@@ -6,7 +6,7 @@ Read this first in every session. Update it at the end of every session (see CLA
 
 | # | Milestone | Where | Status | Gate |
 | --- | --- | --- | --- | --- |
-| 0 | Spec refinement from golden files (`docs/compat.md`, SPEC.md updates) | local | in progress (KICKOFF-LOCAL step 0 done, step 1 next) | user approves SPEC.md |
+| 0 | Spec refinement from golden files (`docs/compat.md`, SPEC.md updates) | local | in progress (KICKOFF-LOCAL steps 0 and 1 done, step 2 next) | user approves SPEC.md |
 | 1 | Spike: `tfp whoami` + `tfp status` with PAT, Costura single exe, clean machine | local | not started | user approves architecture |
 | 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | not started | – |
 | 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | not started | – |
@@ -18,9 +18,12 @@ Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
-1. `docs/KICKOFF-LOCAL.md` step 1: golden analysis → `docs/compat.md`, `docs/golden-format.md`
-   (list the placeholders, including `<ORG>` and `<OTHER_WORKSPACE_ROOT>`, and the manifests in
-   `tests/golden/manifests/`).
+1. `docs/KICKOFF-LOCAL.md` step 2: apply the decisions of `docs/compat.md` to SPEC.md (per-command
+   exit codes, error catalog "Exit" column as default + overrides, output shapes, `history` default
+   slot mode, `/format:context` unsupported, `merges /extended` dropped), list everything an
+   implementer would have to guess (switch lists per command, JSON fields → propose
+   `docs/json-schema.md`), ask the developer the questions in one batch (include the Gate A items
+   under "Open questions"), apply answers, record them under "Decisions". Then Gate A.
 
 ## Needs the user
 
@@ -47,13 +50,38 @@ Statuses: not started, in progress, blocked, done.
 | 2026-10-07 | `.gitignore` ignores `seed-manifest.json` and `extra-manifest-*.json` anywhere except `tests/golden/manifests/` | Defense in depth: the originals contain the collection URL and local paths |
 | 2026-10-07 | Sanitized manifests stored in `tests/golden/manifests/`: in `seed-manifest.json` the collection URL → `<COLLECTION>`, `localRoot` → `<LOCAL_ROOT>`, `projectLocal` → `<WORKSPACE_ROOT>`, `workspace` → `<WORKSPACE>`; the two extra manifests contained nothing personal and are verbatim copies. Developer confirmed that the redaction found everything (no other workspaces, projects or hosts to hide) | KICKOFF-LOCAL step 0; the originals stay outside the repo |
 | 2026-10-07 | Reaffirmed by the developer: every tfp.exe message is English even though the golden files are Czech; golden text is never copied or translated into tfp. Rule added to CLAUDE.md | The tool is universal; golden files only document behavior of a Czech tf.exe |
+| 2026-10-07 | Exit codes follow the original per command and case (`docs/compat.md` §1.1): not found is 1 for `add`/`delete`/`view`/`dir`/`undelete`, 100 for `rename`/`changeset`/`label`, 0 for `history`; `resolve` exits 1 while conflicts remain; `workspaces` with no match exits 1; `difference` exits 0 when files differ. The SPEC.md catalog exit column becomes the default, compat.md lists overrides. Only 110 (PAT) and 120 (workspace/collection) stay as extensions | Scripts and golden tests depend on the original codes; the two extensions tell the AI what to do next |
+| 2026-10-07 | Streams follow the original: per-item errors and conflicts on stderr, empty-result messages on stdout even with exit 1 (`dir/not-found`, `workspaces/other-computer`) | Minimal deviation; JSON mode puts everything in one document anyway |
+| 2026-10-07 | `history`: default mode is slot mode (golden `history/renamed-file` equals `/slotmode`); `/format:xml` stays unsupported (TFP0002), `json` added; unknown path → exit 0 with empty result | Matches tf.exe 18.10 |
+| 2026-10-07 | `add`: `.tfignore` applies to wildcard and `/recursive` expansion only; an explicitly named file is always added (golden `add/ignored-file` exit 0) | Matches the original |
+| 2026-10-07 | `merges /extended` is rejected by tf.exe 18.10 ("option not allowed", exit 100); dropped from the phase 2 switch list. `annotate` does not exist in tf.exe (exit 2); stays a TfPortable extension | Golden `merges/extended`, `annotate/attempt` |
+| 2026-10-07 | `rollback /changeset:C85` works without an item spec (golden `rollback/changeset`), as SPEC.md assumed | Open question closed |
+| 2026-10-07 | Original codes for conflicts: `get` conflict exit 1, `resolve` with conflicts left exit 1, `merge` conflict exit 1, `checkin` blocked by lock / out of date exit 100 (TF10141), checkout lock in local workspace exit 1 (TF400022) | Open question closed; `checkin`/`lock` stay out of scope |
+| 2026-10-07 | `view` always writes UTF-8 and decodes the item by its server encoding; golden `view/czech-name` (mojibake of a BOM-less UTF-8 file) is a bug of the original and is not reproduced | Correctness over byte-compatibility |
+| 2026-10-07 | `difference /format:context` is not supported (TFP0002); `properties` prints no deprecation warning; `tfp`/`tfp help` print the command catalog instead of the banner | Not needed by the AI; cleaner output |
+| 2026-10-07 | Golden tests compare exit code, stream emptiness, items, changeset numbers (mapped through the manifests), change types (Czech → English map) and trailer counts; never texts or dates (`docs/golden-format.md` §7–8). Cases of `index-extra*.json` for phase 1 commands are compared for shape only because their server state came from out-of-scope commands | Golden files are Czech; server state cannot be recreated by tfp |
 
 ## Open questions
 
-- `merges /extended` (golden `merges/extended`) exits 100: invalid switch combination or a bug? Read the file.
-- `history` of a non-existent path exits 0 and `add` of an ignored file exits 0: confirm and record in `docs/compat.md`.
-- Does `tf rollback /changeset:` without an item spec behave as SPEC.md assumes? See golden `rollback/*`.
-- Which exit code and message does the original use for a locked file, an out-of-date checkin and conflicts? See golden `checkin/*`, `get/conflict`, `resolve/*`.
+Closed on 2026-10-07 by the golden analysis (see "Decisions" and `docs/compat.md`): `merges /extended`
+(switch rejected by tf.exe 18.10), `history` of an unknown path (exit 0) and `add` of an ignored
+file (exit 0, explicit path), `rollback /changeset:` without item spec (works), exit codes for
+locks, out-of-date checkin and conflicts.
+
+Open:
+
+- Gate A (step 2): confirm two proposed output deviations – the last table column (comment) is
+  never truncated, and local paths in grouped listings are absolute (`docs/compat.md` §1.3).
+- `add <folder> /recursive` with items skipped by `.tfignore`: the seed script observed exit 1, no
+  golden file exists. Follow the original (exit 1, skipped items listed) until the developer captures
+  a case.
+- `reconcile /promote <folder> /recursive` promoted nothing in the golden run (`reconcile/promote`),
+  although `status` showed two candidates. Check in the milestone 3 integration test whether `/adds`
+  and `/deletes` must be given explicitly.
+- No golden case for TFP0402 (`get` over a writable file without pending change) or for a PAT
+  rejection; both stay as specified in SPEC.md until captured.
+- `index-extra.json` (run 2610071920) has no run suffix although the script writes
+  `index-extra-<run>.json`; harmless, but the golden test loader must accept both names.
 
 ## Golden files – facts
 
@@ -77,7 +105,12 @@ Statuses: not started, in progress, blocked, done.
   personal data and redacted it (see "Decisions"); backup of the unredacted files in the scratchpad.
   Developer provided the manifests (sanitized copies in `tests/golden/manifests/`) and confirmed the
   redaction; first commit made.
-- Next: step 1 (`docs/compat.md`, `docs/golden-format.md`).
+- Step 1 done: all 203 golden cases (86 + 76 + 41) compared with SPEC.md; `docs/compat.md` (per-command
+  tables, exit-code table, cross-cutting decisions) and `docs/golden-format.md` (file format,
+  placeholders, manifests, normalization, what is compared, replayable cases) written; four open
+  questions closed, five new ones recorded.
+- Next: step 2 (apply decisions to SPEC.md, list implementer questions, propose `docs/json-schema.md`,
+  ask the developer in one batch, Gate A).
 - Blockers: none.
 
 ### 2026-10-07 – specification and golden files (claude.ai conversation)
