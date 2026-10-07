@@ -70,6 +70,17 @@ namespace TfPortable
             catch (Exception ex)
             {
                 var error = ErrorMapper.Map(ex, toolName, output.Collection);
+                if (error.Code == ErrorCodes.PatRejected && output.Collection != null)
+                {
+                    // TF30063 with a token that REST accepts means the PAT lacks full access (see SPEC.md "Scope PAT").
+                    var stored = Auth.CredentialStore.Read(output.Collection);
+                    var scope = stored == null ? null : Auth.ConnectionFactory.ExplainSoapRejection(output.Collection, output.Collection, stored.Pat, toolName, ex);
+                    if (scope != null)
+                    {
+                        error = scope;
+                    }
+                }
+
                 output.Error(error);
                 if (verbose)
                 {

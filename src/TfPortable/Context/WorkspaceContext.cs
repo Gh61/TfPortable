@@ -102,6 +102,8 @@ namespace TfPortable.Context
             Workspace? workspace = null;
             try
             {
+                // Authenticate here so that every command fails at one place with one mapping.
+                connection.EnsureAuthenticated();
                 var vcs = connection.GetService<VersionControlServer>();
 
                 if (explicitWorkspace != null)
@@ -145,9 +147,19 @@ namespace TfPortable.Context
 
                 return new WorkspaceContext(normalized, connection, storedPat, workspace, searched);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 connection.Dispose();
+                var mapped = ErrorMapper.Map(ex, toolName, normalized);
+                if (mapped.Code == ErrorCodes.PatRejected)
+                {
+                    var scope = ConnectionFactory.ExplainSoapRejection(collectionUrl, normalized, storedPat.Pat, toolName, ex);
+                    if (scope != null)
+                    {
+                        throw scope;
+                    }
+                }
+
                 throw;
             }
         }

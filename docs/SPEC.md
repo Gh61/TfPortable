@@ -135,8 +135,8 @@ If the link does not open the token page, use the web UI menu:
 
 Token settings:
   1. New Token, Expiration: as needed (Services allow max. 1 year)
-  2. Scopes: Custom defined > Code: Read & write
-     (Code: Read is enough if you only read history and files)
+  2. Scopes: Full access
+     (the TFVC API does not accept tokens with custom scopes, not even Code: Read & write)
   3. Create, then copy the token. It will not be shown again.
 
 Paste the PAT (input is hidden):
@@ -144,7 +144,9 @@ Paste the PAT (input is hidden):
 
 Odkaz se vždy skládá ze skutečné URL kolekce: u Services `https://dev.azure.com/<org>/_usersSettings/tokens`, u Serveru `<URL kolekce>/_usersSettings/tokens`. Protože se umístění stránky mezi verzemi Serveru může lišit, výzva vždy uvádí i cestu v menu pro obě varianty. Klientské knihovny i PAT fungují stejně pro Services i Server; TFS 2015 a starší PAT nepodporují a nástroj je nepodporuje.
 
-**Ověření PAT při uložení**: `TfsTeamProjectCollection.Authenticate()`, zjištění `AuthorizedIdentity`, pak zkušební `QueryItems("$/", RecursionType.OneLevel)`. Selže-li autentizace, PAT se neuloží. Projde-li autentizace, ale dotaz na TFVC vrátí 403, PAT se uloží s varováním o chybějícím scope Code.
+**Ověření PAT při uložení**: nejdřív REST `GET <kolekce>/_apis/connectionData` s Basic autentizací (nezávislé na SOAP klientovi; vrátí identitu). Odmítne-li server token (203 se sign-in stránkou nebo 401), PAT se neuloží. Jinak se PAT uloží a teprve pak se ověří TFVC (SOAP) spojení `TfsTeamProjectCollection.EnsureAuthenticated()` + zkušební dotaz na `$/`; jeho selhání je varování, ne chyba.
+
+**Scope PAT (zjištěno ve spiku 2026-10-07)**: TFVC klient komunikuje přes legacy SOAP endpointy (`/Services/v3.0/LocationService.asmx`, `/VersionControl/v5.0/...`), které v Azure DevOps Services přijímají jen PAT se všemi scopy (Full access). PAT s vlastním výběrem scopů (i Code: Read & write) projde přes REST, ale SOAP odpoví 401 a klientská knihovna ohlásí TF30063; token poslaný jako Bearer odmítne také. Potvrzuje to i README rozšíření Azure Repos pro VS Code („TFVC repositories require tokens with All Scopes“). Důsledky: výzva k PAT žádá Full access; `TFP0103` hlásí tuto situaci (REST token přijal, SOAP ne) s návodem; `tfp whoami`/`status` po TF30063 ověří token přes REST a rozliší neplatný token (TFP0102) od chybějícího scope (TFP0103). Omezení na čtení (Code: Read) tedy přes PAT dosáhnout nelze.
 
 ## Detekce workspace a kolekce
 
@@ -384,7 +386,7 @@ tabulka v `docs/compat.md` §1.1 (např. TFP0301 je 1 u `add`, `delete`, `view`,
 | TFP0003 | Příkaz mimo rozsah nástroje | – | Použít VS nebo originální tf.exe | 100 |
 | TFP0101 | Chybí PAT | – | Spustit `tfp login /collection:<url>` ve vlastním terminálu | 110 |
 | TFP0102 | PAT odmítnut | TF30063, TF400813, HTTP 401 | Vypršel nebo byl zrušen; vytvořit nový, `tfp login` | 110 |
-| TFP0103 | PAT bez potřebného scope | HTTP 403 | Přidat scope Code (Read & write) | 110 |
+| TFP0103 | PAT bez potřebného scope (REST token přijal, TFVC SOAP API ne) | TF30063 po úspěšném REST ověření, HTTP 403 | Vytvořit PAT se Scopes: Full access, `tfp login` | 110 |
 | TFP0104 | Nelze číst nebo zapsat Credential Manager | Win32 chyba | Kód Win32 chyby, kontrola profilu | 110 |
 | TFP0201 | Workspace nenalezen | – | Prohledané cesty, nalezené workspace, `/collection` | 120 |
 | TFP0202 | Server nedostupný | DNS, proxy, timeout | URL, proxy z prostředí, `/verbose` | 100 |

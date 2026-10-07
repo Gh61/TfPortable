@@ -26,8 +26,8 @@ namespace TfPortable.Auth
             sb.AppendLine();
             sb.AppendLine("Token settings:");
             sb.AppendLine("  1. New Token, Expiration: as needed (Services allow max. 1 year)");
-            sb.AppendLine("  2. Scopes: Custom defined > Code: Read & write");
-            sb.AppendLine("     (Code: Read is enough if you only read history and files)");
+            sb.AppendLine("  2. Scopes: Full access");
+            sb.AppendLine("     (the TFVC API does not accept tokens with custom scopes, not even Code: Read & write)");
             sb.AppendLine("  3. Create, then copy the token. It will not be shown again.");
             return sb.ToString();
         }

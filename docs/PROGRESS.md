@@ -35,10 +35,11 @@ Statuses: not started, in progress, blocked, done.
   that `tf help <command>` did not print.
 - Push `main` to GitHub so that the CI workflow runs for the first time (nothing has been pushed
   from the local sessions; the agent does not push on its own).
-- Step 4 (spike): run `tfp login` once in your own terminal so that the spike can be verified against
-  the test collection. The spike exe is `src\TfPortable\bin\Release\net48\tfp.exe`; run it from inside
-  `D:\TfpTest\TfsPortableTestRepo` (the collection is detected) or pass `/collection:<url>`. The PAT needs
-  scope Code: Read & write and is stored under `TfPortable:https://dev.azure.com/<org>`.
+- Step 4 (spike): create a **new** PAT with **Scopes: Full access** (the TFVC SOAP API refuses custom
+  scopes, see "Decisions"), revoke the previous one (it was exposed in a trace log on this machine during
+  the spike, see "Decisions"), then run `tfp login` once more in your own terminal from inside
+  `D:\TfpTest\TfsPortableTestRepo`. The spike exe is `src\TfPortable\bin\Release\net48\tfp.exe`; the token
+  is stored under `TfPortable:https://dev.azure.com/<org>` and `login` overwrites the stored one.
 - Step 4 (spike): a machine or Windows Sandbox without Visual Studio to verify portability of `tfp.exe`.
 
 - Before milestone 2: GitHub Secrets `TFP_TEST_COLLECTION` and `TFP_TEST_PAT`. The PAT should belong to a
@@ -87,6 +88,8 @@ Statuses: not started, in progress, blocked, done.
 | 2026-10-07 | Workspace detection step 2 works across client versions: the 20.256 client library finds the workspace that tf.exe 18.10 created (`Workstation.Current.GetLocalWorkspaceInfo`), collection URL `https://<org>.visualstudio.com/` normalized to `https://dev.azure.com/<org>` | Observed on the developer's machine |
 | 2026-10-07 | `app.manifest`: asInvoker, Windows 8.1–11 supportedOS (real OS version in `tfp version`), longPathAware, UTF-8 active code page | Portability and correct Czech file names in arguments |
 | 2026-10-07 | MSYS protection verified from Git Bash: `tfp status /recursive` reports TFP0002 naming `C:/Program Files/Git/recursive` and the `-recursive` fix; detection requires MSYSTEM or EXEPATH in the environment and a Git-looking prefix that exists on disk | SPEC.md "Ochrana proti převodu cest" |
+| 2026-10-07 | PAT for TfPortable must have all scopes (Full access). Found in the spike: a PAT with 'Code: Read & write' passes REST `connectionData` (HTTP 200) but the SOAP endpoints the TFVC client uses answer 401 (`WWW-Authenticate: Basic`), which the client library reports as TF30063 from `TfsHttpWebRequest.EnsureTokenProvider`; a PAT sent as Bearer is refused the same way. Confirmed by the Azure Repos VS Code extension README ("TFVC repositories require tokens with All Scopes") and the tf.exe `/loginType:OAuth` discussions. Consequences: prompt text asks for Full access; `login` verifies over REST first and stores, SOAP failure is a TFP0103 warning; `whoami`/`status` re-check the token over REST after TF30063 to report TFP0103 instead of TFP0102; the connection uses `VssCredentials(WindowsCredential(false), VssBasicCredential, DoNotPrompt)` | Spike finding; read-only PATs are therefore impossible for TFVC |
+| 2026-10-07 | Never enable System.Net or TeamFoundation tracing in a build or document it for users without masking: the trace writes the `Authorization` header with the PAT in clear text. The spike did this once on the developer's machine; the log files were deleted and the developer was asked to regenerate the token | Security lesson from the spike |
 | 2026-10-07 | Default output of tfp is text in the shape of tf.exe; JSON only with `/format:json` (tf.exe has no JSON at all, `/format:` accepts only `brief`/`detailed`, plus `unified`/`context` for `difference`; anything else is TF10120, exit 100) | Confirmed with the developer |
 
 ## Open questions

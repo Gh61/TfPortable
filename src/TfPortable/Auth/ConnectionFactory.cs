@@ -3,7 +3,6 @@ using System.Text.RegularExpressions;
 using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.VisualStudio.Services.Common;
-using Microsoft.VisualStudio.Services.OAuth;
 using TfPortable.Errors;
 
 namespace TfPortable.Auth
@@ -73,18 +72,34 @@ namespace TfPortable.Auth
         }
 
         /// <summary>
-        /// The SOAP channel of the client library (TfsTeamProjectCollection) answers the server's 401 with a bearer token;
-        /// Azure DevOps accepts a PAT as a bearer token (tf.exe does the same with /loginType:OAuth). A VssBasicCredential
-        /// produced no token provider for that challenge (TF30063 in TfsHttpWebRequest.EnsureTokenProvider).
+        /// Basic authentication with the PAT, sent preemptively by the client library; no default Windows credentials,
+        /// no prompting. The SOAP endpoints of Azure DevOps challenge with "WWW-Authenticate: Basic" and accept a PAT only
+        /// when it has all scopes (full access); a PAT with custom scopes passes the REST connectionData check but gets 401
+        /// here, which the client library reports as TF30063 (see SPEC.md "Autentizace" and docs/PROGRESS.md decisions).
         /// </summary>
         public static TfsTeamProjectCollection Open(string collectionUrl, string pat)
         {
-            var credentials = new VssCredentials(new VssOAuthAccessTokenCredential(pat))
-            {
-                PromptType = CredentialPromptType.DoNotPrompt,
-            };
+            var credentials = new VssCredentials(new Microsoft.VisualStudio.Services.Common.WindowsCredential(false), new VssBasicCredential(string.Empty, pat), CredentialPromptType.DoNotPrompt);
             var uri = new Uri(collectionUrl.Trim().TrimEnd('/'), UriKind.Absolute);
             return new TfsTeamProjectCollection(uri, credentials);
+        }
+
+        /// <summary>
+        /// Explains a TF30063 of the SOAP connection when the token itself is valid: the PAT lacks full access.
+        /// Returns null when the token is rejected by REST too (then the original TFP0102 stands).
+        /// </summary>
+        public static TfpException? ExplainSoapRejection(string collectionUrl, string normalized, string pat, string toolName, Exception inner)
+        {
+            var rest = CheckPatOverRest(collectionUrl, pat);
+            if (!rest.Ok)
+            {
+                return null;
+            }
+
+            return new TfpException(ErrorCodes.PatScope, ExitCodes.Authentication,
+                $"The PAT for {normalized} is valid ({rest.DisplayName}) but the version control API refused it: the TFVC (SOAP) API of Azure DevOps works only with a PAT that has all scopes (Full access).",
+                $"Create a new PAT with 'Scopes: Full access' and run '{toolName} login /collection:{normalized}' in your own terminal.",
+                "TF30063", inner.Message, inner: inner);
         }
 
         /// <summary>Authenticates and returns the identity. Exceptions are mapped by the caller through ErrorMapper.</summary>

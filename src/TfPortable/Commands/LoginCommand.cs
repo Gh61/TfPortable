@@ -74,15 +74,15 @@ namespace TfPortable.Commands
                 catch (Exception ex)
                 {
                     var mapped = ErrorMapper.Map(ex, toolName, normalized);
-                    output.Warning($"The PAT is stored, but the version control connection failed: {mapped.Code} {mapped.ServerMessage ?? mapped.Message}", mapped.Code,
-                        "Report this; the REST check above shows that the token itself is accepted.");
-                    if (commandLine.Has("verbose"))
+                    if (mapped.Code == ErrorCodes.PatRejected)
                     {
-                        Console.Error.WriteLine("Connection variants (spike diagnostics):");
-                        foreach (string line in ConnectionDiagnostics.TryVariants(collectionUrl, normalized, pat))
-                        {
-                            Console.Error.WriteLine("  " + line);
-                        }
+                        // REST accepted the token a moment ago, so the SOAP refusal means a scope problem.
+                        output.Warning("The PAT is stored, but the version control (TFVC) API refused it. That API works only with a PAT that has all scopes (Full access); a token with custom scopes such as 'Code: Read & write' is not enough.",
+                            ErrorCodes.PatScope, $"Create a new PAT with 'Scopes: Full access' and run '{toolName} login /collection:{normalized}' again.");
+                    }
+                    else
+                    {
+                        output.Warning($"The PAT is stored, but the version control connection failed: {mapped.Code} {mapped.ServerMessage ?? mapped.Message}", mapped.Code, mapped.Hint);
                     }
                 }
             }
