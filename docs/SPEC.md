@@ -482,7 +482,8 @@ Claude Code na Windows spouští příkazy přes Git Bash, a to má jednu zásad
 - Workspace: rozhodnuto, jen lokální. Serverový workspace vrátí TFP0204 ServerWorkspaceNotSupported.
 - Licence: rozhodnuto, GNU GPL v3 s dodatečným povolením podle sekce 7 pro klientské knihovny Microsoftu. Repozitář obsahuje LICENSE (GPL v3), LICENSE-EXCEPTION (text povolení) a THIRD-PARTY-NOTICES (licence Microsoftu pro vložené knihovny).
 - Exit kódy a streamy: rozhodnuto (2026-10-07, analýza golden výstupů), kopírují originál podle příkazu; jen 110 a 120 jsou rozšíření. Podrobnosti `docs/compat.md`.
-- Tvar výstupu: rozhodnuto ISO 8601, UTF-8 s překódováním u `view`, žádné varování u `properties`, katalog v `help`. Čeká na Gate A: nezkracování posledního sloupce a absolutní cesty ve skupinových výpisech.
+- Tvar výstupu: rozhodnuto ISO 8601, UTF-8 s překódováním u `view`, žádné varování u `properties`, katalog v `help`, nezkracování posledního sloupce a absolutní cesty ve skupinových výpisech (Gate A, 2026-10-07).
+- Výchozí výstup je text ve tvaru tf.exe; JSON jen na vyžádání přes `/format:json` (tf.exe JSON nemá). Schéma v `docs/json-schema.md` vychází z polí, která originál tiskne v golden výstupech.
 - Otevřené: `add /recursive` s položkami přeskočenými kvůli `.tfignore` (exit 1 podle poznámky v seed skriptu, golden případ chybí); `reconcile /promote` v golden běhu nic nepovýšil, ověřit v integračním testu, zda jsou potřeba `/adds` a `/deletes`.
 
 **Milníky**

@@ -80,7 +80,7 @@ mode the whole result is one JSON document on stdout and stderr stays empty exce
 | Topic | Original | Decision |
 | --- | --- | --- |
 | Dates | Short `7. 10. 2026` in tables, long `středa 7. října 2026 19:07:27` in detail blocks (local time, no offset) | **deviate**: ISO 8601 with offset everywhere (`2026-10-07T19:07:27+02:00`), as in SPEC.md |
-| Table width | Fitted to 79 columns; the last column (comment) is cut (`history/short-version`: `Fix null ch`) | **deviate**: columns are kept, but the last column is never truncated. Truncation loses information the AI needs and the layout of the other columns does not change. (Confirm at Gate A.) |
+| Table width | Fitted to 79 columns; the last column (comment) is cut (`history/short-version`: `Fix null ch`) | **deviate**: columns are kept, but the last column is never truncated. Truncation loses information the AI needs and the layout of the other columns does not change. (Approved at Gate A, 2026-10-07.) |
 | Grouping of local items | Items are grouped under their folder: `Main\src:` + names, relative to the current directory for `add`, `checkout`, `delete`, `rename`, `undo`, `unshelve`, `shelve`, `checkin`; absolute for `get`, `localversions`; when the folder equals the current directory the header line is omitted (`checkout/server-workspace`, `undo/server-workspace`) | **deviate** in one point: paths are printed absolute (SPEC.md "Cesty ve výstupu jsou vždy absolutní"); the grouping and the header-omission rule are kept |
 | Server items | `$/...` paths; deleted items carry a deletion id `;X18`; versions as `;C83` | follow |
 | Encoding | Output in the ANSI code page; `view` of a BOM-less UTF-8 file produced mojibake (`view/czech-name`) because the bytes were written raw | **deviate**: UTF-8 on stdout always; `view` decodes the item by its server encoding (`utf-8`, `windows-1250`, …) and re-encodes to UTF-8. `view/czech-name` is a bug of the original, the golden text is not reproduced |
@@ -296,7 +296,7 @@ Recorded in `docs/PROGRESS.md`:
    but there is no golden file. Follow the original (exit 1, skipped items listed) until captured.
 2. `reconcile /promote <folder> /recursive` promoted nothing in the golden run. Check whether
    `/adds` and `/deletes` are required, in the integration test of milestone 3.
-3. Gate A: confirm the two output deviations proposed here – no truncation of the last table
-   column, and absolute local paths in grouped listings.
+3. Gate A (2026-10-07): the two output deviations proposed here – no truncation of the last table
+   column, and absolute local paths in grouped listings – were approved by the developer.
 4. No golden case exists for TFP0402 (writable file not overwritten by `get`) and for a PAT
    failure; both stay as specified.

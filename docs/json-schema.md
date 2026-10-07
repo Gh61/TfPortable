@@ -1,8 +1,11 @@
 # `/format:json` output – schema
 
-**Status: draft proposed in KICKOFF-LOCAL step 2, to be approved at Gate A.** The implementer
-fills in details per command (milestones 2–4) and keeps this file in sync; every change of a
-field name after the first release is a breaking change.
+**Status: approved at Gate A (2026-10-07) as the basis for milestone 2**, on the condition that
+the types stay derived from what the original prints in the golden outputs (PendingChange from
+`status /format:detailed`, Item from `properties`, Changeset/Change from `changeset`,
+Workspace/Mapping from `workspaces /format:detailed` and `workfold`). The implementer fills in
+details per command (milestones 2–4) and keeps this file in sync; every change of a field name
+after the first release is a breaking change. Open point 1 in section 4 (`view`) is still pending.
 
 Rules (from SPEC.md, "Rozšíření pro AI"):
 
@@ -114,6 +117,6 @@ Phase 2 commands (`merges`, `annotate`, `folderdiff`, `shelvesets`, `unshelve`, 
 1. `view /format:json` returns the text content inline as a JSON string (proposed). Alternative:
    always require `/output` in JSON mode.
 2. `workspace` in the envelope stays a `name;owner` string as in SPEC.md; the full object is in
-   `whoami`/`workfold` data (proposed).
-3. Enumeration casing: lower-case (`acceptyours`) proposed for stability; the text output keeps
-   the server's casing (`AcceptYours`).
+   `whoami`/`workfold` data (approved with the draft).
+3. Enumeration casing: lower-case (`acceptyours`) for stability; the text output keeps the
+   server's casing (`AcceptYours`) (approved with the draft).

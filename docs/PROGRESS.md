@@ -27,16 +27,9 @@ Statuses: not started, in progress, blocked, done.
 
 ## Needs the user
 
-- **Gate A** (KICKOFF-LOCAL step 2): approve the SPEC.md changes of 2026-10-07 and answer:
-  1. Output deviations: never truncate the last table column; absolute local paths in grouped
-     listings (recommended: yes to both).
-  2. `view /format:json`: text content inline as a JSON string, binary only via `/output`
-     (recommended), or always require `/output` in JSON mode.
-  3. `docs/json-schema.md` draft: approve the envelope, shared types and per-command `data` as the
-     basis for milestone 2 (details may still change during implementation).
-  4. Will `TFP_TEST_COLLECTION` in CI be the same collection as the golden capture, so that changeset
-     numbers match the manifests? (Recommended: yes, with a PAT of a dedicated user limited to the
-     test project.)
+- **Gate A** (KICKOFF-LOCAL step 2): questions 1, 3 and 4 answered on 2026-10-07 (see "Decisions").
+  Still open: 2. `view /format:json`: text content inline as a JSON string, binary only via
+  `/output` (recommended), or always require `/output` in JSON mode.
 - Run `tools/capture-tf-help.ps1` (read-only, no sign-in; writes `tests/golden/help/` and
   `index-help.json`), review the output and commit it. It supplies the switch lists and aliases
   that `tf help <command>` did not print.
@@ -77,6 +70,8 @@ Statuses: not started, in progress, blocked, done.
 | 2026-10-07 | SPEC.md refined (step 2): exit-code table rewritten with per-command semantics, catalog exit column is a default with compat.md overrides, new TFP0303 (binary content needs `/output`), versionspec date parsing order (ISO → current culture → invariant), collection URL normalization drops `/DefaultCollection` for Services, `CredEnumerateW` added for the single-PAT detection, section "Tvar textového výstupu", warnings format `WARNING TFPxxxx:`, JSON envelope details (`truncated` object, message shape), `merges /extended` removed, milestone 5 typo `tf.exe` → `tfp.exe` | Decisions of `docs/compat.md` applied; the implementer should not have to guess |
 | 2026-10-07 | `docs/json-schema.md` written as a draft (envelope, shared types Item/Changeset/Change/PendingChange/Conflict/Mapping/Workspace, enumerations in lower case, `data` per phase 1 command) | Kickoff step 2 asks for a proposed structure; Gate A approves it |
 | 2026-10-07 | New script `tools/capture-tf-help.ps1` captures `tf vc help <cmd>` and `tf <cmd> /?` into `tests/golden/help/` | Golden `general/help-status` shows that `tf help <cmd>` prints only a banner in VS 18, so switch lists and aliases were missing; the developer runs it (rule: capture scripts are run by the user) |
+| 2026-10-07 | Gate A, developer approved: (1) the last table column is never truncated and local paths in grouped listings are absolute; (3) `docs/json-schema.md` is the basis for milestone 2, on the condition that its types stay derived from what the golden outputs show (PendingChange from `status /format:detailed`, Item from `properties`, Changeset/Change from `changeset`, Workspace/Mapping from `workspaces /format:detailed` and `workfold`); (4) CI uses the same collection and the same test project as the golden capture, so changeset numbers match the manifests | Developer's answers in the local session |
+| 2026-10-07 | Default output of tfp is text in the shape of tf.exe; JSON only with `/format:json` (tf.exe has no JSON at all, `/format:` accepts only `brief`/`detailed`, plus `unified`/`context` for `difference`; anything else is TF10120, exit 100) | Confirmed with the developer |
 
 ## Open questions
 
@@ -87,8 +82,6 @@ locks, out-of-date checkin and conflicts.
 
 Open:
 
-- Gate A (step 2): confirm two proposed output deviations – the last table column (comment) is
-  never truncated, and local paths in grouped listings are absolute (`docs/compat.md` §1.3).
 - `add <folder> /recursive` with items skipped by `.tfignore`: the seed script observed exit 1, no
   golden file exists. Follow the original (exit 1, skipped items listed) until the developer captures
   a case.

@@ -152,7 +152,7 @@ Applied to the golden text and to `tfp` output alike before comparison:
 | --- | --- |
 | Line endings | CRLF → LF; trailing whitespace on each line removed; trailing blank lines removed |
 | Placeholders | Actual values in `tfp` output are replaced back by the placeholders of section 5 (longest first). `<OWNER>` ↔ the display name of the authenticated identity; `<COMPUTER>` ↔ `Environment.MachineName` |
-| Changeset numbers | Golden numbers are mapped to symbolic names through the manifests (`75` → `{initial}`); actual numbers are mapped through the manifest of the CI collection. When the CI collection *is* the golden collection (the default), the mapping is the identity. Numbers in `;C75`, `;75`, `C75~C81`, bare table cells and `Changeset: 75` lines are all covered; deletion ids `;X18` are mapped the same way (`{deleted-obsolete}`) |
+| Changeset numbers | CI runs against the same collection and the same test project as the golden capture (Gate A, 2026-10-07), so the numbers compare directly. The manifests still document which number means what (`75` = `initial`), and a test may map through them to produce readable failure messages. Numbers in `;C75`, `;75`, `C75~C81`, bare table cells and `Changeset: 75` lines are all covered; deletion ids `;X18` likewise |
 | Dates | Any Czech short (`7. 10. 2026`) or long (`středa 7. října 2026 19:07:27`) date and any ISO 8601 date are replaced by `<DATE>` |
 | Durations, activity ids | Removed (`# duration-ms`, `ActivityId:` lines) |
 | Message texts | Not compared (see section 8); the comparison works on extracted data, not on lines of text |
