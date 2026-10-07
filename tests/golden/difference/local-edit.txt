@@ -1,0 +1,23 @@
+# case: difference/local-edit
+# command: tf diff Main\src\Program.cs /format:unified /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 655
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+upravit: <WORKSPACE_ROOT>\Main\src\Program.cs
+Soubor: Main\src\Program.cs
+===================================================================
+--- Server: $/TfsPortableTestRepo/Main/src/Program.cs;C81
++++ Místní: Main\src\Program.cs
+@@ -16,3 +16,4 @@
+         }
+     }
+ }
++// local edit for golden capture
+===================================================================
+
+==== stderr ====

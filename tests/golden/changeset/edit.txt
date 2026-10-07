@@ -1,0 +1,21 @@
+# case: changeset/edit
+# command: tf changeset 76 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1081
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Sada změn: 76
+Uživatel: <OWNER>
+Datum: středa 7. října 2026 19:06:55
+
+Komentář:
+  Add greeting to Program
+
+Položky:
+  upravit $/TfsPortableTestRepo/Main/src/Program.cs
+
+==== stderr ====

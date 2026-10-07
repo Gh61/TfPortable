@@ -1,0 +1,29 @@
+# case: properties/locked-file
+# command: tf properties Main\golden-2610071920\c.txt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1531
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071920
+==== stdout ====
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\golden-2610071920\c.txt
+  Cesta na server: $/TfsPortableTestRepo/Main/golden-2610071920/c.txt
+  Sada změn      : 84
+  Změnit         : uzamknout
+  Typ            : soubor
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/golden-2610071920/c.txt
+  Sada změn        : 84
+  ID odstranění    : 0
+  Uzamknout        : vrátit se změnami
+  Vlastník zámku   : <OWNER>
+  Naposledy změněno: středa 7. října 2026 19:20:15
+  Typ              : soubor
+  Typ souboru      : windows-1250
+  Velikost         : 41
+
+==== stderr ====
+Příkaz properties je zastaralý. Namísto něj použijte prosím příkaz tf info.

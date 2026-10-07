@@ -1,0 +1,24 @@
+# case: view/changeset-no-c
+# command: tf view $/TfsPortableTestRepo/Main/src/Program.cs /version:75 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1106
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+using System;
+
+namespace TfpTest
+{
+    internal static class Program
+    {
+        private static void Main(string[] args)
+        {
+            Console.WriteLine("Hello");
+        }
+    }
+}
+
+==== stderr ====

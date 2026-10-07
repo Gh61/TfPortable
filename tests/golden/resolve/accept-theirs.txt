@@ -1,0 +1,15 @@
+# case: resolve/accept-theirs
+# command: tf resolve Release\README.md /auto:AcceptTheirs /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1972
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071925
+==== stdout ====
+Položka <WORKSPACE_ROOT>\Release\README.md je vyřešená jako TakeTheirs.
+<WORKSPACE_ROOT>\Release:
+Nahrazování README.md
+
+==== stderr ====

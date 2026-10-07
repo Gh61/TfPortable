@@ -1,0 +1,18 @@
+# case: shelvesets/detailed
+# command: tf shelvesets Golden-2610071920 /format:detailed
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 887
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071920
+==== stdout ====
+===============================================================================
+Sada odložených změn: Golden-2610071920
+Vlastník            : <OWNER>
+Datum               : středa 7. října 2026 19:22:10
+Komentář            : 
+  Golden shelveset (2610071920)
+
+==== stderr ====

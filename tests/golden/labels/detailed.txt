@@ -1,0 +1,41 @@
+# case: labels/detailed
+# command: tf labels /format:detailed v1.0@$/TfsPortableTestRepo
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1203
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+
+Popisek : v1.0
+Rozsah  : $/TfsPortableTestRepo
+Vlastník: <OWNER>
+Datum   : středa 7. října 2026 19:07:09
+Komentář: First test release
+
+Sada změn Položka
+--------- ---------------------------------------------------------------------
+75        $/TfsPortableTestRepo/Main
+75        $/TfsPortableTestRepo/Main/.tfignore
+75        $/TfsPortableTestRepo/Main/assets
+75        $/TfsPortableTestRepo/Main/config
+75        $/TfsPortableTestRepo/Main/data
+75        $/TfsPortableTestRepo/Main/docs
+77        $/TfsPortableTestRepo/Main/README.md
+75        $/TfsPortableTestRepo/Main/src
+75        $/TfsPortableTestRepo/Main/assets/logo.png
+75        $/TfsPortableTestRepo/Main/config/app.config
+75        $/TfsPortableTestRepo/Main/data/counter.txt
+75        $/TfsPortableTestRepo/Main/data/cp1250.txt
+75        $/TfsPortableTestRepo/Main/data/sample-lf.txt
+75        $/TfsPortableTestRepo/Main/data/utf8-bom.txt
+79        $/TfsPortableTestRepo/Main/docs/obsolete.md;X18
+75        $/TfsPortableTestRepo/Main/docs/Příručka.md
+75        $/TfsPortableTestRepo/Main/src/File With Spaces.cs
+76        $/TfsPortableTestRepo/Main/src/Program.cs
+75        $/TfsPortableTestRepo/Main/src/Utils
+78        $/TfsPortableTestRepo/Main/src/Utils/TextHelper.cs
+
+==== stderr ====

@@ -1,0 +1,19 @@
+# case: merge/candidate-before-merge
+# command: tf merge /candidate $/TfsPortableTestRepo/Main $/TfsPortableTestRepo/Release /recursive
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1371
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071920
+==== stdout ====
+Sada změn Uživatel          Datum        Komentář
+--------- ----------------- ------------ --------------------------------------
+89        <OWNER>     7. 10. 2026  Golden: change c.txt in workspace B ag
+88        <OWNER>     7. 10. 2026  Golden: change c.txt in workspace B (2
+87*       <OWNER>     7. 10. 2026  Golden: rename a.txt (2610071920)
+84*       <OWNER>     7. 10. 2026  Golden: edited comment (2610071920)
+83        <OWNER>     7. 10. 2026  Feature X (not merged to Release)
+
+==== stderr ====

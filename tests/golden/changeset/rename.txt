@@ -1,0 +1,22 @@
+# case: changeset/rename
+# command: tf changeset 78 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1065
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Sada změn: 78
+Uživatel: <OWNER>
+Datum: středa 7. října 2026 19:07:04
+
+Komentář:
+  Rename StringHelper to TextHelper
+
+Položky:
+  odstranit, přejmenování zdroje $/TfsPortableTestRepo/Main/src/Utils/StringHelper.cs;X17
+  přejmenovat                    $/TfsPortableTestRepo/Main/src/Utils/TextHelper.cs
+
+==== stderr ====

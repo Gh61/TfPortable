@@ -1,0 +1,21 @@
+# case: history/brief
+# command: tf history $/TfsPortableTestRepo/Main /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 915
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Sada změn Uživatel          Datum        Komentář
+--------- ----------------- ------------ --------------------------------------
+83        <OWNER>     7. 10. 2026  Feature X (not merged to Release)
+81        <OWNER>     7. 10. 2026  Fix null check in Main (BUG-456)
+79        <OWNER>     7. 10. 2026  Remove obsolete document
+78        <OWNER>     7. 10. 2026  Rename StringHelper to TextHelper
+77        <OWNER>     7. 10. 2026  Fix Clean for null input (BUG-123)
+76        <OWNER>     7. 10. 2026  Add greeting to Program
+75        <OWNER>     7. 10. 2026  Initial content
+
+==== stderr ====

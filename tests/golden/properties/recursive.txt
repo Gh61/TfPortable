@@ -1,0 +1,95 @@
+# case: properties/recursive
+# command: tf properties Main\data /recursive
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1575
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\data
+  Cesta na server: $/TfsPortableTestRepo/Main/data
+  Sada změn      : 75
+  Změnit         : žádný
+  Typ            : složka
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/data
+  Sada změn        : 75
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: středa 7. října 2026 19:06:51
+  Typ              : složka
+
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\data\counter.txt
+  Cesta na server: $/TfsPortableTestRepo/Main/data/counter.txt
+  Sada změn      : 75
+  Změnit         : žádný
+  Typ            : soubor
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/data/counter.txt
+  Sada změn        : 75
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: středa 7. října 2026 19:06:51
+  Typ              : soubor
+  Typ souboru      : windows-1250
+  Velikost         : 3
+
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\data\cp1250.txt
+  Cesta na server: $/TfsPortableTestRepo/Main/data/cp1250.txt
+  Sada změn      : 75
+  Změnit         : žádný
+  Typ            : soubor
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/data/cp1250.txt
+  Sada změn        : 75
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: středa 7. října 2026 19:06:51
+  Typ              : soubor
+  Typ souboru      : windows-1250
+  Velikost         : 41
+
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\data\sample-lf.txt
+  Cesta na server: $/TfsPortableTestRepo/Main/data/sample-lf.txt
+  Sada změn      : 75
+  Změnit         : žádný
+  Typ            : soubor
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/data/sample-lf.txt
+  Sada změn        : 75
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: středa 7. října 2026 19:06:51
+  Typ              : soubor
+  Typ souboru      : windows-1250
+  Velikost         : 36
+
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\data\utf8-bom.txt
+  Cesta na server: $/TfsPortableTestRepo/Main/data/utf8-bom.txt
+  Sada změn      : 75
+  Změnit         : žádný
+  Typ            : soubor
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/data/utf8-bom.txt
+  Sada změn        : 75
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: středa 7. října 2026 19:06:51
+  Typ              : soubor
+  Typ souboru      : utf-8
+  Velikost         : 59
+
+==== stderr ====
+Příkaz properties je zastaralý. Namísto něj použijte prosím příkaz tf info.

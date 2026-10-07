@@ -1,0 +1,17 @@
+# case: history/itemmode
+# command: tf history $/TfsPortableTestRepo/Main/src/Utils/TextHelper.cs /itemmode /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 872
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071925
+==== stdout ====
+Sada změn Změnit                     Uživatel          Datum        Komentář
+--------- -------------------------- ----------------- ------------ -----------
+78        přejmenovat                <OWNER>     7. 10. 2026  Rename Stri
+77        upravit                    <OWNER>     7. 10. 2026  Fix Clean f
+75        přidat                     <OWNER>     7. 10. 2026  Initial con
+
+==== stderr ====

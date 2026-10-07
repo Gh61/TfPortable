@@ -1,0 +1,30 @@
+# case: difference/shelveset
+# command: tf difference /shelveset:Golden-2610071920 /format:unified /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1576
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071920
+==== stdout ====
+upravit: $/TfsPortableTestRepo/Main/golden-2610071920/a-renamed.txt;C87
+Soubor: a-renamed.txt
+===================================================================
+--- Server: $/TfsPortableTestRepo/Main/golden-2610071920/a-renamed.txt;C87
++++ Odložená změna: $/TfsPortableTestRepo/Main/golden-2610071920/a-renamed.txt;Golden-2610071920
+@@ -1,2 +1,3 @@
+ first line
+ second line
++shelved line
+===================================================================
+přidat: $/TfsPortableTestRepo/Main/golden-2610071920/shelved.txt
+Soubor: shelved.txt
+===================================================================
+--- [no source file]
++++ Odložená změna: $/TfsPortableTestRepo/Main/golden-2610071920/shelved.txt;Golden-2610071920
+@@ -1,0 +1,1 @@
++new file in a shelveset
+===================================================================
+
+==== stderr ====

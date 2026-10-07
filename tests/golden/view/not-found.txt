@@ -1,0 +1,13 @@
+# case: view/not-found
+# command: tf view $/TfsPortableTestRepo/NoSuchFile.cs /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 1
+# timed-out: false
+# duration-ms: 901
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+
+==== stderr ====
+$/TfsPortableTestRepo/NoSuchFile.cs: Žádné odpovídající soubory.

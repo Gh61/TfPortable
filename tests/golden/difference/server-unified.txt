@@ -1,0 +1,32 @@
+# case: difference/server-unified
+# command: tf difference $/TfsPortableTestRepo/Main/src/Program.cs /version:C75~C81 /format:unified /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1665
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Soubor: Main\src\Program.cs
+===================================================================
+--- Server: Program.cs;75
++++ Server: Program.cs;81
+@@ -6,7 +6,13 @@
+     {
+         private static void Main(string[] args)
+         {
+-            Console.WriteLine("Hello");
++            Console.WriteLine(Greeting(args.Length > 0 ? args[0] : "world"));
++        }
++
++        private static string Greeting(string name)
++        {
++            if (string.IsNullOrEmpty(name)) throw new ArgumentException("Name is required.", "name");
++            return "Hello, " + name + "!";
+         }
+     }
+ }
+===================================================================
+
+==== stderr ====

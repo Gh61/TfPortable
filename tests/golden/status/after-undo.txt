@@ -1,0 +1,22 @@
+# case: status/after-undo
+# command: tf status /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 628
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+-------------------------------------------------------------------------------
+Zjištěné změny:
+-------------------------------------------------------------------------------
+Název souboru        Změnit Místní cesta
+-------------------- ------ ---------------------------------------------------
+$/TfsPortableTestRepo/Main/_golden
+file with spaces.txt přidat <WORKSPACE_ROOT>\Main\_golden\file with spaces.txt
+new-file.txt         přidat <WORKSPACE_ROOT>\Main\_golden\new-file.txt
+
+Změny: 0, zjištěné změny: 2
+
+==== stderr ====

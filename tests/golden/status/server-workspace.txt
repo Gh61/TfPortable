@@ -1,0 +1,13 @@
+# case: status/server-workspace
+# command: tf status /recursive /noprompt
+# cwd: <WORKSPACE_S_ROOT>\Main
+# exit: 0
+# timed-out: false
+# duration-ms: 947
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071925
+==== stdout ====
+Nejsou žádné probíhající změny.
+
+==== stderr ====

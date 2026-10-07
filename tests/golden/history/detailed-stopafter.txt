@@ -1,0 +1,45 @@
+# case: history/detailed-stopafter
+# command: tf history $/TfsPortableTestRepo/Main /recursive /format:detailed /stopafter:3 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 900
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+-------------------------------------------------------------------------------
+Sada změn: 83
+Uživatel: <OWNER>
+Datum: středa 7. října 2026 19:07:27
+
+Komentář:
+  Feature X (not merged to Release)
+
+Položky:
+  upravit $/TfsPortableTestRepo/Main/README.md
+
+-------------------------------------------------------------------------------
+Sada změn: 81
+Uživatel: <OWNER>
+Datum: středa 7. října 2026 19:07:18
+
+Komentář:
+  Fix null check in Main (BUG-456)
+
+Položky:
+  upravit $/TfsPortableTestRepo/Main/src/Program.cs
+
+-------------------------------------------------------------------------------
+Sada změn: 79
+Uživatel: <OWNER>
+Datum: středa 7. října 2026 19:07:08
+
+Komentář:
+  Remove obsolete document
+
+Položky:
+  odstranit $/TfsPortableTestRepo/Main/docs/obsolete.md;X18
+
+
+==== stderr ====

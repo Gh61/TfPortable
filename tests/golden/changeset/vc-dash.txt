@@ -1,0 +1,21 @@
+# case: changeset/vc-dash
+# command: tf vc changeset 81 -noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1277
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Sada změn: 81
+Uživatel: <OWNER>
+Datum: středa 7. října 2026 19:07:18
+
+Komentář:
+  Fix null check in Main (BUG-456)
+
+Položky:
+  upravit $/TfsPortableTestRepo/Main/src/Program.cs
+
+==== stderr ====

@@ -1,0 +1,16 @@
+# case: checkin/delete-file
+# command: tf checkin <WORKSPACE_ROOT> /recursive "/comment:Golden: delete b.txt (2610071920)" /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 3283
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071920
+==== stdout ====
+Main\golden-2610071920:
+Vrácení se změnami odstranit: b.txt
+
+Sada změn #86 se vrátila.
+
+==== stderr ====

@@ -1,0 +1,34 @@
+# case: get/after-cloak
+# command: tf get <WORKSPACE_B_ROOT> /recursive /noprompt
+# cwd: <WORKSPACE_B_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1509
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071925
+==== stdout ====
+Odstraňování <WORKSPACE_B_ROOT>\Release\.tfignore
+Odstraňování <WORKSPACE_B_ROOT>\Release\README.md
+Odstraňování <WORKSPACE_B_ROOT>\Release\assets\logo.png
+Odstraňování <WORKSPACE_B_ROOT>\Release\config\app.config
+Odstraňování <WORKSPACE_B_ROOT>\Release\data\counter.txt
+Odstraňování <WORKSPACE_B_ROOT>\Release\data\cp1250.txt
+Odstraňování <WORKSPACE_B_ROOT>\Release\data\sample-lf.txt
+Odstraňování <WORKSPACE_B_ROOT>\Release\data\utf8-bom.txt
+Odstraňování <WORKSPACE_B_ROOT>\Release\docs\Příručka.md
+Odstraňování <WORKSPACE_B_ROOT>\Release\golden-2610071920\a-renamed.txt
+Odstraňování <WORKSPACE_B_ROOT>\Release\golden-2610071920\c.txt
+Odstraňování <WORKSPACE_B_ROOT>\Release\src\File With Spaces.cs
+Odstraňování <WORKSPACE_B_ROOT>\Release\src\Program.cs
+Odstraňování <WORKSPACE_B_ROOT>\Release\src\Utils\TextHelper.cs
+Odstraňování <WORKSPACE_B_ROOT>\Release\src\Utils
+Odstraňování <WORKSPACE_B_ROOT>\Release\assets
+Odstraňování <WORKSPACE_B_ROOT>\Release\config
+Odstraňování <WORKSPACE_B_ROOT>\Release\data
+Odstraňování <WORKSPACE_B_ROOT>\Release\docs
+Odstraňování <WORKSPACE_B_ROOT>\Release\golden-2610071920
+Odstraňování <WORKSPACE_B_ROOT>\Release\src
+Odstraňování <WORKSPACE_B_ROOT>\Release
+
+==== stderr ====

@@ -1,0 +1,69 @@
+# case: permission/project
+# command: tf permission $/TfsPortableTestRepo /collection:<COLLECTION>
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 2247
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071925
+==== stdout ====
+===============================================================================
+Položka serveru: $/TfsPortableTestRepo (Zdědit: Ano)
+  Identita: TfsPortableTestRepo Build Service (<ORG>)
+    Povolit:           Read, PendChange, Checkin, Label, Lock, CheckinOther, 
+                       Merge, ManageBranch
+    Odepřít:           
+    Povolit (zděděné): 
+    Odepřít (zděděné): 
+
+  Identita: [<ORG>]\Project Collection Administrators
+    Povolit:           
+    Odepřít:           
+    Povolit (zděděné): Read, PendChange, Checkin, Label, Lock, ReviseOther, 
+                       UnlockOther, UndoOther, LabelOther, AdminProjectRights, 
+                       CheckinOther, Merge, ManageBranch
+    Odepřít (zděděné): 
+
+  Identita: [<ORG>]\Project Collection Build Service Accounts
+    Povolit:           
+    Odepřít:           
+    Povolit (zděděné): Read, PendChange, Checkin, Label, Lock, CheckinOther, 
+                       Merge, ManageBranch
+    Odepřít (zděděné): 
+
+  Identita: [<ORG>]\Project Collection Service Accounts
+    Povolit:           
+    Odepřít:           
+    Povolit (zděděné): Read, PendChange, Checkin, Label, Lock, ReviseOther, 
+                       UnlockOther, UndoOther, LabelOther, AdminProjectRights, 
+                       CheckinOther, Merge, ManageBranch
+    Odepřít (zděděné): 
+
+  Identita: [TfsPortableTestRepo]\Build Administrators
+    Povolit:           Read, PendChange, Checkin, Label, Lock, Merge
+    Odepřít:           
+    Povolit (zděděné): 
+    Odepřít (zděděné): 
+
+  Identita: [TfsPortableTestRepo]\Contributors
+    Povolit:           Read, PendChange, Checkin, Label, Lock, Merge
+    Odepřít:           
+    Povolit (zděděné): 
+    Odepřít (zděděné): 
+
+  Identita: [TfsPortableTestRepo]\Project Administrators
+    Povolit:           Read, PendChange, Checkin, Label, Lock, ReviseOther, 
+                       UnlockOther, UndoOther, LabelOther, AdminProjectRights, 
+                       CheckinOther, Merge, ManageBranch
+    Odepřít:           
+    Povolit (zděděné): 
+    Odepřít (zděděné): 
+
+  Identita: [TfsPortableTestRepo]\Readers
+    Povolit:           Read
+    Odepřít:           
+    Povolit (zděděné): 
+    Odepřít (zděděné): 
+
+==== stderr ====

@@ -1,0 +1,21 @@
+# case: changeset/merge
+# command: tf changeset 82 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1123
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Sada změn: 82
+Uživatel: <OWNER>
+Datum: středa 7. října 2026 19:07:23
+
+Komentář:
+  Merge BUG-456 fix from Main to Release
+
+Položky:
+  sloučit, upravit $/TfsPortableTestRepo/Release/src/Program.cs
+
+==== stderr ====

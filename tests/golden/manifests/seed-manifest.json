@@ -1,0 +1,35 @@
+{
+    "generatedBy":  "seed-tfvc-test-repo.ps1",
+    "generatedAt":  "2026-10-07T19:07:29.3752993+02:00",
+    "collection":  "<COLLECTION>",
+    "project":  "TfsPortableTestRepo",
+    "serverRoot":  "$/TfsPortableTestRepo",
+    "localRoot":  "<LOCAL_ROOT>",
+    "projectLocal":  "<WORKSPACE_ROOT>",
+    "workspace":  "<WORKSPACE>",
+    "label":  "v1.0@$/TfsPortableTestRepo",
+    "changesets":  {
+                       "initial":  75,
+                       "editProgram":  76,
+                       "bugfix123":  77,
+                       "rename":  78,
+                       "delete":  79,
+                       "branch":  80,
+                       "fixMain":  81,
+                       "mergeToRelease":  82,
+                       "unmerged":  83
+                   },
+    "files":  {
+                  "program":  "$/TfsPortableTestRepo/Main/src/Program.cs",
+                  "renamedFrom":  "$/TfsPortableTestRepo/Main/src/Utils/StringHelper.cs",
+                  "renamedTo":  "$/TfsPortableTestRepo/Main/src/Utils/TextHelper.cs",
+                  "deleted":  "$/TfsPortableTestRepo/Main/docs/obsolete.md",
+                  "czechName":  "$/TfsPortableTestRepo/Main/docs/Příručka.md",
+                  "withSpaces":  "$/TfsPortableTestRepo/Main/src/File With Spaces.cs",
+                  "utf8Bom":  "$/TfsPortableTestRepo/Main/data/utf8-bom.txt",
+                  "cp1250":  "$/TfsPortableTestRepo/Main/data/cp1250.txt",
+                  "lineEndLf":  "$/TfsPortableTestRepo/Main/data/sample-lf.txt",
+                  "binary":  "$/TfsPortableTestRepo/Main/assets/logo.png",
+                  "ignored":  "Main\\src\\bin\\Debug\\ignored.txt"
+              }
+}

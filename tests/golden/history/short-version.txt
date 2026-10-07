@@ -1,0 +1,17 @@
+# case: history/short-version
+# command: tf history $/TfsPortableTestRepo/Main/src/Program.cs /v:C81 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 876
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Sada změn Změnit                     Uživatel          Datum        Komentář
+--------- -------------------------- ----------------- ------------ -----------
+81        upravit                    <OWNER>     7. 10. 2026  Fix null ch
+76        upravit                    <OWNER>     7. 10. 2026  Add greetin
+75        přidat                     <OWNER>     7. 10. 2026  Initial con
+
+==== stderr ====

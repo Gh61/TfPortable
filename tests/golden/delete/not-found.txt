@@ -1,0 +1,13 @@
+# case: delete/not-found
+# command: tf delete Main\NoSuchFile.txt
+# cwd: <WORKSPACE_ROOT>
+# exit: 1
+# timed-out: false
+# duration-ms: 627
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+
+==== stderr ====
+Položku <WORKSPACE_ROOT>\Main\NoSuchFile.txt nejde najít ve vašem pracovním prostoru, nebo nemáte oprávnění pro přístup k ní.

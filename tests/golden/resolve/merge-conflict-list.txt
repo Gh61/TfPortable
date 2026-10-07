@@ -1,0 +1,13 @@
+# case: resolve/merge-conflict-list
+# command: tf resolve <WORKSPACE_ROOT> /recursive /preview /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 1
+# timed-out: false
+# duration-ms: 1109
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071925
+==== stdout ====
+
+==== stderr ====
+Release\README.md: Změny obsahuje zdroj i cíl.

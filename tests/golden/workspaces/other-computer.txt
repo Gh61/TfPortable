@@ -1,0 +1,13 @@
+# case: workspaces/other-computer
+# command: tf workspaces /collection:<COLLECTION> /computer:NoSuchComputer
+# cwd: <WORKSPACE_ROOT>
+# exit: 1
+# timed-out: false
+# duration-ms: 1514
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Na Azure DevOps Serveru <COLLECTION> se nenašel žádný pracovní prostor, který odpovídá položce *;<OWNER> na počítači NoSuchComputer.
+
+==== stderr ====

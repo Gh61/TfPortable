@@ -1,0 +1,37 @@
+# case: workspaces/detailed
+# command: tf workspaces /collection:<COLLECTION> /format:detailed
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 2142
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+===============================================================================
+Pracovní prostor: <WORKSPACE>
+Vlastník        : <OWNER>
+Počítač         : <COMPUTER>
+Komentář        : TfPortable test workspace
+Kolekce         : <ORG>.visualstudio.com\DefaultCollection
+Oprávnění       : Private
+Umístění        : Místní
+Čas souboru     : Aktuální
+
+Pracovní složky:
+ $/TfsPortableTestRepo: <WORKSPACE_ROOT>
+
+===============================================================================
+Pracovní prostor: <COMPUTER>
+Vlastník        : <OWNER>
+Počítač         : <COMPUTER>
+Komentář        : 
+Kolekce         : <ORG>.visualstudio.com\DefaultCollection
+Oprávnění       : Private
+Umístění        : Místní
+Čas souboru     : Aktuální
+
+Pracovní složky:
+ $/TfsPortableTestRepo: <OTHER_WORKSPACE_ROOT>
+
+==== stderr ====

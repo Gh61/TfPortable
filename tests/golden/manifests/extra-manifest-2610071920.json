@@ -1,0 +1,17 @@
+{
+    "run":  "2610071920",
+    "goldenFolder":  "$/TfsPortableTestRepo/Main/golden-2610071920",
+    "label":  "golden-2610071920@$/TfsPortableTestRepo",
+    "shelveset":  "Golden-2610071920",
+    "featureBranch":  "$/TfsPortableTestRepo/Feature-2610071920",
+    "changesets":  {
+                       "add-files":  84,
+                       "edit-file":  85,
+                       "delete-file":  86,
+                       "rename-file":  87,
+                       "from-second-workspace":  88,
+                       "from-second-workspace-2":  89,
+                       "branch":  90,
+                       "merge":  91
+                   }
+}

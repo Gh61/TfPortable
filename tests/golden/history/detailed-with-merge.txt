@@ -1,0 +1,48 @@
+# case: history/detailed-with-merge
+# command: tf history $/TfsPortableTestRepo/Release /recursive /format:detailed /stopafter:3 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 902
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071925
+==== stdout ====
+-------------------------------------------------------------------------------
+Sada změn: 93
+Uživatel: <OWNER>
+Datum: středa 7. října 2026 19:26:07
+
+Komentář:
+  Golden: README change in Release (2610071925)
+
+Položky:
+  upravit $/TfsPortableTestRepo/Release/README.md
+
+-------------------------------------------------------------------------------
+Sada změn: 91
+Uživatel: <OWNER>
+Datum: středa 7. října 2026 19:22:40
+
+Komentář:
+  Golden: merge Main to Release (2610071920)
+
+Položky:
+  sloučit, větev   $/TfsPortableTestRepo/Release/golden-2610071920
+  sloučit, upravit $/TfsPortableTestRepo/Release/README.md
+  sloučit, větev   $/TfsPortableTestRepo/Release/golden-2610071920/a-renamed.txt
+  sloučit, větev   $/TfsPortableTestRepo/Release/golden-2610071920/c.txt
+
+-------------------------------------------------------------------------------
+Sada změn: 82
+Uživatel: <OWNER>
+Datum: středa 7. října 2026 19:07:23
+
+Komentář:
+  Merge BUG-456 fix from Main to Release
+
+Položky:
+  sloučit, upravit $/TfsPortableTestRepo/Release/src/Program.cs
+
+
+==== stderr ====

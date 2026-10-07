@@ -1,0 +1,39 @@
+# case: changeset/branch
+# command: tf changeset 80 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1047
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Sada změn: 80
+Uživatel: <OWNER>
+Datum: středa 7. října 2026 19:07:14
+
+Komentář:
+  Branch Main to Release
+
+Položky:
+  větev $/TfsPortableTestRepo/Release
+  větev $/TfsPortableTestRepo/Release/.tfignore
+  větev $/TfsPortableTestRepo/Release/assets
+  větev $/TfsPortableTestRepo/Release/config
+  větev $/TfsPortableTestRepo/Release/data
+  větev $/TfsPortableTestRepo/Release/docs
+  větev $/TfsPortableTestRepo/Release/README.md
+  větev $/TfsPortableTestRepo/Release/src
+  větev $/TfsPortableTestRepo/Release/assets/logo.png
+  větev $/TfsPortableTestRepo/Release/config/app.config
+  větev $/TfsPortableTestRepo/Release/data/counter.txt
+  větev $/TfsPortableTestRepo/Release/data/cp1250.txt
+  větev $/TfsPortableTestRepo/Release/data/sample-lf.txt
+  větev $/TfsPortableTestRepo/Release/data/utf8-bom.txt
+  větev $/TfsPortableTestRepo/Release/docs/Příručka.md
+  větev $/TfsPortableTestRepo/Release/src/File With Spaces.cs
+  větev $/TfsPortableTestRepo/Release/src/Program.cs
+  větev $/TfsPortableTestRepo/Release/src/Utils
+  větev $/TfsPortableTestRepo/Release/src/Utils/TextHelper.cs
+
+==== stderr ====

@@ -1,0 +1,34 @@
+# case: undo/recursive
+# command: tf undo Main /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 721
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Main:
+Vracení zpět přidat: _golden
+Vracení zpět upravit: README.md
+
+Main\_golden:
+Vracení zpět přidat: file with spaces.txt
+Vracení zpět přidat: new-file.txt
+
+Main\assets:
+Vracení zpět odstranit: logo.png
+
+Main\config:
+Vracení zpět upravit: app.config
+
+Main\data:
+Vracení zpět přejmenovat: sample-renamed.txt
+
+Main\src:
+Vracení zpět upravit: Program.cs
+
+Main\src\bin\Debug:
+Vracení zpět přidat: ignored.txt
+
+==== stderr ====

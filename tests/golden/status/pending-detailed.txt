@@ -1,0 +1,94 @@
+# case: status/pending-detailed
+# command: tf status /recursive /format:detailed /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 622
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+$/TfsPortableTestRepo/Main/_golden
+  Uživatel        : <OWNER>
+  Datum           : středa 7. října 2026 19:09:51
+  Uzamknout       : žádný
+  Změnit          : přidat
+  Pracovní prostor: <WORKSPACE>
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\_golden
+
+$/TfsPortableTestRepo/Main/README.md;C83
+  Uživatel        : <OWNER>
+  Datum           : středa 7. října 2026 19:09:54
+  Uzamknout       : žádný
+  Změnit          : upravit
+  Pracovní prostor: <WORKSPACE>
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\README.md
+  Typ souboru     : windows-1250
+
+$/TfsPortableTestRepo/Main/_golden/file with spaces.txt
+  Uživatel        : <OWNER>
+  Datum           : středa 7. října 2026 19:09:51
+  Uzamknout       : žádný
+  Změnit          : přidat
+  Pracovní prostor: <WORKSPACE>
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\_golden\file with spaces.txt
+  Typ souboru     : windows-1250
+
+$/TfsPortableTestRepo/Main/_golden/new-file.txt
+  Uživatel        : <OWNER>
+  Datum           : středa 7. října 2026 19:09:51
+  Uzamknout       : žádný
+  Změnit          : přidat
+  Pracovní prostor: <WORKSPACE>
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\_golden\new-file.txt
+  Typ souboru     : windows-1250
+
+$/TfsPortableTestRepo/Main/assets/logo.png;C75
+  Uživatel        : <OWNER>
+  Datum           : středa 7. října 2026 19:09:57
+  Uzamknout       : žádný
+  Změnit          : odstranit
+  Pracovní prostor: <WORKSPACE>
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\assets\logo.png
+  Typ souboru     : Binary
+
+$/TfsPortableTestRepo/Main/config/app.config;C75
+  Uživatel        : <OWNER>
+  Datum           : středa 7. října 2026 19:09:54
+  Uzamknout       : žádný
+  Změnit          : upravit
+  Pracovní prostor: <WORKSPACE>
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\config\app.config
+  Typ souboru     : windows-1250
+
+$/TfsPortableTestRepo/Main/data/sample-renamed.txt;C75
+  Uživatel        : <OWNER>
+  Datum           : středa 7. října 2026 19:09:56
+  Uzamknout       : žádný
+  Změnit          : přejmenovat
+  Pracovní prostor: <WORKSPACE>
+  Zdrojová položka: $/TfsPortableTestRepo/Main/data/sample-lf.txt
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\data\sample-renamed.txt
+  Typ souboru     : windows-1250
+
+$/TfsPortableTestRepo/Main/src/Program.cs;C81
+  Uživatel        : <OWNER>
+  Datum           : středa 7. října 2026 19:09:55
+  Uzamknout       : žádný
+  Změnit          : upravit
+  Pracovní prostor: <WORKSPACE>
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\src\Program.cs
+  Typ souboru     : windows-1250
+
+$/TfsPortableTestRepo/Main/src/bin/Debug/ignored.txt
+  Uživatel        : <OWNER>
+  Datum           : středa 7. října 2026 19:09:53
+  Uzamknout       : žádný
+  Změnit          : přidat
+  Pracovní prostor: <WORKSPACE>
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\src\bin\Debug\ignored.txt
+  Typ souboru     : windows-1250
+
+Změny: 9
+
+==== stderr ====

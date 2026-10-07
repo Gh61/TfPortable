@@ -1,0 +1,17 @@
+# case: shelve/create
+# command: tf shelve Golden-2610071920 Main\golden-2610071920 /recursive "/comment:Golden shelveset (2610071920)" /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 2123
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071920
+==== stdout ====
+Main\golden-2610071920:
+Odkládá se upravit: a-renamed.txt
+Odkládá se přidat: shelved.txt
+
+Vytvořila se sada odložených změn Golden-2610071920.
+
+==== stderr ====

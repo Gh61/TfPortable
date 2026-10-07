@@ -1,0 +1,38 @@
+# case: status/pending
+# command: tf status /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 620
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Název souboru        Změnit      Místní cesta
+-------------------- ----------- ----------------------------------------------
+$/TfsPortableTestRepo/Main
+_golden              přidat      <WORKSPACE_ROOT>\Main\_golden
+README.md            upravit     <WORKSPACE_ROOT>\Main\README.md
+
+$/TfsPortableTestRepo/Main/_golden
+file with spaces.txt přidat      <WORKSPACE_ROOT>\Main\_golden\file with spaces.txt
+new-file.txt         přidat      <WORKSPACE_ROOT>\Main\_golden\new-file.txt
+
+$/TfsPortableTestRepo/Main/assets
+logo.png             odstranit   <WORKSPACE_ROOT>\Main\assets\logo.png
+
+$/TfsPortableTestRepo/Main/config
+app.config           upravit     <WORKSPACE_ROOT>\Main\config\app.config
+
+$/TfsPortableTestRepo/Main/data
+sample-renamed.txt   přejmenovat <WORKSPACE_ROOT>\Main\data\sample-renamed.txt
+
+$/TfsPortableTestRepo/Main/src
+Program.cs           upravit     <WORKSPACE_ROOT>\Main\src\Program.cs
+
+$/TfsPortableTestRepo/Main/src/bin/Debug
+ignored.txt          přidat      <WORKSPACE_ROOT>\Main\src\bin\Debug\ignored.txt
+
+Změny: 9
+
+==== stderr ====

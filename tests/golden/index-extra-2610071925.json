@@ -1,0 +1,348 @@
+{
+    "capturedAt":  "2026-10-07T19:47:41.1055635+02:00",
+    "run":  "2610071925",
+    "tfVersion":  "18.10.12215.6 built by: releases/dev18/18.10 (760940044d)",
+    "consoleEncoding":  "windows-1250",
+    "culture":  "cs-CZ",
+    "extra":  {
+                  "changesets":  {
+                                     "main-readme":  92,
+                                     "release-readme":  93,
+                                     "paddingFirst":  94,
+                                     "paddingLast":  393
+                                 },
+                  "label":  "golden-2610071925@$/TfsPortableTestRepo",
+                  "shelveset":  "Golden-2610071925",
+                  "featureBranch":  "$/TfsPortableTestRepo/Feature-2610071925"
+              },
+    "cases":  [
+                  {
+                      "group":  "checkin",
+                      "name":  "main-readme",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e /recursive \"/comment:Golden: README change in Main (2610071925)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/main-readme.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "release-readme",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e /recursive \"/comment:Golden: README change in Release (2610071925)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/release-readme.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "conflict",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/README.md $/TfsPortableTestRepo/Release/README.md /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "merge/conflict.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "merge-conflict",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/merge-conflict.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "merge-conflict-list",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e /recursive /preview /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "resolve/merge-conflict-list.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "accept-merge",
+                      "command":  "tf resolve Release\\README.md /auto:AcceptMerge /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "resolve/accept-merge.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "accept-theirs",
+                      "command":  "tf resolve Release\\README.md /auto:AcceptTheirs /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "resolve/accept-theirs.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-merge-resolve",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-merge-resolve.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "main-release",
+                      "command":  "tf folderdiff $/TfsPortableTestRepo/Main $/TfsPortableTestRepo/Release /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/main-release.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "two-branches",
+                      "command":  "tf difference $/TfsPortableTestRepo/Main/README.md $/TfsPortableTestRepo/Release/README.md /format:unified /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/two-branches.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "context-format",
+                      "command":  "tf difference $/TfsPortableTestRepo/Main/README.md $/TfsPortableTestRepo/Release/README.md /format:context /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/context-format.txt"
+                  },
+                  {
+                      "group":  "workfold",
+                      "name":  "cloak",
+                      "command":  "tf workfold /cloak $/TfsPortableTestRepo/Release /workspace:\u003cWORKSPACE_B\u003e /collection:\u003cCOLLECTION\u003e",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workfold/cloak.txt"
+                  },
+                  {
+                      "group":  "workfold",
+                      "name":  "list-cloaked",
+                      "command":  "tf workfold /workspace:\u003cWORKSPACE_B\u003e /collection:\u003cCOLLECTION\u003e",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workfold/list-cloaked.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "after-cloak",
+                      "command":  "tf get \u003cWORKSPACE_B_ROOT\u003e /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "get/after-cloak.txt"
+                  },
+                  {
+                      "group":  "workfold",
+                      "name":  "decloak",
+                      "command":  "tf workfold /decloak $/TfsPortableTestRepo/Release /workspace:\u003cWORKSPACE_B\u003e /collection:\u003cCOLLECTION\u003e",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workfold/decloak.txt"
+                  },
+                  {
+                      "group":  "workfold",
+                      "name":  "unmap",
+                      "command":  "tf workfold /unmap /workspace:\u003cWORKSPACE_B\u003e /collection:\u003cCOLLECTION\u003e \u003cWORKSPACE_B_ROOT\u003e",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "workfold/unmap.txt"
+                  },
+                  {
+                      "group":  "workfold",
+                      "name":  "map",
+                      "command":  "tf workfold /map /workspace:\u003cWORKSPACE_B\u003e /collection:\u003cCOLLECTION\u003e $/TfsPortableTestRepo \u003cWORKSPACE_B_ROOT\u003e",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workfold/map.txt"
+                  },
+                  {
+                      "group":  "workfold",
+                      "name":  "map-already-mapped",
+                      "command":  "tf workfold /map /workspace:\u003cWORKSPACE_B\u003e /collection:\u003cCOLLECTION\u003e $/TfsPortableTestRepo \u003cWORKSPACE_B_ROOT\u003e",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workfold/map-already-mapped.txt"
+                  },
+                  {
+                      "group":  "workspace",
+                      "name":  "new-server",
+                      "command":  "tf workspace /new \u003cWORKSPACE_S\u003e /collection:\u003cCOLLECTION\u003e /location:server \"/comment:TfPortable golden capture\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workspace/new-server.txt"
+                  },
+                  {
+                      "group":  "workspaces",
+                      "name":  "with-server-workspace",
+                      "command":  "tf workspaces /collection:\u003cCOLLECTION\u003e /format:detailed",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workspaces/with-server-workspace.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "server-workspace",
+                      "command":  "tf get \u003cWORKSPACE_S_ROOT\u003e\\Main /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "get/server-workspace.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "server-workspace",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/server-workspace.txt"
+                  },
+                  {
+                      "group":  "properties",
+                      "name":  "server-workspace",
+                      "command":  "tf properties README.md",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "properties/server-workspace.txt"
+                  },
+                  {
+                      "group":  "checkout",
+                      "name":  "server-workspace",
+                      "command":  "tf checkout README.md",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkout/server-workspace.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "server-workspace-pending",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/server-workspace-pending.txt"
+                  },
+                  {
+                      "group":  "undo",
+                      "name":  "server-workspace",
+                      "command":  "tf undo README.md /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "undo/server-workspace.txt"
+                  },
+                  {
+                      "group":  "workspace",
+                      "name":  "delete-server",
+                      "command":  "tf workspace /delete \u003cWORKSPACE_S\u003e /collection:\u003cCOLLECTION\u003e /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workspace/delete-server.txt"
+                  },
+                  {
+                      "group":  "permission",
+                      "name":  "project",
+                      "command":  "tf permission $/TfsPortableTestRepo /collection:\u003cCOLLECTION\u003e",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "permission/project.txt"
+                  },
+                  {
+                      "group":  "destroy",
+                      "name":  "preview",
+                      "command":  "tf destroy $/TfsPortableTestRepo/Main/data/counter.txt /preview /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "destroy/preview.txt"
+                  },
+                  {
+                      "group":  "annotate",
+                      "name":  "attempt",
+                      "command":  "tf annotate $/TfsPortableTestRepo/Main/src/Program.cs /noprompt",
+                      "exitCode":  2,
+                      "timedOut":  false,
+                      "file":  "annotate/attempt.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "sort-ascending",
+                      "command":  "tf history $/TfsPortableTestRepo/Main /recursive /sort:ascending /stopafter:5 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/sort-ascending.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "user-not-found",
+                      "command":  "tf history $/TfsPortableTestRepo/Main /recursive /user:NoSuchUser /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "history/user-not-found.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "date-range",
+                      "command":  "tf history $/TfsPortableTestRepo/Main /recursive /version:D2026-10-06~T /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/date-range.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "itemmode",
+                      "command":  "tf history $/TfsPortableTestRepo/Main/src/Utils/TextHelper.cs /itemmode /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/itemmode.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "slotmode",
+                      "command":  "tf history $/TfsPortableTestRepo/Main/src/Utils/TextHelper.cs /slotmode /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/slotmode.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "format-xml",
+                      "command":  "tf history $/TfsPortableTestRepo/Main /recursive /format:xml /stopafter:3 /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "history/format-xml.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "detailed-with-merge",
+                      "command":  "tf history $/TfsPortableTestRepo/Release /recursive /format:detailed /stopafter:3 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/detailed-with-merge.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "long-default",
+                      "command":  "tf history $/TfsPortableTestRepo/Main/data/counter.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/long-default.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "long-stopafter-256",
+                      "command":  "tf history $/TfsPortableTestRepo/Main/data/counter.txt /stopafter:256 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/long-stopafter-256.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "long-project-recursive",
+                      "command":  "tf history $/TfsPortableTestRepo /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/long-project-recursive.txt"
+                  },
+                  {
+                      "group":  "workspace",
+                      "name":  "delete-local",
+                      "command":  "tf workspace /delete \u003cWORKSPACE_B\u003e /collection:\u003cCOLLECTION\u003e /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workspace/delete-local.txt"
+                  }
+              ]
+}

@@ -1,0 +1,16 @@
+# case: history/release-branch
+# command: tf history $/TfsPortableTestRepo/Release /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 867
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Sada změn Uživatel          Datum        Komentář
+--------- ----------------- ------------ --------------------------------------
+82        <OWNER>     7. 10. 2026  Merge BUG-456 fix from Main to Release
+80        <OWNER>     7. 10. 2026  Branch Main to Release
+
+==== stderr ====

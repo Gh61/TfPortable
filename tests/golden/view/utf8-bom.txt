@@ -1,0 +1,13 @@
+# case: view/utf8-bom
+# command: tf view $/TfsPortableTestRepo/Main/data/utf8-bom.txt /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1077
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Příliš žluťoučký kůň úpěl ďábelské ódy.
+
+==== stderr ====

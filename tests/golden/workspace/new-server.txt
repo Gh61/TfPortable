@@ -1,0 +1,12 @@
+# case: workspace/new-server
+# command: tf workspace /new <WORKSPACE_S> /collection:<COLLECTION> /location:server "/comment:TfPortable golden capture" /noprompt
+# cwd: <LOCAL_ROOT_S>
+# exit: 0
+# timed-out: false
+# duration-ms: 1109
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071925
+==== stdout ====
+
+==== stderr ====

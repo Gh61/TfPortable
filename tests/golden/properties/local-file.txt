@@ -1,0 +1,29 @@
+# case: properties/local-file
+# command: tf properties Main\src\Program.cs
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1464
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\src\Program.cs
+  Cesta na server: $/TfsPortableTestRepo/Main/src/Program.cs
+  Sada změn      : 81
+  Změnit         : žádný
+  Typ            : soubor
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/src/Program.cs
+  Sada změn        : 81
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: středa 7. října 2026 19:07:18
+  Typ              : soubor
+  Typ souboru      : windows-1250
+  Velikost         : 465
+
+==== stderr ====
+Příkaz properties je zastaralý. Namísto něj použijte prosím příkaz tf info.

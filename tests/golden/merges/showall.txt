@@ -1,0 +1,24 @@
+# case: merges/showall
+# command: tf merges $/TfsPortableTestRepo/Main $/TfsPortableTestRepo/Release /recursive /showall
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 881
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071920
+==== stdout ====
+Sada změn Sloučené v sadě změn Autor                            Datum
+--------- -------------------- -------------------------------- ------------
+      75*                   80 <OWNER>                    7. 10. 2026
+      76                    80 <OWNER>                    7. 10. 2026
+      77                    80 <OWNER>                    7. 10. 2026
+      78                    80 <OWNER>                    7. 10. 2026
+      81                    82 <OWNER>                    7. 10. 2026
+      83                    91 <OWNER>                    7. 10. 2026
+      84*                   91 <OWNER>                    7. 10. 2026
+      87                    91 <OWNER>                    7. 10. 2026
+      88                    91 <OWNER>                    7. 10. 2026
+      89                    91 <OWNER>                    7. 10. 2026
+
+==== stderr ====

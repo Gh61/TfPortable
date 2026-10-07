@@ -1,0 +1,13 @@
+{
+    "run":  "2610071925",
+    "goldenFolder":  "$/TfsPortableTestRepo/Main/golden-2610071925",
+    "label":  "golden-2610071925@$/TfsPortableTestRepo",
+    "shelveset":  "Golden-2610071925",
+    "featureBranch":  "$/TfsPortableTestRepo/Feature-2610071925",
+    "changesets":  {
+                       "main-readme":  92,
+                       "release-readme":  93,
+                       "paddingFirst":  94,
+                       "paddingLast":  393
+                   }
+}

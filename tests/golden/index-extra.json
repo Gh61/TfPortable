@@ -1,0 +1,632 @@
+{
+    "capturedAt":  "2026-10-07T19:22:49.1255288+02:00",
+    "run":  "2610071920",
+    "tfVersion":  "18.10.12215.6 built by: releases/dev18/18.10 (760940044d)",
+    "consoleEncoding":  "windows-1250",
+    "culture":  "cs-CZ",
+    "extra":  {
+                  "changesets":  {
+                                     "add-files":  84,
+                                     "edit-file":  85,
+                                     "delete-file":  86,
+                                     "rename-file":  87,
+                                     "from-second-workspace":  88,
+                                     "from-second-workspace-2":  89,
+                                     "branch":  90,
+                                     "merge":  91
+                                 },
+                  "label":  "golden-2610071920@$/TfsPortableTestRepo",
+                  "shelveset":  "Golden-2610071920",
+                  "featureBranch":  "$/TfsPortableTestRepo/Feature-2610071920"
+              },
+    "cases":  [
+                  {
+                      "group":  "checkin",
+                      "name":  "nothing-pending",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e /recursive \"/comment:Nothing to check in\" /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "checkin/nothing-pending.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "add-files",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e /recursive \"/comment:Golden: add files (2610071920)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/add-files.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "edit-file",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e /recursive \"/comment:Golden: edit a.txt (2610071920)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/edit-file.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "delete-file",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e /recursive \"/comment:Golden: delete b.txt (2610071920)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/delete-file.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "rename-file",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e /recursive \"/comment:Golden: rename a.txt (2610071920)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/rename-file.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "edit-comment",
+                      "command":  "tf changeset \"/comment:Golden: edited comment (2610071920)\" 84 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "changeset/edit-comment.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "after-comment-edit",
+                      "command":  "tf changeset 84 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "changeset/after-comment-edit.txt"
+                  },
+                  {
+                      "group":  "label",
+                      "name":  "create",
+                      "command":  "tf label golden-2610071920@$/TfsPortableTestRepo $/TfsPortableTestRepo/Main/golden-2610071920 /recursive \"/comment:Golden label (2610071920)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "label/create.txt"
+                  },
+                  {
+                      "group":  "labels",
+                      "name":  "golden-detailed",
+                      "command":  "tf labels /format:detailed golden-2610071920@$/TfsPortableTestRepo",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "labels/golden-detailed.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "golden-label",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/golden-2610071920/a-renamed.txt /version:Lgolden-2610071920@$/TfsPortableTestRepo /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/golden-label.txt"
+                  },
+                  {
+                      "group":  "unlabel",
+                      "name":  "item",
+                      "command":  "tf unlabel golden-2610071920@$/TfsPortableTestRepo $/TfsPortableTestRepo/Main/golden-2610071920/c.txt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "unlabel/item.txt"
+                  },
+                  {
+                      "group":  "unlabel",
+                      "name":  "not-labeled",
+                      "command":  "tf unlabel golden-2610071920@$/TfsPortableTestRepo $/TfsPortableTestRepo/Main/golden-2610071920/c.txt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "unlabel/not-labeled.txt"
+                  },
+                  {
+                      "group":  "label",
+                      "name":  "not-found-item",
+                      "command":  "tf label golden-2610071920@$/TfsPortableTestRepo $/TfsPortableTestRepo/Main/golden-2610071920/no-such.txt /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "label/not-found-item.txt"
+                  },
+                  {
+                      "group":  "dir",
+                      "name":  "golden-deleted",
+                      "command":  "tf dir $/TfsPortableTestRepo/Main/golden-2610071920 /deleted",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "dir/golden-deleted.txt"
+                  },
+                  {
+                      "group":  "undelete",
+                      "name":  "file",
+                      "command":  "tf undelete $/TfsPortableTestRepo/Main/golden-2610071920/b.txt;X19 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "undelete/file.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "pending-undelete",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/pending-undelete.txt"
+                  },
+                  {
+                      "group":  "undelete",
+                      "name":  "not-found",
+                      "command":  "tf undelete $/TfsPortableTestRepo/Main/golden-2610071920/no-such.txt /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "undelete/not-found.txt"
+                  },
+                  {
+                      "group":  "rollback",
+                      "name":  "changeset",
+                      "command":  "tf rollback /changeset:C85 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "rollback/changeset.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "pending-rollback",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/pending-rollback.txt"
+                  },
+                  {
+                      "group":  "rollback",
+                      "name":  "to-version",
+                      "command":  "tf rollback /toversion:C84 Main\\golden-2610071920 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "rollback/to-version.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "pending-rollback-to-version",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/pending-rollback-to-version.txt"
+                  },
+                  {
+                      "group":  "workspace",
+                      "name":  "new-local",
+                      "command":  "tf workspace /new \u003cWORKSPACE_B\u003e /collection:\u003cCOLLECTION\u003e /location:local \"/comment:TfPortable golden capture\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workspace/new-local.txt"
+                  },
+                  {
+                      "group":  "lock",
+                      "name":  "checkin-lock",
+                      "command":  "tf lock /lock:checkin Main\\golden-2610071920\\c.txt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "lock/checkin-lock.txt"
+                  },
+                  {
+                      "group":  "properties",
+                      "name":  "locked-file",
+                      "command":  "tf properties Main\\golden-2610071920\\c.txt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "properties/locked-file.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "all-users",
+                      "command":  "tf status $/TfsPortableTestRepo/Main/golden-2610071920 /recursive /user:* /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/all-users.txt"
+                  },
+                  {
+                      "group":  "checkout",
+                      "name":  "locked-by-other",
+                      "command":  "tf checkout Main\\golden-2610071920\\c.txt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkout/locked-by-other.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "blocked-by-lock",
+                      "command":  "tf checkin \u003cWORKSPACE_B_ROOT\u003e /recursive \"/comment:Should fail because of the lock\" /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "checkin/blocked-by-lock.txt"
+                  },
+                  {
+                      "group":  "lock",
+                      "name":  "remove",
+                      "command":  "tf lock /lock:none Main\\golden-2610071920\\c.txt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "lock/remove.txt"
+                  },
+                  {
+                      "group":  "lock",
+                      "name":  "checkout-lock",
+                      "command":  "tf lock /lock:checkout Main\\golden-2610071920\\c.txt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "lock/checkout-lock.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "from-second-workspace",
+                      "command":  "tf checkin \u003cWORKSPACE_B_ROOT\u003e /recursive \"/comment:Golden: change c.txt in workspace B (2610071920)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/from-second-workspace.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "conflict",
+                      "command":  "tf get \u003cWORKSPACE_ROOT\u003e /recursive /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "get/conflict.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "with-conflict",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/with-conflict.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "list",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e /recursive /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "resolve/list.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "list-preview",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e /recursive /preview /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "resolve/list-preview.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "accept-theirs-preview",
+                      "command":  "tf resolve Main\\golden-2610071920\\c.txt /auto:AcceptTheirs /preview /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "resolve/accept-theirs-preview.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "accept-yours",
+                      "command":  "tf resolve Main\\golden-2610071920\\c.txt /auto:AcceptYours /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "resolve/accept-yours.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-resolve",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-resolve.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "from-second-workspace-2",
+                      "command":  "tf checkin \u003cWORKSPACE_B_ROOT\u003e /recursive \"/comment:Golden: change c.txt in workspace B again (2610071920)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/from-second-workspace-2.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "out-of-date",
+                      "command":  "tf checkin Main\\golden-2610071920\\c.txt \"/comment:Should conflict\" /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "checkin/out-of-date.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-checkin-conflict",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-checkin-conflict.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "specific-version",
+                      "command":  "tf get Main\\golden-2610071920\\c.txt /version:C84 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "get/specific-version.txt"
+                  },
+                  {
+                      "group":  "localversions",
+                      "name":  "after-old-get",
+                      "command":  "tf localversions Main\\golden-2610071920 /recursive",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "localversions/after-old-get.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "back-to-latest",
+                      "command":  "tf get Main\\golden-2610071920\\c.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "get/back-to-latest.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "force",
+                      "command":  "tf get Main\\golden-2610071920 /recursive /force /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "get/force.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "all",
+                      "command":  "tf get Main\\golden-2610071920 /recursive /all /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "get/all.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "date-version-preview",
+                      "command":  "tf get Main\\golden-2610071920 /recursive /version:D2025-10-07 /preview /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "get/date-version-preview.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "candidates",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/candidates.txt"
+                  },
+                  {
+                      "group":  "reconcile",
+                      "name":  "promote-preview",
+                      "command":  "tf reconcile /promote Main\\golden-2610071920 /recursive /preview /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "reconcile/promote-preview.txt"
+                  },
+                  {
+                      "group":  "reconcile",
+                      "name":  "promote",
+                      "command":  "tf reconcile /promote Main\\golden-2610071920 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "reconcile/promote.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-promote",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-promote.txt"
+                  },
+                  {
+                      "group":  "reconcile",
+                      "name":  "clean-preview",
+                      "command":  "tf reconcile /clean Main\\golden-2610071920 /recursive /preview /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "reconcile/clean-preview.txt"
+                  },
+                  {
+                      "group":  "reconcile",
+                      "name":  "clean",
+                      "command":  "tf reconcile /clean Main\\golden-2610071920 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "reconcile/clean.txt"
+                  },
+                  {
+                      "group":  "shelve",
+                      "name":  "create",
+                      "command":  "tf shelve Golden-2610071920 Main\\golden-2610071920 /recursive \"/comment:Golden shelveset (2610071920)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "shelve/create.txt"
+                  },
+                  {
+                      "group":  "shelvesets",
+                      "name":  "list",
+                      "command":  "tf shelvesets",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "shelvesets/list.txt"
+                  },
+                  {
+                      "group":  "shelvesets",
+                      "name":  "detailed",
+                      "command":  "tf shelvesets Golden-2610071920 /format:detailed",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "shelvesets/detailed.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "shelveset",
+                      "command":  "tf status /shelveset:Golden-2610071920 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/shelveset.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "shelveset",
+                      "command":  "tf difference /shelveset:Golden-2610071920 /format:unified /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/shelveset.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "shelveset",
+                      "command":  "tf view /shelveset:Golden-2610071920 $/TfsPortableTestRepo/Main/golden-2610071920/a-renamed.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/shelveset.txt"
+                  },
+                  {
+                      "group":  "unshelve",
+                      "name":  "basic",
+                      "command":  "tf unshelve Golden-2610071920 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "unshelve/basic.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-unshelve",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-unshelve.txt"
+                  },
+                  {
+                      "group":  "shelve",
+                      "name":  "delete",
+                      "command":  "tf shelve /delete Golden-2610071920 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "shelve/delete.txt"
+                  },
+                  {
+                      "group":  "shelvesets",
+                      "name":  "not-found",
+                      "command":  "tf shelvesets Golden-2610071920",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "shelvesets/not-found.txt"
+                  },
+                  {
+                      "group":  "unshelve",
+                      "name":  "not-found",
+                      "command":  "tf unshelve Golden-2610071920 /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "unshelve/not-found.txt"
+                  },
+                  {
+                      "group":  "branch",
+                      "name":  "create",
+                      "command":  "tf branch $/TfsPortableTestRepo/Main $/TfsPortableTestRepo/Feature-2610071920 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "branch/create.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "pending-branch",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/pending-branch.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "branch",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e /recursive \"/comment:Golden: branch Main to Feature (2610071920)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/branch.txt"
+                  },
+                  {
+                      "group":  "branches",
+                      "name":  "after-feature",
+                      "command":  "tf branches $/TfsPortableTestRepo/Main",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "branches/after-feature.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "candidate-before-merge",
+                      "command":  "tf merge /candidate $/TfsPortableTestRepo/Main $/TfsPortableTestRepo/Release /recursive",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/candidate-before-merge.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "preview",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main $/TfsPortableTestRepo/Release /recursive /preview /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/preview.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "all",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main $/TfsPortableTestRepo/Release /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/all.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "pending-merge",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/pending-merge.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "merge",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e /recursive \"/comment:Golden: merge Main to Release (2610071920)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/merge.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "merge-many-items",
+                      "command":  "tf changeset 91 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "changeset/merge-many-items.txt"
+                  },
+                  {
+                      "group":  "merges",
+                      "name":  "extended",
+                      "command":  "tf merges $/TfsPortableTestRepo/Main $/TfsPortableTestRepo/Release /recursive /extended",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "merges/extended.txt"
+                  },
+                  {
+                      "group":  "merges",
+                      "name":  "showall",
+                      "command":  "tf merges $/TfsPortableTestRepo/Main $/TfsPortableTestRepo/Release /recursive /showall",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merges/showall.txt"
+                  },
+                  {
+                      "group":  "workspace",
+                      "name":  "delete-local",
+                      "command":  "tf workspace /delete \u003cWORKSPACE_B\u003e /collection:\u003cCOLLECTION\u003e /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workspace/delete-local.txt"
+                  }
+              ]
+}

@@ -1,0 +1,13 @@
+# case: general/outside-workspace
+# command: tf status /recursive /noprompt
+# cwd: C:\Users\<USER>\AppData\Local\Temp
+# exit: 100
+# timed-out: false
+# duration-ms: 444
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+
+==== stderr ====
+Nejde určit server správy zdrojového kódu.

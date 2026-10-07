@@ -1,0 +1,51 @@
+# case: get/server-workspace
+# command: tf get <WORKSPACE_S_ROOT>\Main /recursive /noprompt
+# cwd: <WORKSPACE_S_ROOT>\Main
+# exit: 0
+# timed-out: false
+# duration-ms: 1829
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071925
+==== stdout ====
+<WORKSPACE_S_ROOT>:
+Načítání Main
+
+<WORKSPACE_S_ROOT>\Main:
+Načítání .tfignore
+Načítání assets
+Načítání config
+Načítání data
+Načítání docs
+Načítání golden-2610071920
+Načítání README.md
+Načítání src
+
+<WORKSPACE_S_ROOT>\Main\assets:
+Načítání logo.png
+
+<WORKSPACE_S_ROOT>\Main\config:
+Načítání app.config
+
+<WORKSPACE_S_ROOT>\Main\data:
+Načítání counter.txt
+Načítání cp1250.txt
+Načítání sample-lf.txt
+Načítání utf8-bom.txt
+
+<WORKSPACE_S_ROOT>\Main\docs:
+Načítání Příručka.md
+
+<WORKSPACE_S_ROOT>\Main\golden-2610071920:
+Načítání a-renamed.txt
+Načítání c.txt
+
+<WORKSPACE_S_ROOT>\Main\src:
+Načítání File With Spaces.cs
+Načítání Program.cs
+Načítání Utils
+
+<WORKSPACE_S_ROOT>\Main\src\Utils:
+Načítání TextHelper.cs
+
+==== stderr ====

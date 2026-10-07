@@ -1,0 +1,12 @@
+# case: workspace/delete-server
+# command: tf workspace /delete <WORKSPACE_S> /collection:<COLLECTION> /noprompt
+# cwd: <LOCAL_ROOT_S>
+# exit: 0
+# timed-out: false
+# duration-ms: 1335
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071925
+==== stdout ====
+
+==== stderr ====

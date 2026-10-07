@@ -1,0 +1,17 @@
+# case: checkin/out-of-date
+# command: tf checkin Main\golden-2610071920\c.txt "/comment:Should conflict" /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 100
+# timed-out: false
+# duration-ms: 3443
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071920
+==== stdout ====
+Main\golden-2610071920:
+Vrácení se změnami upravit: c.txt
+
+==== stderr ====
+Konflikt: A newer version of $/TfsPortableTestRepo/Main/golden-2610071920/c.txt exists on the server.
+
+TF10141: Žádné soubory se nevrátily zpět se změnami: vyřešte konflikty a zkuste to znova.

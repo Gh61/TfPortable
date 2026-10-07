@@ -1,0 +1,55 @@
+# case: status/pending-branch
+# command: tf status /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 672
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071920
+==== stdout ====
+Název souboru       Změnit Místní cesta
+------------------- ------ ----------------------------------------------------
+$/TfsPortableTestRepo
+Feature-2610071920  větev  <WORKSPACE_ROOT>\Feature-2610071920
+
+$/TfsPortableTestRepo/Feature-2610071920
+.tfignore           větev  <WORKSPACE_ROOT>\Feature-2610071920\.tfignore
+assets              větev  <WORKSPACE_ROOT>\Feature-2610071920\assets
+config              větev  <WORKSPACE_ROOT>\Feature-2610071920\config
+data                větev  <WORKSPACE_ROOT>\Feature-2610071920\data
+docs                větev  <WORKSPACE_ROOT>\Feature-2610071920\docs
+golden-2610071920   větev  <WORKSPACE_ROOT>\Feature-2610071920\golden-2610071920
+README.md           větev  <WORKSPACE_ROOT>\Feature-2610071920\README.md
+src                 větev  <WORKSPACE_ROOT>\Feature-2610071920\src
+
+$/TfsPortableTestRepo/Feature-2610071920/assets
+logo.png            větev  <WORKSPACE_ROOT>\Feature-2610071920\assets\logo.png
+
+$/TfsPortableTestRepo/Feature-2610071920/config
+app.config          větev  <WORKSPACE_ROOT>\Feature-2610071920\config\app.config
+
+$/TfsPortableTestRepo/Feature-2610071920/data
+counter.txt         větev  <WORKSPACE_ROOT>\Feature-2610071920\data\counter.txt
+cp1250.txt          větev  <WORKSPACE_ROOT>\Feature-2610071920\data\cp1250.txt
+sample-lf.txt       větev  <WORKSPACE_ROOT>\Feature-2610071920\data\sample-lf.txt
+utf8-bom.txt        větev  <WORKSPACE_ROOT>\Feature-2610071920\data\utf8-bom.txt
+
+$/TfsPortableTestRepo/Feature-2610071920/docs
+Příručka.md         větev  <WORKSPACE_ROOT>\Feature-2610071920\docs\Příručka.md
+
+$/TfsPortableTestRepo/Feature-2610071920/golden-2610071920
+a-renamed.txt       větev  <WORKSPACE_ROOT>\Feature-2610071920\golden-2610071920\a-renamed.txt
+c.txt               větev  <WORKSPACE_ROOT>\Feature-2610071920\golden-2610071920\c.txt
+
+$/TfsPortableTestRepo/Feature-2610071920/src
+File With Spaces.cs větev  <WORKSPACE_ROOT>\Feature-2610071920\src\File With Spaces.cs
+Program.cs          větev  <WORKSPACE_ROOT>\Feature-2610071920\src\Program.cs
+Utils               větev  <WORKSPACE_ROOT>\Feature-2610071920\src\Utils
+
+$/TfsPortableTestRepo/Feature-2610071920/src/Utils
+TextHelper.cs       větev  <WORKSPACE_ROOT>\Feature-2610071920\src\Utils\TextHelper.cs
+
+Změny: 22
+
+==== stderr ====

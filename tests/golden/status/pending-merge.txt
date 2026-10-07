@@ -1,0 +1,23 @@
+# case: status/pending-merge
+# command: tf status /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 648
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071920
+==== stdout ====
+Název souboru     Změnit           Místní cesta
+----------------- ---------------- --------------------------------------------
+$/TfsPortableTestRepo/Release
+golden-2610071920 sloučit, větev   <WORKSPACE_ROOT>\Release\golden-2610071920
+README.md         sloučit, upravit <WORKSPACE_ROOT>\Release\README.md
+
+$/TfsPortableTestRepo/Release/golden-2610071920
+a-renamed.txt     sloučit, větev   <WORKSPACE_ROOT>\Release\golden-2610071920\a-renamed.txt
+c.txt             sloučit, větev   <WORKSPACE_ROOT>\Release\golden-2610071920\c.txt
+
+Změny: 4
+
+==== stderr ====

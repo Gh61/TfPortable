@@ -1,0 +1,13 @@
+# case: history/format-xml
+# command: tf history $/TfsPortableTestRepo/Main /recursive /format:xml /stopafter:3 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 100
+# timed-out: false
+# duration-ms: 510
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071925
+==== stdout ====
+
+==== stderr ====
+TF10120: Hodnota xml není podporována pro možnost format.

@@ -1,0 +1,34 @@
+# case: localversions/detailed
+# command: tf localversions Main /recursive /format:detailed
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 571
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+
+<WORKSPACE_ROOT>\Main;C75
+<WORKSPACE_ROOT>\Main\.tfignore;C75
+<WORKSPACE_ROOT>\Main\assets;C75
+<WORKSPACE_ROOT>\Main\config;C75
+<WORKSPACE_ROOT>\Main\data;C75
+<WORKSPACE_ROOT>\Main\docs;C75
+<WORKSPACE_ROOT>\Main\README.md;C83
+<WORKSPACE_ROOT>\Main\src;C75
+<WORKSPACE_ROOT>\Main\assets\logo.png;C75
+<WORKSPACE_ROOT>\Main\config\app.config;C75
+<WORKSPACE_ROOT>\Main\data\counter.txt;C75
+<WORKSPACE_ROOT>\Main\data\cp1250.txt;C75
+<WORKSPACE_ROOT>\Main\data\sample-lf.txt;C75
+<WORKSPACE_ROOT>\Main\data\utf8-bom.txt;C75
+<WORKSPACE_ROOT>\Main\docs\Příručka.md;C75
+<WORKSPACE_ROOT>\Main\src\File With Spaces.cs;C75
+<WORKSPACE_ROOT>\Main\src\Program.cs;C81
+<WORKSPACE_ROOT>\Main\src\Utils;C75
+<WORKSPACE_ROOT>\Main\src\Utils\TextHelper.cs;C78
+
+Počet položek: 19
+
+==== stderr ====

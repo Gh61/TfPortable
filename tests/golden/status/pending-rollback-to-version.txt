@@ -1,0 +1,19 @@
+# case: status/pending-rollback-to-version
+# command: tf status /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 657
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071920
+==== stdout ====
+Název souboru Změnit                            Místní cesta
+------------- --------------------------------- -------------------------------
+$/TfsPortableTestRepo/Main/golden-2610071920
+a.txt         přejmenovat, upravit, vrátit zpět <WORKSPACE_ROOT>\Main\golden-2610071920\a.txt
+b.txt         obnovit, vrátit zpět              <WORKSPACE_ROOT>\Main\golden-2610071920\b.txt
+
+Změny: 2
+
+==== stderr ====

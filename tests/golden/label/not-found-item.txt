@@ -1,0 +1,13 @@
+# case: label/not-found-item
+# command: tf label golden-2610071920@$/TfsPortableTestRepo $/TfsPortableTestRepo/Main/golden-2610071920/no-such.txt /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 100
+# timed-out: false
+# duration-ms: 1105
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071920
+==== stdout ====
+
+==== stderr ====
+VS403405: The item $/TfsPortableTestRepo/Main/golden-2610071920/no-such.txt does not exist on the server, or you do not have permission to access it.

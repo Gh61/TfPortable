@@ -1,0 +1,710 @@
+{
+    "capturedAt":  "2026-10-07T19:10:04.0915443+02:00",
+    "tfVersion":  "18.10.12215.6 built by: releases/dev18/18.10 (760940044d)",
+    "consoleEncoding":  "windows-1250",
+    "culture":  "cs-CZ",
+    "manifest":  {
+                     "changesets":  {
+                                        "initial":  75,
+                                        "editProgram":  76,
+                                        "bugfix123":  77,
+                                        "rename":  78,
+                                        "delete":  79,
+                                        "branch":  80,
+                                        "fixMain":  81,
+                                        "mergeToRelease":  82,
+                                        "unmerged":  83
+                                    },
+                     "label":  "v1.0@$/TfsPortableTestRepo"
+                 },
+    "cases":  [
+                  {
+                      "group":  "general",
+                      "name":  "no-arguments",
+                      "command":  "tf ",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "general/no-arguments.txt"
+                  },
+                  {
+                      "group":  "general",
+                      "name":  "help",
+                      "command":  "tf help",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "general/help.txt"
+                  },
+                  {
+                      "group":  "general",
+                      "name":  "help-status",
+                      "command":  "tf help status",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "general/help-status.txt"
+                  },
+                  {
+                      "group":  "general",
+                      "name":  "unknown-command",
+                      "command":  "tf nosuchcommand",
+                      "exitCode":  2,
+                      "timedOut":  false,
+                      "file":  "general/unknown-command.txt"
+                  },
+                  {
+                      "group":  "general",
+                      "name":  "unknown-switch",
+                      "command":  "tf status /nosuchswitch",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "general/unknown-switch.txt"
+                  },
+                  {
+                      "group":  "general",
+                      "name":  "vc-prefix",
+                      "command":  "tf vc status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "general/vc-prefix.txt"
+                  },
+                  {
+                      "group":  "general",
+                      "name":  "dash-switches",
+                      "command":  "tf status -recursive -noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "general/dash-switches.txt"
+                  },
+                  {
+                      "group":  "general",
+                      "name":  "short-switches",
+                      "command":  "tf status -R -I",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "general/short-switches.txt"
+                  },
+                  {
+                      "group":  "general",
+                      "name":  "outside-workspace",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "general/outside-workspace.txt"
+                  },
+                  {
+                      "group":  "workspaces",
+                      "name":  "list",
+                      "command":  "tf workspaces /collection:\u003cCOLLECTION\u003e",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workspaces/list.txt"
+                  },
+                  {
+                      "group":  "workspaces",
+                      "name":  "detailed",
+                      "command":  "tf workspaces /collection:\u003cCOLLECTION\u003e /format:detailed",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workspaces/detailed.txt"
+                  },
+                  {
+                      "group":  "workspaces",
+                      "name":  "other-computer",
+                      "command":  "tf workspaces /collection:\u003cCOLLECTION\u003e /computer:NoSuchComputer",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "workspaces/other-computer.txt"
+                  },
+                  {
+                      "group":  "workfold",
+                      "name":  "current",
+                      "command":  "tf workfold",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workfold/current.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "clean",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/clean.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "clean-detailed",
+                      "command":  "tf status /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/clean-detailed.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "server-path",
+                      "command":  "tf status $/TfsPortableTestRepo/Main /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/server-path.txt"
+                  },
+                  {
+                      "group":  "dir",
+                      "name":  "folder",
+                      "command":  "tf dir $/TfsPortableTestRepo/Main",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "dir/folder.txt"
+                  },
+                  {
+                      "group":  "dir",
+                      "name":  "recursive",
+                      "command":  "tf dir $/TfsPortableTestRepo/Main /recursive",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "dir/recursive.txt"
+                  },
+                  {
+                      "group":  "dir",
+                      "name":  "folders-only",
+                      "command":  "tf dir $/TfsPortableTestRepo/Main /recursive /folders",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "dir/folders-only.txt"
+                  },
+                  {
+                      "group":  "dir",
+                      "name":  "deleted",
+                      "command":  "tf dir $/TfsPortableTestRepo/Main /recursive /deleted",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "dir/deleted.txt"
+                  },
+                  {
+                      "group":  "dir",
+                      "name":  "at-version",
+                      "command":  "tf dir $/TfsPortableTestRepo/Main /recursive /version:C75",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "dir/at-version.txt"
+                  },
+                  {
+                      "group":  "dir",
+                      "name":  "not-found",
+                      "command":  "tf dir $/TfsPortableTestRepo/NoSuchFolder",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "dir/not-found.txt"
+                  },
+                  {
+                      "group":  "localversions",
+                      "name":  "recursive",
+                      "command":  "tf localversions Main /recursive",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "localversions/recursive.txt"
+                  },
+                  {
+                      "group":  "localversions",
+                      "name":  "detailed",
+                      "command":  "tf localversions Main /recursive /format:detailed",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "localversions/detailed.txt"
+                  },
+                  {
+                      "group":  "properties",
+                      "name":  "local-file",
+                      "command":  "tf properties Main\\src\\Program.cs",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "properties/local-file.txt"
+                  },
+                  {
+                      "group":  "properties",
+                      "name":  "info-alias",
+                      "command":  "tf info Main\\src\\Utils\\TextHelper.cs",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "properties/info-alias.txt"
+                  },
+                  {
+                      "group":  "properties",
+                      "name":  "server-version",
+                      "command":  "tf properties $/TfsPortableTestRepo/Main/src/Program.cs /version:C75",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "properties/server-version.txt"
+                  },
+                  {
+                      "group":  "properties",
+                      "name":  "czech-name",
+                      "command":  "tf properties Main\\docs\\Příručka.md",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "properties/czech-name.txt"
+                  },
+                  {
+                      "group":  "properties",
+                      "name":  "recursive",
+                      "command":  "tf properties Main\\data /recursive",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "properties/recursive.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "brief",
+                      "command":  "tf history $/TfsPortableTestRepo/Main /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/brief.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "detailed-stopafter",
+                      "command":  "tf history $/TfsPortableTestRepo/Main /recursive /format:detailed /stopafter:3 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/detailed-stopafter.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "renamed-file",
+                      "command":  "tf history Main\\src\\Utils\\TextHelper.cs /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/renamed-file.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "range",
+                      "command":  "tf history $/TfsPortableTestRepo/Main /recursive /version:C76~C78 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/range.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "short-version",
+                      "command":  "tf history $/TfsPortableTestRepo/Main/src/Program.cs /v:C81 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/short-version.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "release-branch",
+                      "command":  "tf history $/TfsPortableTestRepo/Release /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/release-branch.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "not-found",
+                      "command":  "tf history $/TfsPortableTestRepo/NoSuchFile.cs /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/not-found.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "vc-dash",
+                      "command":  "tf vc history $/TfsPortableTestRepo/Main/src/Program.cs -noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/vc-dash.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "initial",
+                      "command":  "tf changeset 75 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "changeset/initial.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "edit",
+                      "command":  "tf changeset 76 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "changeset/edit.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "rename",
+                      "command":  "tf changeset 78 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "changeset/rename.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "delete",
+                      "command":  "tf changeset 79 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "changeset/delete.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "branch",
+                      "command":  "tf changeset 80 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "changeset/branch.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "merge",
+                      "command":  "tf changeset 82 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "changeset/merge.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "latest",
+                      "command":  "tf changeset /latest /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "changeset/latest.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "not-found",
+                      "command":  "tf changeset 99999999 /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "changeset/not-found.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "vc-dash",
+                      "command":  "tf vc changeset 81 -noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "changeset/vc-dash.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "server-version",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/src/Program.cs /version:C75 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/server-version.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "semicolon-version",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/src/Program.cs;C75 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/semicolon-version.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "changeset-no-c",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/src/Program.cs /version:75 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/changeset-no-c.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "label-version",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/src/Program.cs /version:Lv1.0@$/TfsPortableTestRepo /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/label-version.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "local-path",
+                      "command":  "tf view Main\\README.md /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/local-path.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "forward-slashes",
+                      "command":  "tf view \u003cWORKSPACE_ROOT\u003e/Main/README.md /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/forward-slashes.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "utf8-bom",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/data/utf8-bom.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/utf8-bom.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "cp1250",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/data/cp1250.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/cp1250.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "czech-name",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/docs/Příručka.md /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/czech-name.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "deleted-file",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/docs/obsolete.md /version:C75 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/deleted-file.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "not-found",
+                      "command":  "tf view $/TfsPortableTestRepo/NoSuchFile.cs /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "view/not-found.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "server-unified",
+                      "command":  "tf difference $/TfsPortableTestRepo/Main/src/Program.cs /version:C75~C81 /format:unified /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/server-unified.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "server-brief",
+                      "command":  "tf difference $/TfsPortableTestRepo/Main/src/Program.cs /version:C75~C81 /format:brief /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/server-brief.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "no-local-change",
+                      "command":  "tf diff Main\\src\\Program.cs /format:unified /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/no-local-change.txt"
+                  },
+                  {
+                      "group":  "labels",
+                      "name":  "all",
+                      "command":  "tf labels",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "labels/all.txt"
+                  },
+                  {
+                      "group":  "labels",
+                      "name":  "detailed",
+                      "command":  "tf labels /format:detailed v1.0@$/TfsPortableTestRepo",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "labels/detailed.txt"
+                  },
+                  {
+                      "group":  "branches",
+                      "name":  "main",
+                      "command":  "tf branches $/TfsPortableTestRepo/Main",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "branches/main.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "candidate",
+                      "command":  "tf merge /candidate $/TfsPortableTestRepo/Main $/TfsPortableTestRepo/Release /recursive",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/candidate.txt"
+                  },
+                  {
+                      "group":  "merges",
+                      "name":  "main-to-release",
+                      "command":  "tf merges $/TfsPortableTestRepo/Main $/TfsPortableTestRepo/Release /recursive",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merges/main-to-release.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "preview",
+                      "command":  "tf get /recursive /preview /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "get/preview.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "up-to-date",
+                      "command":  "tf get /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "get/up-to-date.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "no-conflicts",
+                      "command":  "tf resolve /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "resolve/no-conflicts.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "detected-adds",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/detected-adds.txt"
+                  },
+                  {
+                      "group":  "add",
+                      "name":  "folder-recursive",
+                      "command":  "tf add Main\\_golden /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "add/folder-recursive.txt"
+                  },
+                  {
+                      "group":  "add",
+                      "name":  "already-versioned",
+                      "command":  "tf add Main\\src\\Program.cs /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "add/already-versioned.txt"
+                  },
+                  {
+                      "group":  "add",
+                      "name":  "ignored-file",
+                      "command":  "tf add Main\\src\\bin\\Debug\\ignored.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "add/ignored-file.txt"
+                  },
+                  {
+                      "group":  "add",
+                      "name":  "not-found",
+                      "command":  "tf add Main\\NoSuchFile.txt /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "add/not-found.txt"
+                  },
+                  {
+                      "group":  "checkout",
+                      "name":  "file",
+                      "command":  "tf checkout Main\\README.md",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkout/file.txt"
+                  },
+                  {
+                      "group":  "checkout",
+                      "name":  "edit-alias",
+                      "command":  "tf edit Main\\config\\app.config",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkout/edit-alias.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "local-edit",
+                      "command":  "tf diff Main\\src\\Program.cs /format:unified /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/local-edit.txt"
+                  },
+                  {
+                      "group":  "rename",
+                      "name":  "file",
+                      "command":  "tf rename Main\\data\\sample-lf.txt Main\\data\\sample-renamed.txt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "rename/file.txt"
+                  },
+                  {
+                      "group":  "rename",
+                      "name":  "not-found",
+                      "command":  "tf rename Main\\data\\no-such.txt Main\\data\\other.txt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "rename/not-found.txt"
+                  },
+                  {
+                      "group":  "delete",
+                      "name":  "file",
+                      "command":  "tf delete Main\\assets\\logo.png",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "delete/file.txt"
+                  },
+                  {
+                      "group":  "delete",
+                      "name":  "not-found",
+                      "command":  "tf delete Main\\NoSuchFile.txt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "delete/not-found.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "pending",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/pending.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "pending-detailed",
+                      "command":  "tf status /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/pending-detailed.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "with-pending",
+                      "command":  "tf get /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "get/with-pending.txt"
+                  },
+                  {
+                      "group":  "undo",
+                      "name":  "recursive",
+                      "command":  "tf undo Main /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "undo/recursive.txt"
+                  },
+                  {
+                      "group":  "undo",
+                      "name":  "nothing-to-undo",
+                      "command":  "tf undo Main\\README.md /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "undo/nothing-to-undo.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-undo",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-undo.txt"
+                  }
+              ]
+}

@@ -1,0 +1,21 @@
+# case: checkin/add-files
+# command: tf checkin <WORKSPACE_ROOT> /recursive "/comment:Golden: add files (2610071920)" /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 4256
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071920
+==== stdout ====
+Main:
+Vrácení se změnami přidat: golden-2610071920
+
+Main\golden-2610071920:
+Vrácení se změnami přidat: a.txt
+Vrácení se změnami přidat: b.txt
+Vrácení se změnami přidat: c.txt
+
+Sada změn #84 se vrátila.
+
+==== stderr ====

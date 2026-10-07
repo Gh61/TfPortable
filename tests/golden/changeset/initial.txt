@@ -1,0 +1,40 @@
+# case: changeset/initial
+# command: tf changeset 75 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1655
+# console-encoding: windows-1250
+# vslang: 1033
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Sada změn: 75
+Uživatel: <OWNER>
+Datum: středa 7. října 2026 19:06:51
+
+Komentář:
+  Initial content
+
+Položky:
+  přidat $/TfsPortableTestRepo/Main
+  přidat $/TfsPortableTestRepo/Main/.tfignore
+  přidat $/TfsPortableTestRepo/Main/assets
+  přidat $/TfsPortableTestRepo/Main/config
+  přidat $/TfsPortableTestRepo/Main/data
+  přidat $/TfsPortableTestRepo/Main/docs
+  přidat $/TfsPortableTestRepo/Main/README.md
+  přidat $/TfsPortableTestRepo/Main/src
+  přidat $/TfsPortableTestRepo/Main/assets/logo.png
+  přidat $/TfsPortableTestRepo/Main/config/app.config
+  přidat $/TfsPortableTestRepo/Main/data/counter.txt
+  přidat $/TfsPortableTestRepo/Main/data/cp1250.txt
+  přidat $/TfsPortableTestRepo/Main/data/sample-lf.txt
+  přidat $/TfsPortableTestRepo/Main/data/utf8-bom.txt
+  přidat $/TfsPortableTestRepo/Main/docs/obsolete.md
+  přidat $/TfsPortableTestRepo/Main/docs/Příručka.md
+  přidat $/TfsPortableTestRepo/Main/src/File With Spaces.cs
+  přidat $/TfsPortableTestRepo/Main/src/Program.cs
+  přidat $/TfsPortableTestRepo/Main/src/Utils
+  přidat $/TfsPortableTestRepo/Main/src/Utils/StringHelper.cs
+
+==== stderr ====

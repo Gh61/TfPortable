@@ -1,0 +1,52 @@
+# case: checkin/branch
+# command: tf checkin <WORKSPACE_ROOT> /recursive "/comment:Golden: branch Main to Feature (2610071920)" /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 2646
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610071920
+==== stdout ====
+Vrácení se změnami větev: Feature-2610071920
+
+Feature-2610071920:
+Vrácení se změnami větev: .tfignore
+Vrácení se změnami větev: assets
+Vrácení se změnami větev: config
+Vrácení se změnami větev: data
+Vrácení se změnami větev: docs
+Vrácení se změnami větev: golden-2610071920
+Vrácení se změnami větev: README.md
+Vrácení se změnami větev: src
+
+Feature-2610071920\assets:
+Vrácení se změnami větev: logo.png
+
+Feature-2610071920\config:
+Vrácení se změnami větev: app.config
+
+Feature-2610071920\data:
+Vrácení se změnami větev: counter.txt
+Vrácení se změnami větev: cp1250.txt
+Vrácení se změnami větev: sample-lf.txt
+Vrácení se změnami větev: utf8-bom.txt
+
+Feature-2610071920\docs:
+Vrácení se změnami větev: Příručka.md
+
+Feature-2610071920\golden-2610071920:
+Vrácení se změnami větev: a-renamed.txt
+Vrácení se změnami větev: c.txt
+
+Feature-2610071920\src:
+Vrácení se změnami větev: File With Spaces.cs
+Vrácení se změnami větev: Program.cs
+Vrácení se změnami větev: Utils
+
+Feature-2610071920\src\Utils:
+Vrácení se změnami větev: TextHelper.cs
+
+Sada změn #90 se vrátila.
+
+==== stderr ====
