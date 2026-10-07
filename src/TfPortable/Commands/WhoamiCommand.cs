@@ -19,7 +19,49 @@ namespace TfPortable.Commands
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            using var context = ContextResolver.Resolve(commandLine, toolName, requireWorkspace: false);
+            WorkspaceContext context;
+            try
+            {
+                context = ContextResolver.Resolve(commandLine, toolName, requireWorkspace: false);
+            }
+            catch (Exception) when (commandLine.Has("verbose") && TryDiagnose(commandLine, toolName))
+            {
+                throw;
+            }
+
+            using (context)
+            {
+                return Run(context, output, toolName);
+            }
+        }
+
+        /// <summary>Spike diagnostics with the stored PAT: tries the connection variants and prints them to stderr. Always returns false.</summary>
+        private static bool TryDiagnose(CommandLine commandLine, string toolName)
+        {
+            try
+            {
+                string collectionUrl = LoginCommand.ResolveCollection(commandLine, toolName);
+                string normalized = Auth.CollectionUrl.Normalize(collectionUrl);
+                var stored = Auth.CredentialStore.Read(normalized);
+                if (stored != null)
+                {
+                    Console.Error.WriteLine("Connection variants (spike diagnostics, stored PAT):");
+                    foreach (string line in Auth.ConnectionDiagnostics.TryVariants(collectionUrl, normalized, stored.Pat))
+                    {
+                        Console.Error.WriteLine("  " + line);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("Diagnostics failed: " + ex.Message);
+            }
+
+            return false;
+        }
+
+        private static int Run(WorkspaceContext context, OutputWriter output, string toolName)
+        {
             output.Collection = context.CollectionUrl;
             output.Workspace = context.Workspace == null ? null : context.WorkspaceSpec;
 

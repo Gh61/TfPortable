@@ -9,7 +9,10 @@ using TfPortable.Output;
 
 namespace TfPortable.Commands
 {
-    /// <summary>`tfp login [/collection:&lt;url&gt;] [/pat:-]`: asks for a PAT, verifies it and stores it (SPEC.md "Příkazy pro správu").</summary>
+    /// <summary>
+    /// `tfp login [/collection:&lt;url&gt;] [/pat:-]`: asks for a PAT, verifies it over REST, stores it, then checks the
+    /// version control (SOAP) connection and the Code scope (SPEC.md "Příkazy pro správu").
+    /// </summary>
     internal sealed class LoginCommand : ICommand
     {
         public string Name => "login";
@@ -44,47 +47,67 @@ namespace TfPortable.Commands
                     $"Run '{toolName} login /collection:{normalized}' in your own terminal.");
             }
 
-            bool codeScope;
-            Microsoft.TeamFoundation.Framework.Client.TeamFoundationIdentity identity;
+            // 1. Verify the token over REST; this is independent of the SOAP client.
+            var rest = ConnectionFactory.CheckPatOverRest(collectionUrl, pat);
+            if (!rest.Ok)
+            {
+                throw new TfpException(ErrorCodes.PatRejected, ExitCodes.Authentication,
+                    $"The server {normalized} rejected the PAT ({pat.Length} characters); nothing was stored. {rest.Summary}",
+                    $"Check that the token was copied completely, is not expired and belongs to this organization. Alternative input without the hidden prompt: 'Get-Clipboard | {toolName} login /collection:{normalized} /pat:-'.");
+            }
+
+            // 2. Store it.
+            var storedAt = DateTimeOffset.Now;
+            CredentialStore.Write(normalized, pat, rest.UniqueName, storedAt);
+
+            // 3. Check the version control connection and the Code scope; problems are warnings, the token is valid.
+            bool? codeScope = null;
+            string? soapIdentity = null;
             using (var connection = ConnectionFactory.Open(collectionUrl, pat))
             {
                 try
                 {
-                    identity = ConnectionFactory.Authenticate(connection, normalized, toolName);
+                    var identity = ConnectionFactory.Authenticate(connection);
+                    soapIdentity = identity.DisplayName;
+                    codeScope = ConnectionFactory.HasVersionControlAccess(connection);
                 }
                 catch (Exception ex)
                 {
                     var mapped = ErrorMapper.Map(ex, toolName, normalized);
-                    string diagnostics = ConnectionFactory.RestDiagnostics(collectionUrl, pat);
-                    throw new TfpException(mapped.Code == ErrorCodes.PatRejected ? ErrorCodes.PatRejected : mapped.Code, mapped.ExitCode,
-                        mapped.Code == ErrorCodes.PatRejected ? $"The server {normalized} rejected the PAT ({pat.Length} characters); nothing was stored. {diagnostics}" : $"{mapped.Message} {diagnostics}",
-                        mapped.Code == ErrorCodes.PatRejected
-                            ? $"Check that the token was copied completely, is not expired and belongs to this organization. Alternative input without the hidden prompt: 'Get-Clipboard | {toolName} login /collection:{normalized} /pat:-'. Add /verbose for the full exception."
-                            : mapped.Hint,
-                        mapped.TfCode, mapped.ServerMessage, inner: ex);
+                    output.Warning($"The PAT is stored, but the version control connection failed: {mapped.Code} {mapped.ServerMessage ?? mapped.Message}", mapped.Code,
+                        "Report this; the REST check above shows that the token itself is accepted.");
+                    if (commandLine.Has("verbose"))
+                    {
+                        Console.Error.WriteLine("Connection variants (spike diagnostics):");
+                        foreach (string line in ConnectionDiagnostics.TryVariants(collectionUrl, normalized, pat))
+                        {
+                            Console.Error.WriteLine("  " + line);
+                        }
+                    }
                 }
-
-                codeScope = ConnectionFactory.HasVersionControlAccess(connection);
             }
 
-            var storedAt = DateTimeOffset.Now;
-            CredentialStore.Write(normalized, pat, identity.UniqueName, storedAt);
-
-            if (!codeScope)
+            if (codeScope == false)
             {
-                output.Warning($"The PAT was stored, but the server refused a version control query. The token probably lacks the scope 'Code: Read & write'.", ErrorCodes.PatScope);
+                output.Warning("The PAT was stored, but the server refused a version control query. The token probably lacks the scope 'Code: Read & write'.", ErrorCodes.PatScope);
             }
 
-            output.Line($"PAT for {normalized} stored in the Windows Credential Manager as {identity.DisplayName} ({identity.UniqueName}).");
+            output.Line($"PAT for {normalized} stored in the Windows Credential Manager as {rest.DisplayName} ({rest.UniqueName ?? "unique name unknown"}).");
+            if (soapIdentity != null)
+            {
+                output.Line($"Version control connection verified ({soapIdentity}).");
+            }
+
             output.Line($"Check it with '{toolName} whoami', remove it with '{toolName} logout /collection:{normalized}'.");
 
             output.Success(new JObject
             {
                 ["collection"] = normalized,
-                ["identity"] = new JObject { ["displayName"] = identity.DisplayName, ["uniqueName"] = identity.UniqueName, ["id"] = identity.TeamFoundationId.ToString() },
+                ["identity"] = new JObject { ["displayName"] = rest.DisplayName, ["uniqueName"] = rest.UniqueName, ["id"] = rest.Id },
                 ["stored"] = true,
                 ["storedAt"] = OutputWriter.IsoDate(storedAt),
                 ["codeScope"] = codeScope,
+                ["versionControlConnection"] = soapIdentity != null,
             });
             return ExitCodes.Success;
         }
