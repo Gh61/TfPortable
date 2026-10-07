@@ -44,7 +44,7 @@ Konzolová aplikace v C# pro .NET Framework 4.8 nad oficiálním TFVC klientský
 | Costura.Fody + Fody | aktuální stabilní | Vložení všech spravovaných DLL do exe |
 | Žádná další knihovna pro CLI | – | Parser přepínačů ve stylu tf.exe (`/switch:value`, `-switch:value`) je vlastní, protože běžné knihovny tuto syntaxi neumí |
 
-Credential Manager se volá přes P/Invoke na `advapi32.dll` (`CredReadW`, `CredWriteW`, `CredDeleteW`), bez další závislosti.
+Credential Manager se volá přes P/Invoke na `advapi32.dll` (`CredReadW`, `CredWriteW`, `CredDeleteW`, `CredEnumerateW` pro výčet uložených PAT), bez další závislosti.
 
 **Struktura řešení**
 
@@ -79,7 +79,7 @@ Jediný způsob přihlášení je PAT uložený ve Windows Credential Manageru, 
 **Uložení**
 
 - Typ `CRED_TYPE_GENERIC`, persistence `CRED_PERSIST_LOCAL_MACHINE` (přežije odhlášení, váže se na uživatele a stroj, neroamuje).
-- Target name: `TfPortable:<normalizovaná URL kolekce>`, např. `TfPortable:https://dev.azure.com/contoso`. Normalizace: malá písmena, bez lomítka na konci, `contoso.visualstudio.com` se převede na `dev.azure.com/contoso`.
+- Target name: `TfPortable:<normalizovaná URL kolekce>`, např. `TfPortable:https://dev.azure.com/contoso`. Normalizace: malá písmena, bez lomítka na konci, `contoso.visualstudio.com` se převede na `dev.azure.com/contoso` a případný segment `/DefaultCollection` u Services se odstraní (klient i `tf workspaces` zobrazují kolekci jako `contoso.visualstudio.com\DefaultCollection`, viz golden `workspaces/detailed`). U Serveru zůstává celá URL kolekce včetně názvu kolekce.
 - `UserName` = e-mail identity zjištěný při ověření, `Comment` = datum uložení. PAT je v `CredentialBlob`.
 - Položka je vidět a smazatelná i ručně ve Správci přihlašovacích údajů Windows.
 
@@ -150,7 +150,7 @@ Nástroj musí fungovat v každém adresáři namapovaném do workspace, i když
 
 1. Explicitní přepínače `/collection:<url>` a `/workspace:<name>[;<owner>]`.
 2. Lokální cache workspace: `Workstation.Current.GetLocalWorkspaceInfo(cesta)` od aktuálního adresáře nahoru ke kořeni disku.
-3. Proměnná prostředí `TFP_COLLECTION`, jinak jediný uložený PAT (pokud je ve vaultu právě jeden). Pak dotaz na server `QueryWorkspaces(null, AuthorizedUser, Environment.MachineName)`, výběr workspace, jehož mapování obsahuje aktuální cestu, a `Workstation.Current.UpdateWorkspaceInfoCache(...)`, aby příště stačil krok 2.
+3. Proměnná prostředí `TFP_COLLECTION`, jinak jediný uložený PAT (pokud je ve vaultu právě jeden; zjistí se přes `CredEnumerateW` s filtrem `TfPortable:*`). Pak dotaz na server `QueryWorkspaces(null, AuthorizedUser, Environment.MachineName)`, výběr workspace, jehož mapování obsahuje aktuální cestu, a `Workstation.Current.UpdateWorkspaceInfoCache(...)`, aby příště stačil krok 2.
 4. Nic z toho: chyba `TFP0201 WorkspaceNotFound`, která vypíše prohledané cesty, nalezené workspace na tomto stroji (pokud se podařilo připojit) a návod, jak kolekci zadat.
 
 **Poznámky**
@@ -175,7 +175,7 @@ Syntaxe je převzatá z tf.exe beze změny; odchylky jsou jen tam, kde by kompat
 - Neznámý příkaz: exit kód 2. Neznámý nebo neplatný přepínač: exit kód 100, stejně jako originál (golden výstup general/unknown-switch). V obou případech výpis platných příkazů nebo přepínačů, žádné tiché ignorování.
 - Nápověda, hlášky a rady používají skutečný název spuštěného souboru (`tfp`, nebo `tf` po přejmenování).
 
-\* Přesný seznam aliasů se převezme z nápovědy originálního tf.exe (`tf help <příkaz>`) a uloží jako testovací data.
+\* Přesný seznam aliasů a přepínačů se převezme z nápovědy originálního tf.exe a uloží jako testovací data v `tests/golden/help/` (skript `tools/capture-tf-help.ps1`; `tf help <příkaz>` ve VS 18 vypíše jen banner, proto se zachytává `tf vc help <příkaz>` a `tf <příkaz> /?`). Dokud nápověda není zachycená, platí [dokumentace TFVC příkazů](https://learn.microsoft.com/en-us/azure/devops/repos/tfvc/use-team-foundation-version-control-commands?view=azure-devops).
 
 **Itemspec**
 
@@ -189,7 +189,7 @@ Syntaxe je převzatá z tf.exe beze změny; odchylky jsou jen tam, kde by kompat
 | Zápis | Význam | Příklad |
 | --- | --- | --- |
 | `[C]<n>` | changeset; `C` lze vynechat | `C1234`, `1234` |
-| `D<datum>` | stav k datu; ISO 8601, `mm/dd/yyyy` i formáty .NET jako originál | `D2026-09-30`, `D2026-09-30T14:00` |
+| `D<datum>` | stav k datu; nejprve ISO 8601, pak `DateTime.Parse` v aktuální kultuře (jako originál), pak invariantní kultura (`mm/dd/yyyy`); datum bez času znamená 00:00 místního času | `D2026-09-30`, `D2026-09-30T14:00` |
 | `L<label>[@scope]` | label | `LRelease-2.1@$/Projekt` |
 | `T` | nejnovější verze (tip) | `T` |
 | `W[<workspace>[;<owner>]]` | verze ve workspace | `W` |
@@ -210,25 +210,45 @@ Syntaxe je převzatá z tf.exe beze změny; odchylky jsou jen tam, kde by kompat
 
 - `Console.OutputEncoding = UTF-8` bez BOM, aby české názvy souborů a komentáře checkinů prošly do Claude Code beze ztráty.
 - Data na stdout, chyby a varování na stderr. Žádné barvy, žádné stránkování, žádný ukazatel průběhu.
-- Textový formát kopíruje tf.exe (sloupce, hlavičky), aby fungovaly zažité postupy. Datum vždy ve formátu ISO 8601 v místním čase s offsetem, aby ho AI četla jednoznačně.
-- Cesty ve výstupu jsou vždy absolutní (lokální i serverové), nikdy zkrácené tečkami.
+- Textový formát kopíruje tf.exe (sloupce, hlavičky), aby fungovaly zažité postupy. Datum vždy ve formátu ISO 8601 v místním čase s offsetem (`2026-10-07T19:07:27+02:00`), aby ho AI četla jednoznačně.
+- Cesty ve výstupu jsou vždy absolutní (lokální i serverové), nikdy zkrácené tečkami. Platí i pro skupinové výpisy (`add`, `checkout`, `delete`, `rename`, `undo`, `get`), kde originál píše hlavičky složek relativně k aktuálnímu adresáři.
+- Šířka tabulek se počítá z dat (originál se vejde do 79 sloupců); poslední sloupec (komentář) se nikdy nezkracuje. Originál ho ořezává (`history/short-version`: `Fix null ch`).
+- Co a kam se tiskne, kopíruje originál (`docs/compat.md` §1.2): chyby u položek a konflikty na stderr; hlášky o prázdném výsledku („There are no pending changes.“, „No items match $/…“, „No history entries…“) na stdout, i když je exit kód 1.
+
+**Tvar textového výstupu** (podrobně po příkazech v `docs/compat.md`)
+
+- Skupinový výpis: hlavička složky `<absolutní cesta>:`, pod ní položky, prázdný řádek mezi skupinami. Je-li složka rovna aktuálnímu adresáři, originál hlavičku vynechá; TfPortable ji vypíše vždy (cesty jsou absolutní).
+- Tabulky `status`, `history`, `labels`, `workspaces`, `merges`: hlavička, řádek pomlček, řádky; u `status` seskupení pod serverovou složkou a trailer `Changes: N` / `Changes: 0, detected changes: N`; u `dir` a `localversions` trailer `Items: N`.
+- Bloky `changeset` a `history /format:detailed`: `Changeset: N`, `User:`, `Date:`, prázdný řádek, `Comment:` + text odsazený dvěma mezerami, prázdný řádek, `Items:` + `<typy změn> <serverová cesta>` zarovnané na nejširší typ; sekce `Work items:` jen když existují. V historii oddělovač z pomlček před každým blokem.
+- Typy změn anglicky malými písmeny, kombinace čárkou: `merge, edit`; `rename, edit, rollback`; `delete, source rename`.
+- Smazané položky nesou `;X<deletionId>`, verze `;C<n>`.
 
 **Exit kódy**
 
 | Kód | Význam | Shodné s tf.exe |
 | --- | --- | --- |
-| 0 | Úspěch | ano |
-| 1 | Částečný úspěch (část položek selhala) | ano |
-| 2 | Neznámý příkaz (neplatný přepínač vrací 100 jako originál) | ano |
-| 100 | Nic neproběhlo, obecná chyba | ano |
-| 110 | Problém s přihlášením (PAT chybí nebo byl odmítnut) | rozšíření |
-| 120 | Workspace nebo kolekce nenalezena | rozšíření |
+| 0 | Úspěch nebo prázdný výsledek (včetně `history` neznámé cesty a `difference` s rozdílnými soubory) | ano |
+| 1 | Částečný úspěch, chyba u položky (`add`/`delete`/`view`/`dir`/`undelete` nenalezeno, `undo` bez změn), zbývající konflikty (`get`, `resolve`, `merge`), `workspaces` bez shody | ano |
+| 2 | Neznámý příkaz | ano |
+| 100 | Nic neproběhlo: neplatný přepínač nebo hodnota, `rename`/`changeset`/`label` nenalezeno, neznámá identita, shelveset nenalezen, chyba serveru | ano |
+| 110 | Problém s přihlášením (PAT chybí nebo byl odmítnut) | rozšíření (originál 100) |
+| 120 | Workspace nebo kolekce nenalezena, cesta nenamapovaná, serverový workspace | rozšíření (originál 100) |
+
+Exit kód konkrétní situace kopíruje originál podle příkazu; úplná tabulka zjištěná z golden výstupů je v `docs/compat.md` §1.1 a golden testy ji vynucují. Originál není konzistentní („nenalezeno“ je 1, 100 nebo 0 podle příkazu), ale skripty i zvyklosti na jeho kódech závisí. Jediné záměrné odchylky jsou 110 a 120: AI z nich pozná, že řešením je `tfp login` nebo `/collection`, ne opakování příkazu.
 
 **Odchylky od tf.exe**
 
 - Příkazy, které v tf.exe otevírají GUI (`view`, `diff`, `resolve`, `workspace`, `history` bez `/noprompt`), zde vždy pracují v konzoli: `view` vypíše obsah na stdout (nebo do `/output:<soubor>`), `diff` vypíše unified diff.
 - `history` bez `/stopafter` vrátí nejvýš 256 položek a na konci uvede, že výpis je zkrácený a jak získat další. Chrání to kontext AI před desítkami tisíc řádků.
 - Kde by tf.exe položil otázku (např. přepsat zapisovatelné soubory při `get`), nástroj skončí chybou se seznamem dotčených souborů a přepínačem, který akci povolí.
+- Výstup je vždy UTF-8; `view` dekóduje obsah podle kódování položky na serveru (`utf-8`, `windows-1250`, …) a překóduje ho. Originál zapsal UTF-8 soubor bez BOM syrově a v konzoli s jinou kódovou stránkou vznikl paskvil (golden `view/czech-name`); TfPortable tuto chybu nereprodukuje.
+- Datum v ISO 8601 (originál: krátké a dlouhé datum v kultuře uživatele), poslední sloupec tabulek bez zkracování, absolutní cesty ve skupinových výpisech (viz Výstup a kódování).
+- `tfp`, `tfp help` a `tfp help <příkaz>` vypíšou katalog příkazů, resp. přepínače příkazu; originál ve VS 18 vypíše jen banner s odkazem na `tf vc help`.
+- `properties` nevypisuje varování o zastaralosti (originál ho píše na stderr, u aliasu `info` ne).
+- `difference /format:context` není podporováno (TFP0002); AI ho nepotřebuje. `history /format:xml` odmítá i originál.
+- Serverový workspace: originál s ním pracuje, TfPortable vrátí TFP0204 (viz Detekce workspace). `tfp workspaces` serverové workspace vypíše (sloupec umístění).
+- `history` bez přepínače je ve slot módu (jako originál: u přejmenovaného souboru ukáže jen přejmenování, `/itemmode` sleduje položku napříč přejmenováním).
+- `add` s explicitně zadaným souborem ho přidá, i když odpovídá `.tfignore` (jako originál); `.tfignore` se uplatní jen při expanzi zástupných znaků a `/recursive`.
 
 ## Katalog příkazů
 
@@ -239,34 +259,34 @@ Fáze 1 pokrývá 21 příkazů tf.exe a 3 příkazy pro správu PAT: vše pro p
 | Příkaz (aliasy) | Přepínače | Chování | Fáze |
 | --- | --- | --- | --- |
 | `status` (`stat`) | `/recursive` `/format:brief\|detailed` `/user:` `/workspace:` `/shelveset:` `/nodetect` | Pending changes; v lokálním workspace i detekované změny (candidates) zvlášť označené | 1 |
-| `add` | `/recursive` `/lock:none\|checkin\|checkout` `/type:` `/noignore` | Respektuje `.tfignore`; vypíše přidané i ignorované položky s důvodem | 1 |
+| `add` | `/recursive` `/lock:none\|checkin\|checkout` `/type:` `/noignore` | Respektuje `.tfignore` při `/recursive` a zástupných znacích (přeskočené položky vypíše s důvodem, exit 1 jako originál); explicitně zadaný soubor přidá vždy | 1 |
 | `checkout` (`edit`) | `/recursive` `/lock:` `/type:` | Označí soubor v lokálním workspace jako pending edit | 1 |
 | `delete` (`del`) | `/recursive` `/lock:` `/detect` | Pending delete; soubor smaže lokálně jako tf.exe | 1 |
 | `rename` (`move`, `ren`) | `/lock:` | Přejmenování i přesun souboru nebo složky | 1 |
 | `undo` | `/recursive` `/workspace:` | Vrátí pending changes; vypíše, co vrátil | 1 |
 | `get` | `/version:` `/recursive` `/all` `/overwrite` `/force` `/preview` `/remap` | Při konfliktu se zapisovatelnými soubory skončí chybou se seznamem, ne otázkou | 1 |
-| `resolve` | `/auto:AcceptMerge\|AcceptYours\|AcceptTheirs\|AcceptYoursRenameTheirs\|OverwriteLocal\|DeleteConflict` `/preview` `/recursive` `/newname:` | Bez `/auto` jen vypíše konflikty (žádný dialog) | 1 |
+| `resolve` | `/auto:AcceptMerge\|AcceptYours\|AcceptTheirs\|AcceptYoursRenameTheirs\|OverwriteLocal\|DeleteConflict` `/preview` `/recursive` `/newname:` | Bez `/auto` jen vypíše konflikty (žádný dialog); dokud konflikty trvají, exit 1 a seznam na stderr jako originál; bez konfliktů exit 0 | 1 |
 | `reconcile` | `/promote` `/adds` `/deletes` `/diff` `/clean` `/preview` `/recursive` `/noignore` | `/clean` maže soubory mimo správu verzí; bez `/preview` vyžaduje i `/noprompt`, aby AI nesmazala soubory omylem | 1 |
 | `localversions` (`lv`) | `/recursive` `/format:` `/workspace:` | Verze souborů ve workspace | 1 |
 | `workfold` | `/workspace:` (jen výpis) | Mapování aktuálního workspace | 1 |
 | `workfold /map /unmap /cloak /decloak` | dle tf.exe | Mění mapování na serveru, vratné | 2 |
-| `workspaces` | `/owner:` `/computer:` `/format:` `/collection:` | Seznam workspace; `/remove:` jen pro lokální cache | 1 |
+| `workspaces` | `/owner:` `/computer:` `/format:` `/collection:` | Seznam workspace včetně serverových (umístění ve výpisu); bez shody exit 1 a hláška na stdout jako originál; `/remove:` jen pro lokální cache | 1 |
 
 **Historie, verze a obsah**
 
 | Příkaz (aliasy) | Přepínače | Chování | Fáze |
 | --- | --- | --- | --- |
-| `history` (`hist`) | `/version:` `/stopafter:` `/recursive` `/user:` `/format:brief\|detailed` `/sort:` `/slotmode` `/itemmode` + rozšíření (viz Rozšíření pro AI) | Výchozí limit 256 položek | 1 |
-| `changeset` | `<číslo>` `/latest` | Detail checkinu: autor, datum, komentář, změněné položky s typem změny, přidružené work items. Úprava komentáře není podporována | 1 |
-| `view` | `/version:` `/output:<soubor>` `/shelveset:` | Obsah souboru v dané verzi na stdout, binární soubory jen do `/output` | 1 |
-| `difference` (`diff`) | `/version:` `/recursive` `/format:unified\|brief` `/ignorespace` `/ignoreeol` `/ignorecase` `/shelveset:` | Vždy textový unified diff; porovnání workspace × server, dvou verzí, nebo shelvesetu | 1 |
+| `history` (`hist`) | `/version:` `/stopafter:` `/recursive` `/user:` `/format:brief\|detailed` `/sort:` `/slotmode` `/itemmode` + rozšíření (viz Rozšíření pro AI) | Výchozí limit 256 položek; výchozí slot mód; u jednoho souboru má tabulka navíc sloupec Change; neznámá cesta = prázdný výsledek, exit 0; neznámý `/user:` exit 100 (TF14045); `/format:xml` odmítnuto | 1 |
+| `changeset` | `<číslo>` `/latest` | Detail checkinu: autor, datum, komentář, změněné položky s typem změny, přidružené work items. `/comment:` (úprava komentáře) vrací TFP0003; neexistující číslo exit 100 (TF14019) | 1 |
+| `view` | `/version:` `/output:<soubor>` `/shelveset:` | Obsah souboru v dané verzi na stdout, překódovaný do UTF-8 podle kódování položky; binární soubory jen do `/output` (jinak TFP0303); nenalezeno exit 1 | 1 |
+| `difference` (`diff`) | `/version:` `/recursive` `/format:unified\|brief` `/ignorespace` `/ignoreeol` `/ignorecase` `/shelveset:` | Vždy textový unified diff; porovnání workspace × server, dvou verzí, dvou serverových cest, nebo shelvesetu; exit 0 i když se soubory liší (jako originál); binární soubory jen „files differ“ | 1 |
 | `dir` | `/version:` `/recursive` `/folders` `/deleted` | Výpis serverové struktury | 1 |
 | `properties` (`info`) | `/version:` `/recursive` `/workspace:` | Lokální i serverová verze, kódování, zámky, pending change | 1 |
 | `labels` | `/owner:` `/format:` | Seznam labelů | 1 |
 | `branches` | `/version:` | Strom větví pro položku | 1 |
-| `merge /candidate` | `/recursive` `/version:` | Jen výpis changesetů, které ještě nejsou sloučené (čtecí operace) | 1 |
-| `merges` | `/recursive` `/extended` `/showall` `/format:` | Historie sloučení mezi větvemi | 2 |
-| `annotate` | `/version:` | Kdo a ve kterém changesetu změnil každý řádek (rozšíření, v tf.exe chybí) | 2 |
+| `merge /candidate` | `/recursive` `/version:` | Jen výpis changesetů, které ještě nejsou sloučené (čtecí operace); hvězdička za číslem označuje částečně sloučený changeset jako v originálu | 1 |
+| `merges` | `/recursive` `/showall` `/format:` | Historie sloučení mezi větvemi (`/extended` tf.exe 18.10 odmítá, nepodporuje se) | 2 |
+| `annotate` | `/version:` | Kdo a ve kterém changesetu změnil každý řádek (rozšíření; tf.exe příkaz nezná, golden `annotate/attempt` exit 2) | 2 |
 | `folderdiff` | `/recursive` `/filter:` `/view:` | Rozdíl dvou složek nebo složky a serveru, jen text | 2 |
 | `shelvesets` | `/owner:` `/format:` | Seznam shelvesetů | 2 |
 | `unshelve` | `<shelveset>[;<owner>]` `/recursive` | Jen bez `/move` (nemaže shelveset na serveru) | 2 |
@@ -304,7 +324,7 @@ Každý příkaz vrátí na stdout právě jeden JSON dokument se stejnou obálk
 }
 ```
 
-Názvy polí v `data` jsou anglické, v camelCase, stabilní mezi verzemi a popsané v `docs/json-schema.md`. Data jsou ISO 8601 s offsetem, čísla changesetů jako čísla.
+Názvy polí v `data` jsou anglické, v camelCase, stabilní mezi verzemi a popsané v `docs/json-schema.md` (návrh obálky, sdílených typů a `data` pro každý příkaz fáze 1). Data jsou ISO 8601 s offsetem, čísla changesetů jako čísla. `truncated` je `null`, nebo objekt `{ returned, limit, hint }`. `warnings` a `errors` mají stejný tvar zprávy (`code`, `tfCode`, `message`, `hint`, `item`, `activityId`). V JSON režimu je stderr prázdný (kromě `/verbose`).
 
 **Vyhledávání v historii**
 
@@ -347,8 +367,13 @@ ERROR TFP0301 [TF14019]: Item $/Contoso/App/Old.cs does not exist at version C12
 - Chyba u jedné položky nezastaví zpracování ostatních: výsledkem je exit kód 1 a seznam chyb po položkách.
 - Neočekávaná výjimka: `TFP0900` s typem výjimky a zprávou; celý stack trace se zapíše do `%TEMP%\TfPortable\last-error.txt` a cesta k souboru je v hlášce. S `/verbose` jde stack trace rovnou na stderr.
 - PAT se nikdy neobjeví v žádné hlášce, logu ani výstupu `/verbose`.
+- Varování mají na stderr tvar `WARNING TFPxxxx: <text>` (kód jen pokud existuje), v JSON jsou v poli `warnings`.
 
 **Katalog**
+
+Sloupec Exit je výchozí hodnota; u situací, kde originál vrací podle příkazu jiný kód, platí
+tabulka v `docs/compat.md` §1.1 (např. TFP0301 je 1 u `add`, `delete`, `view`, `dir`,
+`undelete`, 100 u `rename`, `changeset`, `label`, 0 u `history`).
 
 | Kód | Situace | Typické TF kódy / výjimka | Rada uživateli | Exit |
 | --- | --- | --- | --- | --- |
@@ -365,6 +390,7 @@ ERROR TFP0301 [TF14019]: Item $/Contoso/App/Old.cs does not exist at version C12
 | TFP0204 | Serverový workspace | – | Převést workspace na lokální ve VS | 120 |
 | TFP0301 | Položka nebo verze neexistuje | např. TF14019 | `tfp dir` / `tfp history` pro dohledání | 100 |
 | TFP0302 | Neplatná versionspec | – | Podporované formáty s příkladem | 100 |
+| TFP0303 | Binární obsah nelze vypsat na konzoli | – | `tfp view … /output:<soubor>` | 100 |
 | TFP0401 | Položka už má jinou pending change | – | Stav přes `tfp status`, případně `tfp undo` | 1 |
 | TFP0402 | Get nepřepsal zapisovatelný soubor | – | `tfp diff`, pak `tfp get /overwrite` | 1 |
 | TFP0403 | Get vytvořil konflikty | – | Seznam konfliktů, `tfp resolve /auto:...` | 1 |
@@ -373,7 +399,7 @@ ERROR TFP0301 [TF14019]: Item $/Contoso/App/Old.cs does not exist at version C12
 | TFP0501 | Chyba serveru | HTTP 5xx | ActivityId, zkusit znovu | 100 |
 | TFP0900 | Neočekávaná chyba | jakákoli | Cesta k `last-error.txt`, `tfp version` | 100 |
 
-Exit kódy v tabulce jsou výchozí návrh. Kde golden výstupy originálu ukazují jiný kód pro stejnou situaci, platí golden výstup a rozdíl se zapíše do `docs/compat.md`.
+Exit kódy v tabulce jsou výchozí hodnoty. Kde golden výstupy originálu ukazují jiný kód pro stejnou situaci, platí golden výstup; rozdíly jsou zapsané v `docs/compat.md` §1.1.
 
 Konkrétní TF kódy v tabulce a příkladech jsou ilustrační. Skutečné mapování se sestaví během implementace z reálných odpovědí serveru a uloží jako testovací data.
 
@@ -455,6 +481,9 @@ Claude Code na Windows spouští příkazy přes Git Bash, a to má jednu zásad
 - Cílové prostředí: rozhodnuto, Azure DevOps Services (primárně) i Azure DevOps Server / TFS 2017+ (stejný klientský kód, výzva k PAT popisuje obě varianty).
 - Workspace: rozhodnuto, jen lokální. Serverový workspace vrátí TFP0204 ServerWorkspaceNotSupported.
 - Licence: rozhodnuto, GNU GPL v3 s dodatečným povolením podle sekce 7 pro klientské knihovny Microsoftu. Repozitář obsahuje LICENSE (GPL v3), LICENSE-EXCEPTION (text povolení) a THIRD-PARTY-NOTICES (licence Microsoftu pro vložené knihovny).
+- Exit kódy a streamy: rozhodnuto (2026-10-07, analýza golden výstupů), kopírují originál podle příkazu; jen 110 a 120 jsou rozšíření. Podrobnosti `docs/compat.md`.
+- Tvar výstupu: rozhodnuto ISO 8601, UTF-8 s překódováním u `view`, žádné varování u `properties`, katalog v `help`. Čeká na Gate A: nezkracování posledního sloupce a absolutní cesty ve skupinových výpisech.
+- Otevřené: `add /recursive` s položkami přeskočenými kvůli `.tfignore` (exit 1 podle poznámky v seed skriptu, golden případ chybí); `reconcile /promote` v golden běhu nic nepovýšil, ověřit v integračním testu, zda jsou potřeba `/adds` a `/deletes`.
 
 **Milníky**
 
@@ -462,7 +491,7 @@ Claude Code na Windows spouští příkazy přes Git Bash, a to má jednu zásad
 2. Jádro: parser, kontext workspace, chyby, JSON obálka, `login`/`logout`/`whoami`.
 3. Lokální operace: `status`, `add`, `checkout`, `delete`, `rename`, `undo`, `get`, `resolve`, `reconcile`, `localversions`, `workfold`, `workspaces`.
 4. Historie a obsah: `history` včetně vyhledávání, `changeset /diff`, `view`, `diff`, `dir`, `properties`, `labels`, `branches`, `merge /candidate`.
-5. Integrace: šablona CLAUDE.md, kompatibilní testy, release `tf.exe` na GitHubu.
+5. Integrace: šablona CLAUDE.md, kompatibilní testy, release `tfp.exe` na GitHubu.
 6. Fáze 2 podle potřeby.
 
 ## Build a testovací prostředí
@@ -479,7 +508,7 @@ Kód se dá přeložit kdekoli, ale spustit a otestovat jen na Windows. Agent v 
 
 - csproj je SDK-style s `<TargetFramework>net48</TargetFramework>` a balíčkem `Microsoft.NETFramework.ReferenceAssemblies` (`PrivateAssets="all"`), aby `dotnet build` prošel i na Linuxu.
 - Integrační a golden testy čtou `TFP_TEST_COLLECTION` a `TFP_TEST_PAT` z prostředí. Když chybí (Linux, pull request z forku), testy se přeskočí a neselžou. V CI je dodávají GitHub Secrets.
-- Golden testy pouštějí `tfp` proti testovacímu projektu a porovnávají s výstupy v `tests/golden`: vždy exit kód, seznam položek, čísla changesetů a pořadí. Texty hlášek se neporovnávají, protože golden výstupy jsou z české instalace a `tfp` píše anglicky. Čísla changesetů se berou z manifestů v `tests/golden`.
+- Golden testy pouštějí `tfp` proti testovacímu projektu a porovnávají s výstupy v `tests/golden`: vždy exit kód, (ne)prázdnost stdout a stderr, seznam položek, čísla changesetů a pořadí, typy změn a součty v trailerech. Texty hlášek se neporovnávají, protože golden výstupy jsou z české instalace a `tfp` píše anglicky. Čísla changesetů se mapují přes manifesty v `tests/golden/manifests/`. Formát souborů, placeholdery, normalizace a seznam přehratelných případů jsou v `docs/golden-format.md`; známé odchylky v `docs/compat.md`.
 - Agent v cloudu pracuje ve větvi, otevře pull request a výsledek CI čte přes `gh run view --log-failed`. Když CI třikrát po sobě selže na stejném problému, zastaví se a popíše ho v `docs/PROGRESS.md`.
 - Spike (milník 1) se dělá lokálně, protože rozhoduje o architektuře a potřebuje rychlou smyčku na Windows.
 
@@ -489,9 +518,10 @@ Specifikace stačí agentovi na fázi 1, pokud dostane tři věci navíc: rozhod
 
 **Co připravit před zadáním**
 
-- [ ] Přidat LICENSE, LICENSE-EXCEPTION a THIRD-PARTY-NOTICES (licence je rozhodnutá).
-- [ ] Nasbírat výstupy originálu: pro každý příkaz fáze 1 úspěšný případ, prázdný výsledek a typické chyby, se stdout, stderr a exit kódem, do `tests/golden/<příkaz>/<případ>.txt`. Skript capture-tf-golden.ps1 jména, e-maily a URL anonymizuje sám; výstup přesto zkontrolovat.
-- [ ] Založit testovací projekt TFVC v Azure DevOps Services a naplnit ho skriptem seed-tfvc-test-repo.ps1 (changesety, přejmenování, smazání, label, větev, merge, různá kódování). PAT nejde omezit na projekt, jen na organizaci a scope; proto PAT vystavit pro samostatného uživatele, který má přístup jen k testovacímu projektu (nebo pro samostatnou testovací organizaci), a uložit ho do GitHub Secrets.
+- [x] Přidat LICENSE, LICENSE-EXCEPTION a THIRD-PARTY-NOTICES (licence je rozhodnutá).
+- [x] Nasbírat výstupy originálu: pro každý příkaz fáze 1 úspěšný případ, prázdný výsledek a typické chyby, se stdout, stderr a exit kódem, do `tests/golden/<příkaz>/<případ>.txt`. Skript capture-tf-golden.ps1 jména, e-maily a URL anonymizuje sám; výstup přesto zkontrolovat. (Hotovo 2026-10-07, 203 případů, zkontrolováno v KICKOFF-LOCAL kroku 0.)
+- [ ] Zachytit nápovědu originálu (`tools/capture-tf-help.ps1` → `tests/golden/help/`), aby implementátor měl seznam přepínačů a aliasů.
+- [x] Založit testovací projekt TFVC v Azure DevOps Services a naplnit ho skriptem seed-tfvc-test-repo.ps1 (changesety, přejmenování, smazání, label, větev, merge, různá kódování). PAT nejde omezit na projekt, jen na organizaci a scope; proto PAT vystavit pro samostatného uživatele, který má přístup jen k testovacímu projektu (nebo pro samostatnou testovací organizaci), a uložit ho do GitHub Secrets. (Projekt existuje; GitHub Secrets ještě ne, viz PROGRESS.md „Needs the user“.)
 
 **Požadavky na implementaci**
 

@@ -6,7 +6,7 @@ Read this first in every session. Update it at the end of every session (see CLA
 
 | # | Milestone | Where | Status | Gate |
 | --- | --- | --- | --- | --- |
-| 0 | Spec refinement from golden files (`docs/compat.md`, SPEC.md updates) | local | in progress (KICKOFF-LOCAL steps 0 and 1 done, step 2 next) | user approves SPEC.md |
+| 0 | Spec refinement from golden files (`docs/compat.md`, SPEC.md updates) | local | in progress (steps 0–2 done, waiting at Gate A) | user approves SPEC.md |
 | 1 | Spike: `tfp whoami` + `tfp status` with PAT, Costura single exe, clean machine | local | not started | user approves architecture |
 | 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | not started | – |
 | 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | not started | – |
@@ -18,14 +18,28 @@ Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
-1. `docs/KICKOFF-LOCAL.md` step 2: apply the decisions of `docs/compat.md` to SPEC.md (per-command
-   exit codes, error catalog "Exit" column as default + overrides, output shapes, `history` default
-   slot mode, `/format:context` unsupported, `merges /extended` dropped), list everything an
-   implementer would have to guess (switch lists per command, JSON fields → propose
-   `docs/json-schema.md`), ask the developer the questions in one batch (include the Gate A items
-   under "Open questions"), apply answers, record them under "Decisions". Then Gate A.
+1. Gate A: wait for the developer's answers to the questions under "Needs the user", apply them to
+   SPEC.md / `docs/json-schema.md` / `docs/compat.md`, record them under "Decisions".
+2. When the developer has run `tools/capture-tf-help.ps1`: review `tests/golden/help/` for personal
+   data, derive the per-command switch and alias lists, put them into SPEC.md (or a new
+   `docs/commands.md`) and `docs/json-schema.md` (`help` data). Commit.
+3. `docs/KICKOFF-LOCAL.md` step 3 (scaffolding), then step 4 (spike, milestone 1).
 
 ## Needs the user
+
+- **Gate A** (KICKOFF-LOCAL step 2): approve the SPEC.md changes of 2026-10-07 and answer:
+  1. Output deviations: never truncate the last table column; absolute local paths in grouped
+     listings (recommended: yes to both).
+  2. `view /format:json`: text content inline as a JSON string, binary only via `/output`
+     (recommended), or always require `/output` in JSON mode.
+  3. `docs/json-schema.md` draft: approve the envelope, shared types and per-command `data` as the
+     basis for milestone 2 (details may still change during implementation).
+  4. Will `TFP_TEST_COLLECTION` in CI be the same collection as the golden capture, so that changeset
+     numbers match the manifests? (Recommended: yes, with a PAT of a dedicated user limited to the
+     test project.)
+- Run `tools/capture-tf-help.ps1` (read-only, no sign-in; writes `tests/golden/help/` and
+  `index-help.json`), review the output and commit it. It supplies the switch lists and aliases
+  that `tf help <command>` did not print.
 
 - Before milestone 2: GitHub Secrets `TFP_TEST_COLLECTION` and `TFP_TEST_PAT`. The PAT should belong to a
   dedicated user with access only to the test project, or to a separate test organization
@@ -60,6 +74,9 @@ Statuses: not started, in progress, blocked, done.
 | 2026-10-07 | `view` always writes UTF-8 and decodes the item by its server encoding; golden `view/czech-name` (mojibake of a BOM-less UTF-8 file) is a bug of the original and is not reproduced | Correctness over byte-compatibility |
 | 2026-10-07 | `difference /format:context` is not supported (TFP0002); `properties` prints no deprecation warning; `tfp`/`tfp help` print the command catalog instead of the banner | Not needed by the AI; cleaner output |
 | 2026-10-07 | Golden tests compare exit code, stream emptiness, items, changeset numbers (mapped through the manifests), change types (Czech → English map) and trailer counts; never texts or dates (`docs/golden-format.md` §7–8). Cases of `index-extra*.json` for phase 1 commands are compared for shape only because their server state came from out-of-scope commands | Golden files are Czech; server state cannot be recreated by tfp |
+| 2026-10-07 | SPEC.md refined (step 2): exit-code table rewritten with per-command semantics, catalog exit column is a default with compat.md overrides, new TFP0303 (binary content needs `/output`), versionspec date parsing order (ISO → current culture → invariant), collection URL normalization drops `/DefaultCollection` for Services, `CredEnumerateW` added for the single-PAT detection, section "Tvar textového výstupu", warnings format `WARNING TFPxxxx:`, JSON envelope details (`truncated` object, message shape), `merges /extended` removed, milestone 5 typo `tf.exe` → `tfp.exe` | Decisions of `docs/compat.md` applied; the implementer should not have to guess |
+| 2026-10-07 | `docs/json-schema.md` written as a draft (envelope, shared types Item/Changeset/Change/PendingChange/Conflict/Mapping/Workspace, enumerations in lower case, `data` per phase 1 command) | Kickoff step 2 asks for a proposed structure; Gate A approves it |
+| 2026-10-07 | New script `tools/capture-tf-help.ps1` captures `tf vc help <cmd>` and `tf <cmd> /?` into `tests/golden/help/` | Golden `general/help-status` shows that `tf help <cmd>` prints only a banner in VS 18, so switch lists and aliases were missing; the developer runs it (rule: capture scripts are run by the user) |
 
 ## Open questions
 
@@ -109,9 +126,11 @@ Open:
   tables, exit-code table, cross-cutting decisions) and `docs/golden-format.md` (file format,
   placeholders, manifests, normalization, what is compared, replayable cases) written; four open
   questions closed, five new ones recorded.
-- Next: step 2 (apply decisions to SPEC.md, list implementer questions, propose `docs/json-schema.md`,
-  ask the developer in one batch, Gate A).
-- Blockers: none.
+- Step 2 done: SPEC.md updated with the compat.md decisions, `docs/json-schema.md` drafted,
+  `tools/capture-tf-help.ps1` written (syntax-checked, not run), Gate A questions listed under
+  "Needs the user".
+- Next: Gate A answers, then help capture review, then step 3 (scaffolding).
+- Blockers: Gate A (developer approval); `tests/golden/help/` not yet captured.
 
 ### 2026-10-07 – specification and golden files (claude.ai conversation)
 

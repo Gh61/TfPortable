@@ -33,7 +33,7 @@ how the original behaves; `docs/compat.md` records every intended deviation.
 - `Microsoft.TeamFoundationServer.ExtendedClient` 20.256.2 for all TFVC access.
 - `Microsoft.NETFramework.ReferenceAssemblies` (PrivateAssets all) so the code builds on Linux.
 - Costura.Fody: the release is one file, `tfp.exe`, no `.config` next to it.
-- Credential Manager via P/Invoke (`CredReadW`, `CredWriteW`, `CredDeleteW`), no extra library.
+- Credential Manager via P/Invoke (`CredReadW`, `CredWriteW`, `CredDeleteW`, `CredEnumerateW`), no extra library.
 
 ## Where code can run
 
