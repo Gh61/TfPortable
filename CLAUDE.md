@@ -71,6 +71,13 @@ failures with `gh run view --log-failed`.
 - If SPEC.md is unclear: check the golden files, then Microsoft's TFVC command docs. If it is
   still unclear, choose the behavior closest to the original tf.exe, record it under
   "Decisions", and add the question to "Open questions".
+- When you are stuck on a problem for more than a couple of attempts (an API that refuses to
+  behave, an error code you cannot explain), search the web before trying more variants. Someone
+  has usually hit it before. Example from the spike: TF30063 with a valid PAT was a PAT scope
+  rule of the TFVC SOAP API, documented in a README of another Microsoft project, not a bug in
+  our connection code.
+- Never enable System.Net or TeamFoundation tracing while a PAT is in use, and never log
+  request headers: the trace writes the `Authorization` header in clear text.
 
 ## When to stop and report
 

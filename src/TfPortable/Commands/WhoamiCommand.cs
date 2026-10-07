@@ -36,7 +36,7 @@ namespace TfPortable.Commands
             }
             else
             {
-                output.Line($"Workspace  : {workspace.Name};{workspace.OwnerName} ({workspace.Location.ToString().ToLowerInvariant()}, computer {workspace.Computer})");
+                output.Line($"Workspace  : {workspace.Name};{workspace.OwnerDisplayName} ({workspace.Location.ToString().ToLowerInvariant()}, computer {workspace.Computer})");
                 foreach (var folder in workspace.Folders)
                 {
                     output.Line(folder.IsCloaked ? $"  (cloaked) {folder.ServerItem}:" : $"  {folder.ServerItem}: {folder.LocalItem}");

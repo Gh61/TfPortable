@@ -34,9 +34,14 @@ Run once, in your own terminal (never paste the PAT into a chat with an AI agent
 tfp login /collection:https://dev.azure.com/<organization>
 ```
 
-The prompt explains where to create the token (scope *Code: Read & write*, or *Code: Read* for
-read-only use). The PAT is stored in the Windows Credential Manager for your user profile. Check
-it with `tfp whoami`, remove it with `tfp logout`.
+The prompt explains where to create the token. The PAT is stored in the Windows Credential
+Manager for your user profile. Check it with `tfp whoami`, remove it with `tfp logout`.
+
+> **The PAT must have *Scopes: Full access*.** The TFVC API of Azure DevOps (the legacy SOAP
+> endpoints that every TFVC client, including `tf.exe`, talks to) refuses tokens with custom
+> scopes. A token limited to *Code: Read & write* is accepted by the REST API but gets `TF30063`
+> from version control. TfPortable detects this case and reports it as `TFP0103`. A read-only PAT
+> for TFVC is therefore not possible; limit the token's lifetime instead.
 
 ## Use
 

@@ -36,7 +36,8 @@ namespace TfPortable.Context
 
         public VersionControlServer VersionControl => Connection.GetService<VersionControlServer>();
 
-        public string WorkspaceSpec => Workspace == null ? string.Empty : $"{Workspace.Name};{Workspace.OwnerName}";
+        /// <summary>`name;owner` as tf.exe prints it (display name of the owner, golden `<WORKSPACE>;<OWNER>`).</summary>
+        public string WorkspaceSpec => Workspace == null ? string.Empty : $"{Workspace.Name};{Workspace.OwnerDisplayName}";
 
         public void Dispose() => Connection.Dispose();
     }
