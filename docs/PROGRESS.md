@@ -8,7 +8,7 @@ Read this first in every session. Update it at the end of every session (see CLA
 | --- | --- | --- | --- | --- |
 | 0 | Spec refinement from golden files (`docs/compat.md`, SPEC.md updates) | local | done (Gate A passed 2026-10-07; help capture still to be reviewed) | user approves SPEC.md |
 | 1 | Spike: `tfp whoami` + `tfp status` with PAT, Costura single exe, clean machine | local | done (clean-machine test passed, Gate B approved 2026-10-08) | user approves architecture |
-| 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | not started | – |
+| 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | not started (next; `docs/KICKOFF-CLOUD.md`) | – |
 | 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | not started | – |
 | 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | not started | – |
 | 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | not started | user approves release |
@@ -18,8 +18,8 @@ Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
-1. Step 5: `docs/KICKOFF-CLOUD.md` (milestones 2–5, what to read, CI loop, stop conditions, golden cases
-   per milestone), "Needs the user" for the cloud phase, PROGRESS.md handover.
+1. Cloud: follow `docs/KICKOFF-CLOUD.md`, milestone 2 (branch `m2-core`, pull request, CI loop).
+2. Before that the developer: push `main`, set the secrets, re-run the help capture (see "Needs the user").
 2. When the developer has run `tools/capture-tf-help.ps1`: review `tests/golden/help/` for personal
    data, derive the per-command switch and alias lists, put them into SPEC.md (or a new
    `docs/commands.md`) and `docs/json-schema.md` (`help` data). Commit.
@@ -28,11 +28,16 @@ Statuses: not started, in progress, blocked, done.
 ## Needs the user
 
 - Push `main` to GitHub so that the CI workflow runs for the first time (nothing has been pushed
-  from the local sessions; the agent does not push on its own).
+  from the local sessions; the agent does not push on its own). Check the first run.
+- Re-run `.\tools\capture-tf-help.ps1` from the repository root (the first capture went to another
+  folder and had a file-name collision between `tf /?` and `tf help /?`; the script now names the
+  first case `root-qmark`), check `git status`, commit `tests/golden/help/` and `index-help.json`.
+  The integrity test `GoldenIndexTests` must pass afterwards.
+- Before milestone 2 (cloud): GitHub Secrets `TFP_TEST_COLLECTION` and `TFP_TEST_PAT`. The PAT must
+  have **Full access** (TFVC SOAP API) and should belong to a dedicated user with access only to the
+  test project, or to a separate test organization.
+- Cloud phase: review and merge the pull requests of milestones 2–5; decide on branch protection.
 
-- Before milestone 2: GitHub Secrets `TFP_TEST_COLLECTION` and `TFP_TEST_PAT`. The PAT should belong to a
-  dedicated user with access only to the test project, or to a separate test organization
-  (Azure DevOps PATs cannot be limited to one project).
 
 ## Decisions
 
@@ -160,6 +165,12 @@ Open:
   20.256 client; one design consequence: PAT must have Full access (read-only PAT impossible).
 - Next: clean-machine test by the developer, Gate B, then step 5 (`docs/KICKOFF-CLOUD.md`).
 - Blockers: Gate B (developer); `tests/golden/help/` not yet captured; repository not yet pushed.
+- Later the same day: Gate B passed on a clean Windows Server; help captured and summarized in
+  `docs/commands.md` (SPEC.md corrected: `/encoding`, `/noautoresolve`, resolve names, `/format:xml`,
+  `view /console`); step 5 done: `docs/KICKOFF-CLOUD.md` written, "Needs the user" lists the cloud
+  prerequisites. Local phase complete.
+- Next: developer pushes, sets secrets, re-runs the help capture; cloud agent starts milestone 2.
+- Blockers: none for the handover; help capture data not yet committed (re-run pending).
 
 ### 2026-10-07 – specification and golden files (claude.ai conversation)
 
