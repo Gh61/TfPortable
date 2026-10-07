@@ -13,6 +13,7 @@
          non-embedded (bin folder) build and are evaluated in the spike (SPEC.md, "Jeden přenosný soubor"). -->
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>

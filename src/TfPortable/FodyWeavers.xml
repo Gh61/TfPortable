@@ -4,12 +4,60 @@
     Costura embeds every managed dependency into tfp.exe as a compressed resource and loads it
     through AssemblyResolve, so the release is one file without a .config next to it.
 
-    ExcludeAssemblies: the spike (KICKOFF-LOCAL step 4) measures the exe and fills this list with
-    assemblies that TFVC does not need (candidates from SPEC.md: Microsoft.Data.SqlClient and its
-    native SNI, work item tracking, build, test management, lab management clients).
+    ExcludeAssemblies: what TFVC over a PAT (VssBasicCredential) never loads. Measured in the
+    spike (KICKOFF-LOCAL step 4): without exclusions 78 assemblies, 7.8 MB. Excluded assemblies
+    are still copied to the build output, so test the exe alone in an empty folder.
+    If a command ever needs one of them, the error is a FileNotFoundException for that assembly:
+    remove it from this list.
   -->
   <Costura IncludeDebugSymbols="false" DisableCompression="false" CreateTemporaryAssemblies="false">
     <ExcludeAssemblies>
+      <!-- SQL client (work item tracking data store); its native SNI would not be portable anyway -->
+      Microsoft.Data.SqlClient
+      <!-- Interactive / Entra ID authentication stack; tfp uses only basic auth with a PAT -->
+      Microsoft.Identity.Client
+      Microsoft.Identity.Client.Extensions.Msal
+      Azure.Core
+      Azure.Identity
+      System.ClientModel
+      Microsoft.IdentityModel.Abstractions
+      Microsoft.IdentityModel.JsonWebTokens
+      Microsoft.IdentityModel.Logging
+      Microsoft.IdentityModel.Protocols
+      Microsoft.IdentityModel.Protocols.OpenIdConnect
+      Microsoft.IdentityModel.Tokens
+      System.IdentityModel.Tokens.Jwt
+      <!-- Azure DevOps services other than version control -->
+      Microsoft.TeamFoundation.Build.Client
+      Microsoft.TeamFoundation.Build.Common
+      Microsoft.TeamFoundation.Build2.WebApi
+      Microsoft.TeamFoundation.Dashboards.WebApi
+      Microsoft.TeamFoundation.DeleteTeamProject
+      Microsoft.TeamFoundation.Discussion.Client
+      Microsoft.TeamFoundation.DistributedTask.Common.Contracts
+      Microsoft.TeamFoundation.Git.Client
+      Microsoft.TeamFoundation.Pipelines.WebApi
+      Microsoft.TeamFoundation.Policy.WebApi
+      Microsoft.TeamFoundation.ProjectManagement
+      Microsoft.TeamFoundation.SharePointReporting.Integration
+      Microsoft.TeamFoundation.Test.WebApi
+      Microsoft.TeamFoundation.TestImpact.Client
+      Microsoft.TeamFoundation.TestManagement.Client
+      Microsoft.TeamFoundation.TestManagement.Common
+      Microsoft.TeamFoundation.TestManagement.WebApi
+      Microsoft.TeamFoundation.Wiki.WebApi
+      Microsoft.TeamFoundation.Work.WebApi
+      Microsoft.TeamFoundation.WorkItemTracking.Client
+      Microsoft.TeamFoundation.WorkItemTracking.Client.DataStoreLoader
+      Microsoft.TeamFoundation.WorkItemTracking.Client.QueryLanguage
+      Microsoft.TeamFoundation.WorkItemTracking.Common
+      Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi
+      Microsoft.TeamFoundation.WorkItemTracking.Proxy
+      Microsoft.TeamFoundation.WorkItemTracking.WebApi
+      Microsoft.VisualStudio.Services.TestManagement.TestPlanning.WebApi
+      Microsoft.VisualStudio.Services.TestResults.WebApi
+      Microsoft.Azure.Pipelines.WebApi
+      Microsoft.Azure.DevOps.Comments.WebApi
     </ExcludeAssemblies>
   </Costura>
 </Weavers>

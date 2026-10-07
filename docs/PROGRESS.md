@@ -7,7 +7,7 @@ Read this first in every session. Update it at the end of every session (see CLA
 | # | Milestone | Where | Status | Gate |
 | --- | --- | --- | --- | --- |
 | 0 | Spec refinement from golden files (`docs/compat.md`, SPEC.md updates) | local | done (Gate A passed 2026-10-07; help capture still to be reviewed) | user approves SPEC.md |
-| 1 | Spike: `tfp whoami` + `tfp status` with PAT, Costura single exe, clean machine | local | not started | user approves architecture |
+| 1 | Spike: `tfp whoami` + `tfp status` with PAT, Costura single exe, clean machine | local | in progress (code done, offline paths verified; waiting for `tfp login` by the developer, then server verification and clean-machine test) | user approves architecture |
 | 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | not started | – |
 | 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | not started | – |
 | 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | not started | – |
@@ -18,9 +18,11 @@ Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
-1. `docs/KICKOFF-LOCAL.md` step 4 (spike, milestone 1): Credential Manager store, `login`, `whoami`,
-   `status` (workspace detection), Costura exclusions measured, verification on this machine (PowerShell
-   and Git Bash) and on a clean machine or Windows Sandbox, report (exe size, excluded assemblies).
+1. Step 4 (spike) continued, after the developer has run `tfp login`: `whoami` and `status` in the test
+   workspace from PowerShell and Git Bash (`-switch` syntax), from the exe copied alone into an empty
+   folder (checks the Costura exclusion list against a live connection; if an assembly is missing, the
+   error is a FileNotFoundException naming it: remove it from `FodyWeavers.xml`), then the clean-machine
+   test, then the spike report and Gate B.
 2. When the developer has run `tools/capture-tf-help.ps1`: review `tests/golden/help/` for personal
    data, derive the per-command switch and alias lists, put them into SPEC.md (or a new
    `docs/commands.md`) and `docs/json-schema.md` (`help` data). Commit.
@@ -33,6 +35,10 @@ Statuses: not started, in progress, blocked, done.
   that `tf help <command>` did not print.
 - Push `main` to GitHub so that the CI workflow runs for the first time (nothing has been pushed
   from the local sessions; the agent does not push on its own).
+- Step 4 (spike): run `tfp login` once in your own terminal so that the spike can be verified against
+  the test collection. The spike exe is `src\TfPortable\bin\Release\net48\tfp.exe`; run it from inside
+  `D:\TfpTest\TfsPortableTestRepo` (the collection is detected) or pass `/collection:<url>`. The PAT needs
+  scope Code: Read & write and is stored under `TfPortable:https://dev.azure.com/<org>`.
 - Step 4 (spike): a machine or Windows Sandbox without Visual Studio to verify portability of `tfp.exe`.
 
 - Before milestone 2: GitHub Secrets `TFP_TEST_COLLECTION` and `TFP_TEST_PAT`. The PAT should belong to a
@@ -77,6 +83,10 @@ Statuses: not started, in progress, blocked, done.
 | 2026-10-07 | Integration tests skip via a `FactAttribute` subclass (`IntegrationFact`) that sets `Skip` when `TFP_TEST_COLLECTION`/`TFP_TEST_PAT` are missing; no extra package. `GoldenIndexTests` validate `tests/golden` integrity (index ↔ file headers, no unredacted personal data) and run without a server | CLAUDE.md: skipped, not failed |
 | 2026-10-07 | `.gitattributes`: `tests/golden/**` is `-text` so Git never normalizes the byte-exact golden files; everything else `text=auto` | Golden files are CRLF/UTF-8 captures |
 | 2026-10-07 | First Release build on the developer's machine: `tfp.exe` 7,753,728 bytes with 78 embedded assemblies (nothing excluded yet); `tfp version` exit 0, unknown command exit 2 | Baseline for the spike's exclusion list |
+| 2026-10-07 | Spike measurements: Costura with no exclusions 78 assemblies / 7.8 MB; with the exclusion list in `FodyWeavers.xml` (SqlClient, MSAL/Entra identity stack, all non-VC Azure DevOps clients) 34 assemblies / 3.6 MB. The exe alone in an empty folder, without `.config`, runs `version`, `whoami`, `logout` and the error paths; the live-server check of the exclusions is pending `tfp login` | KICKOFF-LOCAL step 4 |
+| 2026-10-07 | Workspace detection step 2 works across client versions: the 20.256 client library finds the workspace that tf.exe 18.10 created (`Workstation.Current.GetLocalWorkspaceInfo`), collection URL `https://<org>.visualstudio.com/` normalized to `https://dev.azure.com/<org>` | Observed on the developer's machine |
+| 2026-10-07 | `app.manifest`: asInvoker, Windows 8.1–11 supportedOS (real OS version in `tfp version`), longPathAware, UTF-8 active code page | Portability and correct Czech file names in arguments |
+| 2026-10-07 | MSYS protection verified from Git Bash: `tfp status /recursive` reports TFP0002 naming `C:/Program Files/Git/recursive` and the `-recursive` fix; detection requires MSYSTEM or EXEPATH in the environment and a Git-looking prefix that exists on disk | SPEC.md "Ochrana proti převodu cest" |
 | 2026-10-07 | Default output of tfp is text in the shape of tf.exe; JSON only with `/format:json` (tf.exe has no JSON at all, `/format:` accepts only `brief`/`detailed`, plus `unified`/`context` for `difference`; anything else is TF10120, exit 100) | Confirmed with the developer |
 
 ## Open questions
@@ -133,8 +143,14 @@ Open:
   (`.github/workflows/ci.yml`: restore, build Release, unit + integration tests with secrets, artifact,
   release on `v*` tags), README, `.gitattributes`. Release build and both test projects pass locally
   (unit 3/3; integration 4 passed, 1 skipped without secrets).
-- Next: step 4 (spike, milestone 1); help capture review when available; first push and CI run.
-- Blockers: none for the spike. `tests/golden/help/` not yet captured; repository not yet pushed.
+- Step 4 (spike) in progress: Auth (Credential Manager P/Invoke, URL normalization, PAT prompt,
+  connection), Context (workspace detection), Cli (minimal parser with MSYS detection), Commands (help,
+  version, login, logout, whoami, status), Errors, Output (text + JSON envelope); 28 unit tests. Offline
+  paths verified from PowerShell, Git Bash and from the exe alone in an empty folder; exe 3.6 MB after
+  exclusions. Known small gaps for milestone 2: JSON `collection` is null when the error happens before the
+  context is resolved; `status /format:detailed`, `/user`, `/shelveset` return TFP0002 in this build.
+- Next: developer runs `tfp login`; then server verification, clean-machine test, spike report, Gate B.
+- Blockers: `tfp login` (developer); `tests/golden/help/` not yet captured; repository not yet pushed.
 
 ### 2026-10-07 – specification and golden files (claude.ai conversation)
 
