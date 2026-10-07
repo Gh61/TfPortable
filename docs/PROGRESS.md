@@ -6,7 +6,7 @@ Read this first in every session. Update it at the end of every session (see CLA
 
 | # | Milestone | Where | Status | Gate |
 | --- | --- | --- | --- | --- |
-| 0 | Spec refinement from golden files (`docs/compat.md`, SPEC.md updates) | local | in progress (steps 0–2 done, waiting at Gate A) | user approves SPEC.md |
+| 0 | Spec refinement from golden files (`docs/compat.md`, SPEC.md updates) | local | done (Gate A passed 2026-10-07; help capture still to be reviewed) | user approves SPEC.md |
 | 1 | Spike: `tfp whoami` + `tfp status` with PAT, Costura single exe, clean machine | local | not started | user approves architecture |
 | 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | not started | – |
 | 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | not started | – |
@@ -18,21 +18,22 @@ Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
-1. Gate A: wait for the developer's answers to the questions under "Needs the user", apply them to
-   SPEC.md / `docs/json-schema.md` / `docs/compat.md`, record them under "Decisions".
+1. `docs/KICKOFF-LOCAL.md` step 4 (spike, milestone 1): Credential Manager store, `login`, `whoami`,
+   `status` (workspace detection), Costura exclusions measured, verification on this machine (PowerShell
+   and Git Bash) and on a clean machine or Windows Sandbox, report (exe size, excluded assemblies).
 2. When the developer has run `tools/capture-tf-help.ps1`: review `tests/golden/help/` for personal
    data, derive the per-command switch and alias lists, put them into SPEC.md (or a new
    `docs/commands.md`) and `docs/json-schema.md` (`help` data). Commit.
-3. `docs/KICKOFF-LOCAL.md` step 3 (scaffolding), then step 4 (spike, milestone 1).
+3. After the first push: check the CI run on GitHub Actions (`.github/workflows/ci.yml`).
 
 ## Needs the user
 
-- **Gate A** (KICKOFF-LOCAL step 2): questions 1, 3 and 4 answered on 2026-10-07 (see "Decisions").
-  Still open: 2. `view /format:json`: text content inline as a JSON string, binary only via
-  `/output` (recommended), or always require `/output` in JSON mode.
 - Run `tools/capture-tf-help.ps1` (read-only, no sign-in; writes `tests/golden/help/` and
   `index-help.json`), review the output and commit it. It supplies the switch lists and aliases
   that `tf help <command>` did not print.
+- Push `main` to GitHub so that the CI workflow runs for the first time (nothing has been pushed
+  from the local sessions; the agent does not push on its own).
+- Step 4 (spike): a machine or Windows Sandbox without Visual Studio to verify portability of `tfp.exe`.
 
 - Before milestone 2: GitHub Secrets `TFP_TEST_COLLECTION` and `TFP_TEST_PAT`. The PAT should belong to a
   dedicated user with access only to the test project, or to a separate test organization
@@ -71,6 +72,11 @@ Statuses: not started, in progress, blocked, done.
 | 2026-10-07 | `docs/json-schema.md` written as a draft (envelope, shared types Item/Changeset/Change/PendingChange/Conflict/Mapping/Workspace, enumerations in lower case, `data` per phase 1 command) | Kickoff step 2 asks for a proposed structure; Gate A approves it |
 | 2026-10-07 | New script `tools/capture-tf-help.ps1` captures `tf vc help <cmd>` and `tf <cmd> /?` into `tests/golden/help/` | Golden `general/help-status` shows that `tf help <cmd>` prints only a banner in VS 18, so switch lists and aliases were missing; the developer runs it (rule: capture scripts are run by the user) |
 | 2026-10-07 | Gate A, developer approved: (1) the last table column is never truncated and local paths in grouped listings are absolute; (3) `docs/json-schema.md` is the basis for milestone 2, on the condition that its types stay derived from what the golden outputs show (PendingChange from `status /format:detailed`, Item from `properties`, Changeset/Change from `changeset`, Workspace/Mapping from `workspaces /format:detailed` and `workfold`); (4) CI uses the same collection and the same test project as the golden capture, so changeset numbers match the manifests | Developer's answers in the local session |
+| 2026-10-07 | Gate A (2): `view /format:json` returns the content of a text file inline as a JSON string in `data.content`; a binary file needs `/output:<file>` (then `content` is null), otherwise TFP0303. Gate A passed | Developer's answer; one call gives the AI metadata and content |
+| 2026-10-07 | Scaffolding (step 3): `TfPortable.slnx` + `Directory.Build.props`; packages Fody 6.9.3, Costura.Fody 6.2.0, Microsoft.NETFramework.ReferenceAssemblies 1.0.3, xunit 2.9.3, xunit.runner.visualstudio 3.1.5, Microsoft.NET.Test.Sdk 17.14.1, Newtonsoft.Json 13.0.3 (JSON output; already a transitive dependency of ExtendedClient, so no new dependency). Version: CI passes `/p:Version` from the tag, local builds are `0.1.0-dev` | KICKOFF-LOCAL step 3; latest stable versions on 2026-10-07; xunit.runner.visualstudio 4.x targets xunit v3 |
+| 2026-10-07 | Integration tests skip via a `FactAttribute` subclass (`IntegrationFact`) that sets `Skip` when `TFP_TEST_COLLECTION`/`TFP_TEST_PAT` are missing; no extra package. `GoldenIndexTests` validate `tests/golden` integrity (index ↔ file headers, no unredacted personal data) and run without a server | CLAUDE.md: skipped, not failed |
+| 2026-10-07 | `.gitattributes`: `tests/golden/**` is `-text` so Git never normalizes the byte-exact golden files; everything else `text=auto` | Golden files are CRLF/UTF-8 captures |
+| 2026-10-07 | First Release build on the developer's machine: `tfp.exe` 7,753,728 bytes with 78 embedded assemblies (nothing excluded yet); `tfp version` exit 0, unknown command exit 2 | Baseline for the spike's exclusion list |
 | 2026-10-07 | Default output of tfp is text in the shape of tf.exe; JSON only with `/format:json` (tf.exe has no JSON at all, `/format:` accepts only `brief`/`detailed`, plus `unified`/`context` for `difference`; anything else is TF10120, exit 100) | Confirmed with the developer |
 
 ## Open questions
@@ -122,8 +128,13 @@ Open:
 - Step 2 done: SPEC.md updated with the compat.md decisions, `docs/json-schema.md` drafted,
   `tools/capture-tf-help.ps1` written (syntax-checked, not run), Gate A questions listed under
   "Needs the user".
-- Next: Gate A answers, then help capture review, then step 3 (scaffolding).
-- Blockers: Gate A (developer approval); `tests/golden/help/` not yet captured.
+- Gate A passed (all four questions answered, recorded under "Decisions").
+- Step 3 done: solution, three projects, `Directory.Build.props`, `FodyWeavers.xml`, CI workflow
+  (`.github/workflows/ci.yml`: restore, build Release, unit + integration tests with secrets, artifact,
+  release on `v*` tags), README, `.gitattributes`. Release build and both test projects pass locally
+  (unit 3/3; integration 4 passed, 1 skipped without secrets).
+- Next: step 4 (spike, milestone 1); help capture review when available; first push and CI run.
+- Blockers: none for the spike. `tests/golden/help/` not yet captured; repository not yet pushed.
 
 ### 2026-10-07 – specification and golden files (claude.ai conversation)
 

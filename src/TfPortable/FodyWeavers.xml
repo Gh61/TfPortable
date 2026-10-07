@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Weavers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd">
+  <!--
+    Costura embeds every managed dependency into tfp.exe as a compressed resource and loads it
+    through AssemblyResolve, so the release is one file without a .config next to it.
+
+    ExcludeAssemblies: the spike (KICKOFF-LOCAL step 4) measures the exe and fills this list with
+    assemblies that TFVC does not need (candidates from SPEC.md: Microsoft.Data.SqlClient and its
+    native SNI, work item tracking, build, test management, lab management clients).
+  -->
+  <Costura IncludeDebugSymbols="false" DisableCompression="false" CreateTemporaryAssemblies="false">
+    <ExcludeAssemblies>
+    </ExcludeAssemblies>
+  </Costura>
+</Weavers>

@@ -1,0 +1,12 @@
+# Normalize line endings for text files; Windows checkouts get CRLF.
+* text=auto
+
+# PowerShell scripts run on Windows only.
+*.ps1 text eol=crlf
+
+# Golden files are captured byte-exact (UTF-8, CRLF) and must never be normalized.
+tests/golden/** -text
+
+# Binaries
+*.png binary
+*.exe binary

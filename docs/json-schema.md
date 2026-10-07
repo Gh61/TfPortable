@@ -5,7 +5,7 @@ the types stay derived from what the original prints in the golden outputs (Pend
 `status /format:detailed`, Item from `properties`, Changeset/Change from `changeset`,
 Workspace/Mapping from `workspaces /format:detailed` and `workfold`). The implementer fills in
 details per command (milestones 2–4) and keeps this file in sync; every change of a field name
-after the first release is a breaking change. Open point 1 in section 4 (`view`) is still pending.
+after the first release is a breaking change. All open points in section 4 are decided.
 
 Rules (from SPEC.md, "Rozšíření pro AI"):
 
@@ -114,8 +114,8 @@ Phase 2 commands (`merges`, `annotate`, `folderdiff`, `shelvesets`, `unshelve`, 
 
 ## 4. Open points for Gate A
 
-1. `view /format:json` returns the text content inline as a JSON string (proposed). Alternative:
-   always require `/output` in JSON mode.
+1. `view /format:json` returns the text content inline as a JSON string; a binary item needs
+   `/output` (then `content` is null), otherwise TFP0303 (approved at Gate A).
 2. `workspace` in the envelope stays a `name;owner` string as in SPEC.md; the full object is in
    `whoami`/`workfold` data (approved with the draft).
 3. Enumeration casing: lower-case (`acceptyours`) for stability; the text output keeps the

@@ -41,7 +41,9 @@ Konzolová aplikace v C# pro .NET Framework 4.8 nad oficiálním TFVC klientský
 | Balíček | Verze | Účel |
 | --- | --- | --- |
 | [Microsoft.TeamFoundationServer.ExtendedClient](https://www.nuget.org/packages/Microsoft.TeamFoundationServer.ExtendedClient) | 20.256.2 (stabilní, net472) | `VersionControlServer`, `Workspace`, `Workstation`, pending changes, historie |
-| Costura.Fody + Fody | aktuální stabilní | Vložení všech spravovaných DLL do exe |
+| Costura.Fody + Fody | 6.2.0 + 6.9.3 | Vložení všech spravovaných DLL do exe |
+| Newtonsoft.Json | 13.0.3 (tranzitivně z ExtendedClient) | Výstup `/format:json`; žádná další závislost |
+| xunit 2.9.3, Microsoft.NET.Test.Sdk 17.14.1 | – | Unit, integrační a golden testy (`tests/`) |
 | Žádná další knihovna pro CLI | – | Parser přepínačů ve stylu tf.exe (`/switch:value`, `-switch:value`) je vlastní, protože běžné knihovny tuto syntaxi neumí |
 
 Credential Manager se volá přes P/Invoke na `advapi32.dll` (`CredReadW`, `CredWriteW`, `CredDeleteW`, `CredEnumerateW` pro výčet uložených PAT), bez další závislosti.
@@ -70,7 +72,7 @@ tfportable/
 - Cíl je, aby nebyl potřeba ani `tfp.exe.config`. Binding redirecty řeší Costura; pokud by se ukázalo, že konfigurace je nutná, soubor se vloží do exe a aplikuje programově.
 - ExtendedClient tahá i balíčky, které TFVC nepotřebuje (např. Microsoft.Data.SqlClient s nativní knihovnou SNI, nativní části pro work item tracking). Ty se vyřadí přes `ExcludeAssemblies` ve `FodyWeavers.xml` nebo přes `ExcludeAssets` v csproj, aby exe nebylo zbytečně velké a nevyžadovalo nativní DLL vedle sebe.
 - Prvním úkolem implementace je spike: holé `tfp status` přes Costuru na čistém stroji bez VS. Pokud by embedding narazil (reflexní načítání pluginů klienta podle cesty), záložní varianta je ILRepack nebo ZIP s exe a DLL v jedné složce.
-- Build: SDK-style csproj, `<TargetFramework>net48</TargetFramework>`, `<AssemblyName>tfp</AssemblyName>`, `<PlatformTarget>AnyCPU</PlatformTarget>` s `Prefer32Bit=false`. Verze assembly z git tagu.
+- Build: SDK-style csproj, `<TargetFramework>net48</TargetFramework>`, `<AssemblyName>tfp</AssemblyName>`, `<PlatformTarget>AnyCPU</PlatformTarget>` s `Prefer32Bit=false`. Verze assembly z git tagu: CI předá `/p:Version=<tag bez v>` (jinak `0.1.0-ci.<run>`), lokální build má `0.1.0-dev`; informační verze nese i hash commitu. Řešení je `TfPortable.slnx` (formát .NET SDK 9.0.200+), společná nastavení v `Directory.Build.props`.
 
 ## Autentizace (PAT)
 
@@ -278,7 +280,7 @@ Fáze 1 pokrývá 21 příkazů tf.exe a 3 příkazy pro správu PAT: vše pro p
 | --- | --- | --- | --- |
 | `history` (`hist`) | `/version:` `/stopafter:` `/recursive` `/user:` `/format:brief\|detailed` `/sort:` `/slotmode` `/itemmode` + rozšíření (viz Rozšíření pro AI) | Výchozí limit 256 položek; výchozí slot mód; u jednoho souboru má tabulka navíc sloupec Change; neznámá cesta = prázdný výsledek, exit 0; neznámý `/user:` exit 100 (TF14045); `/format:xml` odmítnuto | 1 |
 | `changeset` | `<číslo>` `/latest` | Detail checkinu: autor, datum, komentář, změněné položky s typem změny, přidružené work items. `/comment:` (úprava komentáře) vrací TFP0003; neexistující číslo exit 100 (TF14019) | 1 |
-| `view` | `/version:` `/output:<soubor>` `/shelveset:` | Obsah souboru v dané verzi na stdout, překódovaný do UTF-8 podle kódování položky; binární soubory jen do `/output` (jinak TFP0303); nenalezeno exit 1 | 1 |
+| `view` | `/version:` `/output:<soubor>` `/shelveset:` | Obsah souboru v dané verzi na stdout, překódovaný do UTF-8 podle kódování položky; binární soubory jen do `/output` (jinak TFP0303); nenalezeno exit 1. S `/format:json` je obsah textového souboru řetězec v `data.content`, binární soubor i tady vyžaduje `/output` | 1 |
 | `difference` (`diff`) | `/version:` `/recursive` `/format:unified\|brief` `/ignorespace` `/ignoreeol` `/ignorecase` `/shelveset:` | Vždy textový unified diff; porovnání workspace × server, dvou verzí, dvou serverových cest, nebo shelvesetu; exit 0 i když se soubory liší (jako originál); binární soubory jen „files differ“ | 1 |
 | `dir` | `/version:` `/recursive` `/folders` `/deleted` | Výpis serverové struktury | 1 |
 | `properties` (`info`) | `/version:` `/recursive` `/workspace:` | Lokální i serverová verze, kódování, zámky, pending change | 1 |

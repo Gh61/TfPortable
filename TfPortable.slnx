@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TfPortable/TfPortable.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TfPortable.IntegrationTests/TfPortable.IntegrationTests.csproj" />
+    <Project Path="tests/TfPortable.Tests/TfPortable.Tests.csproj" />
+  </Folder>
+</Solution>

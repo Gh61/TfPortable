@@ -1,0 +1,26 @@
+<Project>
+
+  <!-- Shared settings for every project in the repository. -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- Only English resources of the Microsoft client libraries; keeps the single exe small. -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!-- CI passes /p:Version=<tag without v> on a release tag; local builds are "dev". -->
+    <Version Condition="'$(Version)' == ''">0.1.0-dev</Version>
+    <Company>The TfPortable contributors</Company>
+    <Product>TfPortable</Product>
+    <Authors>The TfPortable contributors</Authors>
+    <Copyright>Copyright (C) 2026 The TfPortable contributors. GPL-3.0-or-later with an additional permission (LICENSE-EXCEPTION).</Copyright>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Reference assemblies so that `dotnet build` works without the .NET Framework targeting pack (Linux). -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

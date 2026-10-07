@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write   # release upload on tags; read is enough for everything else
+
+jobs:
+  build:
+    name: Build, test, package (windows-latest)
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Compute version
+        id: version
+        shell: pwsh
+        run: |
+          if ('${{ github.ref_type }}' -eq 'tag') {
+            $v = '${{ github.ref_name }}'.TrimStart('v')
+          } else {
+            $v = "0.1.0-ci.${{ github.run_number }}"
+          }
+          "version=$v" >> $env:GITHUB_OUTPUT
+          Write-Host "Version: $v"
+
+      - name: Restore
+        run: dotnet restore TfPortable.slnx
+
+      - name: Build (Release)
+        run: dotnet build TfPortable.slnx -c Release --no-restore -p:Version=${{ steps.version.outputs.version }}
+
+      - name: Unit tests
+        run: dotnet test tests/TfPortable.Tests -c Release --no-build --logger "trx;LogFileName=unit.trx" --results-directory TestResults
+
+      - name: Integration and golden tests (skipped without secrets)
+        env:
+          TFP_TEST_COLLECTION: ${{ secrets.TFP_TEST_COLLECTION }}
+          TFP_TEST_PAT: ${{ secrets.TFP_TEST_PAT }}
+        run: dotnet test tests/TfPortable.IntegrationTests -c Release --no-build --logger "trx;LogFileName=integration.trx" --results-directory TestResults
+
+      - name: Package tfp.exe
+        shell: pwsh
+        run: |
+          $exe = 'src/TfPortable/bin/Release/net48/tfp.exe'
+          if (-not (Test-Path $exe)) { throw "tfp.exe not found at $exe" }
+          New-Item -ItemType Directory -Force artifacts | Out-Null
+          Copy-Item $exe artifacts/tfp.exe
+          $hash = (Get-FileHash artifacts/tfp.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash *tfp.exe" | Out-File -Encoding ascii -NoNewline artifacts/tfp.exe.sha256
+          Write-Host "tfp.exe: $((Get-Item artifacts/tfp.exe).Length) bytes, SHA-256 $hash"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tfp-${{ steps.version.outputs.version }}
+          path: |
+            artifacts/tfp.exe
+            artifacts/tfp.exe.sha256
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ github.run_number }}
+          path: TestResults/*.trx
+          if-no-files-found: ignore
+
+      - name: GitHub release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create '${{ github.ref_name }}' artifacts/tfp.exe artifacts/tfp.exe.sha256 `
+            --title 'TfPortable ${{ steps.version.outputs.version }}' `
+            --notes 'tfp.exe (single file, .NET Framework 4.8) and its SHA-256. See README.md for installation and docs/compat.md for differences from tf.exe. Not a Microsoft product.' `
+            --verify-tag
