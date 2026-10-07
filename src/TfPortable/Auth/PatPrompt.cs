@@ -52,7 +52,7 @@ namespace TfPortable.Auth
         {
             Console.Error.Write(Explanation(normalizedCollection));
             Console.Error.WriteLine();
-            Console.Error.Write("Paste the PAT (input is hidden): ");
+            Console.Error.Write("Paste the PAT (shown as *, Enter to confirm, Esc to clear): ");
 
             var sb = new StringBuilder();
             while (true)
@@ -68,6 +68,7 @@ namespace TfPortable.Auth
                     if (sb.Length > 0)
                     {
                         sb.Length--;
+                        Console.Error.Write("\b \b");
                     }
 
                     continue;
@@ -75,18 +76,21 @@ namespace TfPortable.Auth
 
                 if (key.Key == ConsoleKey.Escape)
                 {
+                    Console.Error.Write(new string('\b', sb.Length) + new string(' ', sb.Length) + new string('\b', sb.Length));
                     sb.Clear();
                     continue;
                 }
 
-                if (!char.IsControl(key.KeyChar))
+                if (!char.IsControl(key.KeyChar) && !char.IsWhiteSpace(key.KeyChar))
                 {
                     sb.Append(key.KeyChar);
+                    Console.Error.Write('*');
                 }
             }
 
             Console.Error.WriteLine();
             string pat = sb.ToString().Trim();
+            Console.Error.WriteLine($"Read {pat.Length} characters.");
             if (pat.Length == 0)
             {
                 throw new TfpException(ErrorCodes.PatMissing, ExitCodes.Authentication, "No PAT was entered.", "Run the command again and paste the token.");

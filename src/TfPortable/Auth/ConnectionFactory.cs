@@ -55,6 +55,42 @@ namespace TfPortable.Auth
             return connection.AuthorizedIdentity;
         }
 
+        /// <summary>
+        /// Independent check of the PAT over REST (`_apis/connectionData` with Basic auth), used to explain a failed
+        /// login: distinguishes a rejected token from a problem of the SOAP client connection. Never logs the token.
+        /// </summary>
+        public static string RestDiagnostics(string collectionUrl, string pat)
+        {
+            try
+            {
+                string url = collectionUrl.Trim().TrimEnd('/') + "/_apis/connectionData?api-version=7.1-preview.1";
+                using var client = new System.Net.Http.HttpClient();
+                client.Timeout = TimeSpan.FromSeconds(30);
+                string token = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(":" + pat));
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", token);
+                client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+                using var response = client.GetAsync(url).GetAwaiter().GetResult();
+                string body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                string who = string.Empty;
+                if (response.IsSuccessStatusCode)
+                {
+                    var match = System.Text.RegularExpressions.Regex.Match(body, "\"providerDisplayName\"\\s*:\\s*\"([^\"]*)\"");
+                    who = match.Success ? $" as {match.Groups[1].Value}" : string.Empty;
+                }
+                else if ((int)response.StatusCode == 203 || response.StatusCode == System.Net.HttpStatusCode.Unauthorized
+                         || body.IndexOf("<html", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    who = " (the token was not accepted: Azure DevOps answers an invalid or expired PAT with 203 and a sign-in page, or with 401)";
+                }
+
+                return $"REST check {url}: HTTP {(int)response.StatusCode} {response.ReasonPhrase}{who}.";
+            }
+            catch (Exception ex)
+            {
+                return $"REST check failed: {ex.GetType().Name}: {ex.Message}";
+            }
+        }
+
         /// <summary>Test query used by login to detect a PAT without the Code scope. Returns false on 403.</summary>
         public static bool HasVersionControlAccess(TfsTeamProjectCollection connection)
         {

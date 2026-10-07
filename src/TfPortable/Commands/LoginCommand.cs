@@ -55,9 +55,12 @@ namespace TfPortable.Commands
                 catch (Exception ex)
                 {
                     var mapped = ErrorMapper.Map(ex, toolName, normalized);
+                    string diagnostics = ConnectionFactory.RestDiagnostics(collectionUrl, pat);
                     throw new TfpException(mapped.Code == ErrorCodes.PatRejected ? ErrorCodes.PatRejected : mapped.Code, mapped.ExitCode,
-                        mapped.Code == ErrorCodes.PatRejected ? $"The server {normalized} rejected the PAT; nothing was stored." : mapped.Message,
-                        mapped.Code == ErrorCodes.PatRejected ? "Check that the token was copied completely, is not expired and belongs to this organization." : mapped.Hint,
+                        mapped.Code == ErrorCodes.PatRejected ? $"The server {normalized} rejected the PAT ({pat.Length} characters); nothing was stored. {diagnostics}" : $"{mapped.Message} {diagnostics}",
+                        mapped.Code == ErrorCodes.PatRejected
+                            ? $"Check that the token was copied completely, is not expired and belongs to this organization. Alternative input without the hidden prompt: 'Get-Clipboard | {toolName} login /collection:{normalized} /pat:-'. Add /verbose for the full exception."
+                            : mapped.Hint,
                         mapped.TfCode, mapped.ServerMessage, inner: ex);
                 }
 
