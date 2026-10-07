@@ -1,50 +1,82 @@
 using System;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
+using TfPortable.Cli;
+using TfPortable.Commands;
+using TfPortable.Errors;
+using TfPortable.Output;
 
 namespace TfPortable
 {
     /// <summary>
-    /// Entry point. Scaffold only: milestone 1 (spike) adds the Credential Manager store and the
-    /// login, whoami and status commands; milestone 2 adds the parser, context, errors and JSON.
-    /// Exit codes follow SPEC.md ("Exit kódy") and docs/compat.md §1.1.
+    /// Entry point: UTF-8 console, en-US client messages, command dispatch, global error mapping and exit codes
+    /// (SPEC.md "Exit kódy", docs/compat.md §1.1). Spike build: login, logout, whoami, status, help, version.
     /// </summary>
     internal static class Program
     {
-        internal const int ExitSuccess = 0;
-        internal const int ExitUnknownCommand = 2;
-        internal const int ExitGeneralError = 100;
-
         private static int Main(string[] args)
         {
             Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
-            Console.InputEncoding = Console.OutputEncoding;
+            var english = CultureInfo.GetCultureInfo("en-US");
+            CultureInfo.DefaultThreadCurrentUICulture = english;
+            Thread.CurrentThread.CurrentUICulture = english;
 
             string toolName = GetToolName();
-            string command = args.Length > 0 ? args[0] : "help";
-
-            switch (command.ToLowerInvariant())
+            ICommand[] commands = Array.Empty<ICommand>();
+            commands = new ICommand[]
             {
-                case "help":
-                case "/?":
-                case "-?":
-                case "-h":
-                case "/help":
-                case "-help":
-                    Console.WriteLine($"{toolName} {GetVersion()} - portable TFVC client (scaffold build).");
-                    Console.WriteLine("Commands are not implemented yet. See docs/SPEC.md and docs/PROGRESS.md.");
-                    return ExitSuccess;
+                new HelpCommand(() => commands),
+                new VersionCommand(),
+                new LoginCommand(),
+                new LogoutCommand(),
+                new WhoamiCommand(),
+                new StatusCommand(),
+            };
 
-                case "version":
-                    Console.WriteLine($"{toolName} {GetVersion()}");
-                    Console.WriteLine($"Microsoft.TeamFoundationServer.ExtendedClient {GetClientLibraryVersion()}");
-                    return ExitSuccess;
+            bool json = args.Any(a => a.Length > 1 && (a[0] == '/' || a[0] == '-') && a.Substring(1).Equals("format:json", StringComparison.OrdinalIgnoreCase));
+            bool verbose = args.Any(a => a.Length > 1 && (a[0] == '/' || a[0] == '-') && a.Substring(1).Equals("verbose", StringComparison.OrdinalIgnoreCase));
+            string commandName = "help";
+            var output = new OutputWriter(json, commandName, Console.Out, Console.Error);
 
-                default:
-                    Console.Error.WriteLine($"ERROR TFP0001: Unknown command '{command}'.");
-                    Console.Error.WriteLine($"  Next step: run '{toolName} help' for the list of commands.");
-                    return ExitUnknownCommand;
+            try
+            {
+                var commandLine = CommandLine.Parse(args, commands.SelectMany(c => c.Switches));
+                commandName = commandLine.Command.Length == 0 || commandLine.Has("help") ? "help" : commandLine.Command;
+                if (commandName == "stat")
+                {
+                    commandName = "status";
+                }
+
+                var command = commands.FirstOrDefault(c => c.Name == commandName);
+                output = new OutputWriter(json, command?.Name ?? commandName, Console.Out, Console.Error);
+                if (command == null)
+                {
+                    throw new TfpException(ErrorCodes.UnknownCommand, ExitCodes.UnknownCommand,
+                        $"Unknown command '{commandName}'.",
+                        $"Commands in this build: {string.Join(", ", commands.Select(c => c.Name).OrderBy(n => n, StringComparer.Ordinal))}. Run '{toolName} help'.");
+                }
+
+                if (command.Name != "help")
+                {
+                    commandLine.Validate(toolName, command.Switches);
+                }
+
+                return command.Run(commandLine, output, toolName);
+            }
+            catch (Exception ex)
+            {
+                var error = ErrorMapper.Map(ex, toolName, output.Collection);
+                output.Error(error);
+                if (verbose)
+                {
+                    Console.Error.WriteLine(ex.ToString());
+                }
+
+                return error.ExitCode;
             }
         }
 
@@ -65,19 +97,6 @@ namespace TfPortable
             }
 
             return "tfp";
-        }
-
-        internal static string GetVersion()
-        {
-            var assembly = typeof(Program).Assembly;
-            string? informational = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-            return string.IsNullOrEmpty(informational) ? assembly.GetName().Version.ToString() : informational!;
-        }
-
-        private static string GetClientLibraryVersion()
-        {
-            var clientAssembly = typeof(Microsoft.TeamFoundation.VersionControl.Client.VersionControlServer).Assembly;
-            return clientAssembly.GetName().Version.ToString();
         }
     }
 }
