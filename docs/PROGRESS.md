@@ -7,7 +7,7 @@ Read this first in every session. Update it at the end of every session (see CLA
 | # | Milestone | Where | Status | Gate |
 | --- | --- | --- | --- | --- |
 | 0 | Spec refinement from golden files (`docs/compat.md`, SPEC.md updates) | local | done (Gate A passed 2026-10-07; help capture still to be reviewed) | user approves SPEC.md |
-| 1 | Spike: `tfp whoami` + `tfp status` with PAT, Costura single exe, clean machine | local | done on the developer's machine (server verification passed 2026-10-08); clean-machine test and Gate B pending | user approves architecture |
+| 1 | Spike: `tfp whoami` + `tfp status` with PAT, Costura single exe, clean machine | local | done (clean-machine test passed, Gate B approved 2026-10-08) | user approves architecture |
 | 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | not started | – |
 | 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | not started | – |
 | 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | not started | – |
@@ -18,10 +18,8 @@ Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
-1. Gate B: the developer tests `tfp.exe` on a machine or Windows Sandbox without Visual Studio
-   (`version`, `login`, `whoami`, `status -recursive` in a fresh workspace or with `/collection`) and
-   approves the architecture (spike report in the session log of 2026-10-08).
-2. Then step 5: `docs/KICKOFF-CLOUD.md`, "Needs the user" for the cloud phase, PROGRESS.md handover.
+1. Step 5: `docs/KICKOFF-CLOUD.md` (milestones 2–5, what to read, CI loop, stop conditions, golden cases
+   per milestone), "Needs the user" for the cloud phase, PROGRESS.md handover.
 2. When the developer has run `tools/capture-tf-help.ps1`: review `tests/golden/help/` for personal
    data, derive the per-command switch and alias lists, put them into SPEC.md (or a new
    `docs/commands.md`) and `docs/json-schema.md` (`help` data). Commit.
@@ -29,16 +27,8 @@ Statuses: not started, in progress, blocked, done.
 
 ## Needs the user
 
-- Run `tools/capture-tf-help.ps1` (read-only, no sign-in; writes `tests/golden/help/` and
-  `index-help.json`), review the output and commit it. It supplies the switch lists and aliases
-  that `tf help <command>` did not print.
 - Push `main` to GitHub so that the CI workflow runs for the first time (nothing has been pushed
   from the local sessions; the agent does not push on its own).
-- Gate B (step 4): copy `src\TfPortable\bin\Release\net48\tfp.exe` alone to a machine or Windows Sandbox
-  without Visual Studio (needs .NET Framework 4.8, part of Windows 10 1903+), run `tfp version`,
-  `tfp login /collection:https://dev.azure.com/<org>` (PAT with Full access), `tfp whoami` and
-  `tfp status -recursive /collection:...` or inside a workspace. Report: works or not, any error text.
-  Then approve the architecture (single Costura exe, PAT in Credential Manager, SOAP client with Basic auth).
 
 - Before milestone 2: GitHub Secrets `TFP_TEST_COLLECTION` and `TFP_TEST_PAT`. The PAT should belong to a
   dedicated user with access only to the test project, or to a separate test organization
@@ -91,6 +81,8 @@ Statuses: not started, in progress, blocked, done.
 | 2026-10-08 | Spike verified against the test collection with a full-access PAT: `whoami` (identity, collection, PAT date, workspace with mappings) and `status` (pending and detected changes in the tf.exe table shape, trailer `Changes: 1, detected changes: 1`) work from PowerShell, from Git Bash with `-switch` syntax, and from `tfp.exe` copied alone into an empty folder (3.6 MB, 34 embedded assemblies, no `.config`); JSON envelopes correct. In a local workspace the client library pends an edit of a tracked file automatically during the scan (README.md appeared as pending `edit`, the new file as detected `add`) and un-pends it when the content is restored | Milestone 1 result; architecture holds |
 | 2026-10-08 | `name;owner` uses the owner's display name (`Workspace.OwnerDisplayName`), as in the golden files; `Workspace.OwnerName` is an identity id (GUID) on Azure DevOps Services | Golden `<WORKSPACE>;<OWNER>` |
 | 2026-10-08 | Rules added to CLAUDE.md on the developer's request: search the web after a few failed attempts before guessing further; never enable System.Net/TeamFoundation tracing with a PAT in use. README states that the PAT must have Full access | Lessons from the spike |
+| 2026-10-08 | Gate B passed: `tfp.exe` alone on a clean Windows Server (10.0.20348) without Visual Studio ran `version`, `login` (full-access PAT), `whoami`, `logout`; the developer approved the architecture (single Costura exe, PAT in Credential Manager, SOAP client with Basic auth). Two notes for milestone 2: `logout` without `/collection` outside a workspace should fall back to the single stored PAT like `whoami`; an interrupted PAT prompt (Ctrl+C) ends silently | Developer's test on 2026-10-08 |
+| 2026-10-08 | Help of tf.exe 18.10 captured (`tests/golden/help/`, 87 files, `index-help.json`; the developer ran the script from another directory, files were moved into the repo; no personal data). `docs/commands.md` lists every command's switches and what TfPortable does with them. Corrections to SPEC.md from the help: `add`/`checkout` use `/encoding:`, not `/type:`; `get` has `/noautoresolve`; `resolve /auto` canonical values are `AutoMerge|AutoMergeForced|TakeTheirs|KeepYours|OverwriteLocal|DeleteConflict|KeepYoursRenameTheirs` with the documentation's `Accept*` names as aliases (golden captures used `AcceptYours`/`AcceptTheirs`/`AcceptMerge` successfully); `status`/`workspaces`/`shelvesets` know `/format:xml` (not supported, `json` instead); `view` has `/console` (accepted, no-op) and `/recursive`; `/lock:checkin|checkout` on `add`/`checkout`/`delete`/`rename` is rejected because locks write to the server | KICKOFF-LOCAL step 2 follow-up; the implementer no longer guesses switch lists |
 | 2026-10-07 | Default output of tfp is text in the shape of tf.exe; JSON only with `/format:json` (tf.exe has no JSON at all, `/format:` accepts only `brief`/`detailed`, plus `unified`/`context` for `difference`; anything else is TF10120, exit 100) | Confirmed with the developer |
 
 ## Open questions

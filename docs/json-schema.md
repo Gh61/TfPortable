@@ -77,8 +77,10 @@ Enumerations:
 - ChangeType: `add`, `edit`, `delete`, `rename`, `branch`, `merge`, `undelete`, `rollback`,
   `lock`, `encoding`, `property`, `sourcerename`.
 - LockLevel: `none`, `checkin`, `checkout`.
-- Resolution: `acceptmerge`, `acceptyours`, `accepttheirs`, `acceptyoursrenametheirs`,
-  `overwritelocal`, `deleteconflict`.
+- Resolution (the names of the tf.exe help, lower-case): `automerge`, `automergeforced`,
+  `taketheirs`, `keepyours`, `overwritelocal`, `deleteconflict`, `keepyoursrenametheirs`. The
+  documentation aliases `AcceptMerge`, `AcceptYours`, `AcceptTheirs`, `AcceptYoursRenameTheirs` are
+  accepted on input and reported under the canonical name.
 - Location: `local`, `server`.
 
 ## 3. `data` per command (phase 1)
@@ -118,5 +120,5 @@ Phase 2 commands (`merges`, `annotate`, `folderdiff`, `shelvesets`, `unshelve`, 
    `/output` (then `content` is null), otherwise TFP0303 (approved at Gate A).
 2. `workspace` in the envelope stays a `name;owner` string as in SPEC.md; the full object is in
    `whoami`/`workfold` data (approved with the draft).
-3. Enumeration casing: lower-case (`acceptyours`) for stability; the text output keeps the
-   server's casing (`AcceptYours`) (approved with the draft).
+3. Enumeration casing: lower-case (`keepyours`) for stability; the text output keeps the
+   server's casing (`KeepYours`) (approved with the draft).

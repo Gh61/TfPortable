@@ -179,7 +179,7 @@ Syntaxe je převzatá z tf.exe beze změny; odchylky jsou jen tam, kde by kompat
 - Neznámý příkaz: exit kód 2. Neznámý nebo neplatný přepínač: exit kód 100, stejně jako originál (golden výstup general/unknown-switch). V obou případech výpis platných příkazů nebo přepínačů, žádné tiché ignorování.
 - Nápověda, hlášky a rady používají skutečný název spuštěného souboru (`tfp`, nebo `tf` po přejmenování).
 
-\* Přesný seznam aliasů a přepínačů se převezme z nápovědy originálního tf.exe a uloží jako testovací data v `tests/golden/help/` (skript `tools/capture-tf-help.ps1`; `tf help <příkaz>` ve VS 18 vypíše jen banner, proto se zachytává `tf vc help <příkaz>` a `tf <příkaz> /?`). Dokud nápověda není zachycená, platí [dokumentace TFVC příkazů](https://learn.microsoft.com/en-us/azure/devops/repos/tfvc/use-team-foundation-version-control-commands?view=azure-devops).
+\* Přesný seznam aliasů a přepínačů je převzatý z nápovědy originálního tf.exe 18.10, zachycené v `tests/golden/help/` (skript `tools/capture-tf-help.ps1`; `tf help <příkaz>` ve VS 18 vypíše jen banner, proto je zachyceno `tf vc help <příkaz>` a `tf <příkaz> /?`), a sepsaný po příkazech v `docs/commands.md` včetně toho, co TfPortable s každým přepínačem dělá. Tabulky níže uvádějí jen hlavní přepínače; při rozporu platí `docs/commands.md`.
 
 **Itemspec**
 
@@ -262,14 +262,14 @@ Fáze 1 pokrývá 21 příkazů tf.exe a 3 příkazy pro správu PAT: vše pro p
 
 | Příkaz (aliasy) | Přepínače | Chování | Fáze |
 | --- | --- | --- | --- |
-| `status` (`stat`) | `/recursive` `/format:brief\|detailed` `/user:` `/workspace:` `/shelveset:` `/nodetect` | Pending changes; v lokálním workspace i detekované změny (candidates) zvlášť označené | 1 |
-| `add` | `/recursive` `/lock:none\|checkin\|checkout` `/type:` `/noignore` | Respektuje `.tfignore` při `/recursive` a zástupných znacích (přeskočené položky vypíše s důvodem, exit 1 jako originál); explicitně zadaný soubor přidá vždy | 1 |
-| `checkout` (`edit`) | `/recursive` `/lock:` `/type:` | Označí soubor v lokálním workspace jako pending edit | 1 |
+| `status` (`stat`) | `/recursive` `/format:brief\|detailed` `/user:` `/workspace:` `/shelveset:` `/nodetect` | Pending changes; v lokálním workspace i detekované změny (candidates) zvlášť označené. `/format:xml` originálu (i u `workspaces` a `shelvesets`) se nepodporuje, místo něj `/format:json` | 1 |
+| `add` | `/recursive` `/lock:none` `/encoding:` `/noignore` | Respektuje `.tfignore` při `/recursive` a zástupných znacích (přeskočené položky vypíše s důvodem, exit 1 jako originál); explicitně zadaný soubor přidá vždy. `/lock:checkin\|checkout` odmítne (zámky zapisují na server) | 1 |
+| `checkout` (`edit`) | `/recursive` `/lock:none` `/encoding:` | Označí soubor v lokálním workspace jako pending edit | 1 |
 | `delete` (`del`) | `/recursive` `/lock:` `/detect` | Pending delete; soubor smaže lokálně jako tf.exe | 1 |
 | `rename` (`move`, `ren`) | `/lock:` | Přejmenování i přesun souboru nebo složky | 1 |
 | `undo` | `/recursive` `/workspace:` | Vrátí pending changes; vypíše, co vrátil | 1 |
-| `get` | `/version:` `/recursive` `/all` `/overwrite` `/force` `/preview` `/remap` | Při konfliktu se zapisovatelnými soubory skončí chybou se seznamem, ne otázkou | 1 |
-| `resolve` | `/auto:AcceptMerge\|AcceptYours\|AcceptTheirs\|AcceptYoursRenameTheirs\|OverwriteLocal\|DeleteConflict` `/preview` `/recursive` `/newname:` | Bez `/auto` jen vypíše konflikty (žádný dialog); dokud konflikty trvají, exit 1 a seznam na stderr jako originál; bez konfliktů exit 0 | 1 |
+| `get` | `/version:` `/recursive` `/all` `/overwrite` `/force` `/preview` `/remap` `/noautoresolve` | Při konfliktu se zapisovatelnými soubory skončí chybou se seznamem, ne otázkou | 1 |
+| `resolve` | `/auto:AutoMerge\|AutoMergeForced\|TakeTheirs\|KeepYours\|OverwriteLocal\|DeleteConflict\|KeepYoursRenameTheirs` (aliasy z dokumentace `AcceptMerge`, `AcceptYours`, `AcceptTheirs`, `AcceptYoursRenameTheirs` se přijímají) `/preview` `/recursive` `/newname:` | Bez `/auto` jen vypíše konflikty (žádný dialog); dokud konflikty trvají, exit 1 a seznam na stderr jako originál; bez konfliktů exit 0 | 1 |
 | `reconcile` | `/promote` `/adds` `/deletes` `/diff` `/clean` `/preview` `/recursive` `/noignore` | `/clean` maže soubory mimo správu verzí; bez `/preview` vyžaduje i `/noprompt`, aby AI nesmazala soubory omylem | 1 |
 | `localversions` (`lv`) | `/recursive` `/format:` `/workspace:` | Verze souborů ve workspace | 1 |
 | `workfold` | `/workspace:` (jen výpis) | Mapování aktuálního workspace | 1 |
@@ -282,7 +282,7 @@ Fáze 1 pokrývá 21 příkazů tf.exe a 3 příkazy pro správu PAT: vše pro p
 | --- | --- | --- | --- |
 | `history` (`hist`) | `/version:` `/stopafter:` `/recursive` `/user:` `/format:brief\|detailed` `/sort:` `/slotmode` `/itemmode` + rozšíření (viz Rozšíření pro AI) | Výchozí limit 256 položek; výchozí slot mód; u jednoho souboru má tabulka navíc sloupec Change; neznámá cesta = prázdný výsledek, exit 0; neznámý `/user:` exit 100 (TF14045); `/format:xml` odmítnuto | 1 |
 | `changeset` | `<číslo>` `/latest` | Detail checkinu: autor, datum, komentář, změněné položky s typem změny, přidružené work items. `/comment:` (úprava komentáře) vrací TFP0003; neexistující číslo exit 100 (TF14019) | 1 |
-| `view` | `/version:` `/output:<soubor>` `/shelveset:` | Obsah souboru v dané verzi na stdout, překódovaný do UTF-8 podle kódování položky; binární soubory jen do `/output` (jinak TFP0303); nenalezeno exit 1. S `/format:json` je obsah textového souboru řetězec v `data.content`, binární soubor i tady vyžaduje `/output` | 1 |
+| `view` | `/version:` `/output:<soubor>` `/shelveset:` `/recursive` `/console` (přijato, bez účinku) | Obsah souboru v dané verzi na stdout, překódovaný do UTF-8 podle kódování položky; binární soubory jen do `/output` (jinak TFP0303); nenalezeno exit 1. S `/format:json` je obsah textového souboru řetězec v `data.content`, binární soubor i tady vyžaduje `/output` | 1 |
 | `difference` (`diff`) | `/version:` `/recursive` `/format:unified\|brief` `/ignorespace` `/ignoreeol` `/ignorecase` `/shelveset:` | Vždy textový unified diff; porovnání workspace × server, dvou verzí, dvou serverových cest, nebo shelvesetu; exit 0 i když se soubory liší (jako originál); binární soubory jen „files differ“ | 1 |
 | `dir` | `/version:` `/recursive` `/folders` `/deleted` | Výpis serverové struktury | 1 |
 | `properties` (`info`) | `/version:` `/recursive` `/workspace:` | Lokální i serverová verze, kódování, zámky, pending change | 1 |

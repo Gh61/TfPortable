@@ -13,7 +13,9 @@ golden test normalizes and compares TfPortable's output against them.
 | `tools/capture-tf-golden.ps1` | `index.json`, `<command>/<case>.txt` | Read-only cases and pending-change cases (undone at the end) |
 | `tools/capture-tf-golden-extra.ps1` | `index-extra-<run>.json`, `extra-manifest-<run>.json`, `<command>/<case>.txt` | Server-writing scenarios: checkin, label, lock, shelve, branch, merge, rollback, second and server workspace, long history padding |
 
-Captured on 2026-10-07 with tf.exe 18.10.12215.6 (Visual Studio 18 Community, Czech UI).
+| `tools/capture-tf-help.ps1` | `index-help.json`, `help/<command>.txt`, `help/<command>-qmark.txt` | Built-in help (`tf vc help <command>` and `tf <command> /?`) of every command TfPortable implements, recognizes or refuses; no sign-in needed. Summarized in `docs/commands.md` |
+
+Captured on 2026-10-07 (help on 2026-10-08) with tf.exe 18.10.12215.6 (Visual Studio 18 Community, Czech UI).
 Two extra runs exist: run `2610071920` (index stored as `index-extra.json`, without the run
 suffix) and run `2610071925` (`index-extra-2610071925.json`). The sanitized manifests are in
 `tests/golden/manifests/`.
@@ -72,6 +74,11 @@ Rules for a parser:
 Cases are listed in capture order. In the extra runs the order matters: later cases depend on
 the server state left by earlier ones (for example `status/pending-undelete` follows
 `undelete/file`).
+
+`index-help.json` has the same shape without `manifest`/`extra`; its cases have `group: "help"`,
+`cwd` is `%TEMP%`, and `help/help-qmark.txt` holds the `tf help /?` capture (the file name of the
+`tf /?` case collided with it and was overwritten; both print the same banner). The help files are
+reference material for `docs/commands.md`, not replayed by golden tests.
 
 ## 4. Manifests
 

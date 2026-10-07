@@ -18,7 +18,8 @@
     original's help were missing.
 
 .PARAMETER OutDir
-    Output folder. Default: .\tests\golden
+    Output folder. Default: .\tests\golden relative to the current directory, so run the script
+    from the repository root (or pass the full path), otherwise the files land elsewhere.
 
 .PARAMETER TfPath
     Full path to tf.exe. Found automatically via vswhere when omitted.
@@ -166,7 +167,7 @@ $commands = @(
 )
 
 Invoke-Case -Name 'vc-help' -Arguments @('vc', 'help')
-Invoke-Case -Name 'help-qmark' -Arguments @('/?')
+Invoke-Case -Name 'root-qmark' -Arguments @('/?')
 foreach ($c in $commands) {
     Invoke-Case -Name $c -Arguments @('vc', 'help', $c)
     Invoke-Case -Name "$c-qmark" -Arguments @($c, '/?')
