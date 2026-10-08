@@ -313,8 +313,11 @@ namespace TfPortable.Context
             {
                 var specs = items.Select(ToItemSpec).ToArray();
                 bool detect = detectCandidates && workspace.Location == WorkspaceLocation.Local;
-                PendingChange[] pending = workspace.GetPendingChangesWithCandidates(specs, detect, out PendingChange[] candidates);
-                var detected = detect && candidates != null ? candidates.Select(c => ToPendingChange(c, true)).ToList() : new List<PendingChangeInfo>();
+                PendingChange[] candidates = Array.Empty<PendingChange>();
+                PendingChange[] pending = detect
+                    ? workspace.GetPendingChangesWithCandidates(specs, false, out candidates)
+                    : workspace.GetPendingChanges(specs);
+                var detected = candidates != null ? candidates.Select(c => ToPendingChange(c, true)).ToList() : new List<PendingChangeInfo>();
                 return new PendingChangeSet(pending.Select(p => ToPendingChange(p, false)).ToList(), detected);
             }
 
@@ -440,7 +443,7 @@ namespace TfPortable.Context
 
                 bool resolved = conflict.IsResolved;
                 string? why = resolved ? null : (collector.Failures.FirstOrDefault()?.Message ?? info.Message);
-                return new ResolveResult(resolved, resolutionName, MergeSummaryText(conflict), why);
+                return new ResolveResult(resolved, resolutionName, MergeSummaryText(conflict), why, collector.Operations);
             }
 
             private static string? MergeSummaryText(Conflict conflict)

@@ -249,6 +249,10 @@ namespace TfPortable.Tests
             var other = WorkspaceCommandSupport.ToError(new FailureInfo(null, null, "TF14098: Access denied.", null, false), "tfp");
             Assert.Equal(TfPortable.Errors.ErrorCodes.ServerError, other.Code);
             Assert.Equal("TF14098", other.TfCode);
+            Assert.Equal("TF14098: Access denied.", other.Message);
+            Assert.Null(other.Item);
+            var nothingToUndo = WorkspaceCommandSupport.ToError(new FailureInfo(@"C:\x\a.txt", null, @"No pending changes were found for C:\x\a.txt.", null, false), "tfp");
+            Assert.Equal(TfPortable.Errors.ErrorCodes.ItemNotFound, nothingToUndo.Code);
         }
     }
 }

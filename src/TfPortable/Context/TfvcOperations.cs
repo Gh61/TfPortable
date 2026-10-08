@@ -201,12 +201,13 @@ namespace TfPortable.Context
     /// <summary>Outcome of resolving one conflict.</summary>
     internal sealed class ResolveResult
     {
-        public ResolveResult(bool resolved, string resolutionName, string? mergeSummary, string? message)
+        public ResolveResult(bool resolved, string resolutionName, string? mergeSummary, string? message, IReadOnlyList<GetOperationInfo>? operations = null)
         {
             Resolved = resolved;
             ResolutionName = resolutionName;
             MergeSummary = mergeSummary;
             Message = message;
+            Operations = operations ?? Array.Empty<GetOperationInfo>();
         }
 
         public bool Resolved { get; }
@@ -219,6 +220,9 @@ namespace TfPortable.Context
 
         /// <summary>Why the conflict is still open, or null.</summary>
         public string? Message { get; }
+
+        /// <summary>The get operations the resolution performed (`Replacing README.md` of a TakeTheirs).</summary>
+        public IReadOnlyList<GetOperationInfo> Operations { get; }
     }
 
     internal sealed class LocalVersionInfo

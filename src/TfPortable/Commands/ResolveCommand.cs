@@ -52,6 +52,11 @@ namespace TfPortable.Commands
                 if (result.Resolved)
                 {
                     output.Line($"Item {conflict.Path} is resolved as {result.ResolutionName}.");
+                    if (result.Operations.Count > 0)
+                    {
+                        output.Lines(GetCommand.Render(new GetResult(result.Operations, Array.Empty<ConflictInfo>(), Array.Empty<FailureInfo>(), false, result.Operations.Count, 0, 0)));
+                    }
+
                     resolved.Add(new JObject { ["localPath"] = conflict.LocalPath, ["serverPath"] = conflict.ServerPath, ["resolution"] = resolution });
                 }
                 else
