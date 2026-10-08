@@ -12,6 +12,7 @@ using Xunit;
 namespace TfPortable.Tests
 {
     /// <summary>Phase 2 pieces that need no server: the merge line, the annotate attribution, the folderdiff filters, the merges table, argument errors.</summary>
+    [Collection("ToolSettings")]
     public class Phase2CommandTests
     {
         private static (int Exit, string Out, string Err) Run(params string[] args)
