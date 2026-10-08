@@ -28,7 +28,7 @@ TfPortable nahrazuje originální tf.exe pro práci s TFVC v Azure DevOps Servic
 
 **Fáze 1 (MVP): čtení a lokální operace** – přihlášení a správa PAT, kontext workspace, `status`, `add`, `delete`, `rename`/`move`, `checkout`/`edit`, `undo`, `get`, `dir`, `localversions`, `info`, `view`, `diff`, `history`, `changeset`, `workspaces`, `workfold`, `resolve`, `reconcile`, `labels`, `branches`.
 
-**Fáze 2: rozšíření** – `annotate`, `merges`, `merge` (jen pending), `branch` (jen pending), `undelete`, `rollback` (jen pending), `folderdiff`, vyhledávání v obsahu historie.
+**Fáze 2: větvení jako pending changes** – `merge` (jen pending), `branch` (jen pending), `rollback` (jen pending), `undelete`, `merges`, `folderdiff` a rozšíření `annotate`. Vyhledávání v obsahu historie (`history /comment`, `/changetype`, `/workitem`) bylo hotové už ve fázi 1. Zápisové příkazy fáze 2 vytvářejí jen pending changes ve workspace (úroveň 2), takže je lze vzít zpět přes `undo`; `merges`, `folderdiff` a `annotate` jen čtou (úroveň 1). Rozsah přepínačů: `merge /recursive`, `/version:<od>~<do>`, `/preview`, `/force`, `/baseless`, `/discard`, `/noimplicitbaseless`, `/conservative`, `/noautoresolve`, `/lock:none`, `/format:`; `branch /version:`, `/noget`, `/silent`, `/lock:none` (`/checkin`, `/comment`, `/author`, `/notes` se odmítají, zapisují rovnou changeset); `undelete /noget`, `/recursive`, `/lock:none`, itemspec s `;X<deletionId>`; `rollback /changeset:<c>[~<c>]` nebo `/toversion:<verze>` (právě jeden z nich, `/toversion` vyžaduje itemspec), `/recursive`, `/version:`, `/keepmergehistory`, `/noautoresolve`, `/lock:none`. `merge /preview` nemá v klientské knihovně protějšek: tfp vypíše změny kandidátních changesetů ve tvaru, v jakém by je merge vytvořil (viz `docs/compat.md` §15). `folderdiff` porovnává soubory podle obsahu (MD5 hash položky na serveru, lokální soubory se spočítají), s jednou cestou porovná složku s jejím protějškem ve workspace. `annotate` vypíše pro každý řádek souboru changeset, autora a datum, kdy řádek naposledy vznikl (vlastní řádkový diff přes historii souboru včetně přejmenování).
 
 **Fáze 3: zápis na server pro běžnou práci** – `checkin` (klasický checkin pending changes), `label`/`unlabel` (označkování checkinu), `shelve` spolu se `shelvesets` a `unshelve` (uložení rozdělané práce na server a návrat k ní), `lock`/`unlock` (týmy s výhradním checkoutem). Součástí fáze 3 jsou úrovně ochrany (viz níže). Rozsah přepínačů: `checkin /comment` (povinný), `/associate:<work item>`, `/recursive`, `/noprompt`, `/validate` (zkušební průchod bez zápisu), `/override:<důvod>` (úroveň 2: důvod se zapíše do changesetu jako přebití policy, stejně jako ve Visual Studiu); `shelve /comment`, `/move`, `/replace`, `/recursive`, `/delete` (jen úroveň 3); `label /comment`, `/child:replace|merge`, `/recursive`, `/version`, `/delete` (jen úroveň 3); `lock /lock:checkin|checkout|none`, `/recursive` (checkout zámek lokální workspace nepodporuje, server vrací TF400022, exit 1). `checkin /force` zapíše i editaci s nezměněným obsahem. Rozšíření pro agenty: `checkin /format:json` vrací číslo changesetu a zapsané položky; konflikty a selhání policy jsou položkové chyby (`errors[]`), `checkin /validate` je vrátí s exit 100 bez zápisu.
 
@@ -295,12 +295,15 @@ Fáze 1 pokrývá 21 příkazů tf.exe a 3 příkazy pro správu PAT: vše pro p
 | `labels` | `/owner:` `/format:` | Seznam labelů | 1 |
 | `branches` | `/version:` | Strom větví pro položku | 1 |
 | `merge /candidate` | `/recursive` `/version:` | Jen výpis changesetů, které ještě nejsou sloučené (čtecí operace); hvězdička za číslem označuje částečně sloučený changeset jako v originálu | 1 |
-| `merges` | `/recursive` `/showall` `/format:` | Historie sloučení mezi větvemi (`/extended` tf.exe 18.10 odmítá, nepodporuje se) | 2 |
-| `annotate` | `/version:` | Kdo a ve kterém changesetu změnil každý řádek (rozšíření; tf.exe příkaz nezná, golden `annotate/attempt` exit 2) | 2 |
-| `folderdiff` | `/recursive` `/filter:` `/view:` | Rozdíl dvou složek nebo složky a serveru, jen text | 2 |
-| `shelvesets` | `/owner:` `/format:` | Seznam shelvesetů | 2 |
-| `unshelve` | `<shelveset>[;<owner>]` `/recursive` | Jen bez `/move` (nemaže shelveset na serveru) | 2 |
-| `merge`, `branch`, `undelete`, `rollback` | dle tf.exe | Jen jako pending changes ve workspace | 2 |
+| `merges` | `/recursive` `/showall` `/format:brief\|detailed` | Historie sloučení mezi větvemi: tabulka Changeset, Merged in Changeset, Author, Date, hvězdička za částečným sloučením; `/format:detailed` vypíše cílové changesety jako `history /format:detailed` (`/extended` tf.exe 18.10 odmítá, nepodporuje se) | 2 |
+| `annotate` | `/version:` | Kdo a ve kterém changesetu změnil každý řádek (rozšíření; tf.exe příkaz nezná, golden `annotate/attempt` exit 2); sloupce Changeset, Owner, Date, Line; složka TFP0002, binární soubor TFP0303, neexistující TFP0301 (exit 1) | 2 |
+| `folderdiff` | `/recursive` `/filter:` `/view:same,different,sourceOnly,targetOnly` | Rozdíl dvou složek (server nebo lokální) nebo jedné složky a jejího protějšku ve workspace, podle obsahu (hash); sekce jako originál a řádek `Summary:`; jen text, bez dialogu | 2 |
+| `shelvesets` | `/owner:` `/format:` | Seznam shelvesetů | 3 |
+| `unshelve` | `<shelveset>[;<owner>]` `/recursive` | Jen bez `/move` (nemaže shelveset na serveru) | 3 |
+| `merge` | `/recursive` `/version:` `/preview` `/force` `/baseless` `/discard` `/noimplicitbaseless` `/conservative` `/noautoresolve` `/lock:none` `/format:` | Pending merge ze zdroje do cíle; řádky `merge, <změna>: <zdroj>;C<n> -> <cíl>`; konflikt je položková chyba TFP0403 (exit 1) a pending merge zůstává jako v originálu; `/preview` aproximace z kandidátů | 2 |
+| `branch` | `/version:` `/noget` `/silent` `/lock:none` | Pending branch; vypíše cílovou cestu a strom ve skupinách jako `add`; `/checkin` a spol. TFP0002 | 2 |
+| `undelete` | `/noget` `/recursive` `/lock:none` | Pending undelete; `itemspec;X<deletionId>`; neexistující položka exit 1 jako originál | 2 |
+| `rollback` | `/changeset:<c>[~<c>]` nebo `/toversion:<verze>` `/recursive` `/version:` `/keepmergehistory` `/noautoresolve` `/lock:none` | Pending rollback; `/changeset` bez itemspec vrátí celý changeset; bez změn `There is nothing to roll back.`; konflikty TFP0403 (exit 1) | 2 |
 
 **Správa nástroje** (rozšíření): `login`, `logout`, `whoami` (viz Autentizace), `help [<příkaz>]`, `version`, `protection [set <1|2|3>]` (viz Úrovně ochrany).
 
@@ -524,7 +527,7 @@ Claude Code na Windows spouští příkazy přes Git Bash, a to má jednu zásad
 3. Lokální operace: `status`, `add`, `checkout`, `delete`, `rename`, `undo`, `get`, `resolve`, `reconcile`, `localversions`, `workfold`, `workspaces`.
 4. Historie a obsah: `history` včetně vyhledávání, `changeset /diff`, `view`, `diff`, `dir`, `properties`, `labels`, `branches`, `merge /candidate`.
 5. Integrace: šablona CLAUDE.md, kompatibilní testy, release `tfp.exe` na GitHubu.
-6. Fáze 2 podle potřeby.
+6. Fáze 2 podle potřeby (zadána 2026-10-08 po fázi 3, viz `docs/PROGRESS.md`).
 
 ## Build a testovací prostředí
 

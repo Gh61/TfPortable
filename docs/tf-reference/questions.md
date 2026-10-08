@@ -47,6 +47,21 @@ agent; it adjusts the code and `docs/compat.md`.
 19. `lock /lock:none` on an item without a lock: exit 0 or an error? Does tf.exe list the item?
 20. `lock /workspace:<other>`: which call (`Workspace.SetLock` of the other workspace through `GetWorkspace`)?
 
+## merge, branch, rollback, undelete (phase 2)
+
+27. `merge /preview`: which library call lists the merge without pending it (a `MergeOptionsEx` flag,
+    a preview workspace, or the pending change is pended and undone)? tfp lists the changes of the candidate
+    changesets instead (`docs/compat.md` §15), so its preview lines name `C<n>` of the source changeset and
+    cannot show conflicts.
+28. `merge` summary lines (the count of merged items and conflicts, suppressed by `/nosummary`): exact text and
+    whether they go to stdout.
+29. `branch /version:` default: latest, or the workspace version of a local source path?
+30. `rollback` with a range `/changeset:C85~C90` and no itemspec: does tf.exe pass the whole workspace, or the
+    items of the changesets? (tfp: the whole workspace through the library's workspace-wide overload.)
+31. `undelete` of an item deleted several times without `;X<n>`: which deletion is restored (the latest)?
+32. `folderdiff`: compared by hash, by size and date, or by content? Which items does `/filterLocalPathsOnly`
+    exclude? (tfp: by the MD5 hash of the item, local files computed.)
+
 ## protection-relevant commands (phase 4 candidates)
 
 21. `destroy`: default of `/keephistory`, meaning of `/stopat`, what `/preview` prints, exit code when the item

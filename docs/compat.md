@@ -318,7 +318,7 @@ Milestone 4 (2026-10-08) notes on §9–§14, found while implementing against t
 | `branches` of a path that is not branched | error | TFP0301 (exit 100) |
 | `merge /candidate /format:detailed` | blocks | the `changeset` block per candidate, `*` after the number of a partial one |
 
-## 15. Phase 2 commands (reference only)
+## 15. Phase 2 commands: `merge`, `branch`, `undelete`, `rollback`, `merges`, `folderdiff`, `annotate`
 
 | Case | Original | Decision |
 | --- | --- | --- |
@@ -336,6 +336,21 @@ Milestone 4 (2026-10-08) notes on §9–§14, found while implementing against t
 | `unshelve/not-found` | exit 100; stderr (English TF text) | follow |
 | `folderdiff/main-release` | exit 0; three `====` sections (only in source, only in target, different content), pairs `src - ` + tab-indented target, summary line with counts | follow |
 | `annotate/attempt` | exit 2 "Unrecognized command: annotate" – tf.exe has no `annotate` | TfPortable adds it as an extension |
+
+Phase 2 implementation (2026-10-08) notes, found against the client library:
+
+| Topic | Original | TfPortable |
+| --- | --- | --- |
+| `merge /preview` | lists what the merge would pend without pending it | the client library has no merge preview: tfp reads the merge candidates and lists the changes of each candidate changeset under the source as `merge, <change>: $/src;C<n> -> $/dst`, so the lines name the source changeset instead of a `C<from>~C<to>` range, carry no target version and show no conflicts; the JSON has `preview: true` (`docs/tf-reference/questions.md` asks how tf.exe does it) |
+| `merge` lines | `merge, edit: $/src;C83~C83 -> $/dst;C80` | the same shape from the merge sources of the pending change (`;C<n>` on the target only when the target existed) |
+| `merge` conflict | exit 1, `Conflict (merge, edit): ...` on stderr, the pending merge is created | the same: TFP0403 item error with the server path, hint to `resolve`; the pending merge stays |
+| `merge` with nothing to merge | message | `There are no changes to merge.` (exit 0) |
+| `branch` | target name, blank line, grouped tree with relative names | the same, the target name as given and absolute local paths in the groups (Gate A) |
+| `rollback` without changes | message | `There is nothing to roll back.` (exit 0); `/toversion` without an itemspec and both or neither of `/changeset` and `/toversion` are TFP0002 |
+| `undelete/not-found` | exit 1, TF14022 | TFP0301 item error, exit 1 |
+| `merges` | table Changeset, Merged in changeset, Author, Date; `*` after a partial source changeset | the same columns (`Merged in Changeset`), ISO date, sorted by source then target changeset; `/format:detailed` prints the target changesets in the `history /format:detailed` shape (one call per changeset) |
+| `folderdiff` | compares a server folder with a server folder or a local folder, section titles in the VS language | compares by content hash (the server's MD5 for server items, computed for local files; `$tf` is skipped), sections `Items that exist only in <path>`, `Items with different content`, `Items with the same content` (only with `/view:same`), each `=====` 80 wide, and `Summary: folders: n, files: n, source only: n, target only: n, different: n, errors: 0`; the local side of a single-path call is its workspace counterpart; `/filterLocalPathsOnly` is not supported |
+| `annotate` | – | columns Changeset, Owner, Date, Line; each line is attributed through tfp's Myers line diff from the oldest version of the item (renames followed by item id) up to the requested version; folder TFP0002, binary TFP0303, missing TFP0301 (exit 1) |
 
 ## 16. Phase 3 commands: `checkin`, `shelve`, `shelvesets`, `unshelve`, `label`, `unlabel`, `lock`
 

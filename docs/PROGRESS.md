@@ -12,13 +12,18 @@ Read this first in every session. Update it at the end of every session (see CLA
 | 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | done: [PR #2](https://github.com/Gh61/TfPortable/pull/2) merged into `main` on 2026-10-08 after an independent review (findings under Decisions) | – |
 | 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | done: [PR #3](https://github.com/Gh61/TfPortable/pull/3) merged into `main` on 2026-10-08 (merge commit ff64062) after an independent review (findings under Decisions) | – |
 | 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | done: [PR #4](https://github.com/Gh61/TfPortable/pull/4) (docs/CLAUDE.md, compatibility tests, embedded-assembly check, THIRD-PARTY-NOTICES) reviewed, CI green and merged into `main` on 2026-10-08; release [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) published the same day (developer approved; `tfp.exe` + SHA-256 from the CI run on 2a1c007) | user approved the release on 2026-10-08 |
-| – | Phase 2 commands | – | not planned | separate brief |
+| P2 | Phase 2: `merge`, `branch`, `rollback`, `undelete` as pending changes, `merges`, `folderdiff`, `annotate` | cloud + CI | in progress: branch `p2-branching`, [PR #12](https://github.com/Gh61/TfPortable/pull/12) (draft, CI loop) | – |
 | P3 | Phase 3: protection levels, `checkin`, `shelve`/`shelvesets`/`unshelve`, `label`/`unlabel`, `lock` | cloud + CI | done: [PR #9](https://github.com/Gh61/TfPortable/pull/9) merged into `main` on 2026-10-08 (merge commit 3c92ea2) after an independent review (findings under Decisions); 187 unit and 82 integration tests green | release `v0.2.0` (developer) |
 
 Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
+0. Phase 2 ([PR #12](https://github.com/Gh61/TfPortable/pull/12), branch `p2-branching`): drive CI green
+   (the new `Phase2Tests` run against the test collection for the first time), independent review, fix the
+   findings, record them under Decisions, mark ready, merge with a merge commit. Then ask the developer to
+   run `tools/capture-tf-golden-all.ps1` (phase 2 cases included: `merge /preview` on a fresh candidate,
+   `rollback` of a range, `folderdiff /view:same`) and compare.
 1. Phase 3 is merged ([PR #9](https://github.com/Gh61/TfPortable/pull/9)). Release `v0.2.0` is the
    developer's gate (step 3).
 2. Ask the developer to run `tools/capture-tf-golden-phase3.ps1` (the cases without
@@ -29,8 +34,7 @@ Statuses: not started, in progress, blocked, done.
 3. Release `v0.2.0` (developer gate): run the CI workflow manually on `main` with `release_tag`.
 4. If a package changes later, update `src/TfPortable/embedded-assemblies.txt` from the output of
    the CI step "Check the embedded assemblies against THIRD-PARTY-NOTICES" and THIRD-PARTY-NOTICES.
-5. Phase 2 commands need a separate brief (SPEC.md "Fáze 2"); the catalog lists them as planned
-   (TFP0003). Phase 4 is undecided (README "Phases and progress").
+5. Phase 4 is undecided (README "Phases and progress", `docs/DEVELOPER-TODO.md`).
 
 ## Needs the user
 
@@ -154,6 +158,13 @@ before phase 4). The items below are kept for history.
 | 2026-10-08 | CI runs are serialized (`concurrency: tfvc-test-collection`, no cancellation) and the `push` trigger is limited to `main`: the first phase 3 runs showed the twin runs of one commit interfering through the test collection (a lock of the other run visible in `properties`, the other run's CI checkin making the golden `get` not up to date). The lock test also locks a file of its own run under the CI folder instead of the shared `Main\data\counter.txt` | CI runs 37817091995 and 37818392002 |
 | 2026-10-08 | Checkin policies (developer's decision, variant 3): tfp no longer asks the client library to evaluate policies (it would load them from a Visual Studio installation). `CheckinPolicies` reads the enabled policies of the team projects touched (`GetCheckinPoliciesForServerPaths`, the implementing class name through reflection because the display name is localized by the configuring Visual Studio) and evaluates "Work Items" (`/associate`) and "Changeset Comments" (`/comment`) itself; every other policy is TFP0409 "cannot be evaluated by tfp", a failed one TFP0407. `/override:<reason>` moved to level 2: Visual Studio shows policy failures as warnings and checks in after a reason is typed, and tfp records the same `PolicyOverrideInfo`. `checkin /format:json` lists every policy with its status so that the integration tests adapt to whatever the test project has configured (no policy = policy assertions skipped) | Developer's decision of 2026-10-08 |
 | 2026-10-08 | Review of PR #11 (independent agent, one blocking finding): the policies were read from the legacy annotation key (`GetCheckinPoliciesForServerPaths`, obsolete) while current Visual Studio versions write the "client policies" key, so a policy configured today would have been invisible; tfp now reads the client key first and falls back to the legacy one, as the library's own evaluation does. Also: a policy is recognized by its implementing class (`.WorkItemPolicy`, `.CheckForCommentsPolicy`) and by the exact display name only when the class is unknown, so a "Work Item Query Policy" or a custom comments policy stays unknown; the phase 3 and 4 capture scripts no longer rely on `/associate` (not in the captured help) and the shelveset form of checkin carries no extra switches; commands.md no longer calls `/override` level 3; the cleanup checkins of the integration tests pass the override only, so work item 1 collects fewer links per run | Review findings |
+| 2026-10-08 | Phase 2 started on the developer's brief ("implement phase 2, I thought it was done"): `merge`, `branch`, `rollback` and `undelete` pend changes only (level 2, reversible with `undo`), `merges`, `folderdiff` and `annotate` read (level 1). SPEC.md "Fáze 2" rewritten with the switch scope; the catalog rows of `shelvesets` and `unshelve` corrected to phase 3 | Developer's decision of 2026-10-08; the earlier phase table listed phase 2 as "planned, separate brief" |
+| 2026-10-08 | `merge /preview` is an approximation: the client library (`Workspace.Merge`) has no preview mode, so tfp lists the changes of the merge candidates in the shape a merge would pend them (`merge, edit: $/src;C<n> -> $/dst`), with `preview: true` in JSON and no conflicts. Recorded in compat.md §15 and as question 27 of `docs/tf-reference/questions.md` | The alternative (pend the merge and undo it) would touch the workspace for a read-only switch |
+| 2026-10-08 | `folderdiff` compares by content hash (the server's MD5 per item, computed for local files, `$tf` skipped) and relative path; one path compares a folder with its workspace counterpart; sections and the `Summary:` line follow the golden shape; `/filterLocalPathsOnly` is not supported | The golden capture shows the sections only; hash comparison needs no download |
+| 2026-10-08 | `annotate` (extension) attributes each line through tfp's own Myers line diff over the item's history (oldest first, renames followed by item id, deletes skipped); columns Changeset, Owner, Date, Line; folder TFP0002, binary TFP0303, missing item TFP0301 with exit 1 | tf.exe has no annotate; the server has no blame API for TFVC |
+| 2026-10-08 | `merges /format:detailed` prints the target changesets in the `history /format:detailed` shape (one `GetChangeset` per changeset); the brief table is Changeset, Merged in Changeset, Author, Date with `*` after a partial source changeset, sorted by source then target changeset | Golden `merges/*` show the brief table; the detailed shape is not captured |
+| 2026-10-08 | `rollback`: exactly one of `/changeset` and `/toversion`; `/toversion` needs an itemspec; `/changeset` without items rolls back the whole workspace through the library's workspace-wide overload; nothing to do prints `There is nothing to roll back.`; conflicts are TFP0403 item errors with exit 1 like `merge` | Golden `rollback/changeset` works without an itemspec; the Microsoft docs require items for `/toversion` |
+| 2026-10-08 | Pending changes carry `mergeSources` (JSON) and a `MergeLine` text form (`merge, edit: $/src;C83~C83 -> $/dst;C80`, `branch: $/src;C84 -> $/dst`), used by `merge`, `rollback` and the integration tests | Golden `merge/all`, `merge/conflict`, `rollback/*` |
 | 2026-10-08 | Review of PR #9 (independent agent, no blocking findings, 8 should-fix, 4 nits) and the fixes: (1) help of a command (`/?`, `-h`, `help <cmd>`) is never gated by the protection level; (2) `checkin` reports every conflict (TFP0406) and policy failure (TFP0407) as an item error, so JSON `errors[]` carries the server paths and messages, and `/validate` returns the evaluation with exit 100 instead of throwing; (3) `checkin /force` sets `AllowUnchangedContent`; (4) `undo /workspace:<name>` raises the level for every value, recorded in SPEC.md and compat.md §18 (the gate runs before the connection); (5) SPEC.md and README now say `shelve /delete` and `label /delete` are phase 3 at level 3; (6) `lock /lock:checkout` in a local workspace maps TF400022 to a TFP0501 item error with exit 1 as the golden capture; (7) a non-integer `protectionLevel` in the settings file is TFP0004, not TFP0900; (8) the "blocked at level 2" assertions of the integration tests run inside a level-2 settings scope; nits: `overridden` is consistent, the nothing-pending message no longer mirrors the golden text, hints lost their semicolons | Review findings |
 | 2026-10-08 | Review of PR #4 (independent agent, one should-fix: PROGRESS.md was stale): status table, next steps and "Needs the user" rewritten for the hand-over; `docs/CLAUDE.md` keeps only the `-candidate` permission rule (the `/candidate` form never arrives from Git Bash) and says the switch must follow `merge`, names the three meanings of exit 120 (no workspace, path not mapped, server workspace), notes that `view -output:` writes a file and that aliases (`hist`, `stat`, ...) are not in the allow list; the compatibility test checks the `undo` and that no detected change is left; the CI step trims the list lines before the `#` check; SPEC.md points to `docs/CLAUDE.md` as the maintained template | Review findings |
 
@@ -197,6 +208,25 @@ Open:
   `tools/capture-tf-golden-extra.ps1` (from C84, including history padding).
 
 ## Session log
+
+### 2026-10-08 – cloud session, phase 2 (branch `p2-branching`, PR #12)
+
+- Done (before this entry, same session): PR #11 merged (a26a2a7): native checkin policies (variant 3),
+  `/override` at level 2, TFP0409, `docs/DEVELOPER-TODO.md`, the capture scripts for phases 3 and 4 and the
+  all-in-one script, `tools/decompile-tf.ps1` with `docs/tf-reference/` (rules, template, questions) and the
+  CLAUDE.md rule on decompiled sources.
+- Done: phase 2 on the developer's brief. Client: `Merge`, `PendBranch`, `PendUndelete`, `Rollback`,
+  `QueryMerges`, merge sources on pending changes, item hash, `UnifiedDiff.MatchingLines`. Commands:
+  `merge` (pending, `/preview` from the candidates, flags), `branch`, `undelete`, `rollback`
+  (`/changeset`, `/toversion`), `merges` (brief and detailed), `folderdiff` (hash comparison, filters,
+  views, single-path form), `annotate` (extension). Catalog rows implemented, help section "Phase 2",
+  unit tests (`Phase2CommandTests`), integration tests (`Phase2Tests`: branch and undo, preview and merge
+  and undo, rollback and undelete on the CI folder, merges/folderdiff/annotate on the seeded branches).
+  Docs: SPEC.md "Fáze 2" and catalog rows, commands.md, json-schema.md, compat.md §15, questions 27–32,
+  README phase table, the agent template (permissions and the pending-only note).
+- Next: CI loop on PR #12, independent review, merge; then the developer's checklist
+  (`docs/DEVELOPER-TODO.md`).
+- Blockers: none.
 
 ### 2026-10-08 – cloud session, phase 3 (branch `p3-protection`, PR #9)
 

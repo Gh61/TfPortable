@@ -264,9 +264,13 @@ tf vc merge [/recursive] [/force] [/candidate] [/discard] [/version:versionspec]
 | Switch | TfPortable |
 | --- | --- |
 | `/candidate` with `/recursive`, `/version:`, `/format:` | ✓ phase 1 |
-| `/preview`, `/baseless`, `/noimplicitbaseless`, `/conservative`, `/noautoresolve`, `/nosummary`, `/force`, `/discard`, `/lock:` | phase 2 (pending changes only; `/lock:checkin|checkout` ✗) |
+| `/force`, `/baseless`, `/discard`, `/noimplicitbaseless`, `/conservative`, `/noautoresolve`, `/recursive`, `/version:from~to` | ✓ phase 2, as pending changes (mapped to the merge options of the client library; a single `/version:C<n>` is the upper bound) |
+| `/preview` | ~ phase 2: the client library has no merge preview, so tfp lists the changes of the candidate changesets in the shape a merge would pend them (`merge, edit: $/src;C83 -> $/dst`), without conflicts (compat.md §15) |
+| `/lock:none` | ✓; `/lock:checkin\|checkout` ✗ (server locks) |
+| `/nosummary` | ✗ (tfp prints no summary) |
+| `/format:brief\|detailed` | ~ accepted; the pending merge listing has one shape |
 
-## Phase 2
+## Phase 2 (branching as pending changes; `merge`, `branch`, `undelete`, `rollback` at protection level 2)
 
 ### merges
 
@@ -275,11 +279,20 @@ tf vc merges [source] destination [/recursive] [/extended] [/format:(brief|detai
 ```
 
 `/extended` is listed by the help but rejected at run time by tf.exe 18.10 ("option not allowed",
-golden `merges/extended`); TfPortable does not implement it. Others ✓ when implemented.
+golden `merges/extended`); TfPortable does not implement it (✗). `/recursive`, `/showall` ✓;
+`/format:brief` is the table Changeset, Merged in Changeset, Author, Date (`*` after a partial merge),
+`/format:detailed` adds the target changesets in the `history /format:detailed` shape. Without a
+source every merge into the destination is listed.
 
 ### annotate (+ extension; tf.exe has no such command, golden `help/annotate` exit 2)
 
-Planned: `tfp annotate itemspec [/version:versionspec]`.
+```
+tfp annotate itemspec [/version:versionspec]
+```
+
+One text file. Columns Changeset, Owner, Date, Line; each line is attributed to the changeset that last
+introduced it (tfp's own line diff over the file's history, renames included). A folder is TFP0002,
+a binary file TFP0303, an unknown item TFP0301 (exit 1).
 
 ### folderdiff
 
@@ -287,6 +300,14 @@ Planned: `tfp annotate itemspec [/version:versionspec]`.
 tf vc folderdiff [sourcePath] targetPath [/recursive] [/noprompt] [/collection:url] [/filter:filter]
               [/filterLocalPathsOnly] [/login:u,[p]] [/view:same,different,sourceOnly,targetOnly]
 ```
+
+| Switch | TfPortable |
+| --- | --- |
+| `sourcePath targetPath` (server or local, `;version` on a server path) | ✓ compared by content hash (the server's MD5, computed for local files); the relative path decides which items are compared |
+| `targetPath` alone | ✓ the folder against its counterpart in the workspace (a local folder against its server path, a server path against its local folder); TFP0201 outside a workspace |
+| `/recursive`, `/filter:` (`;`-separated patterns, `!` excludes), `/view:` | ✓ (default view: sourceOnly, targetOnly, different) |
+| `/filterLocalPathsOnly` | ✗ |
+| `/noprompt` | ~ accepted (tfp never opens the dialog) |
 
 ## Phase 3 (the everyday write path; protection level 2, `/delete` level 3)
 
@@ -380,13 +401,16 @@ tf vc lock itemspec /lock:(none|checkout|checkin) [/workspace:workspacename] [/r
 
 `/lock:` ✓ required, `/recursive` ✓, `/workspace:` ✗ (locks of another workspace are phase 4).
 
-### undelete
+### undelete (phase 2)
 
 ```
 tf vc undelete [/noget] [/lock:(none|checkin|checkout)] [/recursive] itemspec[;deletionID] [/login:u,[p]]
 ```
 
-### rollback
+`itemspec[;Xn]`, `/noget`, `/recursive`, `/lock:none` ✓ (grouped listing like `add`); `/lock:checkin|checkout` ✗.
+An item that is not deleted or does not exist is TFP0301 (exit 1, golden `undelete/not-found`).
+
+### rollback (phase 2)
 
 ```
 tf vc rollback /changeset:from~to [itemspec] [/recursive] [/lock:none|checkin|checkout] [/version:versionspec]
@@ -395,14 +419,21 @@ tf vc rollback /toversion:versionspec itemspec [/recursive] [/lock:...] [/versio
                [/keepmergehistory] [/noautoresolve] [/noprompt] [/login:u,[p]]
 ```
 
-### branch
+Exactly one of `/changeset:` (a changeset or a range, with or without items) and `/toversion:` (items
+required) ✓; `/recursive`, `/version:` (the version of the items), `/keepmergehistory`, `/noautoresolve`,
+`/lock:none` ✓; `/lock:checkin|checkout` ✗. Lines `edit, rollback: $/a.txt;C85~C85 -> $/a.txt;C87`;
+conflicts are TFP0403 item errors (exit 1); nothing to do prints `There is nothing to roll back.`.
+
+### branch (phase 2)
 
 ```
 tf vc branch olditem newitem [/version:versionspec] [/noget] [/lock:(none|checkin|checkout)] [/noprompt]
           [/silent] [/checkin] [/comment:("text"|@file)] [/author:name] [/login:u,[p]] [/notes:(...)]
 ```
 
-`/checkin`, `/comment:`, `/author:`, `/notes:` ✗ (they check in immediately).
+`olditem newitem`, `/version:` (default latest), `/noget`, `/silent`, `/lock:none` ✓ (prints the target
+path and the branched tree grouped like `add`); `/lock:checkin|checkout` ✗; `/checkin`, `/comment:`,
+`/author:`, `/notes:` ✗ (they check in immediately).
 
 ## Out of scope (recognized, TFP0003)
 
