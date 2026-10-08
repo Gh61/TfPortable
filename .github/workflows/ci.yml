@@ -83,6 +83,8 @@ jobs:
           } finally {
             Pop-Location
           }
+          # The last native command deliberately exited with 2; pwsh would otherwise report the step as failed.
+          exit 0
 
       - uses: actions/upload-artifact@v4
         with:

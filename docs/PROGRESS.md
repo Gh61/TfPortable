@@ -8,7 +8,7 @@ Read this first in every session. Update it at the end of every session (see CLA
 | --- | --- | --- | --- | --- |
 | 0 | Spec refinement from golden files (`docs/compat.md`, SPEC.md updates) | local | done (Gate A passed 2026-10-07; help capture still to be reviewed) | user approves SPEC.md |
 | 1 | Spike: `tfp whoami` + `tfp status` with PAT, Costura single exe, clean machine | local | done (clean-machine test passed, Gate B approved 2026-10-08) | user approves architecture |
-| 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | not started (next; `docs/KICKOFF-CLOUD.md`) | – |
+| 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | in progress (branch `m2-core`, draft [PR #1](https://github.com/Gh61/TfPortable/pull/1); code complete, CI loop running, see session log 2026-10-08 cloud) | – |
 | 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | not started | – |
 | 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | not started | – |
 | 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | not started | user approves release |
@@ -18,21 +18,35 @@ Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
-1. Cloud: follow `docs/KICKOFF-CLOUD.md`, milestone 2 (branch `m2-core`, pull request, CI loop).
-2. Before that the developer: push `main`, set the secrets (see "Needs the user").
-2. When the developer has run `tools/capture-tf-help.ps1`: review `tests/golden/help/` for personal
-   data, derive the per-command switch and alias lists, put them into SPEC.md (or a new
-   `docs/commands.md`) and `docs/json-schema.md` (`help` data). Commit.
-3. After the first push: check the CI run on GitHub Actions (`.github/workflows/ci.yml`).
+1. Milestone 2 ([PR #1](https://github.com/Gh61/TfPortable/pull/1), branch `m2-core`): read the
+   latest CI run of the branch; when it is green, mark the PR ready for review. The repository
+   secrets exist, so the integration tests run for real (run 5: 18 passed, 0 skipped, including
+   the golden workspace fixture, `tfp login /pat:-`, the three `status` golden cases and `whoami`);
+   a "Skipped" count in the summary would mean the secrets were removed.
+2. Developer: review and merge PR #1.
+3. Milestone 3 (`m3-workspace`, from `main` after the merge): extend `ITfvcClient`/`ITfvcWorkspace`
+   (`Context/ITfvcClient.cs`) with the operations each command needs and return DTOs from
+   `Context/TfvcModels.cs`; register each command in `Program.Commands()` and flip its catalog
+   entry (`Cli/CommandCatalog.cs`) from `Planned` to `Implemented` (the unit test
+   `Every_implemented_command_in_the_program_is_in_the_catalog_and_marked_implemented` enforces
+   the pairing); `status /format:detailed`, `/user`, `/shelveset` currently throw TFP0003 in
+   `Commands/StatusCommand.cs`. Golden cases: reuse `tests/TfPortable.IntegrationTests/Golden/`
+   (`GoldenCase`, `TfpRunner`, `GoldenComparison` with `GoldenChecks.All`,
+   `GoldenWorkspaceFixture` creates the local workspace and runs `Get`); the pending-change
+   scenario of `index.json` must run in index order and end with `undo`.
+4. Milestone 4 (`m4-history`): `history` detailed format and search extensions are rejected with
+   TFP0003 in `Commands/HistoryCommand.cs`; the catalog already lists the switches.
 
 ## Needs the user
 
-- Push `main` to GitHub so that the CI workflow runs for the first time (nothing has been pushed
-  from the local sessions; the agent does not push on its own). Check the first run.
-- Before milestone 2 (cloud): GitHub Secrets `TFP_TEST_COLLECTION` and `TFP_TEST_PAT`. The PAT must
-  have **Full access** (TFVC SOAP API) and should belong to a dedicated user with access only to the
-  test project, or to a separate test organization.
-- Cloud phase: review and merge the pull requests of milestones 2–5; decide on branch protection.
+- Review and merge [PR #1](https://github.com/Gh61/TfPortable/pull/1) (milestone 2). Decide on
+  branch protection for `main`.
+- The golden fixture creates a temporary local workspace named `tfp-golden-<id>` on the CI runner
+  (owner: the PAT's user) and deletes it at the end; a run that dies mid-way may leave one behind
+  in the collection (harmless, but visible in `tf workspaces /owner:*`). Delete such leftovers
+  occasionally.
+- The CI workflow runs twice per push on a PR branch (`push` and `pull_request` triggers both
+  match); harmless, but it doubles the minutes. Keep or restrict `push` to `main`.
 
 
 ## Decisions
@@ -87,6 +101,21 @@ Statuses: not started, in progress, blocked, done.
 | 2026-10-08 | README structure requested by the developer: why the project exists, how it is used, examples of basic commands, a command table with one-line descriptions, links to `docs/commands.md` / `docs/compat.md` / `docs/json-schema.md`. Rewritten accordingly; KICKOFF-CLOUD milestone 5 keeps it in sync with each milestone | Developer's request |
 | 2026-10-08 | `history` added to the spike build on the developer's request (to verify a PAT's read access): brief table and JSON, `/recursive`, `/stopafter`, `/version` (single and range), `/user`, `/sort`, `/slotmode`/`/itemmode`, default slot mode, 256-entry limit with notice and `truncated`, local paths mapped through the workspace (TFP0203 otherwise). Verified against golden `history/range`, `short-version`, `renamed-file`, `itemmode`, `sort-ascending`, `not-found` (exit 0), `long-default`/`long-stopafter-256` (ends at C138), `user-not-found` (exit 100). Sorting must be done by the server (`QueryHistory(..., sortAscending)`), the limit applies after it. `/format:detailed` and the search extensions remain milestone 4 | Developer's request; milestone 4 extends it |
 | 2026-10-07 | Default output of tfp is text in the shape of tf.exe; JSON only with `/format:json` (tf.exe has no JSON at all, `/format:` accepts only `brief`/`detailed`, plus `unified`/`context` for `difference`; anything else is TF10120, exit 100) | Confirmed with the developer |
+| 2026-10-08 | Switch table lives in code (`Cli/CommandCatalog.cs`): every tf.exe command with aliases, phase (1, 2, null for tool and out-of-scope commands), status (implemented, planned, out-of-scope) and switches (name, short form, value rule, allowed values, extension flag); `help` text and JSON, switch validation and the MSYS detection all derive from it. Out-of-scope and planned commands answer TFP0003 (exit 100) with the phase in the message; an unknown name stays TFP0001 (exit 2); `tf git`/`tf settings` groups are TFP0003 | One source for help, parser and docs; `docs/commands.md` is the human copy |
+| 2026-10-08 | Switch values are validated against the catalog (`status /format:xml` → TFP0002 listing `brief, detailed, json`); short forms are per command (`-X` is `/slotmode` of `history` only); `/format:json` is accepted by every command. A switch without its required value or with an unexpected value is TFP0002 | Matches the original's exit 100 for TF10120 and "option not allowed"; the hint tells the AI what is valid |
+| 2026-10-08 | `@file` argument files: UTF-8, one argument per line, blank lines skipped, path relative to the current directory, not nested; missing file is TFP0002 with the path in `item` | SPEC.md "Společné konvence CLI" |
+| 2026-10-08 | Versionspec parsing is TfPortable's own (`Cli/VersionSpecParser.cs`), producing the library's `VersionSpec` objects: dates try ISO 8601 formats first (`yyyy-MM-dd`, with `T` time, with offset), then the current culture, then the invariant culture; a bare `W` needs a workspace (TFP0302 otherwise); TFP0302 names the reason and the syntax | SPEC.md "Versionspec"; the library's `ParseSingleSpec` uses the current culture only |
+| 2026-10-08 | Itemspec parsing (`Cli/ItemSpecParser.cs`): `$\a\b` → `$/a/b`, trailing separator removed; local paths made absolute with the platform separator, wildcards only in the last segment (TFP0002 otherwise, because `Path.GetFullPath` rejects them on .NET Framework); `;X<n>` and one `;<versionspec>` suffix in any order | SPEC.md "Itemspec" |
+| 2026-10-08 | Per-command exit codes are applied in one place (`ErrorCodes.ExitCodeFor` in `Program.Run`) from the compat.md §1.1 table: TFP0301 is 1 for add/delete/view/dir/undelete/unlabel, 100 for rename/changeset/label, 0 for history; every other code keeps its catalog default. Per-item errors go through `OutputWriter.ItemError` (stderr at once in text mode, collected in JSON mode) and force exit 1 | SPEC.md "Pravidla"; commands never hard-code exit numbers |
+| 2026-10-08 | ActivityId is taken from the exception data (any key containing `ActivityId`, walking inner exceptions) or from an `ActivityId: <guid>` text in the message; null otherwise. The client library does not expose it as a property | Spike observation; real server responses will show whether the key appears |
+| 2026-10-08 | The JSON envelope's `collection` and `workspace` are set by `ContextResolver` as soon as they are known (before authentication, before the server-workspace check), so error envelopes carry them; `OutputWriter.Command` is set from `CommandLine.PeekCommand(args)` before parsing, so a parse error names the command too | Milestone 2 gap from the spike closed |
+| 2026-10-08 | Client library behind `ITfvcClient`/`ITfvcWorkspace` (`Context/`) returning DTOs (`IdentityInfo`, `WorkspaceSummary`, `MappingInfo`, `PendingChangeInfo`, `ChangesetInfo`); `ContextResolver.ClientFactory` is replaceable for tests; commands keep static `Render`/`ToJson` functions over DTOs so text and JSON shape have unit tests without a server. The local workspace cache (`Workstation.Current`) stays a direct call: it is local and needs no server | SPEC.md "Požadavky na implementaci" (`ITfvcClient`) |
+| 2026-10-08 | `/login:user,pat` is honored for one run (the user part is ignored, the PAT identifies the user), never stored, with a warning; `whoami` then prints "PAT stored : no" and `patStoredAt` is null. `/workspace:name;owner` goes through `GetWorkspace(name, owner)` (cache first, then server), an unknown one is TFP0201 with a hint to `workspaces /owner:*` | SPEC.md "Autentizace" (compatibility switch) |
+| 2026-10-08 | Ctrl+C in the hidden PAT prompt: `Console.TreatControlCAsInput` is set during the prompt and Ctrl+C becomes TFP0101 (exit 110) with a message | Milestone 2 note from Gate B (an interrupted prompt ended silently) |
+| 2026-10-08 | Golden test infrastructure in `tests/TfPortable.IntegrationTests/Golden/`: `GoldenCase` (index + case file), `TfpRunner` (separate process, stdin closed, `TFP_COLLECTION`/`MSYSTEM`/`EXEPATH` removed from the environment, `TFP_EXE` override), `GoldenText` (normalization and extraction of §7–8), `GoldenComparison` with `GoldenChecks` (`Shape` = exit code + stream emptiness for help and error cases; `All` adds items, changeset numbers, deletion ids, change types, counts), `GoldenWorkspaceFixture` (collection fixture; creates a local workspace with the client library in `%TEMP%\tfp-golden-<id>\TfsPortableTestRepo`, runs `Get`, stores the PAT through `tfp login /pat:-`, deletes everything at the end; nothing happens until `EnsureReady()`). `general/outside-workspace` expects 120 per compat.md | KICKOFF-CLOUD milestone 2 definition of done; milestones 3 and 4 reuse it |
+| 2026-10-08 | CI runs the packaged `tfp.exe` copied alone into an empty folder: `version` (0), `help /format:json` (0, parsed, ≥ 20 commands), `status` outside a workspace (120), unknown command (2) | KICKOFF-CLOUD milestone 2; excluded Costura assemblies are still in `bin/` |
+| 2026-10-08 | Newtonsoft types a null string assigned through the implicit conversion as `JTokenType.String` with a null value; it still serializes as `null`. Tests compare through `JsonAssert.Null`; the JSON contract is unaffected | First CI run of milestone 2 |
+| 2026-10-08 | The cloud environment can install the .NET 10 SDK from the Ubuntu package feed (`apt-get install dotnet-sdk-10.0`; `dot.net` and `builds.dotnet.microsoft.com` are blocked by the proxy) and restore from nuget.org, so `dotnet build` of the whole solution works on Linux; unit tests still need Windows (net48). API shapes of the client library were checked with a small MetadataLoadContext dump tool in the session scratchpad (not committed) | Working method of the cloud sessions |
 
 ## Open questions
 
@@ -122,6 +151,29 @@ Open:
   `tools/capture-tf-golden-extra.ps1` (from C84, including history padding).
 
 ## Session log
+
+### 2026-10-08 – cloud session 1, milestone 2 (Claude Code on Linux, CI on windows-latest)
+
+- Done: branch `m2-core`, draft [PR #1](https://github.com/Gh61/TfPortable/pull/1). Code of
+  milestone 2 complete: `Cli/CommandCatalog.cs` (every command, alias, phase, status, switch),
+  `Cli/CommandLine.cs` (table-driven parser, `@file`, short forms per command, value validation,
+  `PeekCommand`), `Cli/VersionSpecParser.cs`, `Cli/ItemSpecParser.cs`; `Errors/` catalog with
+  defaults and compat.md overrides, ActivityId; `Output/` item errors, envelope context on errors,
+  block helpers; `Context/` `ITfvcClient`, `TfvcClient`, DTOs, resolver with `/workspace`,
+  `/login`, TFP0203 helper; `help` from the catalog (text + JSON), TFP0003 for planned and
+  out-of-scope commands, Ctrl+C in the PAT prompt. 144 unit tests (parser, catalog, versionspec,
+  itemspec, errors, output, dispatch, rendering). Golden infrastructure and `GeneralGoldenTests`;
+  CI step for the standalone exe. Docs: `docs/json-schema.md` (`help` with `status`, `login`,
+  `whoami`), `docs/compat.md` §2 parser notes, README status.
+- CI: run 3 failed on five unit tests (Newtonsoft null typing, cs-CZ parsing "10:00 PM", out-of-scope
+  switches, envelope command name before parsing); fixed in the second push. Run 5: 144 unit and
+  18 integration tests passed, none skipped (the secrets are set): the fixture created a local
+  workspace with the client library, `tfp login /pat:-` stored the PAT, the `status` golden cases
+  and `whoami` ran against the test collection; the standalone exe ran `version`, `help
+  /format:json` (48 commands), `status` outside a workspace (120) and an unknown command (2), but
+  the step failed on PowerShell's handling of the last exit code (fixed: `exit 0` at the end).
+- Next: see "Next steps" 1–3.
+- Blockers: PR review by the developer.
 
 ### 2026-10-07 – local session 1, KICKOFF-LOCAL step 0 (Claude Code, Windows)
 
