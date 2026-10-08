@@ -871,7 +871,10 @@ namespace TfPortable.Context
                 GetStatus status;
                 if (items == null || items.Count == 0)
                 {
-                    status = workspace.Rollback(versionFrom, versionTo, LockLevel.None, options);
+                    // Without items the library's workspace-wide overload pends nothing on a local workspace:
+                    // the mapped folders of the workspace, recursively, are the scope instead (as `rollback /changeset:C85` of tf.exe).
+                    var roots = workspace.Folders.Where(f => !f.IsCloaked).Select(f => f.ServerItem).ToArray();
+                    status = workspace.Rollback(roots, RecursionType.Full, null, versionFrom, versionTo, LockLevel.None, options, null);
                 }
                 else
                 {

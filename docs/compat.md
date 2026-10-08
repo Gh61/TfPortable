@@ -349,6 +349,7 @@ Phase 2 implementation (2026-10-08) notes, found against the client library:
 | `branch /silent` | less output | the library's silent branch: the server returns no get operations, so nothing is downloaded and no items are listed (the JSON `changes` is empty); without `/silent` the tree is listed and downloaded unless `/noget` |
 | `merge /discard` | marks the changes as merged, takes no content | the library's AlwaysAcceptMine merge option; the pending merge changes are listed as usual |
 | `rollback` without changes | message | `There is nothing to roll back.` (exit 0); `/toversion` without an itemspec and both or neither of `/changeset` and `/toversion` are TFP0002 |
+| `rollback /changeset:<c>` without an itemspec | the whole workspace (golden `rollback/changeset`) | the same: the mapped folders of the workspace, recursively (the library's workspace-wide overload pends nothing on a local workspace) |
 | `rollback /toversion:<v>` | rolls the items back to version `v` | the same through the library's ToVersion option with Latest as the version rolled back from (the library refuses a null from-version; question 33 of `docs/tf-reference/questions.md`) |
 | `undelete/not-found` | exit 1, TF14022 | TFP0301 item error, exit 1 |
 | `merges` | table Changeset, Merged in changeset, Author, Date; `*` after a partial source changeset | the same columns (`Merged in Changeset`), ISO date, sorted by source then target changeset; `/format:detailed` prints the target changesets in the `history /format:detailed` shape (one call per changeset) |

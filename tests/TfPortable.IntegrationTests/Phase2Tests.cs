@@ -69,14 +69,15 @@ namespace TfPortable.IntegrationTests
                 Assert.True(candidates.ExitCode == 0, candidates.Stderr);
                 int candidateCount = ((JArray)Data(candidates)["candidates"]!).Count;
 
+                // The seeded branches hold a conflicting change (golden merge/conflict), so the preview and the merge may exit 1.
                 var preview = Run($"merge {Main} {Release} /recursive /preview /noprompt /format:json");
-                Assert.True(preview.ExitCode == 0, preview.Stderr);
+                Assert.True(preview.ExitCode == 0 || preview.ExitCode == 1, preview.Stdout);
                 Assert.True((bool)Data(preview)["preview"]!);
                 Assert.Equal(candidateCount == 0, ((JArray)Data(preview)["changes"]!).Count == 0);
                 Assert.Empty(Changes(Run($"status {Release} /recursive /nodetect /format:json")));
 
                 var merge = Run($"merge {Main} {Release} /recursive /noprompt /format:json");
-                Assert.True(merge.ExitCode == 0 || merge.ExitCode == 1, merge.Stderr);
+                Assert.True(merge.ExitCode == 0 || merge.ExitCode == 1, merge.Stdout);
                 Assert.False((bool)Data(merge)["preview"]!);
                 if (candidateCount > 0)
                 {
@@ -86,7 +87,7 @@ namespace TfPortable.IntegrationTests
                 // /discard pends the merge without taking the content (the changes are marked as merged).
                 Assert.True(Run($"undo {Release} /recursive /noprompt").ExitCode == 0 || candidateCount == 0);
                 var discard = Run($"merge {Main} {Release} /recursive /discard /noprompt /format:json");
-                Assert.True(discard.ExitCode == 0 || discard.ExitCode == 1, discard.Stderr);
+                Assert.True(discard.ExitCode == 0 || discard.ExitCode == 1, discard.Stdout);
                 if (candidateCount > 0)
                 {
                     var pending = Changes(Run($"status {Release} /recursive /nodetect /format:json"));
