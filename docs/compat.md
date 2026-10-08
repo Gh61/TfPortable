@@ -199,6 +199,10 @@ Milestone 3 (2026-10-08) notes on §3–§7, found while implementing against th
 | `status /format:detailed` | Czech labels, long date, `[<COMPUTER>] path` | English labels, ISO date, `File type: Binary` for binary items, `Source item` for renames |
 | `get` | `Getting`/`Replacing` grouped, `Deleting` flat | the same; a writable file without pending change is TFP0402 (exit 1) with the `/overwrite` hint; conflicts TFP0403 (exit 1) with the conflict line on stderr and the folder header on stdout |
 | `reconcile` without an itemspec | the whole workspace | the current folder, `/recursive` decides the depth (`/clean` deletes files, so the scope is never widened silently); `status` without an itemspec still covers the whole workspace as the original |
+| `reconcile /promote` without `/adds` or `/deletes` | the capture promoted nothing (`reconcile/promote`) | **deviate**: both detected adds and deletes are promoted, as the Microsoft documentation describes (`/adds` and `/deletes` only restrict); verified by `OpenQuestionTests` against the test collection |
+| `add <folder> /recursive` with `.tfignore` matches | exit 1 observed by the seed script (no golden file) | exit 0: the ignored items are silently left out, the others are pended; verified by `OpenQuestionTests` |
+| `add`/`checkout /encoding:<value>` | names (`windows-1250`, `utf-8`), code pages (`1250`), `binary`, `text`, `auto` | the same: the value goes verbatim to the client library, whose parser accepts exactly these forms (decompiled `FileType.GetEncodingFromIntOrString`); an unknown name is a per-item error |
+| `get` of an older version over a locally modified file without a pending change | TFP0402 (writable file) is for server workspaces | in a local workspace the modification is a conflict: TFP0403 (exit 1); TFP0402 can still appear for the library's "writable" status |
 | a server workspace | every command fails | only commands that need a workspace fail with TFP0204; `whoami`, `workspaces`, `history`, `view` of server paths and `status /user` run without it (§3) |
 | `resolve /auto:AutoMergeForced` | accepts the merge with conflict markers | `AcceptMergeWithConflicts` of the client library |
 | `reconcile /promote` | promoted nothing in the golden run | pends the detected adds and deletes (`/adds`, `/deletes` restrict), `/preview` lists them as `Would promote <change>: <name>`; `/exclude` patterns match the file name or the whole path |
@@ -303,6 +307,12 @@ Milestone 4 (2026-10-08) notes on §9–§14, found while implementing against t
 | `dir` sorting | ordinal-ignore-case, folders first | the same; the queried folder heads the listing and is not counted; a file itemspec lists the file |
 | `properties` outside a workspace | `Lock: none` | the lock state is not queried without a workspace: `Lock:` is empty and `lock` is null in JSON |
 | `merge /candidate /format:detailed` | changeset blocks with items | the same; the items are read per candidate (one call each) |
+| `merge /candidate /version:` | limits the candidates | the same, by changeset number on the client (`C<a>~C<b>`, or up to `C<n>`; `T` = no upper limit); a date or label version is TFP0302 |
+| `difference /encoding:` | decodes both sides with the given encoding | the same (names or code pages, `binary`); an unknown value is TFP0002 |
+| `branches` of a non-root item | the whole tree, the requested item marked `>> path <<` | the same |
+| `view /recursive /output:<dir>`, `view *.cs /output:<dir>` | a directory | the same, also when a single file matches; one listing call plus one download per file; the files land flat in the directory (same names overwrite each other) |
+| `difference /shelveset` | – | one shelveset query plus one download per file; no temp file; a shelved change without content (delete, rename-only, property change) compares against an empty right side |
+| `history /workitem:<id>` | – | the linking service answers for a PAT on Azure DevOps Services (`OpenQuestionTests`); one call per search |
 | `properties` outside a workspace | needs a workspace | works with a server path: only the `Server information:` section |
 | `labels` with extra labels on the server | – | the golden brief listing compares shape only (later golden runs added labels) |
 | `branches` of a path that is not branched | error | TFP0301 (exit 100) |

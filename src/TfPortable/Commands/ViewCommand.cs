@@ -47,6 +47,8 @@ namespace TfPortable.Commands
             }
 
             string? shelveset = commandLine.Value("shelveset");
+            // /recursive and wildcards may match several files; /output is then a directory, even for a single match.
+            bool many = shelveset == null && (commandLine.Has("recursive") || item.HasWildcard);
             var contents = new List<ItemContent>();
             if (shelveset != null)
             {
@@ -54,42 +56,51 @@ namespace TfPortable.Commands
                 var shelved = context.Client.DownloadShelved(parts[0], parts.Length > 1 ? parts[1] : null, path);
                 if (shelved == null)
                 {
-                    throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.PartialSuccess, $"{path}: no matching file in shelveset {shelveset}.",
+                    throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.PartialSuccess, $"{path}: no shelved content in shelveset {shelveset} (no such change, or a change without content).",
                         $"'{toolName} status /shelveset:{shelveset}' lists the shelved changes.", item: path);
                 }
 
                 contents.Add(shelved);
             }
-            else
+            else if (many)
             {
-                IReadOnlyList<ItemInfo> items;
+                // A wildcard itemspec goes through the listing too: GetItem rejects wildcards before any server call.
+                IReadOnlyList<ItemContent> found;
                 try
                 {
-                    // A wildcard itemspec goes through GetItems too: GetItem rejects wildcards before any server call.
-                    items = commandLine.Has("recursive") || item.HasWildcard
-                        ? context.Client.GetItems(new ItemQuery(path, commandLine.Has("recursive") ? RecursionType.Full : RecursionType.None, item.DeletionId), version, item.DeletionId > 0, false).Where(i => !i.IsFolder).ToList()
-                        : new[] { context.Client.GetItem(path, version, item.DeletionId) ?? throw NotFound(path, toolName) }.ToList();
+                    found = context.Client.DownloadItems(new ItemQuery(path, commandLine.Has("recursive") ? RecursionType.Full : RecursionType.None, item.DeletionId), version, item.DeletionId > 0);
                 }
                 catch (Exception ex) when (ErrorMapper.Map(ex, toolName, context.CollectionUrl).Code == ErrorCodes.ItemNotFound)
                 {
                     throw NotFound(path, toolName, ex);
                 }
 
-                if (items.Count == 0)
+                if (found.Count == 0)
                 {
                     throw NotFound(path, toolName);
                 }
 
-                foreach (var found in items)
+                contents.AddRange(found);
+            }
+            else
+            {
+                ItemContent content;
+                try
                 {
-                    if (found.IsFolder)
-                    {
-                        throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.PartialSuccess, $"{found.ServerPath} is a folder; view shows files.",
-                            $"Use '{toolName} dir {found.ServerPath}' to list it, or /recursive to view the files under it.", item: found.ServerPath);
-                    }
-
-                    contents.Add(context.Client.Download(found.ServerPath, version, found.DeletionId));
+                    content = context.Client.Download(path, version, item.DeletionId);
                 }
+                catch (Exception ex) when (ErrorMapper.Map(ex, toolName, context.CollectionUrl).Code == ErrorCodes.ItemNotFound)
+                {
+                    throw NotFound(path, toolName, ex);
+                }
+
+                if (content.Item.IsFolder)
+                {
+                    throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.PartialSuccess, $"{content.Item.ServerPath} is a folder; view shows files.",
+                        $"Use '{toolName} dir {content.Item.ServerPath}' to list it, or /recursive to view the files under it.", item: content.Item.ServerPath);
+                }
+
+                contents.Add(content);
             }
 
             var data = new JArray();
@@ -99,7 +110,7 @@ namespace TfPortable.Commands
                 string? written = null;
                 if (outputFile != null)
                 {
-                    written = contents.Count == 1 ? Path.GetFullPath(outputFile) : Path.Combine(Path.GetFullPath(outputFile), Microsoft.TeamFoundation.VersionControl.Common.VersionControlPath.GetFileName(content.Item.ServerPath));
+                    written = many ? Path.Combine(Path.GetFullPath(outputFile), Microsoft.TeamFoundation.VersionControl.Common.VersionControlPath.GetFileName(content.Item.ServerPath)) : Path.GetFullPath(outputFile);
                     Directory.CreateDirectory(Path.GetDirectoryName(written)!);
                     File.WriteAllBytes(written, content.Bytes);
                     output.Line($"{content.Item.DisplayPath};C{content.Item.ChangesetId} written to {written} ({content.Bytes.Length} bytes).");

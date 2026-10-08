@@ -83,8 +83,8 @@ namespace TfPortable.Context
         /// <summary>Pending changes of other workspaces (`status /user`): null user = everyone, null workspace = every workspace.</summary>
         IReadOnlyList<PendingSetInfo> QueryPendingSets(IReadOnlyList<ItemQuery> items, string? workspaceName, string? user);
 
-        /// <summary>Changes of a shelveset (`status /shelveset`); null owner = the authenticated user.</summary>
-        IReadOnlyList<PendingSetInfo> QueryShelvedChanges(string shelvesetName, string? owner, IReadOnlyList<ItemQuery> items);
+        /// <summary>Changes of a shelveset (`status /shelveset`); null owner = the authenticated user. With download info the changes can be downloaded through <see cref="DownloadShelved(PendingChangeInfo)"/>.</summary>
+        IReadOnlyList<PendingSetInfo> QueryShelvedChanges(string shelvesetName, string? owner, IReadOnlyList<ItemQuery> items, bool includeDownloadInfo = false);
 
         IReadOnlyList<ChangesetInfo> QueryHistory(HistoryQuery query);
 
@@ -105,8 +105,14 @@ namespace TfPortable.Context
         /// <summary>Content of a file item at a version.</summary>
         ItemContent Download(string serverPath, VersionSpec version, int deletionId);
 
+        /// <summary>Content of every file item matching the query at a version, in one listing call plus one download per file.</summary>
+        IReadOnlyList<ItemContent> DownloadItems(ItemQuery item, VersionSpec version, bool includeDeleted);
+
         /// <summary>Content of a file in a shelveset (null owner = the authenticated user), with the server item it is based on.</summary>
         ItemContent? DownloadShelved(string shelvesetName, string? owner, string serverPath);
+
+        /// <summary>Content of a shelved change returned by <see cref="QueryShelvedChanges"/>; null when the change carries no content (a rename or a property change).</summary>
+        ItemContent? DownloadShelved(PendingChangeInfo change);
 
         /// <summary>Labels matching the filters (null = any); items only when asked.</summary>
         IReadOnlyList<LabelInfo> QueryLabels(string? name, string? scope, string? owner, bool includeItems);

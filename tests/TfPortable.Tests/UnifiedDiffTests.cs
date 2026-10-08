@@ -67,6 +67,18 @@ namespace TfPortable.Tests
         }
 
         [Fact]
+        public void Difference_encoding_switch_accepts_names_and_code_pages()
+        {
+            Assert.Null(DifferenceCommand.ResolveEncoding(null));
+            Assert.Equal("windows-1250", DifferenceCommand.ResolveEncoding("1250"));
+            Assert.Equal("windows-1250", DifferenceCommand.ResolveEncoding("windows-1250"));
+            Assert.Equal("utf-8", DifferenceCommand.ResolveEncoding("UTF-8"));
+            Assert.Equal("binary", DifferenceCommand.ResolveEncoding("binary"));
+            var error = Assert.Throws<TfPortable.Errors.TfpException>(() => DifferenceCommand.ResolveEncoding("windows-125"));
+            Assert.Equal(TfPortable.Errors.ErrorCodes.InvalidSwitch, error.Code);
+        }
+
+        [Fact]
         public void Insertion_before_a_repeated_closing_line_is_reported_before_it()
         {
             var lines = UnifiedDiff.Render("a\n}\n}\n", "a\nb\n}\n}\n}\n", "L", "R").ToList();
@@ -172,6 +184,8 @@ namespace TfPortable.Tests
 
             var tree = new BranchInfo("$/Repo/Main", null, 0, true, new[] { new BranchInfo("$/Repo/Release", "$/Repo/Main", 75, false, Array.Empty<BranchInfo>()) });
             Assert.Equal(new[] { ">> $/Repo/Main <<", "\t$/Repo/Release\tBranched from version 75" }, BranchesCommand.Render("$/Repo/Main", new[] { tree }));
+            var fromChild = new BranchInfo("$/Repo/Main", null, 0, false, new[] { new BranchInfo("$/Repo/Release", "$/Repo/Main", 75, true, Array.Empty<BranchInfo>()) });
+            Assert.Equal(new[] { "$/Repo/Main", "\t>> $/Repo/Release <<\tBranched from version 75" }, BranchesCommand.Render("$/Repo/Release", new[] { fromChild }));
 
             var candidates = new[] { new MergeCandidateInfo(new ChangesetInfo(87, "Jan Novak", null, Date, "partial"), true), new MergeCandidateInfo(new ChangesetInfo(83, "Jan Novak", null, Date, "full"), false) };
             var table = MergeCommand.Render(candidates, false).ToList();

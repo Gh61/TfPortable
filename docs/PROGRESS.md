@@ -11,7 +11,7 @@ Read this first in every session. Update it at the end of every session (see CLA
 | 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | done: [PR #1](https://github.com/Gh61/TfPortable/pull/1) merged into `main` on 2026-10-08 after an independent review | – |
 | 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | done: [PR #2](https://github.com/Gh61/TfPortable/pull/2) merged into `main` on 2026-10-08 after an independent review (findings under Decisions) | – |
 | 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | done: [PR #3](https://github.com/Gh61/TfPortable/pull/3) merged into `main` on 2026-10-08 (merge commit ff64062) after an independent review (findings under Decisions) | – |
-| 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | done except the release: [PR #4](https://github.com/Gh61/TfPortable/pull/4) (docs/CLAUDE.md, compatibility tests, embedded-assembly check, THIRD-PARTY-NOTICES) reviewed, CI green and merged into `main` on 2026-10-08; the release (tag `v0.1.0`) waits for the developer | user approves release |
+| 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | done: [PR #4](https://github.com/Gh61/TfPortable/pull/4) (docs/CLAUDE.md, compatibility tests, embedded-assembly check, THIRD-PARTY-NOTICES) reviewed, CI green and merged into `main` on 2026-10-08; release [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) published the same day (developer approved; `tfp.exe` + SHA-256 from the CI run on 2a1c007) | user approved the release on 2026-10-08 |
 | – | Phase 2 commands | – | not planned | separate brief |
 
 Statuses: not started, in progress, blocked, done.
@@ -32,11 +32,14 @@ Statuses: not started, in progress, blocked, done.
 
 ## Needs the user
 
-- Approve the release of milestone 5 (SPEC.md gate): create the tag `v0.1.0` on `main` (PR #3 and
-  PR #4 are merged); CI publishes `tfp.exe` with its SHA-256. Before that, a lawyer's look at
-  LICENSE-EXCEPTION and THIRD-PARTY-NOTICES (Decisions 2026-10-07) is still open.
-- Decide on branch protection for `main` (the cloud agent merges its own pull requests after an
-  independent review; protection would require a human approval per merge).
+- A lawyer's look at LICENSE-EXCEPTION and THIRD-PARTY-NOTICES (Decisions 2026-10-07) is still
+  open; `v0.1.0` was released with the current texts.
+- Set up the `main` ruleset the developer agreed to on 2026-10-08: pull request required, the CI
+  check `Build, test, package (windows-latest)` required (branch up to date), force pushes and
+  deletions blocked, no required approvals (the agent merges after an independent review), no
+  linear-history requirement (merge commits are the convention).
+- Later releases: run the CI workflow manually on `main` with `release_tag` (Actions → CI → Run
+  workflow), or push a tag `v*` from a machine that can push tags.
 - The golden fixture creates a temporary local workspace named `tfp-golden-<id>` on the CI runner
   (owner: the PAT's user) and deletes it at the end; a run that dies mid-way may leave one behind
   in the collection (harmless, but visible in `tf workspaces /owner:*`). Delete such leftovers
@@ -124,6 +127,8 @@ Statuses: not started, in progress, blocked, done.
 | 2026-10-08 | Golden comparison gained `ChangesetsSubset` and a relative-path resolution for `File:` / `+++ Local:` lines of diffs; the milestone 4 cases compare line by line where the seeded state is stable (changeset blocks, view content, `dir /version:C75`, `labels /format:detailed v1.0`, `properties` at C75, `difference` of C75~C81) and shape plus subsets where later golden runs extended the server (history of Main, dir of Main, branches, merge candidates, labels list) | docs/golden-format.md §6 |
 | 2026-10-08 | First CI run of milestone 4 (18 failures) fixed: (1) the seeded changesets belong to the developer, so the fixture maps the owner display name of the oldest changeset of `$/TfsPortableTestRepo` to `<OWNER>` as well as the CI identity; (2) the Czech → English dictionary of `GoldenText` is applied longest first and on whole words only (`Typ` no longer turns tfp's `Type` into `Typee`); (3) `properties` cases skip the stream check (the original's deprecation warning on stderr is an intended deviation, compat §1.3); (4) "Item … was not found in source control at version …" of the client library (no TF code, not an `ItemNotFoundException`) maps to TFP0301, so `view` exits 1 and `history` prints the empty result; (5) `changeset` lists items by parent folder, then name, as tf.exe (a folder's direct children before its subfolders' items); (6) the unified diff matches the common prefix and suffix before running Myers, as tf.exe: a block inserted in front of a repeated `}` is reported before that line; (7) `history/brief` and `merge/candidate` compare shape only: the 300 padding changesets of the `long-default` capture push the seed changesets past the 256 limit, and changeset 83 was merged to Release by the later golden changeset 91 | CI log of run 37785311952 |
 | 2026-10-08 | Review of PR #3 (independent agent, no blocking findings) and the fixes applied before the merge: (1) linked work items are read only for `changeset` and `history /format:detailed` (`Changeset.AssociatedWorkItems` is a server call per access), `/workitem` resolves the work item's links once through `ILinking.GetReferencingArtifacts` with a per-changeset fallback; (2) `changeset /diff` compares a merged or branched file with its own previous version, only a rename looks under the old name; (3) `history` and `view` accept wildcards and `history` of a deleted item works (lookup through `GetItems` with deleted items); (4) the unified diff treats CRLF/LF and a missing final newline as differences unless `/ignoreeol` (`\ No newline at end of file` marker) and is now linear-space Myers (middle snake, deletes before inserts in a block; the trace version needed O(D·(N+M)) memory); (5) `difference /shelveset` prints the change line and the `File:` line as the original and the local side is decoded with the server encoding; (6) a single `/version` with two itemspecs applies to both sides; (7) the history continuation hint uses the scanned range and the sort order, and the 256 limit is detected by fetching one row more; (8) `dir <file>` lists the file; `merge /candidate /format:detailed` reads the items per candidate; `properties` outside a workspace reports no lock; the client no longer fabricates a `TF14019` message; `view` strips the final CRLF. Not done (nits recorded as open questions): N+1 downloads of `view /recursive` and `difference /shelveset`, shelved content through a temp file, `branches` of a non-root item prints only the subtree | Review findings; the linear-space diff was cross-checked against a DP edit distance on 3000 random inputs in a scratch .NET 10 project |
+| 2026-10-08 | Open questions closed after the release (branch `open-questions`): `/encoding` values are whatever the client library's `FileType` parser accepts (names, code pages, `binary`/`text`/`auto`; decompiled), the dead `ParseEncoding` is gone; `reconcile /promote` promotes adds and deletes without `/adds`/`/deletes` (the capture's empty result is recorded as a deviation); a recursive `add` leaves `.tfignore` matches out silently with exit 0; a modified file in a local workspace makes `get` of an older version a TFP0403 conflict; `history /workitem` is answered by the linking service with a PAT; the golden loader finds cases in every `index*.json`. Review nits of PR #3 done: `view` downloads through one listing (`DownloadItems`) and treats `/output` as a directory for `/recursive` and wildcards, shelved content streams without a temp file and without a second query (`PendingChangeInfo.Handle`), `branches` prints the whole tree with the requested item marked, `merge /candidate /version` filters by changeset number, `difference /encoding` overrides the decoding. All verified by `tests/TfPortable.IntegrationTests/OpenQuestionTests.cs` against the test collection | Developer's request to close the open questions |
+| 2026-10-08 | Review of the open-questions branch (independent agent): `difference /encoding` resolves the value once (name or code page → web name, `binary`; unknown → TFP0002, the silent UTF-8 fallback is gone); SPEC.md's `add` row says exit 0 with `.tfignore` matches left out; a shelved change without content (rename-only, property, lock) no longer crashes `difference /shelveset` or `view /shelveset` (`DownloadShelved` returns null); the conflict test resolves with `TakeTheirs`, undoes, gets the latest and asserts that no conflict or pending change is left; the golden loader searches `index-extra.json` before the suffixed runs | Review findings |
 | 2026-10-08 | The developer approved the release of milestone 5 (`v0.1.0`). A tag cannot be pushed from the cloud session (the session's git proxy accepts branch pushes only and refuses writes to the tags API), so the CI workflow gained a `workflow_dispatch` input `release_tag`: a manual run publishes the release for that tag from the chosen branch and creates the tag on its head when it does not exist; the tag push that follows re-runs the job, which finds the release and does nothing. A pushed tag still releases as before | Developer's instruction of 2026-10-08; the cloud environment's git proxy |
 | 2026-10-08 | Review of PR #4 (independent agent, one should-fix: PROGRESS.md was stale): status table, next steps and "Needs the user" rewritten for the hand-over; `docs/CLAUDE.md` keeps only the `-candidate` permission rule (the `/candidate` form never arrives from Git Bash) and says the switch must follow `merge`, names the three meanings of exit 120 (no workspace, path not mapped, server workspace), notes that `view -output:` writes a file and that aliases (`hist`, `stat`, ...) are not in the allow list; the compatibility test checks the `undo` and that no detected change is left; the CI step trims the list lines before the `#` check; SPEC.md points to `docs/CLAUDE.md` as the maintained template | Review findings |
 
@@ -134,28 +139,20 @@ Closed on 2026-10-07 by the golden analysis (see "Decisions" and `docs/compat.md
 file (exit 0, explicit path), `rollback /changeset:` without item spec (works), exit codes for
 locks, out-of-date checkin and conflicts.
 
+Closed on 2026-10-08 by `OpenQuestionTests` against the test collection and by decompiling the client library
+(see "Decisions"): `add /recursive` with `.tfignore` matches (exit 0, ignored items left out), `reconcile /promote`
+without `/adds`/`/deletes` (promotes; the capture's empty result is a recorded deviation), a PAT rejection (TFP0102,
+exit 110, the PAT never echoed), `get` of an older version over a modified file (TFP0403 in a local workspace), the
+golden loader and `index-extra*.json` (every `index*.json` is searched), `history /workitem` on Azure DevOps Services
+(the linking service answers), `/encoding` values (the library parses names, code pages and `binary`), and the review
+nits of PR #3 (`view` downloads, shelved content, `branches` tree, `merge /version`, `difference /encoding`).
+
 Open:
 
-- `add <folder> /recursive` with items skipped by `.tfignore`: the seed script observed exit 1, no
-  golden file exists. Follow the original (exit 1, skipped items listed) until the developer captures
-  a case.
-- `reconcile /promote <folder> /recursive` promoted nothing in the golden run (`reconcile/promote`),
-  although `status` showed two candidates. Check in the milestone 3 integration test whether `/adds`
-  and `/deletes` must be given explicitly.
-- No golden case for TFP0402 (`get` over a writable file without pending change) or for a PAT
-  rejection; both stay as specified in SPEC.md until captured.
-- `index-extra.json` (run 2610071920) has no run suffix although the script writes
-  `index-extra-<run>.json`; harmless, but the golden test loader must accept both names.
-- `history /workitem:<id>` uses the linking service (`ILinking.GetReferencingArtifacts`) of the collection; whether
-  Azure DevOps Services still answers it with a PAT is unverified (the code falls back to one `GetChangeset` per
-  candidate changeset when the call fails). The test project has no work items, so no golden case covers it.
-- Review nits of PR #3 left open: `view /recursive` and `difference /shelveset` download one file per call (N+1);
-  `DownloadShelved` goes through a temp file in `%TEMP%\TfPortable`; `branches` of a non-root item prints only the
-  subtree below it (tf.exe prints the whole tree and marks the item); `merge` accepts `/version:` and `difference`
-  `/encoding:` without using them; `view /recursive /output:` treats the target as a file when exactly one file matches.
-- `add`/`checkout /encoding:<value>` passes the value verbatim as the client library's `fileType`
-  string (`TfvcClient.ParseEncoding` is unused). Whether the library accepts names such as
-  `windows-1250` or only code pages is unverified; the integration tests do not cover `/encoding`.
+- No golden case exists for TFP0402 (the library's "writable" status of `get`): tfp maps it as SPEC.md says, but no
+  capture or integration test has produced it (local workspaces report a conflict instead).
+- A shelveset diff has no live test: the golden run's shelveset was deleted at its end (`shelve/delete`), and tfp
+  cannot create one (`shelve` is phase 2). `difference /shelveset` is covered by unit tests of the rendering only.
 
 ## Golden files – facts
 
@@ -187,9 +184,11 @@ Open:
   `docs/CLAUDE.md`, `CompatibilityTests`, the embedded-assembly CI check with
   `src/TfPortable/embedded-assemblies.txt` (33 assemblies + Costura resources), THIRD-PARTY-NOTICES
   section 3 updated; reviewed, findings applied.
-- Next: PR #3 merged (ff64062); PR #4 merges after this docs push passes CI; the developer tags
-  `v0.1.0`.
-- Blockers: the release gate (developer); nothing else.
+- Next: PR #3 merged (ff64062); PR #4 merged (bd1fa08); release `v0.1.0` published through the new
+  `workflow_dispatch` input (PR #5, the git proxy of the cloud session refuses tag pushes). Then the
+  open questions: branch `open-questions`, `OpenQuestionTests`, review nits of PR #3; see "Decisions".
+- Blockers: none. The developer sets up the `main` ruleset (PR required, CI check required, no
+  force pushes; no required approvals so that the agent can merge).
 
 ### 2026-10-08 – cloud session 1 continued, review of PR #1 and milestone 3
 

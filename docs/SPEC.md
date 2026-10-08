@@ -263,7 +263,7 @@ Fáze 1 pokrývá 21 příkazů tf.exe a 3 příkazy pro správu PAT: vše pro p
 | Příkaz (aliasy) | Přepínače | Chování | Fáze |
 | --- | --- | --- | --- |
 | `status` (`stat`) | `/recursive` `/format:brief\|detailed` `/user:` `/workspace:` `/shelveset:` `/nodetect` | Pending changes; v lokálním workspace i detekované změny (candidates) zvlášť označené. `/format:xml` originálu (i u `workspaces` a `shelvesets`) se nepodporuje, místo něj `/format:json` | 1 |
-| `add` | `/recursive` `/lock:none` `/encoding:` `/noignore` | Respektuje `.tfignore` při `/recursive` a zástupných znacích (přeskočené položky vypíše s důvodem, exit 1 jako originál); explicitně zadaný soubor přidá vždy. `/lock:checkin\|checkout` odmítne (zámky zapisují na server) | 1 |
+| `add` | `/recursive` `/lock:none` `/encoding:` `/noignore` | Respektuje `.tfignore` při `/recursive` a zástupných znacích (vyloučené položky tiše vynechá, exit 0; originál při seedování hlásil exit 1, viz compat.md); explicitně zadaný soubor přidá vždy, `/noignore` přidá i vyloučené. `/lock:checkin\|checkout` odmítne (zámky zapisují na server) | 1 |
 | `checkout` (`edit`) | `/recursive` `/lock:none` `/encoding:` | Označí soubor v lokálním workspace jako pending edit | 1 |
 | `delete` (`del`) | `/recursive` `/lock:` `/detect` | Pending delete; soubor smaže lokálně jako tf.exe | 1 |
 | `rename` (`move`, `ren`) | `/lock:` | Přejmenování i přesun souboru nebo složky | 1 |

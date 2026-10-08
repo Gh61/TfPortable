@@ -64,16 +64,23 @@ namespace TfPortable.IntegrationTests.Golden
             return ((JArray)index["cases"]!).Cast<JObject>().Select(Load).ToList();
         }
 
-        /// <summary>Loads one case by `group/name` from `index.json`.</summary>
+        /// <summary>Loads one case by `group/name` from any `index*.json`: `index.json`, then `index-extra.json` (the first extra run), then the suffixed runs in order.</summary>
         public static GoldenCase Load(string id)
         {
-            var found = LoadIndex("index.json").FirstOrDefault(c => c.Id == id);
-            if (found == null)
+            var indexFiles = Directory.GetFiles(TestEnvironment.GoldenRoot, "index*.json")
+                .Select(Path.GetFileName)
+                .OrderBy(f => f == "index.json" ? 0 : f == "index-extra.json" ? 1 : 2)
+                .ThenBy(f => f, StringComparer.Ordinal);
+            foreach (string indexFile in indexFiles)
             {
-                throw new InvalidOperationException($"Golden case {id} is not in index.json");
+                var found = LoadIndex(indexFile!).FirstOrDefault(c => c.Id == id);
+                if (found != null)
+                {
+                    return found;
+                }
             }
 
-            return found;
+            throw new InvalidOperationException($"Golden case {id} is not in any index*.json");
         }
 
         private static GoldenCase Load(JObject entry)
