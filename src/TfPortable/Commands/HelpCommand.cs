@@ -128,6 +128,8 @@ namespace TfPortable.Commands
             }
 
             yield return string.Empty;
+            int level = ProtectionLevels.Of(spec.Name);
+            yield return $"Protection level: {level} ({ProtectionLevels.Name(level)}); see '{toolName} protection'.";
             yield return spec.Status == CommandStatus.Planned
                 ? $"Status: planned for phase {spec.Phase}, not available in this build (TFP0003)."
                 : "Status: available in this build.";
@@ -147,6 +149,7 @@ namespace TfPortable.Commands
                 ["supported"] = c.Status == CommandStatus.Implemented,
                 ["status"] = c.Status == CommandStatus.Implemented ? "implemented" : c.Status == CommandStatus.Planned ? "planned" : "out-of-scope",
                 ["summary"] = c.Summary,
+                ["protectionLevel"] = ProtectionLevels.Of(c.Name),
                 ["switches"] = new JArray(CommandCatalog.SwitchesOf(c).Select(s => new JObject
                 {
                     ["name"] = s.Name,

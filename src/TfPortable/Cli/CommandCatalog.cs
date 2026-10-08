@@ -159,6 +159,8 @@ namespace TfPortable.Cli
                 "List the commands, or the switches of one command.", "[command]"),
             new CommandSpec("version", Array.Empty<string>(), null, CommandStatus.Implemented,
                 "Print the TfPortable and client library versions.", ""),
+            new CommandSpec("protection", Array.Empty<string>(), null, CommandStatus.Implemented,
+                "Show the protection level (1 read-only, 2 everyday work, 3 everything), or set it in an interactive terminal.", "[set <1|2|3>]"),
 
             // Phase 1: workspace commands (milestone 3).
             new CommandSpec("status", new[] { "stat" }, 1, CommandStatus.Implemented,
