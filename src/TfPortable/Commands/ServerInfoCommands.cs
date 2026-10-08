@@ -377,24 +377,26 @@ namespace TfPortable.Commands
             return ExitCodes.Success;
         }
 
+        /// <summary>The whole branch tree; the requested item is marked `>> path <<` wherever it sits, as tf.exe does.</summary>
         internal static IEnumerable<string> Render(string requested, IReadOnlyList<BranchInfo> roots)
         {
             foreach (var root in roots)
             {
-                yield return $">> {root.ServerPath} <<";
-                foreach (string line in Lines(root.Children, 1))
+                foreach (string line in Lines(root, 0, requested))
                 {
                     yield return line;
                 }
             }
         }
 
-        private static IEnumerable<string> Lines(IReadOnlyList<BranchInfo> nodes, int depth)
+        private static IEnumerable<string> Lines(BranchInfo node, int depth, string requested)
         {
-            foreach (var node in nodes)
+            bool marked = node.IsRequested || string.Equals(node.ServerPath, requested, StringComparison.OrdinalIgnoreCase);
+            string name = marked ? $">> {node.ServerPath} <<" : node.ServerPath;
+            yield return depth == 0 ? name : $"{new string('\t', depth)}{name}\tBranched from version {node.BranchedFromVersion}";
+            foreach (var child in node.Children)
             {
-                yield return $"{new string('\t', depth)}{node.ServerPath}\tBranched from version {node.BranchedFromVersion}";
-                foreach (string line in Lines(node.Children, depth + 1))
+                foreach (string line in Lines(child, depth + 1, requested))
                 {
                     yield return line;
                 }
@@ -426,6 +428,17 @@ namespace TfPortable.Commands
             string source = context.ServerPathOf(items[0], toolName);
             string target = context.ServerPathOf(items[1], toolName);
             var candidates = context.Client.GetMergeCandidates(source, target, commandLine.Has("recursive") ? RecursionType.Full : RecursionType.None);
+
+            // /version limits the candidates by changeset number (C<a>~C<b>, or up to C<n>); the library has no such filter.
+            string? versionText = commandLine.Value("version");
+            if (!string.IsNullOrEmpty(versionText))
+            {
+                var range = VersionSpecParser.ParseRange(versionText!, workspace?.Name, workspace?.Owner);
+                int from = range.IsRange ? ChangesetNumber(range.From!, toolName) : 1;
+                int to = ChangesetNumber(range.To, toolName);
+                candidates = candidates.Where(c => c.Changeset.Id >= from && c.Changeset.Id <= to).ToList();
+            }
+
             if (detailed)
             {
                 // The candidate query returns the changeset header only; the detailed block needs the items (json-schema.md).
@@ -445,6 +458,18 @@ namespace TfPortable.Commands
                 }).Cast<object>().ToArray()),
             });
             return ExitCodes.Success;
+        }
+
+        private static int ChangesetNumber(VersionSpec spec, string toolName)
+        {
+            switch (spec)
+            {
+                case ChangesetVersionSpec changeset: return changeset.ChangesetId;
+                case LatestVersionSpec _: return int.MaxValue;
+                default:
+                    throw new TfpException(ErrorCodes.InvalidVersionSpec, ExitCodes.GeneralError, "merge /candidate takes changeset numbers in /version (C<n>, C<a>~C<b> or T).",
+                        $"Example: '{toolName} merge /candidate $/Project/Main $/Project/Release /recursive /version:C100~C120'.");
+            }
         }
 
         internal static IEnumerable<string> Render(IReadOnlyList<MergeCandidateInfo> candidates, bool detailed)

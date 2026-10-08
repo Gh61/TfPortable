@@ -90,11 +90,11 @@ namespace TfPortable.Context
             return VersionControl.QueryPendingSets(specs, workspaceName, user, false, false).Select(ToPendingSet).ToList();
         }
 
-        public IReadOnlyList<PendingSetInfo> QueryShelvedChanges(string shelvesetName, string? owner, IReadOnlyList<ItemQuery> items)
+        public IReadOnlyList<PendingSetInfo> QueryShelvedChanges(string shelvesetName, string? owner, IReadOnlyList<ItemQuery> items, bool includeDownloadInfo = false)
         {
             var vcs = VersionControl;
             var specs = items.Count == 0 ? null : items.Select(ToItemSpec).ToArray();
-            return vcs.QueryShelvedChanges(shelvesetName, string.IsNullOrEmpty(owner) ? vcs.AuthorizedUser : owner, specs, false).Select(ToPendingSet).ToList();
+            return vcs.QueryShelvedChanges(shelvesetName, string.IsNullOrEmpty(owner) ? vcs.AuthorizedUser : owner, specs, includeDownloadInfo).Select(ToPendingSet).ToList();
         }
 
         public IReadOnlyList<ChangesetInfo> QueryHistory(HistoryQuery query)
@@ -159,10 +159,14 @@ namespace TfPortable.Context
                 return new ItemContent(ToItem(item), Array.Empty<byte>());
             }
 
-            using var stream = item.DownloadFile();
-            using var buffer = new MemoryStream();
-            stream.CopyTo(buffer);
-            return new ItemContent(ToItem(item), buffer.ToArray());
+            return new ItemContent(ToItem(item), ReadAll(item.DownloadFile()));
+        }
+
+        public IReadOnlyList<ItemContent> DownloadItems(ItemQuery item, VersionSpec version, bool includeDeleted)
+        {
+            // One listing with download information, then one download per file: no metadata round trip per item.
+            var set = VersionControl.GetItems(ToItemSpec(item), version, includeDeleted ? DeletedState.Any : DeletedState.NonDeleted, ItemType.File, GetItemsOptions.Download);
+            return set.Items.Select(found => new ItemContent(ToItem(found), ReadAll(found.DownloadFile()))).ToList();
         }
 
         public ItemContent? DownloadShelved(string shelvesetName, string? owner, string serverPath)
@@ -170,29 +174,30 @@ namespace TfPortable.Context
             var vcs = VersionControl;
             var sets = vcs.QueryShelvedChanges(shelvesetName, string.IsNullOrEmpty(owner) ? vcs.AuthorizedUser : owner, new[] { new ItemSpec(serverPath, RecursionType.None) }, true);
             var change = sets.SelectMany(s => s.PendingChanges).FirstOrDefault(c => string.Equals(c.ServerItem, serverPath, StringComparison.OrdinalIgnoreCase));
-            if (change == null)
-            {
-                return null;
-            }
+            return change == null ? null : ShelvedContent(change);
+        }
 
-            string temp = Path.Combine(Path.GetTempPath(), "TfPortable", "shelved-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Path.GetDirectoryName(temp)!);
-            try
+        public ItemContent DownloadShelved(PendingChangeInfo change)
+        {
+            var handle = change.Handle as PendingChange ?? throw new ArgumentException("The shelved change carries no library handle; query it with download information.", nameof(change));
+            return ShelvedContent(handle);
+        }
+
+        /// <summary>The shelved content as a stream of the library; no temp file.</summary>
+        private static ItemContent ShelvedContent(PendingChange change)
+        {
+            byte[] bytes = ReadAll(change.DownloadShelvedFile());
+            var info = new ItemInfo(change.ServerItem, change.ItemType == ItemType.Folder, change.Version, change.DeletionId, EncodingName(change.Encoding), bytes.Length, change.CreationDate, change.ItemId);
+            return new ItemContent(info, bytes);
+        }
+
+        private static byte[] ReadAll(Stream stream)
+        {
+            using (stream)
+            using (var buffer = new MemoryStream())
             {
-                change.DownloadShelvedFile(temp);
-                var info = new ItemInfo(change.ServerItem, change.ItemType == ItemType.Folder, change.Version, change.DeletionId, EncodingName(change.Encoding), new FileInfo(temp).Length, change.CreationDate, change.ItemId);
-                return new ItemContent(info, File.ReadAllBytes(temp));
-            }
-            finally
-            {
-                try
-                {
-                    File.Delete(temp);
-                }
-                catch (Exception)
-                {
-                    // Temp file; leave it.
-                }
+                stream.CopyTo(buffer);
+                return buffer.ToArray();
             }
         }
 
@@ -323,7 +328,8 @@ namespace TfPortable.Context
                 change.CreationDate,
                 change.PendingSetOwner,
                 change.PendingSetName,
-                detected);
+                detected,
+                change);
         }
 
         /// <summary>Change types in the English wording of the client library ("edit", "merge, edit"), lower-case like tf.exe.</summary>
@@ -354,27 +360,6 @@ namespace TfPortable.Context
         }
 
         /// <summary>Code page of an `/encoding:` value (`utf-8`, `windows-1250`, `binary`, or a number).</summary>
-        internal static int? ParseEncoding(string? encoding)
-        {
-            if (string.IsNullOrWhiteSpace(encoding))
-            {
-                return null;
-            }
-
-            string e = encoding!.Trim();
-            if (e.Equals("binary", StringComparison.OrdinalIgnoreCase))
-            {
-                return -1;
-            }
-
-            if (int.TryParse(e, out int codePage))
-            {
-                return codePage;
-            }
-
-            return System.Text.Encoding.GetEncoding(e).CodePage;
-        }
-
         internal static ConflictInfo ToConflict(Conflict c)
         {
             string type = c.Type.ToString().ToLowerInvariant();

@@ -172,6 +172,8 @@ namespace TfPortable.Tests
 
             var tree = new BranchInfo("$/Repo/Main", null, 0, true, new[] { new BranchInfo("$/Repo/Release", "$/Repo/Main", 75, false, Array.Empty<BranchInfo>()) });
             Assert.Equal(new[] { ">> $/Repo/Main <<", "\t$/Repo/Release\tBranched from version 75" }, BranchesCommand.Render("$/Repo/Main", new[] { tree }));
+            var fromChild = new BranchInfo("$/Repo/Main", null, 0, false, new[] { new BranchInfo("$/Repo/Release", "$/Repo/Main", 75, true, Array.Empty<BranchInfo>()) });
+            Assert.Equal(new[] { "$/Repo/Main", "\t>> $/Repo/Release <<\tBranched from version 75" }, BranchesCommand.Render("$/Repo/Release", new[] { fromChild }));
 
             var candidates = new[] { new MergeCandidateInfo(new ChangesetInfo(87, "Jan Novak", null, Date, "partial"), true), new MergeCandidateInfo(new ChangesetInfo(83, "Jan Novak", null, Date, "full"), false) };
             var table = MergeCommand.Render(candidates, false).ToList();

@@ -62,6 +62,8 @@ namespace TfPortable.Commands
             if (commandLine.Has("ignoreeol")) { options |= DiffOptions.IgnoreEol; }
             if (commandLine.Has("ignorecase")) { options |= DiffOptions.IgnoreCase; }
             string? shelveset = commandLine.Value("shelveset");
+            // /encoding decodes both sides with the given encoding instead of the server's (names or code pages).
+            string? encoding = commandLine.Value("encoding");
 
             if (commandLine.Positionals.Count > 2 || (commandLine.Positionals.Count == 0 && shelveset == null))
             {
@@ -81,13 +83,13 @@ namespace TfPortable.Commands
             var pairs = new List<(string Path, string JsonPath, Side Left, Side Right, string? Change)>();
             if (shelveset != null)
             {
-                pairs.AddRange(ShelvesetPairs(context, shelveset, items, toolName));
+                pairs.AddRange(ShelvesetPairs(context, shelveset, items, encoding, toolName));
             }
             else if (items.Count == 2)
             {
                 // A single /version applies to both sides; a range gives each side its own version.
-                var left = Load(context, items[0], (range != null && !range.IsRange ? range.To : range?.From) ?? items[0].Version, "left", toolName);
-                var right = Load(context, items[1], range?.To ?? items[1].Version, "right", toolName);
+                var left = Load(context, items[0], (range != null && !range.IsRange ? range.To : range?.From) ?? items[0].Version, "left", encoding, toolName);
+                var right = Load(context, items[1], range?.To ?? items[1].Version, "right", encoding, toolName);
                 string shown = items[1].IsServerPath ? context.Workspace?.GetLocalItemForServerItem(items[1].Path) ?? items[1].Path : items[1].Path;
                 pairs.Add((shown, shown, left, right, null));
             }
@@ -98,13 +100,13 @@ namespace TfPortable.Commands
                 {
                     // The original names the file by its mapped local path when the workspace knows it.
                     string shown = context.Workspace?.GetLocalItemForServerItem(file) ?? file;
-                    pairs.Add((shown, shown, Server(context, file, range.From!, 0, true), Server(context, file, range.To, 0, true), null));
+                    pairs.Add((shown, shown, Server(context, file, range.From!, 0, true, encoding), Server(context, file, range.To, 0, true, encoding), null));
                 }
             }
             else
             {
                 // Local against the server: every pending edit under the itemspec, or the item itself.
-                pairs.AddRange(LocalPairs(context, items[0], range?.To, commandLine.Has("recursive"), toolName));
+                pairs.AddRange(LocalPairs(context, items[0], range?.To, commandLine.Has("recursive"), encoding, toolName));
             }
 
             var files = new JArray();
@@ -177,12 +179,12 @@ namespace TfPortable.Commands
             return items.Where(i => !i.IsFolder).Select(i => i.ServerPath);
         }
 
-        private static Side Server(WorkspaceContext context, string serverPath, VersionSpec version, int deletionId, bool shortLabel)
+        private static Side Server(WorkspaceContext context, string serverPath, VersionSpec version, int deletionId, bool shortLabel, string? encoding)
         {
             var content = context.Client.Download(serverPath, version, deletionId);
-            string? text = TextContent.Decode(content.Bytes, content.Item.Encoding);
+            string? text = TextContent.Decode(content.Bytes, encoding ?? content.Item.Encoding);
             string name = shortLabel ? Microsoft.TeamFoundation.VersionControl.Common.VersionControlPath.GetFileName(serverPath) : serverPath;
-            return new Side("server", serverPath, content.Item.ChangesetId, text, text == null, $"Server: {name};{(shortLabel ? string.Empty : "C")}{content.Item.ChangesetId}", content.Item.Encoding);
+            return new Side("server", serverPath, content.Item.ChangesetId, text, text == null, $"Server: {name};{(shortLabel ? string.Empty : "C")}{content.Item.ChangesetId}", encoding ?? content.Item.Encoding);
         }
 
         /// <summary>The local file decoded with the item's server encoding (a BOM wins), so that both sides compare alike.</summary>
@@ -192,12 +194,12 @@ namespace TfPortable.Commands
             return new Side("local", localPath, null, text, text == null, $"Local: {localPath}", encoding);
         }
 
-        private static Side Load(WorkspaceContext context, ParsedItemSpec item, VersionSpec? version, string what, string toolName)
+        private static Side Load(WorkspaceContext context, ParsedItemSpec item, VersionSpec? version, string what, string? encoding, string toolName)
         {
             if (item.IsServerPath || version != null)
             {
                 string path = context.ServerPathOf(item, toolName);
-                return Server(context, path, version ?? VersionSpec.Latest, item.DeletionId, false);
+                return Server(context, path, version ?? VersionSpec.Latest, item.DeletionId, false, encoding);
             }
 
             if (!File.Exists(item.Path))
@@ -205,10 +207,10 @@ namespace TfPortable.Commands
                 throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.PartialSuccess, $"{item.Path}: no such local file ({what} side).", "Pass an existing local file or a server path.", item: item.Path);
             }
 
-            return Local(item.Path, null);
+            return Local(item.Path, encoding);
         }
 
-        private IEnumerable<(string Path, string JsonPath, Side Left, Side Right, string? Change)> LocalPairs(WorkspaceContext context, ParsedItemSpec item, VersionSpec? version, bool recursive, string toolName)
+        private IEnumerable<(string Path, string JsonPath, Side Left, Side Right, string? Change)> LocalPairs(WorkspaceContext context, ParsedItemSpec item, VersionSpec? version, bool recursive, string? encoding, string toolName)
         {
             var workspace = context.RequireWorkspace(toolName);
             string serverPath = context.ServerPathOf(item, toolName);
@@ -225,7 +227,7 @@ namespace TfPortable.Commands
             if (edits.Count == 0 && File.Exists(localPath))
             {
                 // No pending change: compare the file with the latest (or the given) server version anyway.
-                var server = Server(context, serverPath, version ?? VersionSpec.Latest, 0, false);
+                var server = Server(context, serverPath, version ?? VersionSpec.Latest, 0, false, encoding);
                 var local = Local(localPath, server.Encoding);
                 yield return (localPath, localPath, server, local, null);
                 yield break;
@@ -241,26 +243,27 @@ namespace TfPortable.Commands
                 else
                 {
                     var content = context.Client.Download(edit.SourceServerPath ?? edit.ServerPath, version ?? new ChangesetVersionSpec(edit.Version), 0);
-                    string? text = TextContent.Decode(content.Bytes, content.Item.Encoding);
-                    left = new Side("server", edit.ServerPath, content.Item.ChangesetId, text, text == null, $"Server: {edit.ServerPath};C{content.Item.ChangesetId}", content.Item.Encoding);
+                    string? text = TextContent.Decode(content.Bytes, encoding ?? content.Item.Encoding);
+                    left = new Side("server", edit.ServerPath, content.Item.ChangesetId, text, text == null, $"Server: {edit.ServerPath};C{content.Item.ChangesetId}", encoding ?? content.Item.Encoding);
                 }
 
                 Side right = File.Exists(edit.LocalPath)
-                    ? Local(edit.LocalPath!, left.Encoding ?? edit.Encoding)
+                    ? Local(edit.LocalPath!, encoding ?? left.Encoding ?? edit.Encoding)
                     : new Side("local", edit.LocalPath!, null, string.Empty, false, "[no target file]");
                 yield return (edit.LocalPath!, edit.LocalPath!, left, right, $"{edit.ChangeText}: {edit.LocalPath}");
             }
         }
 
-        private IEnumerable<(string Path, string JsonPath, Side Left, Side Right, string? Change)> ShelvesetPairs(WorkspaceContext context, string shelveset, List<ParsedItemSpec> items, string toolName)
+        private IEnumerable<(string Path, string JsonPath, Side Left, Side Right, string? Change)> ShelvesetPairs(WorkspaceContext context, string shelveset, List<ParsedItemSpec> items, string? encoding, string toolName)
         {
             string[] parts = shelveset.Split(new[] { ';' }, 2);
             var queries = items.Select(i => new ItemQuery(context.ServerPathOf(i, toolName), RecursionType.Full)).ToList();
-            var sets = context.Client.QueryShelvedChanges(parts[0], parts.Length > 1 ? parts[1] : null, queries);
+            // One query with download information; each shelved file is then downloaded without a second query.
+            var sets = context.Client.QueryShelvedChanges(parts[0], parts.Length > 1 ? parts[1] : null, queries, includeDownloadInfo: true);
             foreach (var change in sets.SelectMany(s => s.Changes).Where(c => !c.IsFolder))
             {
-                var shelved = context.Client.DownloadShelved(parts[0], parts.Length > 1 ? parts[1] : null, change.ServerPath);
-                string? shelvedText = shelved == null ? null : TextContent.Decode(shelved.Bytes, shelved.Item.Encoding);
+                var shelved = change.ChangeTypes.Contains("delete") ? null : context.Client.DownloadShelved(change);
+                string? shelvedText = shelved == null ? null : TextContent.Decode(shelved.Bytes, encoding ?? shelved.Item.Encoding);
                 var right = new Side("shelveset", change.ServerPath, change.Version, shelvedText ?? string.Empty, shelved != null && shelvedText == null, $"Shelved change: {change.ServerPath};{parts[0]}");
                 Side left;
                 if (change.ChangeTypes.Contains("add"))
@@ -270,8 +273,8 @@ namespace TfPortable.Commands
                 else
                 {
                     var content = context.Client.Download(change.SourceServerPath ?? change.ServerPath, new ChangesetVersionSpec(change.Version), 0);
-                    string? text = TextContent.Decode(content.Bytes, content.Item.Encoding);
-                    left = new Side("server", change.ServerPath, content.Item.ChangesetId, text, text == null, $"Server: {change.ServerPath};C{content.Item.ChangesetId}");
+                    string? text = TextContent.Decode(content.Bytes, encoding ?? content.Item.Encoding);
+                    left = new Side("server", change.ServerPath, content.Item.ChangesetId, text, text == null, $"Server: {change.ServerPath};C{content.Item.ChangesetId}", encoding ?? content.Item.Encoding);
                 }
 
                 // The original prints `<change>: $/path;C<n>` and then `File: <name>` (golden difference/shelveset).

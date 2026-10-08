@@ -126,8 +126,9 @@ namespace TfPortable.Context
     internal sealed class PendingChangeInfo
     {
         public PendingChangeInfo(string changeText, string serverPath, string? localPath, bool isFolder, int version, string? sourceServerPath,
-            string lockLevel, string? encoding, DateTime date, string? owner, string? workspace, bool detected)
+            string lockLevel, string? encoding, DateTime date, string? owner, string? workspace, bool detected, object? handle = null)
         {
+            Handle = handle;
             ChangeText = changeText;
             ServerPath = serverPath;
             LocalPath = localPath;
@@ -169,6 +170,9 @@ namespace TfPortable.Context
 
         /// <summary>A candidate detected on disk, not yet pended.</summary>
         public bool Detected { get; }
+
+        /// <summary>The library's pending change, needed to download shelved content; never serialized.</summary>
+        public object? Handle { get; }
 
         public JObject ToJson() => new JObject
         {
