@@ -61,6 +61,16 @@ Afterwards:
 
 Done when the two index files are committed.
 
+## 3b. Decompile tf.exe for the reference notes (agreed on 2026-10-08)
+
+- Run `.\tools\decompile-tf.ps1` on the machine with Visual Studio. It decompiles `TF.exe` and the version
+  control assemblies next to it into `local\decomp\<version>\` (git-ignored) and writes an `index.md` there.
+- Then either answer `docs/tf-reference/questions.md` yourself into `docs/tf-reference/<command>.md` (template
+  in `docs/tf-reference/README.md`), or give the agent the `local\decomp\<version>\` folder in a session and
+  let it write the notes for your review. The rules (reference only, no code or texts, version named) are in
+  that README and in CLAUDE.md.
+- Done when `questions.md` is empty, or every remaining question says why it cannot be answered.
+
 ## 4. Permanent shelveset `tfp-golden-shelveset`
 
 `ShelvesetTests` still reads it (`status`, `difference`, `view` with `/shelveset`). Once the agent rewrites

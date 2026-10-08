@@ -13,7 +13,8 @@ It keeps tf.exe command names and switches.
 | `docs/compat.md` | Where TfPortable deliberately differs from the original tf.exe, and why. |
 | `tests/golden/` | Captured output of the original tf.exe (stdout, stderr, exit code) per command and case. |
 | `docs/PROGRESS.md` | Current state: milestones, decisions, open questions, session log. |
-| `tools/` | PowerShell scripts that seeded the test project and captured the golden files. |
+| `tools/` | PowerShell scripts that seeded the test project and captured the golden files; `decompile-tf.ps1` for the reference notes. |
+| `docs/tf-reference/` | What tf.exe does, verified from its decompiled implementation (notes only, in our words). `questions.md` lists what is still assumed. |
 
 When they disagree: SPEC.md wins over your assumptions; golden files win over SPEC.md on
 how the original behaves; `docs/compat.md` records every intended deviation.
@@ -78,6 +79,9 @@ failures with `gh run view --log-failed`.
   our connection code.
 - Never enable System.Net or TeamFoundation tracing while a PAT is in use, and never log
   request headers: the trace writes the `Authorization` header in clear text.
+- Decompiled sources of tf.exe or the client libraries (`local/decomp/`, never committed) are a
+  reference for behavior only. Never copy code, structure or message texts from them; write what
+  tf.exe does in your own words into `docs/tf-reference/` (rules there) and record the tf.exe version.
 
 ## Pull requests: review and merge (cloud sessions)
 
