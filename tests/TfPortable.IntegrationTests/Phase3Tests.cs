@@ -101,7 +101,7 @@ namespace TfPortable.IntegrationTests
 
                 var nothing = Run($"checkin {argument} /recursive /comment:\"nothing\" /noprompt");
                 Assert.Equal(100, nothing.ExitCode);
-                Assert.StartsWith("ERROR TFP0301: No pending changes match the given items.", nothing.Stderr);
+                Assert.StartsWith("ERROR TFP0301: Nothing to check in: the given items have no pending changes.", nothing.Stderr);
             }
             finally
             {
