@@ -28,11 +28,11 @@ TfPortable nahrazuje originální tf.exe pro práci s TFVC v Azure DevOps Servic
 
 **Fáze 1 (MVP): čtení a lokální operace** – přihlášení a správa PAT, kontext workspace, `status`, `add`, `delete`, `rename`/`move`, `checkout`/`edit`, `undo`, `get`, `dir`, `localversions`, `info`, `view`, `diff`, `history`, `changeset`, `workspaces`, `workfold`, `resolve`, `reconcile`, `labels`, `branches`.
 
-**Fáze 2: rozšíření** – `annotate`, `merges`, `merge` (jen pending), `branch` (jen pending), `undelete`, `rollback` (jen pending), `shelvesets`, `unshelve`, `folderdiff`, vyhledávání v obsahu historie.
+**Fáze 2: rozšíření** – `annotate`, `merges`, `merge` (jen pending), `branch` (jen pending), `undelete`, `rollback` (jen pending), `folderdiff`, vyhledávání v obsahu historie.
 
-**Fáze 3: zápis na server pro běžnou práci** – `checkin` (klasický checkin pending changes), `label`/`unlabel` (označkování checkinu), `shelve` bez `/delete` (uložení rozdělané práce na server a návrat k ní přes `unshelve` z fáze 2). Rozsah přepínačů a doplňky vhodné pro běžnou práci určí samostatné zadání.
+**Fáze 3: zápis na server pro běžnou práci** – `checkin` (klasický checkin pending changes), `label`/`unlabel` (označkování checkinu), `shelve` bez `/delete` spolu se `shelvesets` a `unshelve` (uložení rozdělané práce na server a návrat k ní), `lock`/`unlock` (týmy s výhradním checkoutem). Součástí fáze 3 jsou úrovně ochrany (viz níže). Rozsah přepínačů: `checkin /comment` (povinný), `/associate:<work item>`, `/recursive`, `/noprompt`, `/validate` (zkušební průchod bez zápisu), `/override:<důvod>` (jen úroveň 3); `shelve /comment`, `/move`, `/replace`, `/recursive`; `label /comment`, `/child:replace|merge`, `/recursive`, `/version`; `lock /lock:checkin|checkout|none`, `/recursive`. Rozšíření pro agenty: `checkin /format:json` vrací číslo changesetu a zapsané položky.
 
-**Fáze 4 (hypotetická): zbytek tf.exe** – všechny zbývající příkazy a přepínače včetně těch, které mění server nevratně (`destroy`, `permission`, `lock`, `workspace /new` a `/delete`, `shelve /delete`, `proxy`, `configure`). Zda je má nástroj umožnit, zatím není rozhodnuto; smysl by to mělo jen jako úplná náhrada tf.exe.
+**Fáze 4 (hypotetická): zbytek tf.exe** – všechny zbývající příkazy a přepínače včetně těch, které mění server nevratně (`destroy`, `permission`, `workspace /new` a `/delete`, `shelve /delete`, `proxy`, `configure`). Zda je má nástroj umožnit, zatím není rozhodnuto; smysl by to mělo jen jako úplná náhrada tf.exe.
 
 Příkazy pozdějších fází nástroj rozpozná a vrátí jasnou chybu `TFP0003 NotSupported` s číslem fáze a doporučením použít Visual Studio nebo originální tf.exe. Důvod: zapisují na server okamžitě a nevratně, kdežto pending changes ve fázi 1 jdou kdykoli vzít zpět přes `undo`.
 
@@ -302,6 +302,22 @@ Fáze 1 pokrývá 21 příkazů tf.exe a 3 příkazy pro správu PAT: vše pro p
 
 **Správa nástroje** (rozšíření): `login`, `logout`, `whoami` (viz Autentizace), `help [<příkaz>]`, `version`.
 
+## Úrovně ochrany
+
+Nástroj pracuje v jedné ze tří úrovní ochrany. Každý příkaz a každý přepínač má v katalogu úroveň, kterou vyžaduje; příkaz vyžadující vyšší úroveň, než je nastavená, skončí chybou `TFP0004 ProtectionLevel` (exit 100) s nápovědou, jak úroveň změnit. Úroveň je zábrana a jasná smlouva, ne bezpečnostní hranice: skutečné vynucení na straně agenta zůstává v jeho oprávněních (např. `.claude/settings.json`).
+
+| Úroveň | Co dovolí | Příkazy |
+| --- | --- | --- |
+| L1 | jen čtení (jediný zápis na disk je `view /output`) | `status`, `history`, `changeset`, `view`, `difference`, `dir`, `properties`, `localversions`, `workfold`, `workspaces`, `labels`, `branches`, `merge /candidate`, `shelvesets`, `annotate`, `merges`, `folderdiff`, `help`, `version`, `whoami`, `login`, `logout`, `protection` (zobrazení) |
+| L2 (výchozí) | běžná práce: pending changes, aktualizace workspace a běžný zápis na server | L1 + `add`, `checkout`, `delete`, `rename`, `undo`, `get`, `resolve`, `reconcile`, `undelete`, `merge`, `branch`, `rollback`, `unshelve`, `checkin`, `shelve`, `label`, `unlabel`, `lock` |
+| L3 | vše, včetně nevratných a cizích změn | L2 + `checkin /override`, `shelve /delete`, `undo /workspace:<cizí>`, `destroy`, `permission`, `workspace /new` a `/delete`, `proxy`, `configure`, `property` |
+
+**Uložení**: `%APPDATA%\TfPortable\settings.json` (klíč `protectionLevel`, hodnoty 1–3). Chybí-li soubor, platí L2. CI, které potřebuje jinou úroveň, soubor nastaví v kroku pipeline; proměnná prostředí se nepoužívá.
+
+**Změna**: jen příkaz `tfp protection set <1|2|3>` v interaktivním terminálu (stdin je terminál, stejná detekce jako u výzvy na PAT). Zvýšení úrovně vyžaduje napsat potvrzení, snížení ne. Bez terminálu příkaz skončí `TFP0004` s vysvětlením, že změna se dělá z interaktivního terminálu. Žádný přepínač příkazu úroveň neovlivní. `tfp protection` bez argumentu a `tfp whoami` úroveň zobrazí (JSON: `protectionLevel`).
+
+**Hláška** (bez středníků, bez odkazu na osobu): `Command 'checkin' needs protection level 2. The current level is 1. Raise it with 'tfp protection set 2' in an interactive terminal.` Stejný text je v JSON v `hint`.
+
 ## Rozšíření pro AI
 
 Rozšíření jsou jen nové přepínače a nové příkazy; žádný existující přepínač tf.exe nemění význam. Cílem je, aby Claude Code dostal přesně to, co potřebuje, jedním voláním a bez parsování tabulek.
@@ -388,6 +404,7 @@ tabulka v `docs/compat.md` §1.1 (např. TFP0301 je 1 u `add`, `delete`, `view`,
 | TFP0001 | Neznámý příkaz | – | Seznam příkazů, `tfp help` | 2 |
 | TFP0002 | Neplatný přepínač nebo hodnota | – | Platné přepínače příkazu | 100 |
 | TFP0003 | Příkaz mimo rozsah nástroje | – | Použít VS nebo originální tf.exe | 100 |
+| TFP0004 | Příkaz nebo přepínač nad nastavenou úrovní ochrany | – | `tfp protection set <n>` v interaktivním terminálu | 100 |
 | TFP0101 | Chybí PAT | – | Spustit `tfp login /collection:<url>` ve vlastním terminálu | 110 |
 | TFP0102 | PAT odmítnut | TF30063, TF400813, HTTP 401 | Vypršel nebo byl zrušen; vytvořit nový, `tfp login` | 110 |
 | TFP0103 | PAT bez potřebného scope (REST token přijal, TFVC SOAP API ne) | TF30063 po úspěšném REST ověření, HTTP 403 | Vytvořit PAT se Scopes: Full access, `tfp login` | 110 |
