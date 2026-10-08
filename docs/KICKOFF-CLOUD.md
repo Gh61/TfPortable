@@ -147,7 +147,13 @@ brief; `Microsoft.TeamFoundation.VersionControl.Client.Difference` or an own Mye
 ## Milestone 5 – integration and release
 
 - `docs/CLAUDE.md`: the template for users from SPEC.md "Šablona do CLAUDE.md" plus the
-  permissions snippet; update README (install, login with Full access, usage, differences).
+  permissions snippet.
+- README.md keeps the structure the developer asked for: why the project exists, install, sign-in
+  with Full access, usage examples, the command table with one line per command, links to
+  `docs/commands.md` (every switch), `docs/compat.md` and `docs/json-schema.md`. When a milestone
+  adds or changes a command, update the README table and `docs/commands.md` in the same pull
+  request; the README must never list a command as available before it is implemented
+  (the "Status" note says which milestone is done).
 - Compatibility test set from SPEC.md "Testování" (the commands of the current Claude Code
   instructions: `vc changeset <n> -noprompt`, `vc view "D:/…" -version:C<n> -noprompt`,
   `vc workspaces -noprompt`, `status -recursive`, `diff`, `add`, `delete`, `rename`).

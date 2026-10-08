@@ -1,22 +1,43 @@
 # TfPortable
 
-**TfPortable** (`tfp.exe`) is a portable replacement for the TFVC part of Microsoft's `tf.exe`.
-One file, no Visual Studio, no dialogs. It signs in only with a Personal Access Token stored in
-the Windows Credential Manager, keeps the command names and switches of `tf.exe`, and adds
-machine-readable output so that AI coding agents (Claude Code and others) can drive it safely.
+**TfPortable** (`tfp.exe`) is a portable replacement for the TFVC part of Microsoft's `tf.exe`:
+one file, no Visual Studio, no dialogs, sign-in with a Personal Access Token, and output that
+both people and AI coding agents can read.
 
-> Status: pre-alpha. The specification is finished (`docs/SPEC.md`, in Czech), the behavior of
-> the original is captured in `tests/golden/`, the code is being built milestone by milestone
+> Status: pre-alpha. The specification is finished, the behavior of the original is captured in
+> `tests/golden/`, and the commands are being implemented milestone by milestone
 > (`docs/PROGRESS.md`). Nothing is released yet.
 
-## Why
+## Why this project exists
 
-- `tf.exe` needs Visual Studio or the Team Explorer installer and interactive sign-in. Token
-  caches expire, MFA prompts appear in the middle of scripts, and GUI dialogs block agents.
-- TfPortable uses a PAT from the Credential Manager, never waits for input when it is not run
-  by a human in a terminal, and explains every error with a stable `TFPxxxx` code, the original
-  `TFxxxxx` code when there is one, and what to do next.
-- `/format:json` returns one JSON document per command (`docs/json-schema.md`).
+Teams that keep their code in TFVC (Team Foundation Version Control) and want to use AI coding
+agents such as Claude Code hit the same wall every day:
+
+- **`tf.exe` is not portable.** It comes with Visual Studio or the Team Explorer installer and
+  depends on the installation it was shipped with. A build box, a container or a colleague's
+  laptop without Visual Studio cannot run it.
+- **Sign-in is interactive.** `tf.exe` relies on cached Entra ID tokens that expire, on MFA
+  prompts and on dialogs. An agent driving the tool from a terminal gets a hidden window or a
+  hang instead of an answer. Even `tf.exe` with a PAT needs an undocumented switch.
+- **Output is made for humans.** Tables are cut to 79 columns, dates follow the Windows locale,
+  errors come in the language of the Visual Studio installation, and exit codes are inconsistent.
+  An agent has to guess.
+
+TfPortable keeps the command names, switches and output shape of `tf.exe`, so existing habits and
+scripts work, and fixes the three problems above:
+
+- a single `tfp.exe` that runs on any Windows with .NET Framework 4.8;
+- a PAT stored once in the Windows Credential Manager, never a dialog, never waiting for input
+  when it is not run by a person in a terminal;
+- every error with a stable `TFPxxxx` code, the original `TFxxxxx` code when there is one, and the
+  next step to take; `/format:json` returns one JSON document per command; dates are ISO 8601;
+  nothing is truncated.
+
+It is meant for local workspaces and for the daily loop of an agent: see what changed, read
+history and files, diff, add, edit, rename, delete, undo, get. Commands that write to the server
+immediately and irreversibly (`checkin`, `shelve`, `lock`, `label`, `destroy`, `permission`,
+workspace creation) are recognized and refused with a clear message; use Visual Studio or the
+original `tf.exe` for them.
 
 ## Install
 
@@ -45,26 +66,65 @@ Manager for your user profile. Check it with `tfp whoami`, remove it with `tfp l
 
 ## Use
 
-Same commands and switches as `tf.exe`, for example:
+Inside a folder mapped to a local workspace, the commands look exactly like `tf.exe`:
 
 ```
-tfp status /recursive
+tfp whoami                                  who am I, which collection, which workspace
+tfp status /recursive                       pending changes and detected (uncommitted) changes
 tfp history $/Project/Main /recursive /stopafter:20
-tfp changeset 1234 /diff
-tfp diff Main\src\Program.cs
-tfp get /preview
+tfp changeset 1234                          what a checkin contained
+tfp changeset 1234 /diff                    the same as a unified diff
+tfp view $/Project/Main/src/App.cs /version:C1234
+tfp diff Main\src\App.cs                    local change against the server version
+tfp add Main\src\New.cs
+tfp checkout Main\src\App.cs
+tfp rename Main\src\Old.cs Main\src\New.cs
+tfp undo Main\src\App.cs
+tfp get /preview                            what a get would do, without doing it
+tfp status /recursive /format:json          the same data as JSON
 ```
 
-From Git Bash (and therefore from Claude Code on Windows) write switches with a dash so that
-MSYS does not turn `/recursive` into a path: `tfp status -recursive -format:json`.
+Switches accept `/` and `-`. From Git Bash (and therefore from Claude Code on Windows) write them
+with a dash, so that MSYS does not turn `/recursive` into a path: `tfp status -recursive`.
 
-Supported in phase 1: `login`, `logout`, `whoami`, `status`, `add`, `checkout`/`edit`, `delete`,
-`rename`/`move`, `undo`, `get`, `resolve`, `reconcile`, `localversions`, `workfold`,
-`workspaces`, `history`, `changeset`, `view`, `difference`/`diff`, `dir`, `properties`/`info`,
-`labels`, `branches`, `merge /candidate`. Commands that write to the server immediately
-(`checkin`, `shelve`, `lock`, `label`, `destroy`, `permission`, `workspace /new`) are recognized
-and refused with a clear message; use Visual Studio or the original `tf.exe` for them. Only local
-workspaces are supported. Differences from `tf.exe` are listed in `docs/compat.md`.
+Exit codes: `0` success, `1` partial success or a per-item failure, `2` unknown command,
+`100` nothing done, `110` sign-in problem (run `tfp login`), `120` no workspace or collection found.
+
+## Commands
+
+| Command | What it does |
+| --- | --- |
+| `login`, `logout`, `whoami` | Store, remove and check the PAT; show identity, collection, workspace and mappings |
+| `status` (`stat`) | Pending changes, plus changes detected on disk in a local workspace |
+| `add`, `checkout` (`edit`), `delete` (`del`), `rename` (`move`) | Create pending changes in the workspace |
+| `undo` | Revert pending changes |
+| `get` | Update the workspace to a version; `/preview` shows what would happen |
+| `resolve` | List conflicts, or resolve them with `/auto:` |
+| `reconcile` | Promote detected changes to pending changes, or clean untracked files |
+| `localversions` (`lv`) | Which version of each item the workspace has |
+| `workfold`, `workspaces` | Mappings of the current workspace; workspaces of the collection |
+| `history` (`hist`) | Changesets of an item or folder, with filters by comment, change type and work item |
+| `changeset` | Details of one checkin; `/diff` prints its unified diff |
+| `view` | Content of a file at a version, written to the console or to `/output:` |
+| `difference` (`diff`) | Unified or brief diff of a local change, two versions, two items or a shelveset |
+| `dir` | Server-side listing of a folder |
+| `properties` (`info`) | Local and server information about an item |
+| `labels`, `branches` | Labels of the collection; branch tree of an item |
+| `merge /candidate` | Changesets not yet merged between two branches |
+| `help`, `version` | Command catalog (`/format:json` for agents); versions of tfp and the client libraries |
+
+Every switch of every command, and what TfPortable does with it, is in
+[docs/commands.md](docs/commands.md). Where TfPortable deliberately differs from `tf.exe`
+(exit codes, dates, truncation, encoding) is in [docs/compat.md](docs/compat.md). The JSON output
+is described in [docs/json-schema.md](docs/json-schema.md). Phase 2 (`merges`, `annotate`,
+`folderdiff`, `shelvesets`, `unshelve`, `undelete`, `rollback`, `branch`, `merge`) comes later.
+
+## For AI agents
+
+`docs/CLAUDE.md` (milestone 5) is a ready-made section for the `CLAUDE.md` of a TFVC project:
+which commands to use, dash switches, `-format:json`, what exit code 110 means, and that the
+agent never asks for or enters a PAT. Read-only commands can be allowed without confirmation;
+`get`, `undo`, `reconcile`, `resolve` and `delete` should ask.
 
 ## Build
 
