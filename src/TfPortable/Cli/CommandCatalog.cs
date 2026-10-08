@@ -28,7 +28,7 @@ namespace TfPortable.Cli
     /// <summary>One switch of a command: name, short form, value rule and the values it accepts.</summary>
     internal sealed class SwitchSpec
     {
-        public SwitchSpec(string name, string? shortName, SwitchValue value, string summary, string[]? values = null, bool extension = false)
+        public SwitchSpec(string name, string? shortName, SwitchValue value, string summary, string[]? values = null, bool extension = false, bool secret = false)
         {
             Name = name;
             ShortName = shortName;
@@ -36,6 +36,7 @@ namespace TfPortable.Cli
             Summary = summary;
             Values = values ?? Array.Empty<string>();
             Extension = extension;
+            Secret = secret;
         }
 
         /// <summary>Canonical lower-case name without the leading '/'.</summary>
@@ -53,6 +54,9 @@ namespace TfPortable.Cli
 
         /// <summary>TfPortable extension, not in tf.exe.</summary>
         public bool Extension { get; }
+
+        /// <summary>The value may be a credential (`/login`, `/pat`); error messages never echo it.</summary>
+        public bool Secret { get; }
 
         /// <summary>`/name`, `/name:<value>` or `/name:a|b` for usage lines.</summary>
         public string Usage
@@ -122,7 +126,7 @@ namespace TfPortable.Cli
         {
             new SwitchSpec("collection", "S", SwitchValue.Required, "Collection URL; overrides the workspace detection. Alias /server."),
             new SwitchSpec("workspace", "W", SwitchValue.Required, "Workspace name[;owner]; overrides the workspace detection."),
-            new SwitchSpec("login", "Y", SwitchValue.Required, "user,pat: PAT for this run only (tf.exe compatibility; prefer 'login')."),
+            new SwitchSpec("login", "Y", SwitchValue.Required, "user,pat: PAT for this run only (tf.exe compatibility; prefer 'login').", secret: true),
             new SwitchSpec("noprompt", "I", SwitchValue.None, "Accepted; the tool never prompts without an interactive terminal anyway."),
             new SwitchSpec("format", "F", SwitchValue.Required, "Output format; 'json' gives one JSON document.", new[] { Json }),
             new SwitchSpec("verbose", null, SwitchValue.None, "Diagnostics on stderr (never request headers).", extension: true),
@@ -146,7 +150,7 @@ namespace TfPortable.Cli
             // Tool commands (SPEC.md "Autentizace", "Rozšíření pro AI").
             new CommandSpec("login", Array.Empty<string>(), null, CommandStatus.Implemented,
                 "Ask for a Personal Access Token, verify it and store it in the Windows Credential Manager.", "",
-                new SwitchSpec("pat", null, SwitchValue.Required, "'-' reads the token from standard input instead of the hidden prompt.", new[] { "-" }, extension: true)),
+                new SwitchSpec("pat", null, SwitchValue.Required, "'-' reads the token from standard input instead of the hidden prompt; never pass the token itself.", new[] { "-" }, extension: true, secret: true)),
             new CommandSpec("logout", Array.Empty<string>(), null, CommandStatus.Implemented,
                 "Remove the stored Personal Access Token of a collection.", ""),
             new CommandSpec("whoami", Array.Empty<string>(), null, CommandStatus.Implemented,

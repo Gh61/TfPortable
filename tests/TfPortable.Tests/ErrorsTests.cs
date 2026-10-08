@@ -35,7 +35,7 @@ namespace TfPortable.Tests
         [InlineData("rename", "TFP0301", 100)]
         [InlineData("changeset", "TFP0301", 100)]
         [InlineData("label", "TFP0301", 100)]
-        [InlineData("history", "TFP0301", 0)]
+        [InlineData("history", "TFP0301", 100)]
         [InlineData("status", "TFP0301", 100)]
         [InlineData("status", "TFP0201", 120)]
         [InlineData("anything", "TFP9999", 42)]
@@ -211,6 +211,15 @@ namespace TfPortable.Tests
         {
             var value = new DateTimeOffset(2026, 10, 7, 19, 7, 27, TimeSpan.FromHours(2));
             Assert.Equal("2026-10-07T19:07:27+02:00", OutputWriter.IsoDate(value));
+        }
+
+        [Fact]
+        public void Default_dates_become_null_instead_of_throwing()
+        {
+            Assert.Null(OutputWriter.IsoDate(default(DateTime)));
+            Assert.Null(OutputWriter.IsoDate(DateTime.MinValue));
+            Assert.Null(OutputWriter.IsoDate(DateTime.MaxValue));
+            Assert.NotNull(OutputWriter.IsoDate(new DateTime(2026, 10, 7, 19, 7, 27, DateTimeKind.Local)));
         }
 
         [Fact]

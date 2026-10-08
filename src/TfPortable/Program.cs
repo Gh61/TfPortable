@@ -57,6 +57,12 @@ namespace TfPortable
                 }
 
                 string commandName = commandLine.RawCommand.Length == 0 || commandLine.HelpRequested ? "help" : commandLine.Command;
+                if (commandLine.Json != output.Json)
+                {
+                    // /format:json came from an @file: the raw-argument check could not see it.
+                    output = new OutputWriter(commandLine.Json, commandName, stdout, stderr);
+                }
+
                 output.Command = commandName;
 
                 var command = Commands().FirstOrDefault(c => c.Name == commandName);

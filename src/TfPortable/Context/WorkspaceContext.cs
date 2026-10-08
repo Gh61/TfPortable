@@ -115,6 +115,12 @@ namespace TfPortable.Context
                 }
             }
 
+            if (info != null && explicitCollection != null && !string.Equals(CollectionUrl.Normalize(info.ServerUri.AbsoluteUri), CollectionUrl.Normalize(explicitCollection), StringComparison.OrdinalIgnoreCase))
+            {
+                // The folder belongs to a workspace of another collection; /collection wins and the server is asked.
+                info = null;
+            }
+
             string? collectionUrl = explicitCollection ?? info?.ServerUri.AbsoluteUri;
             if (collectionUrl == null)
             {

@@ -134,7 +134,24 @@ namespace TfPortable.Output
 
         public static string IsoDate(DateTimeOffset value) => value.ToString("yyyy-MM-dd'T'HH:mm:sszzz");
 
-        public static string IsoDate(DateTime value) => IsoDate(new DateTimeOffset(value.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(value, DateTimeKind.Local) : value.ToLocalTime()));
+        /// <summary>ISO 8601 with the local offset; null for a default/empty date (e.g. a detected change that has no creation date).</summary>
+        public static string? IsoDate(DateTime value)
+        {
+            if (value == default || value == DateTime.MinValue || value == DateTime.MaxValue)
+            {
+                return null;
+            }
+
+            try
+            {
+                return IsoDate(new DateTimeOffset(value.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(value, DateTimeKind.Local) : value.ToLocalTime()));
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                // Out of the DateTimeOffset range in this time zone (dates near MinValue in UTC+ zones).
+                return null;
+            }
+        }
 
         /// <summary>Text form of an error (SPEC.md "Textový formát (stderr)").</summary>
         public static IEnumerable<string> ErrorLines(TfpException error)

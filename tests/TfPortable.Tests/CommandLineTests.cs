@@ -237,6 +237,10 @@ namespace TfPortable.Tests
                 Assert.Equal(ErrorCodes.InvalidSwitch, error.Code);
                 Assert.Contains("-recursive", error.Hint);
 
+                // A converted /login:user,pat never echoes the value.
+                var login = Assert.Throws<TfpException>(() => CommandLine.DetectMsysConvertedSwitch(root.Replace('\\', '/') + "/login:user,secretpat", CommandCatalog.AllSwitchNames()));
+                Assert.DoesNotContain("secretpat", login.Message + login.Hint);
+
                 // A real path under the same root that is not a switch name passes.
                 CommandLine.DetectMsysConvertedSwitch(root.Replace('\\', '/') + "/readme.txt", CommandCatalog.AllSwitchNames());
             }

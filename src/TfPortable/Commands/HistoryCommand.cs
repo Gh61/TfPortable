@@ -77,7 +77,17 @@ namespace TfPortable.Commands
             int limit = stopAfter ?? DefaultLimit;
 
             // Sorting is done by the server before the limit applies, as in tf.exe (golden history/sort-ascending: the oldest five).
-            var changesets = context.Client.QueryHistory(new HistoryQuery(path, itemVersion, recursion, commandLine.Value("user"), from, to, limit, slotMode, ascending));
+            IReadOnlyList<ChangesetInfo> changesets;
+            try
+            {
+                changesets = context.Client.QueryHistory(new HistoryQuery(path, itemVersion, recursion, commandLine.Value("user"), from, to, limit, slotMode, ascending, item.DeletionId));
+            }
+            catch (Exception ex) when (ErrorMapper.Map(ex, toolName, context.CollectionUrl).Code == ErrorCodes.ItemNotFound)
+            {
+                // An unknown path is an empty result with exit 0, as in the original (docs/compat.md §9, history/not-found).
+                changesets = Array.Empty<ChangesetInfo>();
+            }
+
             bool truncated = stopAfter == null && changesets.Count >= DefaultLimit;
 
             output.Lines(Render(changesets, truncated));
@@ -102,7 +112,7 @@ namespace TfPortable.Commands
             var table = new TextTable("Changeset", "User", "Date", "Comment");
             foreach (var cs in changesets)
             {
-                table.Add(cs.Id.ToString(), cs.Owner, OutputWriter.IsoDate(cs.Date), FirstLine(cs.Comment));
+                table.Add(cs.Id.ToString(), cs.Owner, OutputWriter.IsoDate(cs.Date) ?? string.Empty, FirstLine(cs.Comment));
             }
 
             foreach (string line in table.Render())

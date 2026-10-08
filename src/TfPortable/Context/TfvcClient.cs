@@ -64,7 +64,7 @@ namespace TfPortable.Context
         public IReadOnlyList<ChangesetInfo> QueryHistory(HistoryQuery query)
         {
             return VersionControl
-                .QueryHistory(query.Path, query.Version, 0, query.Recursion, query.User, query.From, query.To, query.MaxCount, false, query.SlotMode, false, query.Ascending)
+                .QueryHistory(query.Path, query.Version, query.DeletionId, query.Recursion, query.User, query.From, query.To, query.MaxCount, false, query.SlotMode, false, query.Ascending)
                 .Cast<Changeset>()
                 .Select(ToChangeset)
                 .ToList();

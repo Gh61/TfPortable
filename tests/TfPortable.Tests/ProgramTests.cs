@@ -139,6 +139,52 @@ namespace TfPortable.Tests
         }
 
         [Fact]
+        public void Global_switch_errors_without_a_command_do_not_crash()
+        {
+            var (exit, _, stderr) = Run("/format:xml");
+            Assert.Equal(100, exit);
+            Assert.StartsWith("ERROR TFP0002: 'xml' is not a valid value of '/format'.", stderr);
+
+            var (exit2, _, stderr2) = Run("nosuchcommand", "/format:xml");
+            Assert.Equal(2, exit2);
+            Assert.StartsWith("ERROR TFP0001:", stderr2);
+
+            var (exit3, _, stderr3) = Run("/noprompt:yes");
+            Assert.Equal(100, exit3);
+            Assert.StartsWith("ERROR TFP0002:", stderr3);
+        }
+
+        [Fact]
+        public void A_pat_passed_to_a_secret_switch_is_never_echoed()
+        {
+            var (exit, stdout, stderr) = Run("login", "/collection:https://dev.azure.com/contoso", "/pat:abcdefghijklmnop1234");
+            Assert.Equal(100, exit);
+            Assert.DoesNotContain("abcdefghijklmnop1234", stdout + stderr);
+            Assert.Contains("the value given is not a valid value of '/pat'", stderr);
+
+            var (exit2, stdout2, stderr2) = Run("version", "/login:user,secretpat123", "/verbose:x");
+            Assert.Equal(100, exit2);
+            Assert.DoesNotContain("secretpat123", stdout2 + stderr2);
+        }
+
+        [Fact]
+        public void Format_json_inside_an_argument_file_switches_the_envelope_on()
+        {
+            string path = Path.GetTempFileName();
+            try
+            {
+                File.WriteAllLines(path, new[] { "/format:json" });
+                var (exit, stdout, _) = Run("version", "@" + path);
+                Assert.Equal(0, exit);
+                Assert.Equal("version", (string)JObject.Parse(stdout)["command"]!);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        [Fact]
         public void Version_prints_tool_and_client_library()
         {
             var (exit, stdout, _) = Run("version");

@@ -253,9 +253,10 @@ namespace TfPortable.Context
     /// <summary>Parameters of a history query (`history` and the search extensions).</summary>
     internal sealed class HistoryQuery
     {
-        public HistoryQuery(string path, VersionSpec version, RecursionType recursion, string? user, VersionSpec? from, VersionSpec? to, int maxCount, bool slotMode, bool ascending)
+        public HistoryQuery(string path, VersionSpec version, RecursionType recursion, string? user, VersionSpec? from, VersionSpec? to, int maxCount, bool slotMode, bool ascending, int deletionId = 0)
         {
             Path = path;
+            DeletionId = deletionId;
             Version = version;
             Recursion = recursion;
             User = user;
@@ -267,6 +268,9 @@ namespace TfPortable.Context
         }
 
         public string Path { get; }
+
+        /// <summary>Deletion id of a `;X<n>` itemspec suffix, 0 for the live item.</summary>
+        public int DeletionId { get; }
 
         public VersionSpec Version { get; }
 

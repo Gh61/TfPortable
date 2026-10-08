@@ -8,7 +8,8 @@ namespace TfPortable.Auth
     /// <summary>Text and input of the PAT prompt (SPEC.md "Text výzvy při chybějícím PAT").</summary>
     internal static class PatPrompt
     {
-        public static bool IsInteractive => !Console.IsInputRedirected && !Console.IsOutputRedirected && Environment.UserInteractive;
+        /// <summary>SPEC.md "Tok při každém příkazu" step 3: the prompt needs an interactive stdin; stdout may be redirected (the prompt goes to stderr).</summary>
+        public static bool IsInteractive => !Console.IsInputRedirected && Environment.UserInteractive;
 
         public static string Explanation(string normalizedCollection)
         {

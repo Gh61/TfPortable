@@ -142,9 +142,16 @@ namespace TfPortable.Cli
                         $"Valid switches: {string.Join(", ", table.Values.Distinct().Select(s => s.Usage).OrderBy(s => s, StringComparer.Ordinal))}. See '{toolName} help {spec.Name}'.");
                 }
 
-                if (!help)
+                if (!help && spec != null)
                 {
-                    ValidateValue(spec!, switchSpec, raw.Value, toolName);
+                    ValidateValue(spec, switchSpec, raw.Value, toolName);
+                }
+                else if (!help && raw.Value != null && !switchSpec.Accepts(raw.Value))
+                {
+                    // No command: validate the global switch without a command name in the message.
+                    throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError,
+                        $"{Shown(switchSpec, raw.Value)} is not a valid value of '/{switchSpec.Name}'.",
+                        $"Valid values: {string.Join(", ", switchSpec.Values)}. See '{toolName} help'.");
                 }
 
                 result.Set(switchSpec.Name, raw.Value);
@@ -227,7 +234,7 @@ namespace TfPortable.Cli
             if (s.Value == SwitchValue.None && value != null)
             {
                 throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError,
-                    $"Switch '/{s.Name}' of command '{command.Name}' does not take a value ('{value}' given).",
+                    $"Switch '/{s.Name}' of command '{command.Name}' does not take a value ({Shown(s, value)} given).",
                     $"Write '/{s.Name}' alone. See '{toolName} help {command.Name}'.");
             }
 
@@ -241,10 +248,13 @@ namespace TfPortable.Cli
             if (!string.IsNullOrEmpty(value) && !s.Accepts(value!))
             {
                 throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError,
-                    $"'{value}' is not a valid value of '/{s.Name}' for command '{command.Name}'.",
+                    $"{Shown(s, value!)} is not a valid value of '/{s.Name}' for command '{command.Name}'.",
                     $"Valid values: {string.Join(", ", s.Values)}. See '{toolName} help {command.Name}'.");
             }
         }
+
+        /// <summary>The value quoted for a message, or a placeholder for a switch that may carry a credential (SPEC.md: a PAT never appears in a message).</summary>
+        private static string Shown(SwitchSpec s, string value) => s.Secret ? "the value given" : $"'{value}'";
 
         /// <summary>Replaces `@file` by the lines of the file (UTF-8, one argument per line, blank lines skipped).</summary>
         internal static string[] ExpandArgumentFiles(string[] args)
@@ -334,8 +344,9 @@ namespace TfPortable.Cli
                 return;
             }
 
+            // Only the path part is echoed: a value after ':' could be a credential (/login:user,pat).
             throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError,
-                $"Argument '{arg}' looks like the switch '/{name}' converted to a path by Git Bash (MSYS).",
+                $"Argument '{root}{name}' looks like the switch '/{name}' converted to a path by Git Bash (MSYS).",
                 $"Write switches with a dash in Git Bash ('-{name}'), or set MSYS_NO_PATHCONV=1.");
         }
     }

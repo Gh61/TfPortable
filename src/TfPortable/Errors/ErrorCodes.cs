@@ -72,7 +72,8 @@ namespace TfPortable.Errors
 
         /// <summary>
         /// Per-command exit codes where the original differs from the catalog default (docs/compat.md §1.1):
-        /// "item not found" is 1 for add/delete/view/dir/undelete, 100 for rename/changeset/label, 0 for history.
+        /// "item not found" is 1 for add/delete/view/dir/undelete, 100 for rename/changeset/label. `history` prints an
+        /// empty result (exit 0) itself, so it needs no override.
         /// </summary>
         private static readonly Dictionary<string, int> Overrides = new Dictionary<string, int>(StringComparer.Ordinal)
         {
@@ -85,7 +86,6 @@ namespace TfPortable.Errors
             ["rename:" + ItemNotFound] = ExitCodes.GeneralError,
             ["changeset:" + ItemNotFound] = ExitCodes.GeneralError,
             ["label:" + ItemNotFound] = ExitCodes.GeneralError,
-            ["history:" + ItemNotFound] = ExitCodes.Success,
         };
 
         /// <summary>The exit code of a TFP code for a command: the compat.md override, else the catalog default, else the given one.</summary>
