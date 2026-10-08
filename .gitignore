@@ -36,3 +36,6 @@ extra-manifest-*.json
 # OS
 Thumbs.db
 .DS_Store
+
+# Local, never committed: tf.exe copies and decompiled sources (docs/tf-reference/README.md)
+local/

@@ -44,6 +44,7 @@ namespace TfPortable.Errors
         public const string CheckinConflict = "TFP0406";
         public const string CheckinPolicy = "TFP0407";
         public const string ShelvesetExists = "TFP0408";
+        public const string CheckinPolicyUnknown = "TFP0409";
 
         public const string ServerError = "TFP0501";
         public const string Unexpected = "TFP0900";
@@ -73,6 +74,7 @@ namespace TfPortable.Errors
             [CheckinConflict] = ExitCodes.GeneralError,
             [CheckinPolicy] = ExitCodes.GeneralError,
             [ShelvesetExists] = ExitCodes.GeneralError,
+            [CheckinPolicyUnknown] = ExitCodes.GeneralError,
             [CleanNeedsConfirmation] = ExitCodes.GeneralError,
             [ServerError] = ExitCodes.GeneralError,
             [Unexpected] = ExitCodes.GeneralError,

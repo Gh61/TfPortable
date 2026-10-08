@@ -303,7 +303,7 @@ namespace TfPortable.Cli
                 new SwitchSpec("comment", "C", SwitchValue.Required, "Changeset comment (required); @file reads it from a file."),
                 new SwitchSpec("associate", null, SwitchValue.Required, "Work item ids to link to the changeset (comma-separated) (extension)."),
                 new SwitchSpec("validate", null, SwitchValue.None, "Only evaluate conflicts, policies and notes; check nothing in."),
-                new SwitchSpec("override", null, SwitchValue.Required, "Reason for overriding failed checkin policies (protection level 3)."),
+                new SwitchSpec("override", null, SwitchValue.Required, "Reason recorded in the changeset for bypassing failed or unknown checkin policies."),
                 new SwitchSpec("author", null, SwitchValue.Required, "Author of the changeset when it is not the authenticated user."),
                 new SwitchSpec("force", null, SwitchValue.None, "Check in edits whose content did not change."),
                 Recursive, NoAutoResolve),

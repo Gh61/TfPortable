@@ -21,7 +21,7 @@ namespace TfPortable.Tests
                 ["TFP0201"] = 120, ["TFP0202"] = 100, ["TFP0203"] = 120, ["TFP0204"] = 120,
                 ["TFP0301"] = 100, ["TFP0302"] = 100, ["TFP0303"] = 100,
                 ["TFP0401"] = 1, ["TFP0402"] = 1, ["TFP0403"] = 1, ["TFP0404"] = 1, ["TFP0405"] = 100,
-                ["TFP0406"] = 100, ["TFP0407"] = 100, ["TFP0408"] = 100,
+                ["TFP0406"] = 100, ["TFP0407"] = 100, ["TFP0408"] = 100, ["TFP0409"] = 100,
                 ["TFP0501"] = 100, ["TFP0900"] = 100,
             };
             Assert.Equal(expected.OrderBy(p => p.Key), ErrorCodes.DefaultExitCodes.OrderBy(p => p.Key));

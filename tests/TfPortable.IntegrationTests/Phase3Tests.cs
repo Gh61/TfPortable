@@ -55,17 +55,41 @@ namespace TfPortable.IntegrationTests
                 Assert.Equal(100, noComment.ExitCode);
                 Assert.Contains("TFP0002", noComment.Stderr);
 
+                // The policies of the test project decide the shape: a work item policy makes a checkin without /associate fail
+                // with TFP0407, a policy tfp cannot evaluate (builds, code analysis) needs /override. Without any policy the
+                // policy assertions are inconclusive and skipped.
                 var validate = Run($"checkin {argument} /recursive /comment:\"CI validate ({RunId})\" /validate /noprompt /format:json");
-                Assert.True(validate.ExitCode == 0, validate.Stderr);
                 var validated = Data(validate);
+                var policies = (JArray)validated["policies"]!;
+                bool workItemPolicy = policies.Any(p => (string)p["name"]! == "Work Items" || ((string?)p["message"] ?? string.Empty).Contains("/associate"));
+                bool unknownPolicy = policies.Any(p => (string)p["status"]! == "unknown");
+                string overrideSwitch = unknownPolicy ? $" /override:\"CI run {RunId}: policies that need Visual Studio\"" : string.Empty;
                 Assert.True((bool)validated["validated"]!);
                 Assert.Null(((JValue)validated["changeset"]!).Value);
                 Assert.Empty((JArray)validated["conflicts"]!);
                 Assert.NotEmpty((JArray)validated["changes"]!);
+                if (workItemPolicy)
+                {
+                    Assert.Equal(100, validate.ExitCode);
+                    Assert.Contains("TFP0407", validate.Stderr + validate.Stdout);
+                    Assert.Contains((JArray)validated["policyFailures"]!, f => ((string)f!).Contains("/associate"));
+                }
+                else if (unknownPolicy)
+                {
+                    Assert.Equal(100, validate.ExitCode);
+                }
+                else
+                {
+                    Assert.True(validate.ExitCode == 0, validate.Stderr);
+                }
+
+                var validOverridden = Run($"checkin {argument} /recursive /comment:\"CI validate ({RunId})\" /validate /associate:1{overrideSwitch} /noprompt /format:json");
+                Assert.True(validOverridden.ExitCode == 0, validOverridden.Stderr);
+                Assert.Equal(unknownPolicy, (bool)Data(validOverridden)["overridden"]!);
                 Assert.NotEmpty(Changes(Run($"status {argument} /recursive /nodetect /format:json")));
 
                 // Work item 1 (a bug) exists in the test project for this association (developer, 2026-10-08).
-                var checkin = Run($"checkin {argument} /recursive /comment:\"CI checkin: add files ({RunId})\" /associate:1 /noprompt /format:json");
+                var checkin = Run($"checkin {argument} /recursive /comment:\"CI checkin: add files ({RunId})\" /associate:1{overrideSwitch} /noprompt /format:json");
                 committed = true;
                 Assert.True(checkin.ExitCode == 0, checkin.Stderr);
                 var data = Data(checkin);
@@ -92,14 +116,14 @@ namespace TfPortable.IntegrationTests
                 File.AppendAllText(Path.Combine(folder, "a.txt"), "more\r\n");
                 var delete = Run($"delete {argument}\\b.txt /noprompt");
                 Assert.True(delete.ExitCode == 0, delete.Stderr);
-                var second = Run($"checkin {argument} /recursive /comment:\"CI checkin: edit and delete ({RunId})\" /noprompt");
+                var second = Run($"checkin {argument} /recursive /comment:\"CI checkin: edit and delete ({RunId})\" /associate:1{overrideSwitch} /noprompt");
                 Assert.True(second.ExitCode == 0, second.Stderr);
                 Assert.Contains("Checking in edit: a.txt", second.Stdout);
                 Assert.Contains("Checking in delete: b.txt", second.Stdout);
                 Assert.Contains("Changeset #", second.Stdout);
                 Assert.Contains(" checked in.", second.Stdout);
 
-                var nothing = Run($"checkin {argument} /recursive /comment:\"nothing\" /noprompt");
+                var nothing = Run($"checkin {argument} /recursive /comment:\"nothing\" /associate:1{overrideSwitch} /noprompt");
                 Assert.Equal(100, nothing.ExitCode);
                 Assert.StartsWith("ERROR TFP0301: Nothing to check in: the given items have no pending changes.", nothing.Stderr);
             }
@@ -109,7 +133,7 @@ namespace TfPortable.IntegrationTests
                 if (committed)
                 {
                     Run($"delete {argument} /recursive /noprompt");
-                    var cleanup = Run($"checkin {argument} /recursive /comment:\"CI cleanup ({RunId})\" /noprompt");
+                    var cleanup = Run($"checkin {argument} /recursive /comment:\"CI cleanup ({RunId})\" /override:\"CI cleanup\" /noprompt");
                     if (cleanup.ExitCode != 0)
                     {
                         Run($"undo {argument} /recursive /noprompt");
@@ -259,7 +283,7 @@ namespace TfPortable.IntegrationTests
                 File.WriteAllText(Path.Combine(folder, "locked.txt"), "to be locked\r\n");
                 var add = Run($"add {argument} /recursive /noprompt");
                 Assert.True(add.ExitCode == 0, add.Stderr);
-                var checkin = Run($"checkin {argument} /recursive /comment:\"CI lock test ({RunId})\" /noprompt");
+                var checkin = Run($"checkin {argument} /recursive /comment:\"CI lock test ({RunId})\" /override:\"CI lock test\" /noprompt");
                 committed = true;
                 Assert.True(checkin.ExitCode == 0, checkin.Stderr);
 
@@ -289,7 +313,7 @@ namespace TfPortable.IntegrationTests
                 if (committed)
                 {
                     Run($"delete {argument} /recursive /noprompt");
-                    var cleanup = Run($"checkin {argument} /recursive /comment:\"CI cleanup ({RunId})\" /noprompt");
+                    var cleanup = Run($"checkin {argument} /recursive /comment:\"CI cleanup ({RunId})\" /override:\"CI cleanup\" /noprompt");
                     if (cleanup.ExitCode != 0)
                     {
                         Run($"undo {argument} /recursive /noprompt");

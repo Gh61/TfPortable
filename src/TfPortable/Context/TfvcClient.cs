@@ -288,6 +288,37 @@ namespace TfPortable.Context
             return new LabelOperationResult(results.Select(ToLabelResult).ToList(), (failures ?? Array.Empty<Failure>()).Select(ToFailure).ToList());
         }
 
+        public IReadOnlyList<CheckinPolicyInfo> GetCheckinPolicies(IReadOnlyList<string> serverPaths)
+        {
+            // PolicyEnvelope.Type is the display name the policy had when it was configured (localized by that Visual Studio);
+            // the implementing class name is stable but not public, so it is read through reflection when available.
+            var field = typeof(PolicyEnvelope).GetField("m_className", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var result = new List<CheckinPolicyInfo>();
+            string[] paths = serverPaths.ToArray();
+            // Current Visual Studio versions store the policies under the "client policies" annotation; the library's own
+            // evaluation reads that key first and falls back to the legacy key, so does tfp.
+            var envelopes = VersionControl.GetCheckinClientPoliciesForServerPaths(paths);
+            if (envelopes == null || envelopes.Length == 0)
+            {
+#pragma warning disable CS0618 // The legacy annotation of older servers and clients.
+                envelopes = VersionControl.GetCheckinPoliciesForServerPaths(paths);
+#pragma warning restore CS0618
+            }
+
+            foreach (var envelope in envelopes ?? Array.Empty<PolicyEnvelope>())
+            {
+                if (!envelope.Enabled)
+                {
+                    continue;
+                }
+
+                string? className = field?.GetValue(envelope) as string;
+                result.Add(new CheckinPolicyInfo(envelope.Type ?? className ?? "unknown", className));
+            }
+
+            return result;
+        }
+
         public void LinkWorkItemToChangeset(int workItemId, int changesetId)
         {
             // The TFVC (SOAP) checkin links work items only through the work item tracking object model, which tfp does
@@ -707,17 +738,18 @@ namespace TfPortable.Context
 
             private static string? FileType(string? encoding) => string.IsNullOrWhiteSpace(encoding) ? null : encoding!.Trim();
 
-            public CheckinEvaluation EvaluateCheckin(IReadOnlyList<PendingChangeInfo> changes, string comment)
+            public CheckinEvaluation EvaluateCheckin(IReadOnlyList<PendingChangeInfo> changes, string comment, IReadOnlyList<PolicyResultInfo> policies)
             {
+                // Policies are left out: the library would load them from the registry of a Visual Studio installation,
+                // which a single tfp.exe does not have. tfp evaluates the policies it knows itself (CheckinPolicies).
                 var pending = Handles(changes);
-                CheckinEvaluationResult result = workspace.EvaluateCheckin2(CheckinEvaluationOptions.All, pending, comment, null, null);
+                CheckinEvaluationResult result = workspace.EvaluateCheckin2(CheckinEvaluationOptions.Conflicts | CheckinEvaluationOptions.Notes, pending, comment, null, null);
                 var conflicts = (result.Conflicts ?? Array.Empty<CheckinConflict>()).Select(c => new CheckinConflictInfo(c.ServerItem, c.Message, c.Resolvable)).ToList();
-                var policies = (result.PolicyFailures ?? Array.Empty<PolicyFailure>()).Select(p => p.Message).ToList();
                 var notes = (result.NoteFailures ?? Array.Empty<CheckinNoteFailure>()).Select(n => n.Message).ToList();
-                return new CheckinEvaluation(conflicts, policies, notes, result.PolicyEvaluationException?.Message) { PolicyHandles = result.PolicyFailures };
+                return new CheckinEvaluation(conflicts, notes, policies);
             }
 
-            public int CheckIn(IReadOnlyList<PendingChangeInfo> changes, string comment, string? author, string? overrideReason, CheckinEvaluation? evaluation, bool noAutoResolve, bool allowUnchangedContent)
+            public int CheckIn(IReadOnlyList<PendingChangeInfo> changes, string comment, string? author, string? overrideReason, IReadOnlyList<string> overriddenFailures, bool noAutoResolve, bool allowUnchangedContent)
             {
                 var parameters = new WorkspaceCheckInParameters(Handles(changes), comment)
                 {
@@ -731,7 +763,7 @@ namespace TfPortable.Context
 
                 if (overrideReason != null)
                 {
-                    parameters.PolicyOverride = new PolicyOverrideInfo(overrideReason, evaluation?.PolicyHandles as PolicyFailure[] ?? Array.Empty<PolicyFailure>());
+                    parameters.PolicyOverride = new PolicyOverrideInfo(overrideReason, overriddenFailures.Select(f => new PolicyFailure(f)).ToArray());
                 }
 
                 return workspace.CheckIn(parameters);

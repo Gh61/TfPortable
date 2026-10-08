@@ -34,7 +34,9 @@ Setup (once, by a person):
 - Do not check in unless the task says so; leave the work as pending changes otherwise. When it
   does: `tfp checkin <folder> -recursive -comment:"<what and why>" -associate:<work item>` after
   a `-validate` run; `tfp shelve <name> <folder> -recursive -comment:"..."` parks the work on the
-  server and `tfp unshelve <name>` takes it back.
+  server and `tfp unshelve <name>` takes it back. `TFP0407` means a checkin policy failed (usually
+  a missing `-associate`), `TFP0409` a policy only Visual Studio can evaluate. Do not add
+  `-override` on your own; the reason it records is a person's decision.
 - Exit code 110 means a problem with the PAT: tell the user to run `tfp login` in their own
   terminal. Never ask for a PAT and never enter one yourself.
 - Exit code 120 means TfPortable found no workspace or collection, the path is not mapped, or the

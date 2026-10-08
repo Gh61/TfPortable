@@ -5,35 +5,78 @@ using Newtonsoft.Json.Linq;
 
 namespace TfPortable.Context
 {
-    /// <summary>What the server found wrong with a checkin before it is committed (`checkin`, `checkin /validate`).</summary>
+    /// <summary>What stops a checkin before it is committed: the server's conflicts and note failures, plus tfp's own policy pass.</summary>
     internal sealed class CheckinEvaluation
     {
-        public CheckinEvaluation(IReadOnlyList<CheckinConflictInfo> conflicts, IReadOnlyList<string> policyFailures, IReadOnlyList<string> noteFailures, string? policyEvaluationError)
+        public CheckinEvaluation(IReadOnlyList<CheckinConflictInfo> conflicts, IReadOnlyList<string> noteFailures, IReadOnlyList<PolicyResultInfo> policies)
         {
             Conflicts = conflicts;
-            PolicyFailures = policyFailures;
             NoteFailures = noteFailures;
-            PolicyEvaluationError = policyEvaluationError;
+            Policies = policies;
         }
 
         public IReadOnlyList<CheckinConflictInfo> Conflicts { get; }
 
-        /// <summary>Messages of the checkin policies that failed.</summary>
-        public IReadOnlyList<string> PolicyFailures { get; }
-
         /// <summary>Messages of the required checkin notes that are missing.</summary>
         public IReadOnlyList<string> NoteFailures { get; }
 
-        /// <summary>The policies could not be evaluated at all (the policy assemblies are not available to tfp).</summary>
-        public string? PolicyEvaluationError { get; }
+        /// <summary>Every enabled checkin policy of the team projects touched, with tfp's verdict.</summary>
+        public IReadOnlyList<PolicyResultInfo> Policies { get; }
 
-        public bool IsClean => Conflicts.Count == 0 && PolicyFailures.Count == 0 && NoteFailures.Count == 0 && PolicyEvaluationError == null;
+        /// <summary>Policies tfp evaluated and that failed (TFP0407), plus the missing notes.</summary>
+        public IEnumerable<string> PolicyFailures => Policies.Where(p => p.Status == PolicyStatus.Failed).Select(p => p.Message!).Concat(NoteFailures);
 
-        /// <summary>The policy and note findings an `/override` covers (conflicts are never overridden).</summary>
-        public IEnumerable<string> OverridableFailures => PolicyFailures.Concat(NoteFailures).Concat(PolicyEvaluationError == null ? Array.Empty<string>() : new[] { PolicyEvaluationError });
+        /// <summary>Policies tfp cannot evaluate (TFP0409).</summary>
+        public IEnumerable<string> UnknownPolicies => Policies.Where(p => p.Status == PolicyStatus.Unknown).Select(p => p.Message!);
 
-        /// <summary>The library's policy failures, needed to build the override; never serialized.</summary>
-        public object? PolicyHandles { get; set; }
+        /// <summary>Everything an `/override` covers (conflicts are never overridden).</summary>
+        public IEnumerable<string> OverridableFailures => PolicyFailures.Concat(UnknownPolicies);
+    }
+
+    internal enum PolicyStatus
+    {
+        Passed,
+        Failed,
+        Unknown,
+    }
+
+    /// <summary>A checkin policy of a team project and what tfp made of it.</summary>
+    internal sealed class PolicyResultInfo
+    {
+        public PolicyResultInfo(string name, PolicyStatus status, string? message)
+        {
+            Name = name;
+            Status = status;
+            Message = message;
+        }
+
+        public string Name { get; }
+
+        public PolicyStatus Status { get; }
+
+        /// <summary>The failure text (`Failed`) or why tfp cannot evaluate it (`Unknown`); null when it passed.</summary>
+        public string? Message { get; }
+
+        public JObject ToJson() => new JObject
+        {
+            ["name"] = Name,
+            ["status"] = Status.ToString().ToLowerInvariant(),
+            ["message"] = Message,
+        };
+    }
+
+    /// <summary>An enabled checkin policy as the server stores it: its display type and the class that implements it in Visual Studio.</summary>
+    internal sealed class CheckinPolicyInfo
+    {
+        public CheckinPolicyInfo(string typeName, string? className)
+        {
+            TypeName = typeName;
+            ClassName = className;
+        }
+
+        public string TypeName { get; }
+
+        public string? ClassName { get; }
     }
 
     /// <summary>A checkin conflict: a newer version on the server, a lock of another workspace, ...</summary>

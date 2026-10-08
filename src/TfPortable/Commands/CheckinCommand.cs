@@ -47,7 +47,8 @@ namespace TfPortable.Commands
                     $"'{toolName} status' lists the pending changes. Pass /recursive for a folder.");
             }
 
-            var evaluation = workspace.EvaluateCheckin(changes, comment);
+            var policies = CheckinPolicies.Evaluate(context.Client.GetCheckinPolicies(changes.Select(c => c.ServerPath).Distinct().ToList()), comment, workItems);
+            var evaluation = workspace.EvaluateCheckin(changes, comment, policies);
             output.Lines(WorkspaceCommandSupport.GroupedByFolder(changes, c => $"{(validate ? "Validating" : "Checking in")} {c.ChangeText}: {WorkspaceCommandSupport.NameOf(c)}"));
 
             // Every conflict and policy failure is an item error (stderr in text mode, `errors[]` in JSON) before the summary.
@@ -61,10 +62,23 @@ namespace TfPortable.Commands
             bool overridden = failures.Count > 0 && overrideReason != null;
             if (overrideReason == null)
             {
-                foreach (string failure in failures)
+                foreach (string failure in evaluation.PolicyFailures)
                 {
                     output.ItemError(new TfpException(ErrorCodes.CheckinPolicy, ExitCodes.GeneralError, $"Policy: {failure}",
-                        $"Fix it, or run '{toolName} checkin ... /override:<reason>' at protection level 3."));
+                        $"Fix it, or run '{toolName} checkin ... /override:<reason>' to record why it is bypassed."));
+                }
+
+                foreach (string unknown in evaluation.UnknownPolicies)
+                {
+                    output.ItemError(new TfpException(ErrorCodes.CheckinPolicyUnknown, ExitCodes.GeneralError, $"Policy: {unknown}",
+                        $"Check it in Visual Studio, or run '{toolName} checkin ... /override:<reason>' to record why it is bypassed."));
+                }
+            }
+            else
+            {
+                foreach (string failure in failures)
+                {
+                    output.Warning($"Policy overridden: {failure}", hint: $"Reason recorded in the changeset: {overrideReason}");
                 }
             }
 
@@ -75,7 +89,7 @@ namespace TfPortable.Commands
                 output.Line(blocked
                     ? $"The checkin of {changes.Count} change(s) is blocked by {evaluation.Conflicts.Count} conflict(s) and {(overridden ? 0 : failures.Count)} policy failure(s). Nothing was checked in."
                     : overridden
-                        ? $"The checkin of {changes.Count} change(s) is valid with the override of {failures.Count} policy failure(s). Nothing was checked in."
+                        ? $"The checkin of {changes.Count} change(s) is valid with the override of {failures.Count} policy finding(s). Nothing was checked in."
                         : $"The checkin of {changes.Count} change(s) is valid. Nothing was checked in.");
                 int exit = blocked ? ExitCodes.GeneralError : ExitCodes.Success;
                 output.Success(ToJson(null, changes, evaluation, workItems.Select(id => new JObject { ["id"] = id, ["linked"] = false }), true, overridden), exit);
@@ -91,12 +105,13 @@ namespace TfPortable.Commands
 
             if (failures.Count > 0 && overrideReason == null)
             {
-                throw new TfpException(ErrorCodes.CheckinPolicy, ExitCodes.GeneralError,
-                    $"{failures.Count} checkin policy or note requirement(s) failed. Nothing was checked in.",
-                    $"Fix them, or run '{toolName} checkin ... /override:<reason>' at protection level 3.");
+                int unknownCount = evaluation.UnknownPolicies.Count();
+                throw new TfpException(unknownCount == failures.Count ? ErrorCodes.CheckinPolicyUnknown : ErrorCodes.CheckinPolicy, ExitCodes.GeneralError,
+                    $"{failures.Count - unknownCount} checkin policy or note requirement(s) failed and {unknownCount} policy(ies) cannot be evaluated by tfp. Nothing was checked in.",
+                    $"Fix them, or run '{toolName} checkin ... /override:<reason>' to record why they are bypassed.");
             }
 
-            int changeset = workspace.CheckIn(changes, comment, commandLine.Value("author"), overridden ? overrideReason : null, evaluation, commandLine.Has("noautoresolve"), commandLine.Has("force"));
+            int changeset = workspace.CheckIn(changes, comment, commandLine.Value("author"), overridden ? overrideReason : null, failures, commandLine.Has("noautoresolve"), commandLine.Has("force"));
             if (changeset <= 0)
             {
                 throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError, "The server committed nothing: the content of the changes is unchanged.",
@@ -151,7 +166,9 @@ namespace TfPortable.Commands
             ["validated"] = validated,
             ["changes"] = new JArray(changes.Select(c => c.ToJson()).Cast<object>().ToArray()),
             ["conflicts"] = new JArray(evaluation.Conflicts.Select(c => c.ToJson()).Cast<object>().ToArray()),
-            ["policyFailures"] = new JArray(evaluation.OverridableFailures.Cast<object>().ToArray()),
+            ["policies"] = new JArray(evaluation.Policies.Select(p => p.ToJson()).Cast<object>().ToArray()),
+            ["policyFailures"] = new JArray(evaluation.PolicyFailures.Cast<object>().ToArray()),
+            ["unknownPolicies"] = new JArray(evaluation.UnknownPolicies.Cast<object>().ToArray()),
             ["overridden"] = overridden,
             ["workItems"] = new JArray(workItems.Cast<object>().ToArray()),
         };
