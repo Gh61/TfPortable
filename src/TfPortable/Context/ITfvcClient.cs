@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.TeamFoundation.VersionControl.Client;
 
 namespace TfPortable.Context
 {
     /// <summary>
     /// A workspace of the collection. Every method that talks to the server throws the client library's exceptions;
-    /// the caller maps them through ErrorMapper.
+    /// the caller maps them through ErrorMapper. Per-item problems that do not abort an operation come back as
+    /// <see cref="FailureInfo"/> entries.
     /// </summary>
     internal interface ITfvcWorkspace
     {
@@ -16,8 +18,33 @@ namespace TfPortable.Context
         /// <summary>Server path of a mapped local path (the caller checks <see cref="IsLocalPathMapped"/> first).</summary>
         string GetServerItemForLocalItem(string localPath);
 
+        /// <summary>Local path of a server path, or null when it is not mapped.</summary>
+        string? GetLocalItemForServerItem(string serverPath);
+
         /// <summary>Pending changes and, when asked, the changes detected on disk (local workspaces only).</summary>
         PendingChangeSet GetPendingChanges(IReadOnlyList<ItemQuery> items, bool detectCandidates);
+
+        /// <summary>Pends adds for local paths (wildcards allowed); `applyIgnore` honors .tfignore during expansion.</summary>
+        PendResult PendAdd(IReadOnlyList<string> localPaths, bool recursive, string? encoding, bool applyIgnore);
+
+        PendResult PendEdit(IReadOnlyList<string> paths, RecursionType recursion, string? encoding);
+
+        PendResult PendDelete(IReadOnlyList<string> paths, RecursionType recursion);
+
+        PendResult PendRename(string oldPath, string newPath);
+
+        /// <summary>Undoes the pending changes of the items; the result lists the undone changes.</summary>
+        PendResult Undo(IReadOnlyList<ItemQuery> items);
+
+        /// <summary>Gets the items (null = the whole workspace) at a version; `flags` mirror the tf.exe switches.</summary>
+        GetResult Get(IReadOnlyList<ItemQuery>? items, VersionSpec version, GetFlags flags);
+
+        IReadOnlyList<ConflictInfo> QueryConflicts(IReadOnlyList<string> paths, bool recursive);
+
+        /// <summary>Resolves one conflict with a canonical resolution name (`automerge`, `taketheirs`, ...).</summary>
+        ResolveResult Resolve(ConflictInfo conflict, string resolution, string? newPath, bool forced);
+
+        IReadOnlyList<LocalVersionInfo> GetLocalVersions(IReadOnlyList<ItemQuery> items);
     }
 
     /// <summary>
@@ -41,8 +68,20 @@ namespace TfPortable.Context
         /// <summary>Workspaces of the authenticated user on this computer.</summary>
         IReadOnlyList<ITfvcWorkspace> QueryWorkspacesOnThisComputer();
 
+        /// <summary>Workspaces matching the filter (`workspaces` command); null filter fields mean "any".</summary>
+        IReadOnlyList<WorkspaceSummary> QueryWorkspaces(WorkspaceQuery query);
+
         /// <summary>Refreshes the local workspace cache so that the next run finds the workspace without the server.</summary>
         void UpdateWorkspaceCache();
+
+        /// <summary>Removes workspaces from the local cache (`workspaces /remove`); returns the names removed.</summary>
+        IReadOnlyList<string> RemoveCachedWorkspaces(IReadOnlyList<string>? names);
+
+        /// <summary>Pending changes of other workspaces (`status /user`): null user = everyone, null workspace = every workspace.</summary>
+        IReadOnlyList<PendingSetInfo> QueryPendingSets(IReadOnlyList<ItemQuery> items, string? workspaceName, string? user);
+
+        /// <summary>Changes of a shelveset (`status /shelveset`); null owner = the authenticated user.</summary>
+        IReadOnlyList<PendingSetInfo> QueryShelvedChanges(string shelvesetName, string? owner, IReadOnlyList<ItemQuery> items);
 
         IReadOnlyList<ChangesetInfo> QueryHistory(HistoryQuery query);
     }

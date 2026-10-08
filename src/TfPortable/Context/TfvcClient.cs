@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Common;
-using TfPortable.Auth;
 
 namespace TfPortable.Context
 {
@@ -55,10 +55,46 @@ namespace TfPortable.Context
             return vcs.QueryWorkspaces(null, vcs.AuthorizedUser, Environment.MachineName).Select(w => (ITfvcWorkspace)new TfvcWorkspace(w)).ToList();
         }
 
+        public IReadOnlyList<WorkspaceSummary> QueryWorkspaces(WorkspaceQuery query)
+        {
+            return VersionControl.QueryWorkspaces(query.Name, query.Owner, query.Computer).Select(ToSummary).ToList();
+        }
+
         public void UpdateWorkspaceCache()
         {
             var vcs = VersionControl;
             Workstation.Current.UpdateWorkspaceInfoCache(vcs, vcs.AuthorizedUser);
+        }
+
+        public IReadOnlyList<string> RemoveCachedWorkspaces(IReadOnlyList<string>? names)
+        {
+            var vcs = VersionControl;
+            if (names == null)
+            {
+                return Workstation.Current.RemoveCachedWorkspaceInfo(vcs).Select(i => i.Name).ToList();
+            }
+
+            var removed = new List<string>();
+            foreach (string name in names)
+            {
+                string[] parts = name.Split(new[] { ';' }, 2);
+                removed.AddRange(Workstation.Current.RemoveCachedWorkspaceInfo(connection.Uri, parts[0], parts.Length > 1 ? parts[1] : vcs.AuthorizedUser).Select(i => i.Name));
+            }
+
+            return removed;
+        }
+
+        public IReadOnlyList<PendingSetInfo> QueryPendingSets(IReadOnlyList<ItemQuery> items, string? workspaceName, string? user)
+        {
+            var specs = items.Select(ToItemSpec).ToArray();
+            return VersionControl.QueryPendingSets(specs, workspaceName, user, false, false).Select(ToPendingSet).ToList();
+        }
+
+        public IReadOnlyList<PendingSetInfo> QueryShelvedChanges(string shelvesetName, string? owner, IReadOnlyList<ItemQuery> items)
+        {
+            var vcs = VersionControl;
+            var specs = items.Count == 0 ? null : items.Select(ToItemSpec).ToArray();
+            return vcs.QueryShelvedChanges(shelvesetName, string.IsNullOrEmpty(owner) ? vcs.AuthorizedUser : owner, specs, false).Select(ToPendingSet).ToList();
         }
 
         public IReadOnlyList<ChangesetInfo> QueryHistory(HistoryQuery query)
@@ -72,8 +108,14 @@ namespace TfPortable.Context
 
         public void Dispose() => connection.Dispose();
 
+        internal static ItemSpec ToItemSpec(ItemQuery i) => new ItemSpec(i.Path, i.Recursion, i.DeletionId);
+
         internal static ChangesetInfo ToChangeset(Changeset cs) =>
             new ChangesetInfo(cs.ChangesetId, cs.OwnerDisplayName ?? cs.Owner, cs.Owner, cs.CreationDate, cs.Comment);
+
+        internal static PendingSetInfo ToPendingSet(PendingSet set) =>
+            new PendingSetInfo(set.Name, set.OwnerDisplayName ?? set.OwnerName, set.OwnerName, set.Computer, set.Type == PendingSetType.Shelveset,
+                set.PendingChanges.Select(p => ToPendingChange(p, false)).ToList());
 
         internal static WorkspaceSummary ToSummary(Workspace workspace)
         {
@@ -105,13 +147,13 @@ namespace TfPortable.Context
         internal static PendingChangeInfo ToPendingChange(PendingChange change, bool detected)
         {
             return new PendingChangeInfo(
-                ChangeText(change),
+                ChangeText(change.ChangeType),
                 change.ServerItem,
                 change.LocalItem,
                 change.ItemType == ItemType.Folder,
                 change.Version,
                 change.IsRename || change.IsBranch || change.IsMerge ? change.SourceServerItem : null,
-                change.LockLevel.ToString().ToLowerInvariant(),
+                LockText(change.LockLevel),
                 change.ItemType == ItemType.Folder ? null : EncodingName(change.Encoding),
                 change.CreationDate,
                 change.PendingSetOwner,
@@ -120,7 +162,9 @@ namespace TfPortable.Context
         }
 
         /// <summary>Change types in the English wording of the client library ("edit", "merge, edit"), lower-case like tf.exe.</summary>
-        internal static string ChangeText(PendingChange change) => PendingChange.GetLocalizedStringForChangeType(change.ChangeType).ToLowerInvariant();
+        internal static string ChangeText(ChangeType type) => PendingChange.GetLocalizedStringForChangeType(type).ToLowerInvariant();
+
+        internal static string LockText(LockLevel level) => level == LockLevel.CheckOut ? "checkout" : level.ToString().ToLowerInvariant();
 
         internal static string? EncodingName(int codePage)
         {
@@ -144,6 +188,97 @@ namespace TfPortable.Context
             }
         }
 
+        /// <summary>Code page of an `/encoding:` value (`utf-8`, `windows-1250`, `binary`, or a number).</summary>
+        internal static int? ParseEncoding(string? encoding)
+        {
+            if (string.IsNullOrWhiteSpace(encoding))
+            {
+                return null;
+            }
+
+            string e = encoding!.Trim();
+            if (e.Equals("binary", StringComparison.OrdinalIgnoreCase))
+            {
+                return -1;
+            }
+
+            if (int.TryParse(e, out int codePage))
+            {
+                return codePage;
+            }
+
+            return System.Text.Encoding.GetEncoding(e).CodePage;
+        }
+
+        internal static ConflictInfo ToConflict(Conflict c)
+        {
+            string type = c.Type.ToString().ToLowerInvariant();
+            string? resolution = c.Resolution == Microsoft.TeamFoundation.VersionControl.Client.Resolution.None ? null : CanonicalResolution(c.Resolution);
+            string message;
+            try
+            {
+                message = c.GetBriefMessage();
+            }
+            catch (Exception)
+            {
+                message = c.ToString();
+            }
+
+            return new ConflictInfo(type, c.ServerPath ?? c.YourServerItem ?? c.TheirServerItem ?? string.Empty, c.LocalPath, c.YourVersion, c.TheirVersion, c.BaseVersion,
+                ChangeText(c.YourChangeType), ChangeText(c.TheirChangeType), resolution, c.CanMergeContent, message, c.IsResolved, c);
+        }
+
+        /// <summary>docs/json-schema.md Resolution names for the library's enumeration.</summary>
+        internal static string CanonicalResolution(Resolution resolution)
+        {
+            switch (resolution)
+            {
+                case Microsoft.TeamFoundation.VersionControl.Client.Resolution.AcceptMerge: return "automerge";
+                case Microsoft.TeamFoundation.VersionControl.Client.Resolution.AcceptTheirs: return "taketheirs";
+                case Microsoft.TeamFoundation.VersionControl.Client.Resolution.AcceptYours: return "keepyours";
+                case Microsoft.TeamFoundation.VersionControl.Client.Resolution.OverwriteLocal: return "overwritelocal";
+                case Microsoft.TeamFoundation.VersionControl.Client.Resolution.DeleteConflict: return "deleteconflict";
+                case Microsoft.TeamFoundation.VersionControl.Client.Resolution.AcceptYoursRenameTheirs: return "keepyoursrenametheirs";
+                default: return resolution.ToString().ToLowerInvariant();
+            }
+        }
+
+        /// <summary>The library's enumeration for a canonical name (`automerge`, `automergeforced`, `taketheirs`, ...).</summary>
+        internal static Resolution ToResolution(string canonical)
+        {
+            switch (canonical.ToLowerInvariant())
+            {
+                case "automerge":
+                case "automergeforced": return Microsoft.TeamFoundation.VersionControl.Client.Resolution.AcceptMerge;
+                case "taketheirs": return Microsoft.TeamFoundation.VersionControl.Client.Resolution.AcceptTheirs;
+                case "keepyours": return Microsoft.TeamFoundation.VersionControl.Client.Resolution.AcceptYours;
+                case "overwritelocal": return Microsoft.TeamFoundation.VersionControl.Client.Resolution.OverwriteLocal;
+                case "deleteconflict": return Microsoft.TeamFoundation.VersionControl.Client.Resolution.DeleteConflict;
+                case "keepyoursrenametheirs": return Microsoft.TeamFoundation.VersionControl.Client.Resolution.AcceptYoursRenameTheirs;
+                default: throw new ArgumentException($"Unknown resolution '{canonical}'.", nameof(canonical));
+            }
+        }
+
+        private static string OperationName(OperationStatus status)
+        {
+            switch (status)
+            {
+                case OperationStatus.Getting: return "getting";
+                case OperationStatus.Replacing: return "replacing";
+                case OperationStatus.Deleting: return "deleting";
+                case OperationStatus.Conflict: return "conflict";
+                case OperationStatus.SourceWritable:
+                case OperationStatus.TargetWritable: return "writable";
+                case OperationStatus.TargetLocalPending: return "localpending";
+                case OperationStatus.SourceDirectoryNotEmpty: return "directorynotempty";
+                case OperationStatus.TargetIsDirectory: return "targetisdirectory";
+                default: return status.ToString().ToLowerInvariant();
+            }
+        }
+
+        private static FailureInfo ToFailure(Failure f) =>
+            new FailureInfo(f.LocalItem, f.ServerItem, f.Message ?? f.GetFormattedMessage(), f.Code, f.Severity == SeverityType.Warning);
+
         private sealed class TfvcWorkspace : ITfvcWorkspace
         {
             private readonly Workspace workspace;
@@ -156,17 +291,248 @@ namespace TfPortable.Context
 
             public WorkspaceSummary Summary => summary ??= ToSummary(workspace);
 
+            private VersionControlServer Vcs => workspace.VersionControlServer;
+
             public bool IsLocalPathMapped(string localPath) => workspace.IsLocalPathMapped(localPath);
 
             public string GetServerItemForLocalItem(string localPath) => workspace.GetServerItemForLocalItem(localPath);
 
+            public string? GetLocalItemForServerItem(string serverPath)
+            {
+                try
+                {
+                    return workspace.IsServerPathMapped(serverPath) ? workspace.GetLocalItemForServerItem(serverPath) : null;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            }
+
             public PendingChangeSet GetPendingChanges(IReadOnlyList<ItemQuery> items, bool detectCandidates)
             {
-                var specs = items.Select(i => new ItemSpec(i.Path, i.Recursion, i.DeletionId)).ToArray();
+                var specs = items.Select(ToItemSpec).ToArray();
                 bool detect = detectCandidates && workspace.Location == WorkspaceLocation.Local;
-                PendingChange[] pending = workspace.GetPendingChangesWithCandidates(specs, detect, out PendingChange[] candidates);
-                var detected = detect && candidates != null ? candidates.Select(c => ToPendingChange(c, true)).ToList() : new List<PendingChangeInfo>();
+                PendingChange[] candidates = Array.Empty<PendingChange>();
+                PendingChange[] pending = detect
+                    ? workspace.GetPendingChangesWithCandidates(specs, false, out candidates)
+                    : workspace.GetPendingChanges(specs);
+                var detected = candidates != null ? candidates.Select(c => ToPendingChange(c, true)).ToList() : new List<PendingChangeInfo>();
                 return new PendingChangeSet(pending.Select(p => ToPendingChange(p, false)).ToList(), detected);
+            }
+
+            public PendResult PendAdd(IReadOnlyList<string> localPaths, bool recursive, string? encoding, bool applyIgnore)
+            {
+                using var collector = new EventCollector(Vcs);
+                int count = workspace.PendAdd(localPaths.ToArray(), recursive, FileType(encoding), LockLevel.None, false, false, applyIgnore);
+                return collector.ToPendResult(count);
+            }
+
+            public PendResult PendEdit(IReadOnlyList<string> paths, RecursionType recursion, string? encoding)
+            {
+                using var collector = new EventCollector(Vcs);
+                int count = workspace.PendEdit(paths.ToArray(), recursion, FileType(encoding), LockLevel.None, false);
+                return collector.ToPendResult(count);
+            }
+
+            public PendResult PendDelete(IReadOnlyList<string> paths, RecursionType recursion)
+            {
+                using var collector = new EventCollector(Vcs);
+                int count = workspace.PendDelete(paths.ToArray(), recursion, LockLevel.None, true, false);
+                return collector.ToPendResult(count);
+            }
+
+            public PendResult PendRename(string oldPath, string newPath)
+            {
+                using var collector = new EventCollector(Vcs);
+                int count = workspace.PendRename(oldPath, newPath, LockLevel.None, true, true, false);
+                return collector.ToPendResult(count);
+            }
+
+            public PendResult Undo(IReadOnlyList<ItemQuery> items)
+            {
+                // The UndonePendingChange event reports a rename under its restored (old) name; tf.exe lists the pending
+                // change as it was, so the changes are read before the undo and reported when the undo took them all.
+                var specs = items.Select(ToItemSpec).ToArray();
+                var before = workspace.GetPendingChanges(specs).Select(p => ToPendingChange(p, false)).ToList();
+                using var collector = new EventCollector(Vcs);
+                int count = workspace.Undo(specs, true);
+                var undone = count > 0 && count == before.Count ? before : collector.Undone;
+                return new PendResult(undone, collector.Failures, count);
+            }
+
+            public GetResult Get(IReadOnlyList<ItemQuery>? items, VersionSpec version, GetFlags flags)
+            {
+                var options = GetOptions.None;
+                if (flags.HasFlag(GetFlags.All)) { options |= GetOptions.GetAll; }
+                if (flags.HasFlag(GetFlags.Overwrite)) { options |= GetOptions.Overwrite; }
+                if (flags.HasFlag(GetFlags.Preview)) { options |= GetOptions.Preview; }
+                if (flags.HasFlag(GetFlags.Remap)) { options |= GetOptions.Remap; }
+                if (flags.HasFlag(GetFlags.NoAutoResolve)) { options |= GetOptions.NoAutoResolve; }
+
+                using var collector = new EventCollector(Vcs);
+                GetStatus status;
+                Conflict[]? conflicts = null;
+                if (items == null || items.Count == 0)
+                {
+                    status = workspace.Get(version, options);
+                }
+                else
+                {
+                    var requests = items.Select(i => new GetRequest(ToItemSpec(i), version)).ToArray();
+                    status = workspace.Get(requests, options, null, null, null, out conflicts);
+                }
+
+                var failures = new List<FailureInfo>(collector.Failures);
+                failures.AddRange(status.GetFailures().Select(ToFailure));
+                var conflictInfos = (conflicts ?? Array.Empty<Conflict>()).Select(ToConflict).ToList();
+                if (conflictInfos.Count == 0 && status.NumConflicts > 0 && !flags.HasFlag(GetFlags.Preview))
+                {
+                    try
+                    {
+                        conflictInfos = workspace.QueryConflicts(items?.Select(i => i.Path).ToArray(), true).Select(ToConflict).ToList();
+                    }
+                    catch (Exception)
+                    {
+                        // The conflict list is informative; the counts still tell the truth.
+                    }
+                }
+
+                return new GetResult(collector.Operations, conflictInfos, failures, status.NoActionNeeded, status.NumOperations, status.NumConflicts, status.NumWarnings);
+            }
+
+            public IReadOnlyList<ConflictInfo> QueryConflicts(IReadOnlyList<string> paths, bool recursive)
+            {
+                return workspace.QueryConflicts(paths.Count == 0 ? null : paths.ToArray(), recursive).Select(ToConflict).ToList();
+            }
+
+            public ResolveResult Resolve(ConflictInfo info, string resolution, string? newPath, bool forced)
+            {
+                var conflict = (Conflict)(info.Handle ?? throw new ArgumentException("The conflict has no handle.", nameof(info)));
+                conflict.Resolution = ToResolution(resolution);
+                if (newPath != null)
+                {
+                    conflict.ResolutionOptions = new ResolutionOptions { NewPath = newPath };
+                }
+
+                if (forced)
+                {
+                    conflict.ResolutionOptions = conflict.ResolutionOptions ?? new ResolutionOptions();
+                    conflict.ResolutionOptions.AcceptMergeWithConflicts = true;
+                }
+
+                string resolutionName = conflict.Resolution.ToString();
+                if (conflict.Resolution == Microsoft.TeamFoundation.VersionControl.Client.Resolution.AcceptYours)
+                {
+                    resolutionName = "KeepYours";
+                }
+                else if (conflict.Resolution == Microsoft.TeamFoundation.VersionControl.Client.Resolution.AcceptTheirs)
+                {
+                    resolutionName = "TakeTheirs";
+                }
+
+                using var collector = new EventCollector(Vcs);
+                try
+                {
+                    workspace.ResolveConflict(conflict);
+                }
+                catch (Microsoft.TeamFoundation.TeamFoundationServerException ex)
+                {
+                    return new ResolveResult(false, resolutionName, MergeSummaryText(conflict), ex.Message);
+                }
+
+                bool resolved = conflict.IsResolved;
+                string? why = resolved ? null : (collector.Failures.FirstOrDefault()?.Message ?? info.Message);
+                return new ResolveResult(resolved, resolutionName, MergeSummaryText(conflict), why, collector.Operations);
+            }
+
+            private static string? MergeSummaryText(Conflict conflict)
+            {
+                var s = conflict.ContentMergeSummary;
+                return s == null ? null : $"local: {s.TotalModified}, server: {s.TotalLatest}, both: {s.TotalBoth}, conflicting: {s.TotalConflicting}";
+            }
+
+            public IReadOnlyList<LocalVersionInfo> GetLocalVersions(IReadOnlyList<ItemQuery> items)
+            {
+                var result = new List<LocalVersionInfo>();
+                foreach (var set in workspace.GetLocalVersions(items.Select(ToItemSpec).ToArray(), true))
+                {
+                    foreach (var v in set)
+                    {
+                        string? server = workspace.TryGetServerItemForLocalItem(v.Item);
+                        result.Add(new LocalVersionInfo(v.Item, server, v.Version, Directory.Exists(v.Item)));
+                    }
+                }
+
+                return result;
+            }
+
+            private static string? FileType(string? encoding) => string.IsNullOrWhiteSpace(encoding) ? null : encoding!.Trim();
+        }
+
+        /// <summary>Collects the events the library raises during one operation (new/undone pending changes, get operations, non-fatal errors).</summary>
+        private sealed class EventCollector : IDisposable
+        {
+            private readonly VersionControlServer vcs;
+
+            public EventCollector(VersionControlServer vcs)
+            {
+                this.vcs = vcs;
+                vcs.NewPendingChange += OnNewPendingChange;
+                vcs.UndonePendingChange += OnUndonePendingChange;
+                vcs.NonFatalError += OnNonFatalError;
+                vcs.Getting += OnGetting;
+            }
+
+            public List<PendingChangeInfo> Changes { get; } = new List<PendingChangeInfo>();
+
+            public List<PendingChangeInfo> Undone { get; } = new List<PendingChangeInfo>();
+
+            public List<FailureInfo> Failures { get; } = new List<FailureInfo>();
+
+            public List<GetOperationInfo> Operations { get; } = new List<GetOperationInfo>();
+
+            public PendResult ToPendResult(int count) => new PendResult(Changes, Failures, count);
+
+            private void OnNewPendingChange(object sender, PendingChangeEventArgs e)
+            {
+                if (e.PendingChange != null)
+                {
+                    Changes.Add(ToPendingChange(e.PendingChange, false));
+                }
+            }
+
+            private void OnUndonePendingChange(object sender, PendingChangeEventArgs e)
+            {
+                if (e.PendingChange != null)
+                {
+                    Undone.Add(ToPendingChange(e.PendingChange, false));
+                }
+            }
+
+            private void OnNonFatalError(object sender, ExceptionEventArgs e)
+            {
+                if (e.Failure != null)
+                {
+                    Failures.Add(ToFailure(e.Failure));
+                }
+                else if (e.Exception != null)
+                {
+                    Failures.Add(new FailureInfo(null, null, e.Exception.Message, e.Exception.GetType().Name, false));
+                }
+            }
+
+            private void OnGetting(object sender, GettingEventArgs e)
+            {
+                Operations.Add(new GetOperationInfo(OperationName(e.Status), e.TargetLocalItem ?? e.SourceLocalItem, e.ServerItem, e.Version, e.ItemType == ItemType.Folder, e.IsDelete));
+            }
+
+            public void Dispose()
+            {
+                vcs.NewPendingChange -= OnNewPendingChange;
+                vcs.UndonePendingChange -= OnUndonePendingChange;
+                vcs.NonFatalError -= OnNonFatalError;
+                vcs.Getting -= OnGetting;
             }
         }
     }

@@ -54,6 +54,15 @@ namespace TfPortable.IntegrationTests.Golden
                 if (TestEnvironment.Collection != null)
                 {
                     map[TestEnvironment.Collection.TrimEnd('/')] = "<COLLECTION>";
+                    try
+                    {
+                        // tfp prints the normalized form (https://dev.azure.com/<org>) where the original printed the URL as given.
+                        map[TfPortable.Auth.CollectionUrl.Normalize(TestEnvironment.Collection)] = "<COLLECTION>";
+                    }
+                    catch (Exception)
+                    {
+                        // An unusual URL; the raw form is enough.
+                    }
                 }
 
                 if (OwnerDisplayName != "<OWNER>")

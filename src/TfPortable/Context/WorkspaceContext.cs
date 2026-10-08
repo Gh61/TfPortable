@@ -206,9 +206,15 @@ namespace TfPortable.Context
                     output.Workspace = workspace.Summary.Spec;
                     if (!workspace.Summary.IsLocal)
                     {
-                        throw new TfpException(ErrorCodes.ServerWorkspaceNotSupported, ExitCodes.WorkspaceNotFound,
-                            $"Workspace {workspace.Summary.Spec} is a server workspace; {toolName} supports local workspaces only.",
-                            "Convert it in Visual Studio: Manage Workspaces > Edit > Advanced > Location: Local.");
+                        if (requireWorkspace)
+                        {
+                            throw new TfpException(ErrorCodes.ServerWorkspaceNotSupported, ExitCodes.WorkspaceNotFound,
+                                $"Workspace {workspace.Summary.Spec} is a server workspace; {toolName} supports local workspaces only.",
+                                "Convert it in Visual Studio: Manage Workspaces > Edit > Advanced > Location: Local.");
+                        }
+
+                        // Commands that only need the collection (server paths, whoami, workspaces) run without it (compat.md §3).
+                        workspace = null;
                     }
                 }
                 else if (requireWorkspace)

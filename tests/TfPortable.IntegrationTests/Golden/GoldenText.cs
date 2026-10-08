@@ -17,7 +17,7 @@ namespace TfPortable.IntegrationTests.Golden
         private static readonly Regex ActivityId = new Regex(@"^\s*ActivityId:.*$", RegexOptions.Compiled | RegexOptions.Multiline);
 
         private static readonly Regex ServerPath = new Regex(@"\$/[^\s;,:""']*[^\s;,:.""']", RegexOptions.Compiled);
-        private static readonly Regex LocalPath = new Regex(@"(?:[A-Za-z]:\\|<(?:WORKSPACE|LOCAL)_[A-Z_]*ROOT>)[^\s:""']*[^\s:.""']", RegexOptions.Compiled);
+        private static readonly Regex LocalPath = new Regex(@"(?:[A-Za-z]:\\|<(?:WORKSPACE|LOCAL)_[A-Z_]*ROOT>)[^\s:;""']*[^\s:;.""']", RegexOptions.Compiled);
         private static readonly Regex ChangesetNumber = new Regex(@"(?<=;C)\d+|(?<=\bC)\d+\b|(?<=Changeset:\s)\d+|(?<=Sada změn:\s)\d+|^\s*\d+(?=\s|\*|$)", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly Regex DeletionId = new Regex(@"(?<=;X)\d+", RegexOptions.Compiled);
         private static readonly Regex TrailerCount = new Regex(@"(?<=\S:\s*)\d+(?=\s*(,|$))", RegexOptions.Compiled | RegexOptions.Multiline);
@@ -38,6 +38,103 @@ namespace TfPortable.IntegrationTests.Golden
         };
 
         private static readonly Regex ChangeType = new Regex(@"\b(add|edit|delete|rename|branch|merge|undelete|rollback|lock|encoding|property|source rename)\b", RegexOptions.Compiled);
+
+        /// <summary>
+        /// Czech phrases of the golden output → the English phrases tfp prints, for the line comparison (<see cref="GoldenChecks.Lines"/>).
+        /// Longer phrases first so that `Zjištěné změny:` is not hit by `Změny:`. Message wording is still never *required* to match:
+        /// the dictionary only exists so that lines of listings and tables can be compared one by one.
+        /// </summary>
+        private static readonly (string Czech, string English)[] Phrases =
+        {
+            ("Nejsou žádné probíhající změny.", "There are no pending changes."),
+            ("Všechny soubory jsou aktuální.", "All files are up to date."),
+            ("Nejsou žádné konflikty, které by bylo potřeba vyřešit.", "There are no conflicts to resolve."),
+            ("Nenašly se žádné odpovídající probíhající změny.", "No matching pending changes were found."),
+            ("Sada odložených změn", "Shelveset"),
+            ("Zjištěné změny:", "Detected changes:"),
+            ("zjištěné změny:", "detected changes:"),
+            ("Počet položek:", "Items:"),
+            ("Název souboru", "File name"),
+            ("Místní cesta", "Local path"),
+            ("Místní položka", "Local item"),
+            ("Zdrojová položka", "Source item"),
+            ("Pracovní prostor", "Workspace"),
+            ("Pracovní složky", "Working folders"),
+            ("Typ souboru", "File type"),
+            ("Vracení zpět", "Undoing"),
+            ("Odstraňování", "Deleting"),
+            ("Nahrazování", "Replacing"),
+            ("Načítání", "Getting"),
+            ("Uživatel", "User"),
+            ("Uzamknout", "Lock"),
+            ("Vlastník", "Owner"),
+            ("Počítač", "Computer"),
+            ("Komentář", "Comment"),
+            ("Kolekce", "Collection"),
+            ("Oprávnění", "Permission"),
+            ("Umístění", "Location"),
+            ("Změny:", "Changes:"),
+            ("Změnit", "Change"),
+            ("Datum", "Date"),
+            ("žádný", "none"),
+            ("Místní", "Local"),
+            ("(skrytá)", "(cloaked)"),
+        };
+
+        private static readonly Regex RelativeHeader = new Regex(@"^(?![A-Za-z]:\\|\$/|<)([^\s:][^:]*):$", RegexOptions.Compiled);
+        private static readonly Regex LabelLine = new Regex(@"^(\s*)([A-Za-z][A-Za-z ]*?)\s*:(\s+|$)(.*)$", RegexOptions.Compiled);
+
+        /// <summary>
+        /// Lines of a golden or tfp output made comparable (§7): normalized, Czech phrases and change words in English,
+        /// relative folder headers resolved against the capture's cwd, label spacing unified, runs of spaces and dashes
+        /// collapsed, leading blank lines dropped.
+        /// </summary>
+        public static IReadOnlyList<string> ComparableLines(string text, string cwd, IReadOnlyDictionary<string, string>? placeholders = null)
+        {
+            string t = Normalize(text, placeholders);
+            foreach (var (czech, english) in Phrases)
+            {
+                t = t.Replace(czech, english);
+            }
+
+            foreach (var (pattern, word) in ChangeWords)
+            {
+                t = pattern.Replace(t, word);
+            }
+
+            var lines = new List<string>();
+            foreach (string raw in t.Split('\n'))
+            {
+                string line = raw.TrimEnd();
+                var header = RelativeHeader.Match(line);
+                if (header.Success)
+                {
+                    line = cwd.TrimEnd('\\') + "\\" + header.Groups[1].Value + ":";
+                }
+
+                var label = LabelLine.Match(line);
+                if (label.Success)
+                {
+                    line = $"{label.Groups[1].Value}{label.Groups[2].Value}: {label.Groups[4].Value}".TrimEnd();
+                }
+
+                line = Regex.Replace(line, @"-{2,}", "--");
+                line = Regex.Replace(line, @" {2,}", " ");
+                lines.Add(line);
+            }
+
+            while (lines.Count > 0 && lines[0].Length == 0)
+            {
+                lines.RemoveAt(0);
+            }
+
+            while (lines.Count > 0 && lines[lines.Count - 1].Length == 0)
+            {
+                lines.RemoveAt(lines.Count - 1);
+            }
+
+            return lines;
+        }
 
         /// <summary>CRLF → LF, trailing whitespace removed, trailing blank lines removed, dates and activity ids neutralized (§7).</summary>
         public static string Normalize(string text, IReadOnlyDictionary<string, string>? placeholders = null)
@@ -148,16 +245,25 @@ namespace TfPortable.IntegrationTests.Golden
         ChangeTypes = 16,
         Counts = 32,
 
+        /// <summary>Every stdout line, after the Czech → English mapping of <see cref="GoldenText.ComparableLines"/>.</summary>
+        Lines = 64,
+
+        /// <summary>The golden items are a subset of tfp's (for server state that later golden runs extended).</summary>
+        ItemsSubset = 128,
+
         /// <summary>Exit code and stream emptiness only (help text and error messages are never compared).</summary>
         Shape = ExitCode | Streams,
 
         All = ExitCode | Streams | Items | Changesets | ChangeTypes | Counts,
+
+        /// <summary>Listings whose every line must match: exit code, streams and lines.</summary>
+        Exact = ExitCode | Streams | Lines,
     }
 
     /// <summary>Compares a golden case with a tfp result and lists every difference (empty = pass).</summary>
     public static class GoldenComparison
     {
-        public static IReadOnlyList<string> Compare(GoldenCase golden, TfpResult actual, int expectedExitCode, GoldenChecks checks, IReadOnlyDictionary<string, string>? placeholders = null)
+        public static IReadOnlyList<string> Compare(GoldenCase golden, TfpResult actual, int expectedExitCode, GoldenChecks checks, IReadOnlyDictionary<string, string>? placeholders = null, string? cwd = null)
         {
             var differences = new List<string>();
             if (actual.TimedOut)
@@ -211,6 +317,28 @@ namespace TfPortable.IntegrationTests.Golden
             if (checks.HasFlag(GoldenChecks.Counts))
             {
                 CompareLists(differences, "counts", GoldenText.Counts(goldenAll).Select(c => c.ToString()).ToList(), GoldenText.Counts(actualAll).Select(c => c.ToString()).ToList());
+            }
+
+            if (checks.HasFlag(GoldenChecks.ItemsSubset))
+            {
+                var expected = GoldenText.Items(goldenAll);
+                var got = new HashSet<string>(GoldenText.Items(actualAll), StringComparer.OrdinalIgnoreCase);
+                var missing = expected.Where(i => !got.Contains(i)).ToList();
+                if (missing.Count > 0)
+                {
+                    differences.Add($"items missing in tfp output: [{string.Join(", ", missing)}]");
+                }
+            }
+
+            if (checks.HasFlag(GoldenChecks.Lines))
+            {
+                string captureCwd = golden.Cwd;
+                var expected = GoldenText.ComparableLines(golden.Stdout, captureCwd);
+                var got = GoldenText.ComparableLines(actual.Stdout, captureCwd, placeholders);
+                if (!expected.SequenceEqual(got, StringComparer.OrdinalIgnoreCase))
+                {
+                    differences.Add($"stdout lines differ:\n--- expected ---\n{string.Join("\n", expected)}\n--- got ---\n{string.Join("\n", got)}");
+                }
             }
 
             if (differences.Count > 0)

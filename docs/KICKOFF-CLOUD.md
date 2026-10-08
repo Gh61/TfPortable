@@ -24,7 +24,9 @@ Read before you start, in this order:
 
 - One branch and one pull request per milestone (`m2-core`, `m3-workspace`, `m4-history`,
   `m5-integration`); commit in small steps with clear messages. Open the PR early as a draft so
-  that CI runs on every push.
+  that CI runs on every push. Review and merge per CLAUDE.md "Pull requests: review and merge":
+  an independent agent reviews the diff, the findings are fixed, CI is green, then the agent
+  merges with a merge commit and continues with the next milestone.
 - After each push: `gh run list --branch <branch> --limit 1`, then
   `gh run view <id> --log-failed` for failures. Fix, push, repeat.
 - Integration and golden tests run only when the secrets `TFP_TEST_COLLECTION` and `TFP_TEST_PAT`

@@ -79,6 +79,28 @@ failures with `gh run view --log-failed`.
 - Never enable System.Net or TeamFoundation tracing while a PAT is in use, and never log
   request headers: the trace writes the `Authorization` header in clear text.
 
+## Pull requests: review and merge (cloud sessions)
+
+The developer authorized the cloud agent (2026-10-08) to merge its own pull requests. The loop
+for every milestone branch (`m2-core`, `m3-workspace`, ...):
+
+1. Open the pull request as a draft early; push in small commits; CI (`windows-latest`) is the
+   test run. Fix every CI failure before anything else.
+2. When the code is complete and CI is green, have the diff reviewed by an **independent agent
+   without session context** (a subagent that reads only the repository: CLAUDE.md, SPEC.md,
+   compat.md, the diff of the branch against `main`). Ask it for correctness bugs, crashes,
+   security problems (a PAT that could leak into output or logs), rule violations and
+   contradictions with the docs, each with file, line, severity and scenario; no style findings.
+3. Fix the blocking and should-fix findings (and cheap nits), push, wait for green CI again.
+4. Record the review findings and the fixes under "Decisions" in `docs/PROGRESS.md`.
+5. Mark the pull request ready for review and merge it with a **merge commit** (keep the small
+   commits). Never squash, never force-push a shared branch.
+6. Start the next milestone from the merged `main` (or from the previous milestone branch when it
+   is still in CI; merge that branch forward after every fix so that the history stays linear).
+
+Stop and ask the developer only for the gates in SPEC.md (release of milestone 5), for secrets,
+Azure DevOps settings, legal questions, or when a decision changes the design.
+
 ## When to stop and report
 
 Stop, write the reason under "Needs the user" in `docs/PROGRESS.md`, and end the session when:
