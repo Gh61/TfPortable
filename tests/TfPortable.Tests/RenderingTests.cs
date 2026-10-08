@@ -129,19 +129,21 @@ namespace TfPortable.Tests
             var add = new PendingChangeInfo("add", "$/Repo/Main/_golden", @"C:\Src\Repo\Main\_golden", true, 0, null, "none", null, Date, "jan@contoso.com", "DEV-PC", false);
             var rename = new PendingChangeInfo("rename", "$/Repo/Main/data/new.txt", @"C:\Src\Repo\Main\data\new.txt", false, 75, "$/Repo/Main/data/old.txt", "none", "binary", Date, "jan@contoso.com", "DEV-PC", false);
             var lines = StatusCommand.RenderDetailedSet(new PendingChangeSet(new[] { edit, add, rename }, Array.Empty<PendingChangeInfo>()), workspace).ToList();
-            Assert.Equal("$/Repo/Main/_golden", lines[0]);
-            Assert.Equal("  User:      Jan Novak", lines[1]);
-            Assert.Equal("  Date:      " + OutputWriter.IsoDate(Date), lines[2]);
-            Assert.Equal("  Lock:      none", lines[3]);
-            Assert.Equal("  Change:    add", lines[4]);
-            Assert.Equal("  Workspace: DEV-PC", lines[5]);
-            Assert.Equal(@"  Local item: [DEV-PC] C:\Src\Repo\Main\_golden".Replace("  Local item: ", "  Local item: "), lines[6].Replace("Local item:", "Local item:"));
-            Assert.Equal("", lines[7]);
-            Assert.Equal("$/Repo/Main/README.md;C83", lines[8]);
-            Assert.Contains("  File type: windows-1250", lines);
-            Assert.Contains("  Source item: $/Repo/Main/data/old.txt", lines);
-            Assert.Contains("  File type: Binary", lines);
-            Assert.Equal("Changes: 3", lines.Last());
+            // Labels are aligned on the widest one of the block; compare with the padding collapsed.
+            var collapsed = lines.Select(l => System.Text.RegularExpressions.Regex.Replace(l, @":\s+", ": ")).ToList();
+            Assert.Equal("$/Repo/Main/_golden", collapsed[0]);
+            Assert.Equal("  User: Jan Novak", collapsed[1]);
+            Assert.Equal("  Date: " + OutputWriter.IsoDate(Date), collapsed[2]);
+            Assert.Equal("  Lock: none", collapsed[3]);
+            Assert.Equal("  Change: add", collapsed[4]);
+            Assert.Equal("  Workspace: DEV-PC", collapsed[5]);
+            Assert.Equal(@"  Local item: [DEV-PC] C:\Src\Repo\Main\_golden", collapsed[6]);
+            Assert.Equal("", collapsed[7]);
+            Assert.Equal("$/Repo/Main/README.md;C83", collapsed[8]);
+            Assert.Contains("  File type: windows-1250", collapsed);
+            Assert.Contains("  Source item: $/Repo/Main/data/old.txt", collapsed);
+            Assert.Contains("  File type: Binary", collapsed);
+            Assert.Equal("Changes: 3", collapsed.Last());
 
             var users = StatusCommand.RenderAllUsers(new[] { edit, new PendingChangeInfo("lock", "$/Repo/Main/c.txt", null, false, 84, null, "checkin", "utf-8", Date, "someone@contoso.com", "OTHER", false) }, workspace).ToList();
             Assert.Equal("File name Change User                Local path", users[0]);
@@ -232,8 +234,8 @@ namespace TfPortable.Tests
             Assert.Equal("taketheirs", ResolveCommand.Canonical("TakeTheirs"));
             Assert.Equal("keepyoursrenametheirs", ResolveCommand.Canonical("AcceptYoursRenameTheirs"));
             Assert.Throws<TfPortable.Errors.TfpException>(() => ResolveCommand.Canonical("Nope"));
-            Assert.True(ReconcileCommand.Pattern("*.txt").IsMatch("untracked.txt"));
-            Assert.False(ReconcileCommand.Pattern("*.txt").IsMatch("a.cs"));
+            Assert.Matches(ReconcileCommand.Pattern("*.txt"), "untracked.txt");
+            Assert.DoesNotMatch(ReconcileCommand.Pattern("*.txt"), "a.cs");
         }
 
         [Fact]
