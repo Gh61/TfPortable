@@ -12,18 +12,17 @@ Read this first in every session. Update it at the end of every session (see CLA
 | 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | done: [PR #2](https://github.com/Gh61/TfPortable/pull/2) merged into `main` on 2026-10-08 after an independent review (findings under Decisions) | – |
 | 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | done: [PR #3](https://github.com/Gh61/TfPortable/pull/3) merged into `main` on 2026-10-08 (merge commit ff64062) after an independent review (findings under Decisions) | – |
 | 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | done: [PR #4](https://github.com/Gh61/TfPortable/pull/4) (docs/CLAUDE.md, compatibility tests, embedded-assembly check, THIRD-PARTY-NOTICES) reviewed, CI green and merged into `main` on 2026-10-08; release [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) published the same day (developer approved; `tfp.exe` + SHA-256 from the CI run on 2a1c007) | user approved the release on 2026-10-08 |
-| P2 | Phase 2: `merge`, `branch`, `rollback`, `undelete` as pending changes, `merges`, `folderdiff`, `annotate` | cloud + CI | in progress: branch `p2-branching`, [PR #12](https://github.com/Gh61/TfPortable/pull/12) (draft, CI loop) | – |
+| P2 | Phase 2: `merge`, `branch`, `rollback`, `undelete` as pending changes, `merges`, `folderdiff`, `annotate` | cloud + CI | done: [PR #12](https://github.com/Gh61/TfPortable/pull/12) reviewed by an independent agent (findings under Decisions), CI green (195 unit and 86 integration tests) and merged into `main` on 2026-10-08 with a merge commit | – |
 | P3 | Phase 3: protection levels, `checkin`, `shelve`/`shelvesets`/`unshelve`, `label`/`unlabel`, `lock` | cloud + CI | done: [PR #9](https://github.com/Gh61/TfPortable/pull/9) merged into `main` on 2026-10-08 (merge commit 3c92ea2) after an independent review (findings under Decisions); 187 unit and 82 integration tests green | release `v0.2.0` (developer) |
 
 Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
-0. Phase 2 ([PR #12](https://github.com/Gh61/TfPortable/pull/12), branch `p2-branching`): drive CI green
-   (the new `Phase2Tests` run against the test collection for the first time), independent review, fix the
-   findings, record them under Decisions, mark ready, merge with a merge commit. Then ask the developer to
-   run `tools/capture-tf-golden-all.ps1` (phase 2 cases included: `merge /preview` on a fresh candidate,
-   `rollback` of a range, `folderdiff /view:same`) and compare.
+0. Phase 2 is merged ([PR #12](https://github.com/Gh61/TfPortable/pull/12)). When tf.exe is at hand, the
+   developer runs `tools/capture-tf-golden-all.ps1` (phase 2 cases included: `merge /preview` on a fresh
+   candidate, `rollback` of a range and `/toversion`, `folderdiff /view:same`) and the agent compares tfp
+   against the captures; questions 27–33 of `docs/tf-reference/questions.md` list what was found by trial.
 1. Phase 3 is merged ([PR #9](https://github.com/Gh61/TfPortable/pull/9)). Release `v0.2.0` is the
    developer's gate (step 3).
 2. Ask the developer to run `tools/capture-tf-golden-phase3.ps1` (the cases without
@@ -165,6 +164,7 @@ before phase 4). The items below are kept for history.
 | 2026-10-08 | `annotate` (extension) attributes each line through tfp's own Myers line diff over the item's history (oldest first, renames followed by item id, deletes skipped); columns Changeset, Owner, Date, Line; folder TFP0002, binary TFP0303, missing item TFP0301 with exit 1 | tf.exe has no annotate; the server has no blame API for TFVC |
 | 2026-10-08 | `merges /format:detailed` prints the target changesets in the `history /format:detailed` shape (one `GetChangeset` per changeset); the brief table is Changeset, Merged in Changeset, Author, Date with `*` after a partial source changeset, sorted by source then target changeset | Golden `merges/*` show the brief table; the detailed shape is not captured |
 | 2026-10-08 | `rollback`: exactly one of `/changeset` and `/toversion`; `/toversion` needs an itemspec; `/changeset` without items rolls back the whole workspace through the library's workspace-wide overload; nothing to do prints `There is nothing to roll back.`; conflicts are TFP0403 item errors with exit 1 like `merge` | Golden `rollback/changeset` works without an itemspec; the Microsoft docs require items for `/toversion` |
+| 2026-10-08 | CI loop of PR #12 (runs 114–120): the client library raises only its Merging event for merge and rollback operations (neither NewPendingChange nor Getting), so the collector listens to it; the library's workspace-wide `Rollback` overload pends nothing on a local workspace, so `rollback /changeset` without items rolls back the mapped folders recursively; `rollback /toversion:<v>` needs `v` as the lower bound and Latest as the upper bound (the other order pends nothing, a null version is refused); `annotate` must match lines with line endings ignored; the folderdiff `/view` switch is validated by the command (the catalog enumeration rejected a comma-separated list); the phase 2 unit tests join the `ToolSettings` collection (the protection gate reads the settings file another class swaps) | CI runs on windows-latest; recorded in compat.md §15 and questions 27–33 |
 | 2026-10-08 | Pending changes carry `mergeSources` (JSON) and a `MergeLine` text form (`merge, edit: $/src;C83~C83 -> $/dst;C80`, `branch: $/src;C84 -> $/dst`), used by `merge`, `rollback` and the integration tests | Golden `merge/all`, `merge/conflict`, `rollback/*` |
 | 2026-10-08 | Review of PR #9 (independent agent, no blocking findings, 8 should-fix, 4 nits) and the fixes: (1) help of a command (`/?`, `-h`, `help <cmd>`) is never gated by the protection level; (2) `checkin` reports every conflict (TFP0406) and policy failure (TFP0407) as an item error, so JSON `errors[]` carries the server paths and messages, and `/validate` returns the evaluation with exit 100 instead of throwing; (3) `checkin /force` sets `AllowUnchangedContent`; (4) `undo /workspace:<name>` raises the level for every value, recorded in SPEC.md and compat.md §18 (the gate runs before the connection); (5) SPEC.md and README now say `shelve /delete` and `label /delete` are phase 3 at level 3; (6) `lock /lock:checkout` in a local workspace maps TF400022 to a TFP0501 item error with exit 1 as the golden capture; (7) a non-integer `protectionLevel` in the settings file is TFP0004, not TFP0900; (8) the "blocked at level 2" assertions of the integration tests run inside a level-2 settings scope; nits: `overridden` is consistent, the nothing-pending message no longer mirrors the golden text, hints lost their semicolons | Review findings |
 | 2026-10-08 | Review of PR #4 (independent agent, one should-fix: PROGRESS.md was stale): status table, next steps and "Needs the user" rewritten for the hand-over; `docs/CLAUDE.md` keeps only the `-candidate` permission rule (the `/candidate` form never arrives from Git Bash) and says the switch must follow `merge`, names the three meanings of exit 120 (no workspace, path not mapped, server workspace), notes that `view -output:` writes a file and that aliases (`hist`, `stat`, ...) are not in the allow list; the compatibility test checks the `undo` and that no detected change is left; the CI step trims the list lines before the `#` check; SPEC.md points to `docs/CLAUDE.md` as the maintained template | Review findings |
@@ -225,8 +225,11 @@ Open:
   and undo, rollback and undelete on the CI folder, merges/folderdiff/annotate on the seeded branches).
   Docs: SPEC.md "Fáze 2" and catalog rows, commands.md, json-schema.md, compat.md §15, questions 27–32,
   README phase table, the agent template (permissions and the pending-only note).
-- Next: CI loop on PR #12, independent review, merge; then the developer's checklist
-  (`docs/DEVELOPER-TODO.md`).
+- CI loop (runs 114–120) and review: three unit failures on the first run (annotate line endings, the help
+  footer, the `/view` enumeration), then the integration findings recorded under Decisions (Merging event,
+  rollback scope and `/toversion` order, the seeded merge conflict in the preview) and the review findings
+  (1 blocking, 5 should-fix, 8 nits) fixed in the same loop. Merged with a merge commit.
+- Next: the developer's checklist (`docs/DEVELOPER-TODO.md`); phase 4 waits for the scope decision.
 - Blockers: none.
 
 ### 2026-10-08 – cloud session, phase 3 (branch `p3-protection`, PR #9)
