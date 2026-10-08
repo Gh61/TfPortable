@@ -41,8 +41,9 @@ namespace TfPortable.IntegrationTests.Golden
 
         /// <summary>
         /// Czech phrases of the golden output → the English phrases tfp prints, for the line comparison (<see cref="GoldenChecks.Lines"/>).
-        /// Longer phrases first so that `Zjištěné změny:` is not hit by `Změny:`. Message wording is still never *required* to match:
-        /// the dictionary only exists so that lines of listings and tables can be compared one by one.
+        /// Applied longest first and only on whole words (<see cref="PhrasePatterns"/>), so that `Zjištěné změny:` is not hit by
+        /// `Změny:` and the English output is left alone (`Typ` must not turn `Type` into `Typee`). Message wording is still never
+        /// *required* to match: the dictionary only exists so that lines of listings and tables can be compared one by one.
         /// </summary>
         private static readonly (string Czech, string English)[] Phrases =
         {
@@ -105,6 +106,11 @@ namespace TfPortable.IntegrationTests.Golden
             ("(skrytá)", "(cloaked)"),
         };
 
+        private static readonly (Regex Pattern, string English)[] PhrasePatterns = Phrases
+            .OrderByDescending(p => p.Czech.Length)
+            .Select(p => (new Regex(@"(?<![\p{L}\p{N}])" + Regex.Escape(p.Czech) + @"(?![\p{L}\p{N}])", RegexOptions.Compiled), p.English))
+            .ToArray();
+
         private static readonly Regex RelativeHeader = new Regex(@"^(?![A-Za-z]:\\|\$/|<)([^\s:][^:]*):$", RegexOptions.Compiled);
         private static readonly Regex LabelLine = new Regex(@"^(\s*)([A-Za-z][A-Za-z ]*?)\s*:(\s+|$)(.*)$", RegexOptions.Compiled);
         private static readonly Regex RelativeFileLabel = new Regex(@"^(?<prefix>(?:(?:\+\+\+|---) )?(?:File|Local): )(?<path>[^$<\s][^:]*)$", RegexOptions.Compiled);
@@ -117,9 +123,9 @@ namespace TfPortable.IntegrationTests.Golden
         public static IReadOnlyList<string> ComparableLines(string text, string cwd, IReadOnlyDictionary<string, string>? placeholders = null)
         {
             string t = Normalize(text, placeholders);
-            foreach (var (czech, english) in Phrases)
+            foreach (var (pattern, english) in PhrasePatterns)
             {
-                t = t.Replace(czech, english);
+                t = pattern.Replace(t, english);
             }
 
             foreach (var (pattern, word) in ChangeWords)

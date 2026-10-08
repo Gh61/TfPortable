@@ -45,6 +45,13 @@ namespace TfPortable.Tests
         }
 
         [Fact]
+        public void Insertion_before_a_repeated_closing_line_is_reported_before_it()
+        {
+            var lines = UnifiedDiff.Render("a\n}\n}\n", "a\nb\n}\n}\n}\n", "L", "R").ToList();
+            Assert.Equal(new[] { "--- L", "+++ R", "@@ -1,3 +1,5 @@", " a", "+b", "+}", " }", " }" }, lines);
+        }
+
+        [Fact]
         public void Empty_source_is_an_add_hunk()
         {
             var lines = UnifiedDiff.Render(string.Empty, "new file in a shelveset\n", "[no source file]", "Shelved change: $/a.txt;S").ToList();

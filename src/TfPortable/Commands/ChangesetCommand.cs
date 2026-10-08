@@ -86,7 +86,8 @@ namespace TfPortable.Commands
             yield return "Items:";
             var changes = cs.Changes ?? Array.Empty<ChangeInfo>();
             int width = changes.Count == 0 ? 0 : changes.Max(c => c.ChangeText.Length);
-            foreach (var change in changes.OrderBy(c => c.ServerPath, StringComparer.InvariantCultureIgnoreCase))
+            // tf.exe lists a folder's direct children before the items of its subfolders: parent folder first, then name.
+            foreach (var change in changes.OrderBy(c => Microsoft.TeamFoundation.VersionControl.Common.VersionControlPath.GetFolderName(c.ServerPath), StringComparer.OrdinalIgnoreCase).ThenBy(c => c.ServerPath, StringComparer.OrdinalIgnoreCase))
             {
                 yield return $"  {change.ChangeText.PadRight(width)} {change.DisplayPath}";
             }
