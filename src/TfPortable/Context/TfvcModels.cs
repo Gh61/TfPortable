@@ -201,16 +201,18 @@ namespace TfPortable.Context
         public IReadOnlyList<PendingChangeInfo> Candidates { get; }
     }
 
-    /// <summary>Changeset of docs/json-schema.md (brief form, without changes and work items).</summary>
+    /// <summary>Changeset of docs/json-schema.md; `Changes` and `WorkItems` are null when they were not requested (brief history).</summary>
     internal sealed class ChangesetInfo
     {
-        public ChangesetInfo(int id, string owner, string? ownerUniqueName, DateTime date, string? comment)
+        public ChangesetInfo(int id, string owner, string? ownerUniqueName, DateTime date, string? comment, IReadOnlyList<ChangeInfo>? changes = null, IReadOnlyList<WorkItemInfo>? workItems = null)
         {
             Id = id;
             Owner = owner;
             OwnerUniqueName = ownerUniqueName;
             Date = date;
             Comment = comment;
+            Changes = changes;
+            WorkItems = workItems;
         }
 
         public int Id { get; }
@@ -223,13 +225,19 @@ namespace TfPortable.Context
 
         public string? Comment { get; }
 
-        public JObject ToJson() => new JObject
+        public IReadOnlyList<ChangeInfo>? Changes { get; }
+
+        public IReadOnlyList<WorkItemInfo>? WorkItems { get; }
+
+        public JObject ToJson(bool includeChanges = false) => new JObject
         {
             ["id"] = Id,
             ["owner"] = Owner,
             ["ownerUniqueName"] = OwnerUniqueName,
             ["date"] = OutputWriter.IsoDate(Date),
             ["comment"] = Comment,
+            ["changes"] = includeChanges && Changes != null ? new JArray(Changes.Select(c => c.ToJson()).Cast<object>().ToArray()) : null,
+            ["workItems"] = includeChanges && WorkItems != null ? new JArray(WorkItems.Select(w => w.ToJson()).Cast<object>().ToArray()) : null,
         };
     }
 
@@ -253,10 +261,11 @@ namespace TfPortable.Context
     /// <summary>Parameters of a history query (`history` and the search extensions).</summary>
     internal sealed class HistoryQuery
     {
-        public HistoryQuery(string path, VersionSpec version, RecursionType recursion, string? user, VersionSpec? from, VersionSpec? to, int maxCount, bool slotMode, bool ascending, int deletionId = 0)
+        public HistoryQuery(string path, VersionSpec version, RecursionType recursion, string? user, VersionSpec? from, VersionSpec? to, int maxCount, bool slotMode, bool ascending, int deletionId = 0, bool includeChanges = false)
         {
             Path = path;
             DeletionId = deletionId;
+            IncludeChanges = includeChanges;
             Version = version;
             Recursion = recursion;
             User = user;
@@ -271,6 +280,9 @@ namespace TfPortable.Context
 
         /// <summary>Deletion id of a `;X<n>` itemspec suffix, 0 for the live item.</summary>
         public int DeletionId { get; }
+
+        /// <summary>Also fetch the changes (items) of every changeset.</summary>
+        public bool IncludeChanges { get; }
 
         public VersionSpec Version { get; }
 

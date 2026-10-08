@@ -45,6 +45,9 @@ namespace TfPortable.Context
         ResolveResult Resolve(ConflictInfo conflict, string resolution, string? newPath, bool forced);
 
         IReadOnlyList<LocalVersionInfo> GetLocalVersions(IReadOnlyList<ItemQuery> items);
+
+        /// <summary>Local and server state of items (`properties`): pending change, lock, local and latest version.</summary>
+        IReadOnlyList<ExtendedItemInfo> GetExtendedItems(IReadOnlyList<ItemQuery> items);
     }
 
     /// <summary>
@@ -84,5 +87,30 @@ namespace TfPortable.Context
         IReadOnlyList<PendingSetInfo> QueryShelvedChanges(string shelvesetName, string? owner, IReadOnlyList<ItemQuery> items);
 
         IReadOnlyList<ChangesetInfo> QueryHistory(HistoryQuery query);
+
+        /// <summary>A changeset with its changes and work items; the library's exception for an unknown number.</summary>
+        ChangesetInfo GetChangeset(int id);
+
+        int GetLatestChangesetId();
+
+        /// <summary>Items at a version; `deletedState` true includes deleted items; folders only when asked.</summary>
+        IReadOnlyList<ItemInfo> GetItems(ItemQuery item, VersionSpec version, bool includeDeleted, bool foldersOnly);
+
+        /// <summary>One item at a version, or null when it does not exist there.</summary>
+        ItemInfo? GetItem(string serverPath, VersionSpec version, int deletionId);
+
+        /// <summary>Content of a file item at a version.</summary>
+        ItemContent Download(string serverPath, VersionSpec version, int deletionId);
+
+        /// <summary>Content of a file in a shelveset (null owner = the authenticated user), with the server item it is based on.</summary>
+        ItemContent? DownloadShelved(string shelvesetName, string? owner, string serverPath);
+
+        /// <summary>Labels matching the filters (null = any); items only when asked.</summary>
+        IReadOnlyList<LabelInfo> QueryLabels(string? name, string? scope, string? owner, bool includeItems);
+
+        /// <summary>Branch hierarchy of an item at a version: the roots of the tree that contains it.</summary>
+        IReadOnlyList<BranchInfo> GetBranchHistory(string serverPath, VersionSpec version);
+
+        IReadOnlyList<MergeCandidateInfo> GetMergeCandidates(string sourcePath, string targetPath, RecursionType recursion);
     }
 }

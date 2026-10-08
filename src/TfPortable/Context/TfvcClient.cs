@@ -100,18 +100,149 @@ namespace TfPortable.Context
         public IReadOnlyList<ChangesetInfo> QueryHistory(HistoryQuery query)
         {
             return VersionControl
-                .QueryHistory(query.Path, query.Version, query.DeletionId, query.Recursion, query.User, query.From, query.To, query.MaxCount, false, query.SlotMode, false, query.Ascending)
+                .QueryHistory(query.Path, query.Version, query.DeletionId, query.Recursion, query.User, query.From, query.To, query.MaxCount, query.IncludeChanges, query.SlotMode, false, query.Ascending)
                 .Cast<Changeset>()
-                .Select(ToChangeset)
+                .Select(cs => ToChangeset(cs, query.IncludeChanges))
                 .ToList();
+        }
+
+        public ChangesetInfo GetChangeset(int id) => ToChangeset(VersionControl.GetChangeset(id, true, false, true), true);
+
+        public int GetLatestChangesetId() => VersionControl.GetLatestChangesetId();
+
+        public IReadOnlyList<ItemInfo> GetItems(ItemQuery item, VersionSpec version, bool includeDeleted, bool foldersOnly)
+        {
+            var set = VersionControl.GetItems(ToItemSpec(item), version, includeDeleted ? DeletedState.Any : DeletedState.NonDeleted, foldersOnly ? ItemType.Folder : ItemType.Any, GetItemsOptions.None);
+            return set.Items.Select(ToItem).ToList();
+        }
+
+        public ItemInfo? GetItem(string serverPath, VersionSpec version, int deletionId)
+        {
+            var item = VersionControl.GetItem(serverPath, version, deletionId, GetItemsOptions.None);
+            return item == null ? null : ToItem(item);
+        }
+
+        public ItemContent Download(string serverPath, VersionSpec version, int deletionId)
+        {
+            var item = VersionControl.GetItem(serverPath, version, deletionId, GetItemsOptions.Download);
+            if (item == null)
+            {
+                throw new ItemNotFoundException($"TF14019: The item {serverPath} does not exist at the specified version.");
+            }
+
+            if (item.ItemType == ItemType.Folder)
+            {
+                return new ItemContent(ToItem(item), Array.Empty<byte>());
+            }
+
+            using var stream = item.DownloadFile();
+            using var buffer = new MemoryStream();
+            stream.CopyTo(buffer);
+            return new ItemContent(ToItem(item), buffer.ToArray());
+        }
+
+        public ItemContent? DownloadShelved(string shelvesetName, string? owner, string serverPath)
+        {
+            var vcs = VersionControl;
+            var sets = vcs.QueryShelvedChanges(shelvesetName, string.IsNullOrEmpty(owner) ? vcs.AuthorizedUser : owner, new[] { new ItemSpec(serverPath, RecursionType.None) }, true);
+            var change = sets.SelectMany(s => s.PendingChanges).FirstOrDefault(c => string.Equals(c.ServerItem, serverPath, StringComparison.OrdinalIgnoreCase));
+            if (change == null)
+            {
+                return null;
+            }
+
+            string temp = Path.Combine(Path.GetTempPath(), "TfPortable", "shelved-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(Path.GetDirectoryName(temp)!);
+            try
+            {
+                change.DownloadShelvedFile(temp);
+                var info = new ItemInfo(change.ServerItem, change.ItemType == ItemType.Folder, change.Version, change.DeletionId, EncodingName(change.Encoding), new FileInfo(temp).Length, change.CreationDate, change.ItemId);
+                return new ItemContent(info, File.ReadAllBytes(temp));
+            }
+            finally
+            {
+                try
+                {
+                    File.Delete(temp);
+                }
+                catch (Exception)
+                {
+                    // Temp file; leave it.
+                }
+            }
+        }
+
+        public IReadOnlyList<LabelInfo> QueryLabels(string? name, string? scope, string? owner, bool includeItems)
+        {
+            return VersionControl.QueryLabels(name, scope, owner, includeItems).Select(l => new LabelInfo(
+                l.Name, l.Scope, l.OwnerDisplayName ?? l.OwnerName, l.OwnerName, l.LastModifiedDate, string.IsNullOrEmpty(l.Comment) ? null : l.Comment,
+                includeItems ? (l.Items ?? Array.Empty<Item>()).Select(i => new LabelItemInfo(i.ServerItem, i.ChangesetId, i.DeletionId)).ToList() : null)).ToList();
+        }
+
+        public IReadOnlyList<BranchInfo> GetBranchHistory(string serverPath, VersionSpec version)
+        {
+            var trees = VersionControl.GetBranchHistory(new[] { new ItemSpec(serverPath, RecursionType.None) }, version);
+            var roots = new List<BranchInfo>();
+            foreach (var set in trees)
+            {
+                foreach (var root in set)
+                {
+                    roots.Add(ToBranch(root, null));
+                }
+            }
+
+            return roots;
+        }
+
+        private static BranchInfo ToBranch(BranchHistoryTreeItem node, string? parent)
+        {
+            string path = node.Relative?.BranchToItem?.ServerItem ?? string.Empty;
+            int from = node.Relative?.BranchFromItem?.ChangesetId ?? 0;
+            var children = new List<BranchInfo>();
+            foreach (BranchHistoryTreeItem child in node.Children)
+            {
+                children.Add(ToBranch(child, path));
+            }
+
+            return new BranchInfo(path, parent, from, node.Relative?.IsRequestedItem ?? false, children);
+        }
+
+        public IReadOnlyList<MergeCandidateInfo> GetMergeCandidates(string sourcePath, string targetPath, RecursionType recursion)
+        {
+            return VersionControl.GetMergeCandidates(sourcePath, targetPath, recursion).Select(c => new MergeCandidateInfo(ToChangeset(c.Changeset, false), c.Partial)).ToList();
         }
 
         public void Dispose() => connection.Dispose();
 
         internal static ItemSpec ToItemSpec(ItemQuery i) => new ItemSpec(i.Path, i.Recursion, i.DeletionId);
 
-        internal static ChangesetInfo ToChangeset(Changeset cs) =>
-            new ChangesetInfo(cs.ChangesetId, cs.OwnerDisplayName ?? cs.Owner, cs.Owner, cs.CreationDate, cs.Comment);
+        internal static ChangesetInfo ToChangeset(Changeset cs) => ToChangeset(cs, false);
+
+        internal static ChangesetInfo ToChangeset(Changeset cs, bool includeChanges)
+        {
+            IReadOnlyList<ChangeInfo>? changes = null;
+            IReadOnlyList<WorkItemInfo>? workItems = null;
+            if (includeChanges)
+            {
+                changes = (cs.Changes ?? Array.Empty<Change>()).Select(c => new ChangeInfo(ChangeText(c.ChangeType), c.Item.ServerItem, c.Item.ChangesetId, c.Item.DeletionId,
+                    (c.ChangeType & (ChangeType.Rename | ChangeType.Branch | ChangeType.Merge)) != 0 ? c.MergeSources?.FirstOrDefault()?.ServerItem : null,
+                    c.Item.ItemType == ItemType.Folder, c.Item.ItemId, c.Item.ItemType == ItemType.Folder ? null : EncodingName(c.Item.Encoding))).ToList();
+                try
+                {
+                    workItems = (cs.AssociatedWorkItems ?? Array.Empty<AssociatedWorkItemInfo>()).Select(w => new WorkItemInfo(w.Id, w.Title)).ToList();
+                }
+                catch (Exception)
+                {
+                    workItems = Array.Empty<WorkItemInfo>();
+                }
+            }
+
+            return new ChangesetInfo(cs.ChangesetId, cs.OwnerDisplayName ?? cs.Owner, cs.Owner, cs.CreationDate, cs.Comment, changes, workItems);
+        }
+
+        internal static ItemInfo ToItem(Item item) =>
+            new ItemInfo(item.ServerItem, item.ItemType == ItemType.Folder, item.ChangesetId, item.DeletionId,
+                item.ItemType == ItemType.Folder ? null : EncodingName(item.Encoding), item.ItemType == ItemType.Folder ? null : (long?)item.ContentLength, item.CheckinDate, item.ItemId);
 
         internal static PendingSetInfo ToPendingSet(PendingSet set) =>
             new PendingSetInfo(set.Name, set.OwnerDisplayName ?? set.OwnerName, set.OwnerName, set.Computer, set.Type == PendingSetType.Shelveset,
@@ -458,6 +589,23 @@ namespace TfPortable.Context
                     {
                         string? server = workspace.TryGetServerItemForLocalItem(v.Item);
                         result.Add(new LocalVersionInfo(v.Item, server, v.Version, Directory.Exists(v.Item)));
+                    }
+                }
+
+                return result;
+            }
+
+            public IReadOnlyList<ExtendedItemInfo> GetExtendedItems(IReadOnlyList<ItemQuery> items)
+            {
+                var result = new List<ExtendedItemInfo>();
+                foreach (var set in workspace.GetExtendedItems(items.Select(ToItemSpec).ToArray(), DeletedState.NonDeleted, ItemType.Any))
+                {
+                    foreach (var e in set)
+                    {
+                        result.Add(new ExtendedItemInfo(e.TargetServerItem ?? e.SourceServerItem, e.LocalItem, e.ItemType == ItemType.Folder, e.VersionLocal, e.VersionLatest,
+                            e.ChangeType == ChangeType.None ? "none" : ChangeText(e.ChangeType), LockText(e.LockStatus),
+                            string.IsNullOrEmpty(e.LockOwnerDisplayName) ? (string.IsNullOrEmpty(e.LockOwner) ? null : e.LockOwner) : e.LockOwnerDisplayName,
+                            e.DeletionId, e.ItemType == ItemType.Folder ? null : EncodingName(e.Encoding), e.CheckinDate, e.IsInWorkspace, e.HasOtherPendingChange));
                     }
                 }
 
