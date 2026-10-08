@@ -13,18 +13,15 @@ Read this first in every session. Update it at the end of every session (see CLA
 | 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | done: [PR #3](https://github.com/Gh61/TfPortable/pull/3) merged into `main` on 2026-10-08 (merge commit ff64062) after an independent review (findings under Decisions) | – |
 | 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | done: [PR #4](https://github.com/Gh61/TfPortable/pull/4) (docs/CLAUDE.md, compatibility tests, embedded-assembly check, THIRD-PARTY-NOTICES) reviewed, CI green and merged into `main` on 2026-10-08; release [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) published the same day (developer approved; `tfp.exe` + SHA-256 from the CI run on 2a1c007) | user approved the release on 2026-10-08 |
 | – | Phase 2 commands | – | not planned | separate brief |
-| P3 | Phase 3: protection levels, `checkin`, `shelve`/`shelvesets`/`unshelve`, `label`/`unlabel`, `lock` | cloud + CI | in progress: [PR #9](https://github.com/Gh61/TfPortable/pull/9) (branch `p3-protection`, draft), code, unit tests, CI integration tests, docs and the capture script written on 2026-10-08; CI loop and the independent review pending | release `v0.2.0` (developer) |
+| P3 | Phase 3: protection levels, `checkin`, `shelve`/`shelvesets`/`unshelve`, `label`/`unlabel`, `lock` | cloud + CI | done: [PR #9](https://github.com/Gh61/TfPortable/pull/9) merged into `main` on 2026-10-08 (merge commit 3c92ea2) after an independent review (findings under Decisions); 187 unit and 82 integration tests green | release `v0.2.0` (developer) |
 
 Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
-1. Phase 3 on branch `p3-protection` ([PR #9](https://github.com/Gh61/TfPortable/pull/9)): drive CI
-   to green (`Phase3Tests` runs the write path against the test collection: a checkin into
-   `$/TfsPortableTestRepo/CI/<run>-checkin` with the work item 1 link, a shelve round trip, a label,
-   a lock), then the independent review (CLAUDE.md "Pull requests"), fix the findings, record them
-   under "Decisions", mark the PR ready and merge it with a merge commit.
-2. After the merge: ask the developer to run `tools/capture-tf-golden-phase3.ps1` (the cases without
+1. Phase 3 is merged ([PR #9](https://github.com/Gh61/TfPortable/pull/9)). Release `v0.2.0` is the
+   developer's gate (step 3).
+2. Ask the developer to run `tools/capture-tf-golden-phase3.ps1` (the cases without
    a golden file: `checkin /validate`, `/associate`, a comment file, an unchanged edit, `shelve /replace`,
    `/move`, an existing name, `unshelve` with a local file in the way, `/nomerge`, `label` without a
    scope, `/child:*`, `label /delete`, `lock` edge cases) and compare tfp against the captures
@@ -207,9 +204,13 @@ Open:
   help catalog had no section for implemented phase 3 commands, the no-argument run hit the protection gate
   with a null spec, the error catalog test and a `/delete` argument test lacked the new codes and the gate):
   fixed in 9a072bd.
-- Next: CI green, independent review, merge, then "Next steps" 2 and 3.
-- Blockers: none from the developer; the usage limit of the session may pause the work (the developer asked
-  to stop at about 90 % and continue after the reset).
+- CI loop: the twin runs of one commit interfered through the shared test collection (lock, `get`), so CI
+  runs are serialized and `push` is limited to `main`; the lock test uses a file of its own run. Independent
+  review: 0 blocking, 8 should-fix, 4 nits, all fixed (Decisions). PR #9 merged (3c92ea2) with 187 unit and
+  82 integration tests green.
+- Next: the developer releases `v0.2.0` (Actions → CI → Run workflow with `release_tag`) and, when tf.exe is
+  at hand, runs `tools/capture-tf-golden-phase3.ps1`; then compare tfp against the new captures.
+- Blockers: none.
 
 ### 2026-10-08 – cloud session 1 continued, milestones 3–5 to the merge
 
