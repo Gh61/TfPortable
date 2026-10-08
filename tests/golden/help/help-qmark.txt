@@ -1,0 +1,17 @@
+# case: help/help-qmark
+# command: tf help /?
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 492
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Pro zobrazení seznamu příkazů Version Control zadejte tf vc help.
+Pro seznam podporovaných příkazů Git zadejte tf git help.
+Pro seznam podporovaných příkazů nastavení serveru zadejte tf settings help.
+
+==== stderr ====

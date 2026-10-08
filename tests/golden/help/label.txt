@@ -1,0 +1,33 @@
+# case: help/label
+# command: tf vc help label
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 497
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Připojí nebo odstraní popisek verze souboru nebo složky správy verzí Team
+Foundation.
+
+tf vc label labelname[@scope] [/owner:ownername] itemspec
+         [/version:versionspec] [/comment:("komentář"|@commentfile)]
+         [/child:(replace|merge)] [/recursive] [/login:username,[password]]
+         [/collection:TeamProjectCollectionUrl]
+
+tf vc label /delete labelname[@scope] itemspec 
+         [/login:username,[password]]
+         [/collection:TeamProjectCollectionUrl]
+
+Versionspec:
+    Date/Time         D"libovolný formát podporovaný rozhraním .NET Framework"
+                      nebo libovolný formát data používaný místním počítačem
+    Číslo sady změn  Cnnnnnn
+    Popisek             Llabelname
+    Poslední verze    T
+    Pracovní prostor         Wworkspacename;workspaceowner
+
+==== stderr ====

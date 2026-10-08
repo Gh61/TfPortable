@@ -1,0 +1,23 @@
+# case: help/permission
+# command: tf vc help permission
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 502
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Upraví seznam řízení přístupu (ACL) uživatele a zobrazí nastavení autorizace
+položky ve správě verzí.
+
+tf vc permission [/allow:(* |perm1[,perm2,...]] [/deny:(* |perm1[,perm2,...])]
+              [/remove:(* |perm1[,perm2,...])] [/inherit:yes|no]
+              [/user:username1[,username2,...]]
+              [/group:groupname1[,groupname2,...]]
+              [/collection:TeamProjectCollectionUrl]
+              [/recursive] itemspec [/global] [/login:username,[password]]
+
+==== stderr ====

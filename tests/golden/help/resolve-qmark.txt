@@ -1,0 +1,23 @@
+# case: help/resolve-qmark
+# command: tf resolve /?
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 507
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Řeší konflikty mezí položkami změněnými v místním pracovním prostoru
+a nejnovějšími nebo cílovými verzemi položek na serveru.
+
+tf vc resolve [itemspec] [/auto:(AutoMerge|AutoMergeForced|TakeTheirs|KeepYours|
+              OverwriteLocal|DeleteConflict|KeepYoursRenameTheirs)]
+              [/preview] [/recursive] [/newname:path] [/noprompt]
+              [(/overridetype:overridetype | /converttotype:converttype)]
+              [/properties:(@valuefile|name1=value1[;name2=value2;name3=@valuefile;...]
+              [/login:username,[password]]
+
+==== stderr ====

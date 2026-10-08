@@ -1,0 +1,22 @@
+# case: help/status
+# command: tf vc help status
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 592
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Zobrazí informace o probíhajících změnách položek jednoho nebo více pracovních prostorů.
+
+tf vc status [itemspec] [/collection:url_kolekce_tymovych_projektu]
+          [/login:uzivatelske_jmeno,[heslo]]
+          ([/workspace:nazev_pracovniho_prostoru[;vlastnik_pracovniho_prostoru]]
+          | [/shelveset:nazev_sady_odlozenych_zmen[;vlastnik_sady_odlozenych_zmen]])
+          [/format:(brief|detailed|xml)] [/recursive] [/user:(*|uzivatelske_jmeno)]
+          [/nodetect]
+
+==== stderr ====

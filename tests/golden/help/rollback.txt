@@ -1,0 +1,32 @@
+# case: help/rollback
+# command: tf vc help rollback
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 521
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Vrací změny jedné nebo více sad změn:
+tf vc rollback /changeset:changesetfrom~changesetto [itemspec] [/recursive]
+               [/lock:none|checkin|checkout] [/version:versionspec]
+               [/keepmergehistory] [/noautoresolve] [/noprompt] 
+               [/login:username,[password]]
+
+tf vc rollback /toversion:versionspec itemspec [/recursive]
+               [/lock:none|checkin|checkout] [/version:versionspec]
+               [/keepmergehistory] [/noautoresolve] [/noprompt] 
+               [/login:username,[password]]
+
+Versionspec:
+    Date/Time         D"libovolný formát podporovaný rozhraním .NET Framework"
+                      nebo libovolný formát data používaný místním počítačem
+    Číslo sady změn  Cnnnnnn
+    Popisek             Llabelname
+    Poslední verze    T
+    Pracovní prostor         Wworkspacename;workspaceowner
+
+==== stderr ====

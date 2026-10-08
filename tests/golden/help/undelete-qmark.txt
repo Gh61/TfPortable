@@ -1,0 +1,18 @@
+# case: help/undelete-qmark
+# command: tf undelete /?
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 501
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Obnoví dříve odstraněné položky.
+
+tf vc undelete [/noget] [/lock:(none|checkin|checkout)]
+            [/recursive] itemspec[;deletionID] [/login:username,[password]]
+
+==== stderr ====

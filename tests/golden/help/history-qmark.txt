@@ -1,0 +1,29 @@
+# case: help/history-qmark
+# command: tf history /?
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 511
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Zobrazí historii revizí jednoho nebo víc souborů nebo složek.
+
+tf vc history itemspec [/version:versionspec]
+           [/stopafter:number] [/recursive] [/user:username]
+           [/format:(brief|detailed)] [/slotmode] [/itemmode] [/noprompt]
+           [/login:username,[password]] [/sort:ascending,descending]
+           [/collection:TeamProjectCollectionUrl]
+
+Versionspec:
+    Date/Time         D"libovolný formát podporovaný rozhraním .NET Framework"
+                      nebo libovolný formát data používaný místním počítačem
+    Číslo sady změn  Cnnnnnn
+    Popisek             Llabelname
+    Poslední verze    T
+    Pracovní prostor         Wworkspacename;workspaceowner
+
+==== stderr ====

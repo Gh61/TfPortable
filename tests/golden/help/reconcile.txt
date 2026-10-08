@@ -1,0 +1,23 @@
+# case: help/reconcile
+# command: tf vc help reconcile
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 498
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Porovná aktuální stav pracovního prostoru na disku se zobrazením na serveru
+za účelem vyčištění pracovního prostoru nebo povýšení místních změn, které přešly z čekajícího stavu.
+
+tf vc reconcile /clean [/diff] [/noprompt] [/preview] [/recursive] [/ignore]
+                [/unmapped] [/exclude:itemspec1,itemspec2,...] [itemspec]
+
+tf vc reconcile /promote [/adds] [/deletes] [/diff] [/noprompt] [/preview]
+                [/recursive] [/noignore] [/exclude:itemspec1,itemspec2,...]
+                [itemspec]
+
+==== stderr ====

@@ -19,7 +19,7 @@ Statuses: not started, in progress, blocked, done.
 ## Next steps
 
 1. Cloud: follow `docs/KICKOFF-CLOUD.md`, milestone 2 (branch `m2-core`, pull request, CI loop).
-2. Before that the developer: push `main`, set the secrets, re-run the help capture (see "Needs the user").
+2. Before that the developer: push `main`, set the secrets (see "Needs the user").
 2. When the developer has run `tools/capture-tf-help.ps1`: review `tests/golden/help/` for personal
    data, derive the per-command switch and alias lists, put them into SPEC.md (or a new
    `docs/commands.md`) and `docs/json-schema.md` (`help` data). Commit.
@@ -29,10 +29,6 @@ Statuses: not started, in progress, blocked, done.
 
 - Push `main` to GitHub so that the CI workflow runs for the first time (nothing has been pushed
   from the local sessions; the agent does not push on its own). Check the first run.
-- Re-run `.\tools\capture-tf-help.ps1` from the repository root (the first capture went to another
-  folder and had a file-name collision between `tf /?` and `tf help /?`; the script now names the
-  first case `root-qmark`), check `git status`, commit `tests/golden/help/` and `index-help.json`.
-  The integrity test `GoldenIndexTests` must pass afterwards.
 - Before milestone 2 (cloud): GitHub Secrets `TFP_TEST_COLLECTION` and `TFP_TEST_PAT`. The PAT must
   have **Full access** (TFVC SOAP API) and should belong to a dedicated user with access only to the
   test project, or to a separate test organization.
@@ -169,8 +165,10 @@ Open:
   `docs/commands.md` (SPEC.md corrected: `/encoding`, `/noautoresolve`, resolve names, `/format:xml`,
   `view /console`); step 5 done: `docs/KICKOFF-CLOUD.md` written, "Needs the user" lists the cloud
   prerequisites. Local phase complete.
-- Next: developer pushes, sets secrets, re-runs the help capture; cloud agent starts milestone 2.
-- Blockers: none for the handover; help capture data not yet committed (re-run pending).
+- Help capture re-run from the repository root with the developer's consent (no sign-in needed):
+  88 cases, committed; integrity test passes.
+- Next: developer pushes `main` and sets the secrets; cloud agent starts milestone 2.
+- Blockers: none.
 
 ### 2026-10-07 – specification and golden files (claude.ai conversation)
 

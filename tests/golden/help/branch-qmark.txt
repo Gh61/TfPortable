@@ -1,0 +1,32 @@
+# case: help/branch-qmark
+# command: tf branch /?
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 504
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Kopíruje položku nebo sadu položek, včetně metadat a historie 
+správy verzí, 
+z jednoho umístění v Team Foundation a v pracovním prostoru do jiného.
+
+tf vc branch olditem newitem [/version:versionspec] [/noget]
+          [/lock:(none|checkin|checkout)] [/noprompt]
+          [/silent] [/checkin] [/comment:("komentář"|@commentfile)]
+          [/author:author name]
+          [/login:username,[password]]
+          [/notes:("Název poznámky"="text poznámky"|@notefile)]
+
+Versionspec:
+    Date/Time         D"libovolný formát podporovaný rozhraním .NET Framework"
+                      nebo libovolný formát data používaný místním počítačem
+    Číslo sady změn  Cnnnnnn
+    Popisek             Llabelname
+    Poslední verze    T
+    Pracovní prostor         Wworkspacename;workspaceowner
+
+==== stderr ====

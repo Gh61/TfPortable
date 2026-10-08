@@ -75,10 +75,11 @@ Cases are listed in capture order. In the extra runs the order matters: later ca
 the server state left by earlier ones (for example `status/pending-undelete` follows
 `undelete/file`).
 
-`index-help.json` has the same shape without `manifest`/`extra`; its cases have `group: "help"`,
-`cwd` is `%TEMP%`, and `help/help-qmark.txt` holds the `tf help /?` capture (the file name of the
-`tf /?` case collided with it and was overwritten; both print the same banner). The help files are
-reference material for `docs/commands.md`, not replayed by golden tests.
+`index-help.json` has the same shape without `manifest`/`extra`; its cases have `group: "help"`
+and `cwd` is `%TEMP%` (`help/vc-help.txt` is `tf vc help`, `help/root-qmark.txt` is `tf /?`,
+`help/<command>.txt` is `tf vc help <command>`, `help/<command>-qmark.txt` is `tf <command> /?`).
+The help files are reference material for `docs/commands.md`, not replayed by golden tests;
+`GoldenIndexTests` checks their integrity like the other index files.
 
 ## 4. Manifests
 

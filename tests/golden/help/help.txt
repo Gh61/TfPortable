@@ -1,0 +1,155 @@
+# case: help/help
+# command: tf vc help help
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 500
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Příkaz tf vc help <název příkazu> zobrazí popis příkazového řádku.
+Příkaz tf msdn <název příkazu> zobrazí úplnou dokumentaci v Průzkumníkovi
+dokumentů Microsoft.
+
+Příkazy:
+tf vc add            Přidá nové soubory a složky z umístění místního systému
+                     souborů do správy verzí Team Foundation.
+
+tf vc branch         Kopíruje položku nebo sadu položek, včetně metadat
+                     a historie správy verzí z jednoho umístění do jiného
+                     na serveru správy verzí Team Foundation i
+                     v pracovním prostoru.
+
+tf vc branches       Zobrazí historii větve zadaného souboru
+                     nebo složky.
+
+tf vc changeset      Zobrazí informace o sadě změn a umožňuje
+                     změnit přidružené atributy, třeba komentáře
+                     nebo poznámky k operaci vrácení se změnami.
+
+tf vc checkin        Potvrzuje čekající změny v aktuálním pracovním prostoru
+                     do správy verzí Team Foundation.
+
+tf vc checkout       Umožní zápis do místního souboru a změní stav čekající změny
+                     v pracovním prostoru na hodnotu Upravit. Příkaz Upravit je
+                     alias příkazu Rezervovat.
+
+tf vc certificates   Konfiguruje použití certifikátů při ověřování klienta při připojení
+                     k Azure DevOps prostřednictvím zabezpečeného připojení.
+
+tf vc configure      Umožňuje správci zobrazit a změnit následující
+                     konfigurační nastavení týmového projektu v dialogovém
+                     okně Nastavení správy zdrojového kódu:
+                     – Nastavení rezervace
+                     – Zásady operace vrácení se změnami
+                     – Poznámky k operaci vrácení se změnami
+
+tf vc delete         Odstraní soubory a složky ze správy verzí Team Foundation
+                     i z disku počítače.
+
+tf vc destroy        Zničí nebo trvale odstraní spravované soubory ze správy
+                     verzí Team Foundation.
+
+tf vc diff           Porovnává, a pokud je to možné taky zobrazuje, rozdíly mezi
+                     dvěma soubory, soubory ve dvou složkách nebo sadou odložených
+                     změn a místním souborem nebo souborem na serveru.
+
+tf vc dir            Zobrazuje celý obsah správy verzí Team Foundation
+                     nebo jeho část.
+
+tf vc folderdiff     Zobrazuje vizuální znázornění rozdílů mezi soubory
+                     ve dvou složkách serveru, ve složce serveru a místní složce
+                     nebo ve dvou místních složkách.
+
+tf vc get            Načte do místního pracovního prostoru kopii souboru
+                     ze serveru Azure DevOps určenou jenom ke čtení a vytvoří
+                     pro ni složky na pevném disku.
+
+tf vc history        Zobrazí historii revizí jednoho nebo víc souborů
+                     a složek.
+
+tf vc info           Zobrazí informace o položkách správy verzí.
+
+tf vc label          Připojí nebo odstraní popisek verze souboru
+                     nebo složky ve správě verzí Team Foundation.
+
+tf vc labels         Zobrazí seznam popisků ve správě verzí Team
+                     Foundation.
+
+tf vc localversions  Zobrazí verzi jedné nebo víc položek v pracovním prostoru.
+
+tf vc lock           Zamyká nebo odemyká soubory nebo složky a zajistí tak odepření
+                     nebo obnovení oprávnění uživatelů umožňujících rezervovat položku
+                     pro úpravy v jiném pracovním prostoru nebo vrátit čekající změny
+                     položky z jiného pracovního prostoru.
+
+tf vc merge          Použije změny jedné větve v jiné větvi.
+
+tf vc merges         Zobrazí podrobné informace o minulých sloučeních mezi
+                     zadanými zdrojovými a cílovými větvemi.
+
+tf vc msdn           Spustí Průzkumníka dokumentů Microsoft a zobrazí stránku
+                     dokumentace daného příkazu.
+
+tf vc permission     Upraví seznam řízení přístupu (ACL) uživatelů a zobrazí
+                     autorizační nastavení položky ve správě verzí.
+
+tf vc property       Zobrazí změny vlastností přidružených k položkám ve správě verzí
+                     a zařadí je mezi čekající.
+
+tf vc reconcile      Porovná aktuální stav pracovního prostoru na disku
+                     se zobrazením na serveru kvůli vyčištění pracovního prostoru
+                     nebo rozšíření místních změn, které už nečekají.
+
+tf vc rename         Změní název nebo cestu souboru nebo složky. Pro přesun
+                     souboru nebo složky do nového umístění můžete použít příkaz
+                     rename nebo jeho alias move.
+
+tf vc resolve        Řeší konflikty mezi položkami změněnými v místním pracovním
+                     prostoru a nejnovějšími nebo cílovými verzemi položek
+                     na serveru.
+
+tf vc resolvePath    Přeloží cestu na serveru na místní cestu ve vašem pracovním prostoru.
+
+tf vc rollback       Vrací změny jedné nebo víc sad
+                     změn.
+
+tf vc shelve         Ukládá sadu čekajících změn spolu s poznámkami čekajících
+                     operací vrácení se změnami, komentářem a seznamem souvisejících
+                     pracovních položek na Azure DevOps Server, aniž by se skutečně
+                     vrátily na server správy verzí.
+
+tf vc shelvesets     Zobrazí informace o sadě odložených změn.
+
+tf vc status         Zobrazí informace o čekajících změnách položek jednoho
+                     nebo víc pracovních prostorů.
+
+tf vc undelete       Obnoví dřív odstraněné položky.
+
+tf vc undo           Odebere čekající změny z pracovního prostoru.
+
+tf vc unlabel        Odebere položku ze stávajícího popisku ve správě verzí
+                     Team Foundation.
+
+tf vc unshelve       Obnoví odložené revize souborů, poznámky k operaci vrácení se změnami,
+                     komentáře a přiřazení pracovních položek do aktuálního pracovního prostoru
+                     nebo odebere existující sady odložených změn ze serveru.
+
+tf vc view           Načte určitou verzi souboru do dočasné složky
+                     místního počítače a zobrazí ji.
+
+tf vc workfold       Vytvoří, upraví nebo zobrazí informace o mapováních
+                     mezi složkami pracovního prostoru a složkami správy verzí
+                     Team Foundation.
+
+tf vc workspace      Vytvoří, odstraní, zobrazí nebo upraví vlastnosti a mapování
+                     přiřazené k pracovnímu prostoru.
+
+tf vc workspaces     Zobrazí informace o pracovních prostorech v systému a aktualizuje
+                     informace o změnách uživatelských jmen nebo názvů počítačů v mezipaměti
+                     Azure DevOps Serveru.
+
+==== stderr ====

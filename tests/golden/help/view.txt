@@ -1,0 +1,29 @@
+# case: help/view
+# command: tf vc help view
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 509
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Načte určitou verzi souboru do dočasné složky místního počítače
+a zobrazí ji.
+
+tf vc view [/collection:TeamProjectCollectionUrl]
+        [/console] [/recursive] [/output:localfile]
+        [/shelveset:shelvesetname[;owner]] [/noprompt] itemspec
+        [/version:versionspec] [/login:username,[password]]
+
+Versionspec:
+    Date/Time         D"libovolný formát podporovaný rozhraním .NET Framework"
+                      nebo libovolný formát data používaný místním počítačem
+    Číslo sady změn  Cnnnnnn
+    Popisek             Llabelname
+    Poslední verze    T
+    Pracovní prostor         Wworkspacename;workspaceowner
+
+==== stderr ====

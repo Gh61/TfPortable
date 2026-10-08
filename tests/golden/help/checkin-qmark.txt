@@ -1,0 +1,26 @@
+# case: help/checkin-qmark
+# command: tf checkin /?
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 497
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Potvrzuje čekající změny v aktuálním pracovním prostoru nebo ze stávající
+sady odložených změn na správu verzí Team Foundation.
+
+tf vc checkin [/author:author name] [/comment:("komentář"|@commentfile)]
+           [/noprompt] [/notes:("název poznámky"="text poznámky"|@notefile)]
+           [/override:(reason|@reasonfile)] [/recursive] [/saved] [/validate]
+           [itemspec] [/bypass] [/force] [/noautoresolve]  
+           [/login:username,[password]] [/new]
+         
+tf vc checkin /shelveset:shelvesetname[;shelvesetowner] [/bypass] [/noprompt]
+           [/login:username,[password]] [/collection:TeamProjectCollectionUrl]
+           [/author:author name] [/force]
+
+==== stderr ====

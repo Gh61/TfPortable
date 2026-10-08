@@ -1,0 +1,29 @@
+# case: help/shelve
+# command: tf vc help shelve
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 523
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Uloží sadu probíhajících změn spolu s poznámkami čekajícími na vrácení
+se změnami, komentářem a seznamem přiřazených pracovních položek na Azure
+DevOps Server, aniž by se vracely do správy verzí.
+
+tf vc shelve [/replace] [/comment:("komentář"|@commentfile)]
+             [shelvesetname] [/validate] [/noprompt]
+             [/login:uzivatelske_jmeno,[heslo]] [/new]
+
+tf vc shelve [/move] [/replace] [/comment:("komentář"|@commentfile)] [/recursive]
+             [shelvesetname] itemspec [/validate] [/noprompt]
+             [/login:uzivatelske_jmeno,[heslo]] [/new]
+
+tf vc shelve /delete shelvesetname[;vlastnik]
+             [/login:uzivatelske_jmeno,[heslo]]
+             [/collection:url_kolekce_tymovych_projektu]
+
+==== stderr ====

@@ -1,0 +1,20 @@
+# case: help/unshelve-qmark
+# command: tf unshelve /?
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 495
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Obnoví odložené revize souborů, poznámky k operaci vrácení se změnami,
+komentáře a přiřazení pracovních položek do aktuálního pracovního prostoru nebo
+stávající sady odložených změn na serveru.
+
+tf vc unshelve [/move] [shelvesetname[;username]] [itemspec] [/recursive]
+            [/nomerge] [/noautoresolve] [/noprompt] [/login:username,[password]]
+
+==== stderr ====

@@ -1,0 +1,19 @@
+# case: help/unlabel
+# command: tf vc help unlabel
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 495
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Odstraní položku ze stávajícího popisku ve správě verzí Team Foundation.
+
+tf vc unlabel [/collection:TeamProjectCollectionUrl]
+              [/recursive] [/login:username,[password]]
+              labelname itemspec
+
+==== stderr ====

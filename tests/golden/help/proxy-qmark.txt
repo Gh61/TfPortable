@@ -1,0 +1,34 @@
+# case: help/proxy-qmark
+# command: tf proxy /?
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 498
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Konfiguruje nastavení proxy serveru automaticky nebo ručně. Příkaz proxy
+můžete také využít pro přidání, smazání nebo vypsání záznamů proxy serveru.
+
+Pokud chcete automaticky rozpoznat a nastavit proxy server, spusťte
+příkaz "proxy" s možností "configure" bez hodnoty "url".
+
+tf settings proxy ([/configure [url]) [/collection:TeamProjectCollectionUrl]
+                  [/login:username,[password]]
+
+tf settings proxy /add url [/name:name] [/site:sitename]
+                  [/description:description] [/default:(global|site|all)]
+                  [/collection:TeamProjectCollectionUrl] [/login:username,[password]]
+
+tf settings proxy /delete url [/collection:TeamProjectCollectionUrl]
+                  [/login:username,[password]]
+
+tf settings proxy /list [url1 url2 ...]
+                  [/collection:TeamProjectCollectionUrl] [/login:username,[password]]
+
+tf settings proxy /enabled:(true|false)
+
+==== stderr ====

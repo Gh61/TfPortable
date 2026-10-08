@@ -1,0 +1,712 @@
+{
+    "capturedAt":  "2026-10-08T10:57:29.8204429+02:00",
+    "tfVersion":  "18.10.12215.6 built by: releases/dev18/18.10 (760940044d)",
+    "consoleEncoding":  "windows-1250",
+    "culture":  "cs-CZ",
+    "cases":  [
+                  {
+                      "group":  "help",
+                      "name":  "vc-help",
+                      "command":  "tf vc help",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/vc-help.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "root-qmark",
+                      "command":  "tf /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/root-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "status",
+                      "command":  "tf vc help status",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/status.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "status-qmark",
+                      "command":  "tf status /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/status-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "add",
+                      "command":  "tf vc help add",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/add.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "add-qmark",
+                      "command":  "tf add /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/add-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "checkout",
+                      "command":  "tf vc help checkout",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/checkout.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "checkout-qmark",
+                      "command":  "tf checkout /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/checkout-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "edit",
+                      "command":  "tf vc help edit",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/edit.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "edit-qmark",
+                      "command":  "tf edit /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/edit-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "delete",
+                      "command":  "tf vc help delete",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/delete.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "delete-qmark",
+                      "command":  "tf delete /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/delete-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "rename",
+                      "command":  "tf vc help rename",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/rename.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "rename-qmark",
+                      "command":  "tf rename /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/rename-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "undo",
+                      "command":  "tf vc help undo",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/undo.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "undo-qmark",
+                      "command":  "tf undo /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/undo-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "get",
+                      "command":  "tf vc help get",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/get.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "get-qmark",
+                      "command":  "tf get /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/get-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "resolve",
+                      "command":  "tf vc help resolve",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/resolve.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "resolve-qmark",
+                      "command":  "tf resolve /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/resolve-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "reconcile",
+                      "command":  "tf vc help reconcile",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/reconcile.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "reconcile-qmark",
+                      "command":  "tf reconcile /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/reconcile-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "localversions",
+                      "command":  "tf vc help localversions",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/localversions.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "localversions-qmark",
+                      "command":  "tf localversions /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/localversions-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "workfold",
+                      "command":  "tf vc help workfold",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/workfold.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "workfold-qmark",
+                      "command":  "tf workfold /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/workfold-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "workspaces",
+                      "command":  "tf vc help workspaces",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/workspaces.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "workspaces-qmark",
+                      "command":  "tf workspaces /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/workspaces-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "history",
+                      "command":  "tf vc help history",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/history.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "history-qmark",
+                      "command":  "tf history /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/history-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "changeset",
+                      "command":  "tf vc help changeset",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/changeset.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "changeset-qmark",
+                      "command":  "tf changeset /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/changeset-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "view",
+                      "command":  "tf vc help view",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/view.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "view-qmark",
+                      "command":  "tf view /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/view-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "difference",
+                      "command":  "tf vc help difference",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/difference.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "difference-qmark",
+                      "command":  "tf difference /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/difference-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "diff",
+                      "command":  "tf vc help diff",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/diff.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "diff-qmark",
+                      "command":  "tf diff /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/diff-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "dir",
+                      "command":  "tf vc help dir",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/dir.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "dir-qmark",
+                      "command":  "tf dir /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/dir-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "properties",
+                      "command":  "tf vc help properties",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/properties.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "properties-qmark",
+                      "command":  "tf properties /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/properties-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "info",
+                      "command":  "tf vc help info",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/info.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "info-qmark",
+                      "command":  "tf info /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/info-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "labels",
+                      "command":  "tf vc help labels",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/labels.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "labels-qmark",
+                      "command":  "tf labels /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/labels-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "branches",
+                      "command":  "tf vc help branches",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/branches.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "branches-qmark",
+                      "command":  "tf branches /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/branches-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "merge",
+                      "command":  "tf vc help merge",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/merge.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "merge-qmark",
+                      "command":  "tf merge /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/merge-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "merges",
+                      "command":  "tf vc help merges",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/merges.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "merges-qmark",
+                      "command":  "tf merges /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/merges-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "annotate",
+                      "command":  "tf vc help annotate",
+                      "exitCode":  2,
+                      "timedOut":  false,
+                      "file":  "help/annotate.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "annotate-qmark",
+                      "command":  "tf annotate /?",
+                      "exitCode":  2,
+                      "timedOut":  false,
+                      "file":  "help/annotate-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "folderdiff",
+                      "command":  "tf vc help folderdiff",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/folderdiff.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "folderdiff-qmark",
+                      "command":  "tf folderdiff /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/folderdiff-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "shelvesets",
+                      "command":  "tf vc help shelvesets",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/shelvesets.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "shelvesets-qmark",
+                      "command":  "tf shelvesets /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/shelvesets-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "unshelve",
+                      "command":  "tf vc help unshelve",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/unshelve.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "unshelve-qmark",
+                      "command":  "tf unshelve /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/unshelve-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "undelete",
+                      "command":  "tf vc help undelete",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/undelete.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "undelete-qmark",
+                      "command":  "tf undelete /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/undelete-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "rollback",
+                      "command":  "tf vc help rollback",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/rollback.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "rollback-qmark",
+                      "command":  "tf rollback /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/rollback-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "branch",
+                      "command":  "tf vc help branch",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/branch.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "branch-qmark",
+                      "command":  "tf branch /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/branch-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "checkin",
+                      "command":  "tf vc help checkin",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/checkin.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "checkin-qmark",
+                      "command":  "tf checkin /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/checkin-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "shelve",
+                      "command":  "tf vc help shelve",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/shelve.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "shelve-qmark",
+                      "command":  "tf shelve /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/shelve-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "lock",
+                      "command":  "tf vc help lock",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/lock.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "lock-qmark",
+                      "command":  "tf lock /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/lock-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "label",
+                      "command":  "tf vc help label",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/label.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "label-qmark",
+                      "command":  "tf label /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/label-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "unlabel",
+                      "command":  "tf vc help unlabel",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/unlabel.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "unlabel-qmark",
+                      "command":  "tf unlabel /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/unlabel-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "destroy",
+                      "command":  "tf vc help destroy",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/destroy.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "destroy-qmark",
+                      "command":  "tf destroy /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/destroy-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "permission",
+                      "command":  "tf vc help permission",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/permission.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "permission-qmark",
+                      "command":  "tf permission /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/permission-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "workspace",
+                      "command":  "tf vc help workspace",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/workspace.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "workspace-qmark",
+                      "command":  "tf workspace /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/workspace-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "configure",
+                      "command":  "tf vc help configure",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/configure.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "configure-qmark",
+                      "command":  "tf configure /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/configure-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "proxy",
+                      "command":  "tf vc help proxy",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/proxy.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "proxy-qmark",
+                      "command":  "tf proxy /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/proxy-qmark.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "help",
+                      "command":  "tf vc help help",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/help.txt"
+                  },
+                  {
+                      "group":  "help",
+                      "name":  "help-qmark",
+                      "command":  "tf help /?",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "help/help-qmark.txt"
+                  }
+              ]
+}

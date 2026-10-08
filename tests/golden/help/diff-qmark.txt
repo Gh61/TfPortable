@@ -1,0 +1,43 @@
+# case: help/diff-qmark
+# command: tf diff /?
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 498
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Porovnává dva soubory nebo soubory ve dvou složkách. Pokud je to možné,
+jsou zobrazené rozdíly mezi soubory. 
+
+tf vc diff[erence] itemspec [/version:versionspec] [/encoding:filetype]
+                [/format:format] [/ignorespace] [/ignoreeol] [/ignorecase]
+                [/recursive] [/options] [/noprompt]
+                [/login:username,[password]]
+
+tf vc diff[erence] itemspec itemspec2 [/encoding:filetype] [/format:format]
+                [/ignorespace] [/ignoreeol] [/ignorecase] [/recursive]
+                [/options] [/noprompt] [/login:username,[password]]
+
+tf vc diff[erence] [/shelveset:shelvesetname[;shelvesetowner]] shelveset_itemspec
+                [/encoding:filetype] [/format:format]
+                [/ignorespace] [/ignoreeol] [/ignorecase] [/recursive]
+                [/options] [/noprompt] [/login:username,[password]]
+
+tf vc diff[erence] /configure [/login:username,[password]]
+
+Formát:
+Brief, Context, Rcs, SS, SS_SideBySide, SS_Unix, Unified, Unix, Visual
+
+Versionspec:
+    Date/Time         D"libovolný formát podporovaný rozhraním .NET Framework"
+                      nebo libovolný formát data používaný místním počítačem
+    Číslo sady změn  Cnnnnnn
+    Popisek             Llabelname
+    Poslední verze    T
+    Pracovní prostor         Wworkspacename;workspaceowner
+
+==== stderr ====

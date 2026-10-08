@@ -1,0 +1,19 @@
+# case: help/shelvesets
+# command: tf vc help shelvesets
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 518
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Zobrazí informace o sadě odložených změn.
+
+tf vc shelvesets [/owner:jmeno_vlastnika] [/format:(brief|detailed|xml)]
+              [/collection:url_kolekce_tymovych_projektu]
+              [/login:uzivatelske_jmeno,[heslo]] nazev_sady_odlozenych_zmen
+
+==== stderr ====

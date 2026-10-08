@@ -1,0 +1,21 @@
+# case: help/lock
+# command: tf vc help lock
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 500
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Uzamyká nebo odemyká soubor nebo složku na serveru. Zámky rezervace
+znemožňují ostatním uživatelům v rezervaci položek v jiných pracovních
+prostorech, zámky operace vrácení se změnami znemožňují uživatelům vrátit jakékoliv probíhající změny položek.
+
+tf vc lock itemspec /lock:(none|checkout|checkin) [/workspace:workspacename]
+        [/recursive] [/login:username,[password]]
+        [/collection:TeamProjectCollectionUrl]
+
+==== stderr ====

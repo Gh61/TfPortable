@@ -1,0 +1,41 @@
+# case: help/workfold-qmark
+# command: tf workfold /?
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 502
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Vytvoří, upraví nebo zobrazí informace o mapováních mezi místními složkami
+pracovního prostoru a složkami správy verzí Team Foundation.
+
+tf vc workfold localfolder [/login:username,[password]]
+
+tf vc workfold [/workspace:workspacename] [/login:username,[password]]
+
+tf vc workfold [/collection:TeamProjectCollectionUrl] [/workspace:workspacename]
+               [/login:username,[password]] serverfolder
+
+tf vc workfold /map serverfolder localfolder
+               [/collection:TeamProjectCollectionUrl]
+               [/workspace:workspacename] 
+               [/login:username,[password]]
+
+tf vc workfold /unmap (serverfolder|localfolder)
+               [/collection:TeamProjectCollectionUrl]
+               [/workspace:workspacename]
+               [/login:username,[password]]
+
+tf vc workfold /cloak serverfolder
+               [/workspace:workspacename] [/collection:TeamProjectCollectionUrl]
+               [/login:username,[password]]
+
+tf vc workfold /decloak serverfolder [/workspace:workspacename]
+               [/collection:TeamProjectCollectionUrl]
+               [/login:username,[password]]
+
+==== stderr ====

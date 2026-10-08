@@ -163,8 +163,6 @@ brief; `Microsoft.TeamFoundation.VersionControl.Client.Difference` or an own Mye
   (a **Full access** PAT of a dedicated user who has access only to the test project, or a
   separate test organization). Without them milestones 3 and 4 cannot be verified.
 - Review and merge the pull requests; decide on branch protection for `main`.
-- Re-run `tools/capture-tf-help.ps1` from the repository root after the `root-qmark` fix and
-  commit `tests/golden/help/` + `index-help.json` (the first capture had a file-name collision).
 - Any new golden case (`docs/compat.md` §17 lists wanted ones) must be captured on Windows with
   the original tf.exe.
 - Gate before the release of milestone 5.

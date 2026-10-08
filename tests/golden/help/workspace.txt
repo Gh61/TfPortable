@@ -1,0 +1,38 @@
+# case: help/workspace
+# command: tf vc help workspace
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 501
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Vytvoří, odstraní, zobrazí nebo upraví vlastnosti mapování přiřazených
+k pracovnímu prostoru.
+
+tf vc workspace /new [/noprompt] [/template:workspacename[;workspaceowner]]
+                [/computer:computername] [/comment:("comment"|@commentfile)]
+                [workspacename[;workspaceowner]]
+                [/collection:TeamProjectCollectionUrl]
+                [/permission:(Private|PublicLimited|Public)]
+                [/location:(local|server)]
+                [/filetime:(current|checkin)]
+                [/login:username,[password]]
+
+tf vc workspace /delete [/collection:TeamProjectCollectionUrl]
+                workspacename[;workspaceowner]
+                [/login:username,[password]]
+
+tf vc workspace [/collection:TeamProjectCollectionUrl]
+                [/comment:("comment"|@commentfile)]
+                [/newname:workspacename] [workspacename[;workspaceowner]]
+                [/newowner:ownername] [/computer:computername]
+                [/permission:(Private|PublicLimited|Public)]
+                [/location:(local|server)]
+                [/filetime:(current|checkin)]
+                [/login:username,[password]]
+
+==== stderr ====

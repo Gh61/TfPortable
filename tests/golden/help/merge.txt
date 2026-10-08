@@ -1,0 +1,29 @@
+# case: help/merge
+# command: tf vc help merge
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 500
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Použije změny jedné větve v jiné větvi.
+
+tf vc merge [/recursive] [/force] [/candidate] [/discard] [/version:versionspec]
+         [/lock:(none|checkin|checkout)] [/preview] [/baseless] [/nosummary]
+         [/noimplicitbaseless] [/conservative] [/format:(brief|detailed)]  
+         [/noautoresolve] [/noprompt] 
+         [/login:username,[password]] source destination
+
+Versionspec:
+    Date/Time         D"libovolný formát podporovaný rozhraním .NET Framework"
+                      nebo libovolný formát data používaný místním počítačem
+    Číslo sady změn  Cnnnnnn
+    Popisek             Llabelname
+    Poslední verze    T
+    Pracovní prostor         Wworkspacename;workspaceowner
+
+==== stderr ====

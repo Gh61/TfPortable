@@ -1,0 +1,22 @@
+# case: help/configure
+# command: tf vc help configure
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 506
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Umožňuje správci zobrazit a změnit následující konfigurační nastavení
+týmového projektu v dialogovém okně Nastavení správy zdrojových kódů:
+- Nastavení rezervace
+- Zásady operace vrácení se změnami
+- Poznámky k operaci vrácení se změnami
+
+tf vc configure [path of team project] [/collection:TeamProjectCollectionUrl]
+             [/login:username,[password]]
+
+==== stderr ====

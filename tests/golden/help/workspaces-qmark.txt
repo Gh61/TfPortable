@@ -1,0 +1,27 @@
+# case: help/workspaces-qmark
+# command: tf workspaces /?
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 499
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Zobrazí informace o pracovních prostorech v systému a aktualizuje informace
+o změnách uživatelských jmen nebo názvů počítačů v mezipaměti serveru
+Azure DevOps.
+
+tf vc workspaces [/owner:jmeno_vlastnika] [/computer:nazev_pocitace]
+                 [/collection:url_kolekce_tymovych_projektu]
+                 [/format:(brief|detailed|xml)] [/updateUserName:stare_uzivatelske_jmeno]
+                 [/updateComputerName:stary_nazev_pocitace] [nazev_pracovniho_prostoru]
+                 [/login:uzivatelske_jmeno,[heslo]]
+
+tf vc workspaces /remove:(*|prostor1[,prostor2,...])
+                 /collection:(*|url_kolekce_tymovych_projektu)
+                 [/login:uzivatelske_jmeno,[heslo]]
+
+==== stderr ====

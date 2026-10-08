@@ -1,0 +1,20 @@
+# case: help/localversions-qmark
+# command: tf localversions /?
+# cwd: %TEMP%
+# exit: 0
+# timed-out: false
+# duration-ms: 501
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+==== stdout ====
+Microsoft (R) TF – Team Foundation Version Control Tool, verze 18.10.12215.6
+Copyright (c) Microsoft Corporation. Všechna práva vyhrazena.
+
+Zobrazí verzi jedné nebo víc položek v pracovním prostoru.
+
+tf vc localversions itemspec [/recursive] [/format:brief|detailed]
+                 [/workspace:workspacename[;workspaceowner]]
+                 [/collection:TeamProjectCollectionUrl]
+                 [/login:username,[password]]
+
+==== stderr ====
