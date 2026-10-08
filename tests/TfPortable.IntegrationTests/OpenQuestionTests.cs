@@ -144,9 +144,14 @@ namespace TfPortable.IntegrationTests
             }
             finally
             {
+                Run("resolve Main\\data\\counter.txt /auto:TakeTheirs /noprompt");
                 Run("undo Main\\data\\counter.txt /noprompt");
                 Run("get Main\\data\\counter.txt /force /noprompt");
             }
+
+            // The read-only golden cases need the file at the latest version with no conflict and no pending change left.
+            Assert.Empty((JArray)JObject.Parse(Run("resolve Main\\data\\counter.txt /preview /format:json").Stdout)["data"]!["conflicts"]!);
+            Assert.Empty(Changes(Run("status Main\\data\\counter.txt /format:json")));
         }
 
         [IntegrationFact]

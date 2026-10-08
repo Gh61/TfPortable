@@ -67,6 +67,18 @@ namespace TfPortable.Tests
         }
 
         [Fact]
+        public void Difference_encoding_switch_accepts_names_and_code_pages()
+        {
+            Assert.Null(DifferenceCommand.ResolveEncoding(null));
+            Assert.Equal("windows-1250", DifferenceCommand.ResolveEncoding("1250"));
+            Assert.Equal("windows-1250", DifferenceCommand.ResolveEncoding("windows-1250"));
+            Assert.Equal("utf-8", DifferenceCommand.ResolveEncoding("UTF-8"));
+            Assert.Equal("binary", DifferenceCommand.ResolveEncoding("binary"));
+            var error = Assert.Throws<TfPortable.Errors.TfpException>(() => DifferenceCommand.ResolveEncoding("windows-125"));
+            Assert.Equal(TfPortable.Errors.ErrorCodes.InvalidSwitch, error.Code);
+        }
+
+        [Fact]
         public void Insertion_before_a_repeated_closing_line_is_reported_before_it()
         {
             var lines = UnifiedDiff.Render("a\n}\n}\n", "a\nb\n}\n}\n}\n", "L", "R").ToList();

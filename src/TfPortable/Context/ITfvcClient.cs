@@ -111,8 +111,8 @@ namespace TfPortable.Context
         /// <summary>Content of a file in a shelveset (null owner = the authenticated user), with the server item it is based on.</summary>
         ItemContent? DownloadShelved(string shelvesetName, string? owner, string serverPath);
 
-        /// <summary>Content of a shelved change returned by <see cref="QueryShelvedChanges"/> with download info.</summary>
-        ItemContent DownloadShelved(PendingChangeInfo change);
+        /// <summary>Content of a shelved change returned by <see cref="QueryShelvedChanges"/>; null when the change carries no content (a rename or a property change).</summary>
+        ItemContent? DownloadShelved(PendingChangeInfo change);
 
         /// <summary>Labels matching the filters (null = any); items only when asked.</summary>
         IReadOnlyList<LabelInfo> QueryLabels(string? name, string? scope, string? owner, bool includeItems);

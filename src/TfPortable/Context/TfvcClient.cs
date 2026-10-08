@@ -177,16 +177,26 @@ namespace TfPortable.Context
             return change == null ? null : ShelvedContent(change);
         }
 
-        public ItemContent DownloadShelved(PendingChangeInfo change)
+        public ItemContent? DownloadShelved(PendingChangeInfo change)
         {
-            var handle = change.Handle as PendingChange ?? throw new ArgumentException("The shelved change carries no library handle; query it with download information.", nameof(change));
+            var handle = change.Handle as PendingChange ?? throw new ArgumentException("The pending change carries no library handle (every change of a server query has one).", nameof(change));
             return ShelvedContent(handle);
         }
 
-        /// <summary>The shelved content as a stream of the library; no temp file.</summary>
-        private static ItemContent ShelvedContent(PendingChange change)
+        /// <summary>The shelved content as a stream of the library (no temp file); null when the change has no shelved file.</summary>
+        private static ItemContent? ShelvedContent(PendingChange change)
         {
-            byte[] bytes = ReadAll(change.DownloadShelvedFile());
+            byte[] bytes;
+            try
+            {
+                bytes = ReadAll(change.DownloadShelvedFile());
+            }
+            catch (InvalidOperationException)
+            {
+                // The library's "PendingChangeIsNotAShelvedFile": a rename-only, lock or property change.
+                return null;
+            }
+
             var info = new ItemInfo(change.ServerItem, change.ItemType == ItemType.Folder, change.Version, change.DeletionId, EncodingName(change.Encoding), bytes.Length, change.CreationDate, change.ItemId);
             return new ItemContent(info, bytes);
         }

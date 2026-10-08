@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Newtonsoft.Json.Linq;
 using TfPortable.Cli;
@@ -63,7 +64,7 @@ namespace TfPortable.Commands
             if (commandLine.Has("ignorecase")) { options |= DiffOptions.IgnoreCase; }
             string? shelveset = commandLine.Value("shelveset");
             // /encoding decodes both sides with the given encoding instead of the server's (names or code pages).
-            string? encoding = commandLine.Value("encoding");
+            string? encoding = ResolveEncoding(commandLine.Value("encoding"));
 
             if (commandLine.Positionals.Count > 2 || (commandLine.Positionals.Count == 0 && shelveset == null))
             {
@@ -173,6 +174,31 @@ namespace TfPortable.Commands
             return ExitCodes.Success;
         }
 
+        /// <summary>The web name of an /encoding value (a name or a code page), "binary", or null; an unknown value is TFP0002.</summary>
+        internal static string? ResolveEncoding(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            string name = value!.Trim();
+            if (name.Equals("binary", StringComparison.OrdinalIgnoreCase))
+            {
+                return "binary";
+            }
+
+            try
+            {
+                return (int.TryParse(name, out int codePage) ? Encoding.GetEncoding(codePage) : Encoding.GetEncoding(name)).WebName;
+            }
+            catch (Exception ex) when (ex is ArgumentException || ex is NotSupportedException)
+            {
+                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, $"'{value}' is not a known encoding.",
+                    "Use an encoding name (utf-8, windows-1250), a code page (1250) or binary.", inner: ex);
+            }
+        }
+
         private static IEnumerable<string> Expand(WorkspaceContext context, string serverPath, VersionSpec version, bool recursive)
         {
             var items = context.Client.GetItems(new ItemQuery(serverPath, recursive ? RecursionType.Full : RecursionType.None), version, false, false);
@@ -262,7 +288,10 @@ namespace TfPortable.Commands
             var sets = context.Client.QueryShelvedChanges(parts[0], parts.Length > 1 ? parts[1] : null, queries, includeDownloadInfo: true);
             foreach (var change in sets.SelectMany(s => s.Changes).Where(c => !c.IsFolder))
             {
-                var shelved = change.ChangeTypes.Contains("delete") ? null : context.Client.DownloadShelved(change);
+                // Only a change that carries content (add, edit, branch, merge, undelete, rollback) has a shelved file; a
+                // delete, a rename-only or a property change has none and compares against an empty right side.
+                bool hasContent = change.ChangeTypes.Any(t => t == "add" || t == "edit" || t == "branch" || t == "merge" || t == "undelete" || t == "rollback");
+                var shelved = hasContent ? context.Client.DownloadShelved(change) : null;
                 string? shelvedText = shelved == null ? null : TextContent.Decode(shelved.Bytes, encoding ?? shelved.Item.Encoding);
                 var right = new Side("shelveset", change.ServerPath, change.Version, shelvedText ?? string.Empty, shelved != null && shelvedText == null, $"Shelved change: {change.ServerPath};{parts[0]}");
                 Side left;

@@ -56,7 +56,7 @@ namespace TfPortable.Commands
                 var shelved = context.Client.DownloadShelved(parts[0], parts.Length > 1 ? parts[1] : null, path);
                 if (shelved == null)
                 {
-                    throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.PartialSuccess, $"{path}: no matching file in shelveset {shelveset}.",
+                    throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.PartialSuccess, $"{path}: no shelved content in shelveset {shelveset} (no such change, or a change without content).",
                         $"'{toolName} status /shelveset:{shelveset}' lists the shelved changes.", item: path);
                 }
 

@@ -308,10 +308,10 @@ Milestone 4 (2026-10-08) notes on §9–§14, found while implementing against t
 | `properties` outside a workspace | `Lock: none` | the lock state is not queried without a workspace: `Lock:` is empty and `lock` is null in JSON |
 | `merge /candidate /format:detailed` | changeset blocks with items | the same; the items are read per candidate (one call each) |
 | `merge /candidate /version:` | limits the candidates | the same, by changeset number on the client (`C<a>~C<b>`, or up to `C<n>`; `T` = no upper limit); a date or label version is TFP0302 |
-| `difference /encoding:` | decodes both sides with the given encoding | the same (names or code pages) |
+| `difference /encoding:` | decodes both sides with the given encoding | the same (names or code pages, `binary`); an unknown value is TFP0002 |
 | `branches` of a non-root item | the whole tree, the requested item marked `>> path <<` | the same |
-| `view /recursive /output:<dir>`, `view *.cs /output:<dir>` | a directory | the same, also when a single file matches; one listing call plus one download per file |
-| `difference /shelveset` | – | one shelveset query plus one download per file; no temp file |
+| `view /recursive /output:<dir>`, `view *.cs /output:<dir>` | a directory | the same, also when a single file matches; one listing call plus one download per file; the files land flat in the directory (same names overwrite each other) |
+| `difference /shelveset` | – | one shelveset query plus one download per file; no temp file; a shelved change without content (delete, rename-only, property change) compares against an empty right side |
 | `history /workitem:<id>` | – | the linking service answers for a PAT on Azure DevOps Services (`OpenQuestionTests`); one call per search |
 | `properties` outside a workspace | needs a workspace | works with a server path: only the `Server information:` section |
 | `labels` with extra labels on the server | – | the golden brief listing compares shape only (later golden runs added labels) |
