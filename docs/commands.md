@@ -265,7 +265,7 @@ tf vc merge [/recursive] [/force] [/candidate] [/discard] [/version:versionspec]
 | --- | --- |
 | `/candidate` with `/recursive`, `/version:`, `/format:` | ✓ phase 1 |
 | `/force`, `/baseless`, `/discard`, `/noimplicitbaseless`, `/conservative`, `/noautoresolve`, `/recursive`, `/version:from~to` | ✓ phase 2, as pending changes (mapped to the merge options of the client library; a single `/version:C<n>` is the upper bound) |
-| `/preview` | ✓ phase 2 through the server's preview (the `NoMerge` merge option): the operations a merge would pend, `merge, edit: $/src -> $/dst;C80` (the source version range of the real merge line is not available in a preview, compat.md §15); predicted conflicts are a summary TFP0403 |
+| `/preview` | ✓ phase 2 through the server's preview (the `NoMerge` merge option): the operations a merge would pend, in the merge line shape; predicted conflicts are a summary TFP0403 (exit 1) |
 | `/lock:none` | ✓; `/lock:checkin\|checkout` ✗ (server locks) |
 | `/nosummary` | ✗ (tfp prints no summary) |
 | `/format:brief\|detailed` | ~ accepted; the pending merge listing has one shape |

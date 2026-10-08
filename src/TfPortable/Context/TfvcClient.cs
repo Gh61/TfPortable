@@ -825,12 +825,6 @@ namespace TfPortable.Context
                 using var collector = new EventCollector(Vcs);
                 GetStatus status = workspace.Merge(ToItemSpec(source), targetPath, versionFrom, versionTo, LockLevel.None, options);
                 var result = ToMergeResult(status, collector, new[] { targetPath }, source.Recursion != RecursionType.None);
-                if (flags.HasFlag(MergeFlags.Preview))
-                {
-                    // A preview pends nothing: the merge operations the server reported stand in for the pending changes.
-                    return new MergeResult(collector.MergeOperations, result.Conflicts, result.Failures, result.NumOperations, result.NumConflicts, result.NoActionNeeded);
-                }
-
                 if (flags.HasFlag(MergeFlags.Discard) && result.Changes.Count == 0)
                 {
                     // A discard merge raises no pending-change events in the library: the pending merges under the target are the result.
@@ -938,6 +932,7 @@ namespace TfPortable.Context
                 vcs.UndonePendingChange += OnUndonePendingChange;
                 vcs.NonFatalError += OnNonFatalError;
                 vcs.Getting += OnGetting;
+                vcs.Merging += OnMerging;
             }
 
             public List<PendingChangeInfo> Changes { get; } = new List<PendingChangeInfo>();
@@ -945,9 +940,6 @@ namespace TfPortable.Context
             public List<PendingChangeInfo> Undone { get; } = new List<PendingChangeInfo>();
 
             public List<FailureInfo> Failures { get; } = new List<FailureInfo>();
-
-            /// <summary>The merge operations of a preview (`Getting` events with the change type and the source item).</summary>
-            public List<PendingChangeInfo> MergeOperations { get; } = new List<PendingChangeInfo>();
 
             public List<GetOperationInfo> Operations { get; } = new List<GetOperationInfo>();
 
@@ -984,14 +976,36 @@ namespace TfPortable.Context
             private void OnGetting(object sender, GettingEventArgs e)
             {
                 Operations.Add(new GetOperationInfo(OperationName(e.Status), e.TargetLocalItem ?? e.SourceLocalItem, e.ServerItem, e.Version, e.ItemType == ItemType.Folder, e.IsDelete));
-                if (e.ChangeType != ChangeType.None && e.ServerItem != null)
+            }
+
+            /// <summary>
+            /// Merge and rollback operations arrive through the Merging event (the library raises neither NewPendingChange nor Getting
+            /// for them): a pended change when there is one, else the operation as the event describes it (a preview).
+            /// Conflicts are left to the conflict query and the counts.
+            /// </summary>
+            private void OnMerging(object sender, MergeEventArgs e)
+            {
+                if (e.IsConflict || e.Status == OperationStatus.Conflict)
                 {
-                    var sources = string.IsNullOrEmpty(e.SourceServerItem) || string.Equals(e.SourceServerItem, e.ServerItem, StringComparison.OrdinalIgnoreCase)
-                        ? new List<MergeSourceInfo>()
-                        : new List<MergeSourceInfo> { new MergeSourceInfo(e.SourceServerItem, 0, 0, false) };
-                    MergeOperations.Add(new PendingChangeInfo(ChangeText(e.ChangeType), e.ServerItem, e.TargetLocalItem ?? e.SourceLocalItem, e.ItemType == ItemType.Folder, e.Version,
-                        sources.Count > 0 ? e.SourceServerItem : null, "none", null, DateTime.UtcNow, string.Empty, string.Empty, false, null, sources));
+                    return;
                 }
+
+                if (e.PendingChange != null)
+                {
+                    Changes.Add(ToPendingChange(e.PendingChange, false));
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(e.TargetServerItem) || e.ChangeType == ChangeType.None)
+                {
+                    return;
+                }
+
+                var sources = string.IsNullOrEmpty(e.SourceServerItem)
+                    ? new List<MergeSourceInfo>()
+                    : new List<MergeSourceInfo> { new MergeSourceInfo(e.SourceServerItem, e.SourceVersionFrom?.ChangesetId ?? 0, e.SourceVersionTo?.ChangesetId ?? 0, false) };
+                Changes.Add(new PendingChangeInfo(ChangeText(e.ChangeType), e.TargetServerItem, e.TargetLocalItem, false, e.TargetVersionPended?.ChangesetId ?? 0,
+                    sources.Count > 0 ? e.SourceServerItem : null, "none", null, DateTime.UtcNow, string.Empty, string.Empty, false, null, sources));
             }
 
             public void Dispose()
@@ -1000,6 +1014,7 @@ namespace TfPortable.Context
                 vcs.UndonePendingChange -= OnUndonePendingChange;
                 vcs.NonFatalError -= OnNonFatalError;
                 vcs.Getting -= OnGetting;
+                vcs.Merging -= OnMerging;
             }
         }
     }

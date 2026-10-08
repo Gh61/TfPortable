@@ -49,9 +49,8 @@ agent; it adjusts the code and `docs/compat.md`.
 
 ## merge, branch, rollback, undelete (phase 2)
 
-27. `merge /preview`: does tf.exe use the `NoMerge` merge option (the server's preview) and from which data does
-    it print the `C<from>~C<to>` source range of each line (the get operations carry only the source item)?
-    tfp uses `NoMerge` and prints the lines without the source range (`docs/compat.md` §15).
+27. `merge /preview`: does tf.exe use the `NoMerge` merge option (the server's preview) and the Merging event of
+    the library for the lines, as tfp does (`docs/compat.md` §15)?
 28. `merge` summary lines (the count of merged items and conflicts, suppressed by `/nosummary`): exact text and
     whether they go to stdout.
 29. `branch /version:` default: latest, or the workspace version of a local source path?

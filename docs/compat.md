@@ -341,7 +341,7 @@ Phase 2 implementation (2026-10-08) notes, found against the client library:
 
 | Topic | Original | TfPortable |
 | --- | --- | --- |
-| `merge /preview` | lists what the merge would pend without pending it | the server's own preview (the library's `NoMerge` merge option, honoring `/version` and the other switches): the reported operations are printed as `merge, <change>: $/src -> $/dst;C<n>` (the operation events carry the source item but not its version range, so the `C<from>~C<to>` part of the real merge line is missing); conflicts the server predicts are a summary TFP0403 (exit 1); the JSON has `preview: true` and the same `changes` shape as a real merge |
+| `merge /preview` | lists what the merge would pend without pending it | the server's own preview (the library's `NoMerge` merge option, honoring `/version` and the other switches): the reported operations are printed in the merge line shape (`merge, edit: $/src;C83~C83 -> $/dst;C80`, from the library's Merging event); conflicts the server predicts are a summary TFP0403 (exit 1); the JSON has `preview: true` and the same `changes` shape as a real merge |
 | `merge` lines | `merge, edit: $/src;C83~C83 -> $/dst;C80` | the same shape from the merge sources of the pending change (`;C<n>` on the target only when the target existed) |
 | `merge` conflict | exit 1, `Conflict (merge, edit): ...` on stderr, the pending merge is created | the same: TFP0403 item error with the server path, hint to `resolve`; the pending merge stays |
 | `merge` with nothing to merge | message | `There are no changes to merge.` (exit 0) |

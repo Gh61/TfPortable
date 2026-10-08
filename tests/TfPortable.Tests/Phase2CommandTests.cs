@@ -35,7 +35,7 @@ namespace TfPortable.Tests
             Assert.Equal("rename, edit, rollback: $/P/a.txt;C85~C87 -> $/P/a.txt;C87",
                 Change("rename, edit, rollback", "$/P/a.txt", 87, new MergeSourceInfo("$/P/a.txt", 85, 87, true)).MergeLine);
             Assert.Equal("edit: $/P/b.txt;C5", Change("edit", "$/P/b.txt", 5).MergeLine);
-            // A preview operation knows the source item but not its version range.
+            // A source without a version (an operation the event did not version) prints no version.
             Assert.Equal("merge, edit: $/P/Main/a.txt -> $/P/Release/a.txt;C80", Change("merge, edit", "$/P/Release/a.txt", 80, new MergeSourceInfo("$/P/Main/a.txt", 0, 0, false)).MergeLine);
             Assert.NotNull(Change("merge, edit", "$/P/x", 1, new MergeSourceInfo("$/P/y", 1, 1, false)).ToJson()["mergeSources"]);
         }
