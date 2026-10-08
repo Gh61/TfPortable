@@ -10,33 +10,35 @@ both people and AI coding agents can read.
 
 ## Why this project exists
 
-**The main reason: signing in with `tf.exe` has become unreliable to the point of not working.**
-`tf.exe` depends on the Entra ID token cache of Visual Studio. The cache expires, MFA prompts
-appear in the middle of a script, and the sign-in window itself crashes on JavaScript errors, so
-the whole sign-in process gets stuck and there is practically no way to authenticate. The result
-is `TF30063: You are not authorized` over and over again, no matter how many times the token
-cache is cleared. For a person this is an annoyance; for an AI coding agent such as Claude Code,
-which runs `tf.exe` from a terminal, it is a hard stop: the agent sees a hang or a hidden dialog
-and cannot do anything about it.
+Teams that keep their code in TFVC (Team Foundation Version Control) and want to use AI coding
+agents such as Claude Code hit the same wall every day:
 
-TfPortable replaces that sign-in with one thing that works every time: a Personal Access Token,
-stored once in the Windows Credential Manager, used for every command, never prompting unless a
-person runs `tfp login` in a terminal. When the token expires, the error says so and tells you to
-run `tfp login` again.
+- **Signing in with `tf.exe` barely works anymore.** This is the main reason for this project.
+  The sign-in window of `tf.exe` crashes on JavaScript errors, the whole sign-in process gets
+  stuck, and there is practically no way to authenticate; the result is `TF30063: You are not
+  authorized` over and over again, no matter how many times the token cache is cleared. When a
+  sign-in does succeed (one attempt in fifty), it lasts only a few hours, about two or three, and
+  then the whole dance starts again.
+- **`tf.exe` is not portable.** It comes with Visual Studio or the Team Explorer installer and
+  depends on the installation it was shipped with. A build box, a container or a colleague's
+  laptop without Visual Studio cannot run it.
+- **Sign-in is interactive.** `tf.exe` relies on cached Entra ID tokens that expire, on MFA
+  prompts and on dialogs. An agent driving the tool from a terminal gets a hidden window or a
+  hang instead of an answer. Even `tf.exe` with a PAT needs an undocumented switch.
+- **Output is made for humans.** Tables are cut to 79 columns, dates follow the Windows locale,
+  errors come in the language of the Visual Studio installation, and exit codes are inconsistent.
+  An agent has to guess.
 
-Two more problems of `tf.exe` are fixed on the way:
+TfPortable keeps the command names, switches and output shape of `tf.exe`, so existing habits and
+scripts work, and fixes the problems above:
 
-- **It is not portable.** `tf.exe` comes with Visual Studio or the Team Explorer installer and
-  depends on that installation. TfPortable is a single `tfp.exe` that runs on any Windows with
-  .NET Framework 4.8: build boxes, containers, a colleague's laptop.
-- **Its output is made for humans.** Tables are cut to 79 columns, dates follow the Windows
-  locale, messages come in the language of the Visual Studio installation, and exit codes are
-  inconsistent. TfPortable gives every error a stable `TFPxxxx` code, the original `TFxxxxx` code
-  when there is one, and the next step to take; `/format:json` returns one JSON document per
-  command; dates are ISO 8601; nothing is truncated.
-
-TfPortable keeps the command names, switches and output shape of `tf.exe`, so existing habits
-and scripts keep working.
+- sign-in with a Personal Access Token, stored once in the Windows Credential Manager and used
+  for every command; it never prompts unless a person runs `tfp login` in a terminal, and when
+  the token expires the error says so and tells you to run `tfp login` again;
+- a single `tfp.exe` that runs on any Windows with .NET Framework 4.8;
+- every error with a stable `TFPxxxx` code, the original `TFxxxxx` code when there is one, and the
+  next step to take; `/format:json` returns one JSON document per command; dates are ISO 8601;
+  nothing is truncated.
 
 It is meant for local workspaces and for the daily loop of an agent: see what changed, read
 history and files, diff, add, edit, rename, delete, undo, get. Commands that write to the server
