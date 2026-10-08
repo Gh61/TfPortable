@@ -99,6 +99,13 @@ namespace TfPortable.Cli
 
         public static bool HasWildcard(string path) => path.IndexOfAny(Wildcards) >= 0;
 
+        /// <summary>`*` and `?` match a file name (case-insensitive), as the filters of `folderdiff` need.</summary>
+        public static bool WildcardMatches(string pattern, string name)
+        {
+            string regex = "^" + System.Text.RegularExpressions.Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+            return System.Text.RegularExpressions.Regex.IsMatch(name, regex, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        }
+
         /// <summary>`$\a\b` becomes `$/a/b`; a trailing separator is removed except on `$/`.</summary>
         public static string NormalizeServerPath(string path)
         {

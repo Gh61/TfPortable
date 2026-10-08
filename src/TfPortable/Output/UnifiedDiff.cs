@@ -32,6 +32,20 @@ namespace TfPortable.Output
             return a.Keys.SequenceEqual(b.Keys, StringComparer.Ordinal);
         }
 
+        /// <summary>
+        /// Pairs of line indexes (left, right) that the diff keeps as equal, in order. Lines of the right text that are in no
+        /// pair are new; lines of the left text in no pair were removed. Used by `annotate` to carry line authorship forward.
+        /// </summary>
+        public static IReadOnlyList<KeyValuePair<int, int>> MatchingLines(string left, string right, DiffOptions options = DiffOptions.None)
+        {
+            var a = Lines(left, options);
+            var b = Lines(right, options);
+            return Myers(a.Keys, b.Keys).Where(e => e.Kind == EditKind.Equal).Select(e => new KeyValuePair<int, int>(e.AIndex, e.BIndex)).ToList();
+        }
+
+        /// <summary>The lines of a text as `difference` sees them (CR stripped), for `annotate`.</summary>
+        public static string[] SplitLines(string text, DiffOptions options = DiffOptions.None) => Lines(text, options).Original;
+
         /// <summary>The unified diff lines (empty when the texts are equal).</summary>
         public static IReadOnlyList<string> Render(string left, string right, string leftLabel, string rightLabel, DiffOptions options = DiffOptions.None)
         {

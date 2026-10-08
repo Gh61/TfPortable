@@ -72,8 +72,9 @@ namespace TfPortable.Context
     /// <summary>Item of docs/json-schema.md (server side).</summary>
     internal sealed class ItemInfo
     {
-        public ItemInfo(string serverPath, bool isFolder, int changesetId, int deletionId, string? encoding, long? size, DateTime lastModified, int itemId)
+        public ItemInfo(string serverPath, bool isFolder, int changesetId, int deletionId, string? encoding, long? size, DateTime lastModified, int itemId, string? hash = null)
         {
+            Hash = hash;
             ServerPath = serverPath;
             IsFolder = isFolder;
             ChangesetId = changesetId;
@@ -100,6 +101,9 @@ namespace TfPortable.Context
         public DateTime LastModified { get; }
 
         public int ItemId { get; }
+
+        /// <summary>MD5 of the content as the server stores it (lower-case hex), null for folders or when the server has none.</summary>
+        public string? Hash { get; }
 
         public bool IsBinary => Encoding == "binary";
 
