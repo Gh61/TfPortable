@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Newtonsoft.Json.Linq;
 using TfPortable.Auth;
@@ -139,9 +140,19 @@ namespace TfPortable.Commands
                 return url!;
             }
 
+            // The single stored PAT decides, as in the workspace detection (SPEC.md step 3).
+            var stored = CredentialStore.EnumerateAll();
+            if (stored.Count == 1)
+            {
+                return stored[0].Collection;
+            }
+
+            string hint = stored.Count == 0
+                ? $"Pass /collection:<url>, e.g. '{toolName} {commandLine.Command} /collection:https://dev.azure.com/<organization>'."
+                : $"Several PATs are stored ({string.Join(", ", stored.Select(s => s.Collection))}); pass /collection:<url> to choose one.";
             throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError,
-                "No collection given and the current directory is not inside a known workspace.",
-                $"Pass /collection:<url>, e.g. '{toolName} {commandLine.Command} /collection:https://dev.azure.com/<organization>'.");
+                "No collection given, the current directory is not inside a known workspace, and the stored PATs do not identify it.",
+                hint);
         }
     }
 

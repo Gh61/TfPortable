@@ -61,8 +61,7 @@ Read before you start, in this order:
 - Exit codes follow the original per command (`docs/compat.md` §1.1); only 110 and 120 are
   extensions. Output is text in the tf.exe shape by default, JSON only with `/format:json`.
 - Known small gaps left by the spike (milestone 2 items): JSON envelope `collection` is null when
-  the error happens before the context is resolved; `logout` without `/collection` outside a
-  workspace should fall back to the single stored PAT like `whoami`; an interrupted PAT prompt
+  the error happens before the context is resolved; an interrupted PAT prompt
   (Ctrl+C) ends silently; `status /format:detailed`, `/user`, `/shelveset` return TFP0002 in the
   spike build; the parser is minimal (no `@file`, no per-command alias table, no versionspec or
   itemspec types).
