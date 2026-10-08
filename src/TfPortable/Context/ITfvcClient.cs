@@ -49,14 +49,14 @@ namespace TfPortable.Context
         /// <summary>Local and server state of items (`properties`): pending change, lock, local and latest version.</summary>
         IReadOnlyList<ExtendedItemInfo> GetExtendedItems(IReadOnlyList<ItemQuery> items);
 
-        /// <summary>Asks the server what would stop a checkin of the changes: conflicts, policy and note failures (`checkin /validate`).</summary>
-        CheckinEvaluation EvaluateCheckin(IReadOnlyList<PendingChangeInfo> changes, string comment);
+        /// <summary>Asks the server what would stop a checkin of the changes: conflicts and note failures. Policies are tfp's own pass (`CheckinPolicies`).</summary>
+        CheckinEvaluation EvaluateCheckin(IReadOnlyList<PendingChangeInfo> changes, string comment, IReadOnlyList<PolicyResultInfo> policies);
 
         /// <summary>
         /// Checks the changes in and returns the changeset number (0 when the server committed nothing). `overrideReason`
-        /// with the evaluation's policy handles records a policy override; the library's checkin exceptions propagate.
+        /// records a policy override with the given failure messages; the library's checkin exceptions propagate.
         /// </summary>
-        int CheckIn(IReadOnlyList<PendingChangeInfo> changes, string comment, string? author, string? overrideReason, CheckinEvaluation? evaluation, bool noAutoResolve, bool allowUnchangedContent);
+        int CheckIn(IReadOnlyList<PendingChangeInfo> changes, string comment, string? author, string? overrideReason, IReadOnlyList<string> overriddenFailures, bool noAutoResolve, bool allowUnchangedContent);
 
         /// <summary>Shelves the changes under `name` for the authenticated user; `replace` overwrites an existing shelveset, `move` undoes the local changes.</summary>
         void Shelve(string name, string? comment, IReadOnlyList<PendingChangeInfo> changes, bool replace, bool move);
@@ -153,6 +153,9 @@ namespace TfPortable.Context
 
         /// <summary>Removes items from a label; an item that is not in the label is a failure.</summary>
         LabelOperationResult UnlabelItems(string name, string scope, IReadOnlyList<ItemQuery> items);
+
+        /// <summary>The enabled checkin policies of the team projects that contain the server paths.</summary>
+        IReadOnlyList<CheckinPolicyInfo> GetCheckinPolicies(IReadOnlyList<string> serverPaths);
 
         /// <summary>Links a work item to a changeset (the "Fixed in Changeset" artifact link, REST). Exceptions propagate.</summary>
         void LinkWorkItemToChangeset(int workItemId, int changesetId);

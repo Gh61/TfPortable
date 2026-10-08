@@ -123,10 +123,34 @@ namespace TfPortable.Tests
         }
 
         [Fact]
-        public void Protection_gate_blocks_the_override_switch_at_level_2()
+        public void Checkin_policies_are_evaluated_natively_or_reported_as_unknown()
+        {
+            var policies = new[]
+            {
+                new CheckinPolicyInfo("Work Items", "Microsoft.TeamFoundation.VersionControl.Controls.Checkin.WorkItemPolicy"),
+                new CheckinPolicyInfo("Changeset Comments Policy", "Microsoft.TeamFoundation.VersionControl.Controls.Checkin.CheckForCommentsPolicy"),
+                new CheckinPolicyInfo("Builds", "Microsoft.TeamFoundation.Build.Controls.BuildPolicy"),
+                new CheckinPolicyInfo("Pracovní položky", null),
+            };
+
+            var withoutWorkItem = CheckinPolicies.Evaluate(policies, "fix", Array.Empty<int>());
+            Assert.Equal(new[] { PolicyStatus.Failed, PolicyStatus.Passed, PolicyStatus.Unknown, PolicyStatus.Unknown }, withoutWorkItem.Select(p => p.Status));
+            Assert.Contains("/associate", withoutWorkItem[0].Message);
+
+            var withWorkItem = CheckinPolicies.Evaluate(policies, "fix", new[] { 1 });
+            Assert.Equal(new[] { PolicyStatus.Passed, PolicyStatus.Passed, PolicyStatus.Unknown, PolicyStatus.Unknown }, withWorkItem.Select(p => p.Status));
+
+            var evaluation = new CheckinEvaluation(Array.Empty<CheckinConflictInfo>(), Array.Empty<string>(), withoutWorkItem);
+            Assert.Single(evaluation.PolicyFailures);
+            Assert.Equal(2, evaluation.UnknownPolicies.Count());
+            Assert.Equal(3, evaluation.OverridableFailures.Count());
+        }
+
+        [Fact]
+        public void Protection_gate_raises_only_the_delete_switches()
         {
             var line = CommandLine.Parse(new[] { "checkin", "/comment:x", "/override:why" });
-            Assert.Equal((3, "override"), ProtectionLevels.Required(line.Spec!, line));
+            Assert.Equal((2, (string?)null), ProtectionLevels.Required(line.Spec!, line));
             var delete = CommandLine.Parse(new[] { "shelve", "/delete", "x" });
             Assert.Equal((3, "delete"), ProtectionLevels.Required(delete.Spec!, delete));
             var lockLine = CommandLine.Parse(new[] { "lock", "a.txt", "/lock:checkin" });

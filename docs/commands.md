@@ -304,14 +304,16 @@ tf vc checkin /shelveset:shelvesetname[;shelvesetowner] [/bypass] [/noprompt] [/
 | --- | --- |
 | `/comment:` | ✓ required (tfp never opens the checkin dialog); `@file` reads it from a file |
 | `/recursive`, `/validate`, `/author:`, `/noautoresolve` | ✓ (`/validate` evaluates conflicts, policies and notes and checks nothing in) |
-| `/override:` | ✓ at protection level 3; records the reason with the policy failures of the evaluation |
+| `/override:` | ✓ bypasses failed (TFP0407) and unknown (TFP0409) checkin policies and missing notes; the reason is recorded in the changeset |
 | `/associate:id[,id]` | **+** links the work items to the changeset over the REST work item API after the checkin (the "Fixed in Changeset" link) |
 | `/force` | ✓ checks in an edit whose content did not change (`AllowUnchangedContent`); without it the server commits nothing and tfp reports TFP0301 |
 | `/notes:`, `/saved`, `/bypass`, `/new`, `/shelveset:` | ✗ |
 
 Output: `Checking in <change>: <name>` grouped by folder, then `Changeset #<n> checked in.` Nothing pending is TFP0301 (exit 100).
-Every conflict (TFP0406) and policy or note failure (TFP0407) is an item error, followed by a summary error with exit 100 and
-nothing checked in; `/validate` prints the same findings and exits 100 without the summary, 0 when the checkin would pass.
+Every conflict (TFP0406), failed policy or missing note (TFP0407) and policy tfp cannot evaluate (TFP0409) is an item error,
+followed by a summary error with exit 100 and nothing checked in; `/validate` prints the same findings and exits 100 without
+the summary, 0 when the checkin would pass. Policies: tfp evaluates "Work Items" (`/associate`) and "Changeset Comments"
+(`/comment`) itself; every other policy runs inside Visual Studio only and is reported as unknown.
 
 ### shelve
 

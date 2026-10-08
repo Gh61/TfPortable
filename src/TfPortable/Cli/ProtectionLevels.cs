@@ -36,7 +36,6 @@ namespace TfPortable.Cli
         /// <summary>Switches that need more than their command: `command/switch` → level.</summary>
         private static readonly Dictionary<string, int> Switches = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
         {
-            ["checkin/override"] = Everything,
             ["undo/workspace"] = Everything,
             ["label/delete"] = Everything,
             ["shelve/delete"] = Everything,

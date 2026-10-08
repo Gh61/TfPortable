@@ -72,7 +72,7 @@ namespace TfPortable.Tests
         public void A_switch_can_raise_the_level_and_merge_candidate_lowers_it()
         {
             var checkin = CommandLine.Parse(new[] { "checkin", "/comment:x", "/override:why" });
-            Assert.Equal((3, "override"), ProtectionLevels.Required(checkin.Spec!, checkin));
+            Assert.Equal((2, (string?)null), ProtectionLevels.Required(checkin.Spec!, checkin));
 
             var plain = CommandLine.Parse(new[] { "checkin", "/comment:x" });
             Assert.Equal((2, (string?)null), ProtectionLevels.Required(plain.Spec!, plain));
