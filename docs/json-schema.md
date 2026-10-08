@@ -93,14 +93,14 @@ Enumerations:
 | `version` | `{ "version", "informationalVersion", "clientLibraries": { "Microsoft.TeamFoundationServer.ExtendedClient": "20.256.2", … }, "runtime" }` |
 | `help` | `{ "commands": [ { "name", "aliases": [], "phase": 1\|2\|null, "supported": bool, "status": "implemented"\|"planned"\|"out-of-scope", "summary", "switches": [ { "name", "short", "value": "none"\|"optional"\|"required", "values": [], "summary", "extension": bool } ] } ] }`; with `help <command>` the array has one element. `phase` is null for the tool's own commands (`login`, `help`, …) and for out-of-scope commands; `supported` is true only for commands that run in this build (`status` is "implemented"); `switches` include the global ones; `values` lists the accepted values of an enumeration switch (`format` always contains `json`), empty for free text |
 | `status` | `{ "changes": [PendingChange], "detectedChanges": [PendingChange], "counts": { "changes", "detected" } }` |
-| `add`, `checkout`, `delete`, `rename` | `{ "changes": [PendingChange], "skipped": [ { "localPath", "reason": "ignored"\|"alreadyVersioned"\|"notFound"\|"locked" } ] }` |
-| `undo` | `{ "undone": [PendingChange], "notFound": [string] }` |
-| `get` | `{ "operations": [ { "operation": "getting"\|"replacing"\|"deleting", "localPath", "serverPath", "version" } ], "conflicts": [Conflict], "skipped": [ { "localPath", "reason": "writable" } ], "counts": { "getting", "replacing", "deleting", "conflicts", "skipped" }, "preview": bool }` |
-| `resolve` | `{ "conflicts": [Conflict], "resolved": [ { "localPath", "serverPath", "resolution" } ], "preview": bool }` |
-| `reconcile` | `{ "promoted": [PendingChange], "deleted": [string], "differences": [ { "localPath", "status": "modified"\|"added"\|"deleted" } ], "preview": bool }` |
+| `add`, `checkout`, `delete`, `rename` | `{ "changes": [PendingChange], "skipped": [ { "localPath", "reason": "alreadyVersioned"\|"notFound"\|"locked"\|"error" } ] }`. Every skipped item is also a Message in `errors` (exit 1); `rename` of a missing source is a fatal TFP0301 (exit 100, docs/compat.md §1.1). The `ignored` reason of the draft is not produced: the client library skips ignored items silently during `/recursive` and wildcard expansion |
+| `undo` | `{ "undone": [PendingChange], "notFound": [string] }`; nothing to undo is a TFP0301 in `errors` with exit 1 |
+| `get` | `{ "operations": [ { "operation": "getting"\|"replacing"\|"deleting", "localPath", "serverPath", "version", "isFolder" } ], "conflicts": [Conflict], "skipped": [ { "localPath", "reason": "writable" } ], "counts": { "getting", "replacing", "deleting", "conflicts", "skipped" }, "preview": bool }`; conflicts are TFP0403 and writable files TFP0402 in `errors` (exit 1) |
+| `resolve` | `{ "conflicts": [Conflict] (still open), "resolved": [ { "localPath", "serverPath", "resolution" } ], "preview": bool }`; open conflicts are TFP0403 in `errors` (exit 1). Conflict also carries `message` (the client library's description) |
+| `reconcile` | `{ "promoted": [PendingChange], "deleted": [string], "differences": [ { "localPath", "status": "modified"\|"added"\|"deleted" } ], "preview": bool }`; `differences` lists every detected change, `promoted` what `/promote` pended, `deleted` what `/clean` removed |
 | `localversions` | `{ "items": [ { "localPath", "serverPath", "changesetId", "isFolder" } ], "count" }` |
-| `workfold` | `{ "workspace": Workspace }` (mappings included) |
-| `workspaces` | `{ "workspaces": [Workspace] }` |
+| `workfold` | `{ "workspace": Workspace }` (mappings included; with a folder argument the text shows the matching mapping only, the JSON the whole workspace) |
+| `workspaces` | `{ "workspaces": [Workspace] }`; no match is exit 1 with an empty array. `/remove:` returns `{ "removed": [string], "workspaces": [] }` |
 | `history` | `{ "changesets": [Changeset], "count", "mode": "slot"\|"item", "scanned": n (search extensions only) }` |
 | `changeset` | `{ "changeset": Changeset, "diff": string or null }` (`diff` only with `/diff`) |
 | `view` | `{ "item": Item, "version", "content": string, "output": null or path }`; binary items need `/output`, then `content` is null |

@@ -37,6 +37,17 @@ namespace TfPortable
             new LogoutCommand(),
             new WhoamiCommand(),
             new StatusCommand(),
+            new AddCommand(),
+            new CheckoutCommand(),
+            new DeleteCommand(),
+            new RenameCommand(),
+            new UndoCommand(),
+            new GetCommand(),
+            new ResolveCommand(),
+            new ReconcileCommand(),
+            new LocalVersionsCommand(),
+            new WorkfoldCommand(),
+            new WorkspacesCommand(),
             new HistoryCommand(),
         };
 

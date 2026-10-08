@@ -6,9 +6,10 @@ both people and AI coding agents can read.
 
 > Status: pre-alpha. The specification is finished, the behavior of the original is captured in
 > `tests/golden/`, and the commands are being implemented milestone by milestone
-> (`docs/PROGRESS.md`). Milestone 2 (the core: parser, workspace context, errors, JSON envelope,
-> `login`/`logout`/`whoami`/`help`/`version`) is in review; `status` and `history` run in their
-> milestone 1 form; every other command answers `TFP0003` until its milestone lands. Nothing is
+> (`docs/PROGRESS.md`). Milestones 2 (core) and 3 (workspace commands: `status`, `add`,
+> `checkout`, `delete`, `rename`, `undo`, `get`, `resolve`, `reconcile`, `localversions`,
+> `workfold`, `workspaces`) are implemented; `history` runs in its brief form; the remaining
+> history and content commands of milestone 4 answer `TFP0003` until they land. Nothing is
 > released yet.
 
 ## Why this project exists

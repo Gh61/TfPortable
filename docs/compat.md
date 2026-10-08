@@ -81,7 +81,7 @@ mode the whole result is one JSON document on stdout and stderr stays empty exce
 | --- | --- | --- |
 | Dates | Short `7. 10. 2026` in tables, long `středa 7. října 2026 19:07:27` in detail blocks (local time, no offset) | **deviate**: ISO 8601 with offset everywhere (`2026-10-07T19:07:27+02:00`), as in SPEC.md |
 | Table width | Fitted to 79 columns; the last column (comment) is cut (`history/short-version`: `Fix null ch`) | **deviate**: columns are kept, but the last column is never truncated. Truncation loses information the AI needs and the layout of the other columns does not change. (Approved at Gate A, 2026-10-07.) |
-| Grouping of local items | Items are grouped under their folder: `Main\src:` + names, relative to the current directory for `add`, `checkout`, `delete`, `rename`, `undo`, `unshelve`, `shelve`, `checkin`; absolute for `get`, `localversions`; when the folder equals the current directory the header line is omitted (`checkout/server-workspace`, `undo/server-workspace`) | **deviate** in one point: paths are printed absolute (SPEC.md "Cesty ve výstupu jsou vždy absolutní"); the grouping and the header-omission rule are kept |
+| Grouping of local items | Items are grouped under their folder: `Main\src:` + names, relative to the current directory for `add`, `checkout`, `delete`, `rename`, `undo`, `unshelve`, `shelve`, `checkin`; absolute for `get`, `localversions`; when the folder equals the current directory the header line is omitted (`checkout/server-workspace`, `undo/server-workspace`) | **deviate**: paths are printed absolute (SPEC.md "Cesty ve výstupu jsou vždy absolutní") and the folder header is always printed, also when the folder is the current directory (SPEC.md "Tvar textového výstupu"; milestone 3 follows SPEC.md here, an earlier draft of this row said the omission rule was kept) |
 | Server items | `$/...` paths; deleted items carry a deletion id `;X18`; versions as `;C83` | follow |
 | Encoding | Output in the ANSI code page; `view` of a BOM-less UTF-8 file produced mojibake (`view/czech-name`) because the bytes were written raw | **deviate**: UTF-8 on stdout always; `view` decodes the item by its server encoding (`utf-8`, `windows-1250`, …) and re-encodes to UTF-8. `view/czech-name` is a bug of the original, the golden text is not reproduced |
 | Deprecation warning | `properties` prints "properties is deprecated, use tf info" on stderr; `info` does not | **deviate**: no warning for either alias |
@@ -186,6 +186,25 @@ secrets exist. Further details of the parser that the golden files do not show:
 | `resolve/accept-merge` (both sides changed the same line) | exit 1; stdout `<path>: local: 0, server: 0, both: 0, conflicting: 1.`; stderr `Both source and target have changes.`; conflict stays | `/auto:AcceptMerge` | follow |
 | `reconcile/promote-preview`, `promote` | exit 0; "No matching pending changes were found."; `status` afterwards still shows the two candidates, nothing was promoted | `/promote` | follow the Microsoft docs when implementing; verify in an integration test why nothing was promoted (open question: `/adds` `/deletes` may be required) |
 | `reconcile/clean-preview`, `clean` | exit 0; grouped `Deleting untracked.txt`; the candidate delete (`c.txt` missing on disk) is not reported | `/clean` needs `/preview` or `/noprompt` (TFP0405) | follow output; TFP0405 is an intended deviation (the original ran with `/noprompt`) |
+
+Milestone 3 (2026-10-08) notes on §3–§7, found while implementing against the client library:
+
+| Topic | Original | TfPortable |
+| --- | --- | --- |
+| `undo` with nothing to undo | exit 1, stderr | TFP0301 per item (exit 1); `data.notFound` lists the items |
+| `add`/`checkout`/`delete` of a missing item | exit 1, stderr | TFP0301 per item (exit 1), the command continues with the other items; `rename` stops with TFP0301 and exit 100 as the original |
+| `add` of an item already under version control | exit 1 | TFP0401 per item (exit 1) |
+| `.tfignore` | applies to `/recursive` and wildcards, not to an explicit path | the same: the library's exclusion filter is enabled only when the add expands folders or wildcards |
+| `status /user` | warning about local workspaces on stderr, `*` before changes of other workspaces | the same (English warning with a hint; `* ` marks changes whose workspace is not the current one) |
+| `status /format:detailed` | Czech labels, long date, `[<COMPUTER>] path` | English labels, ISO date, `File type: Binary` for binary items, `Source item` for renames |
+| `get` | `Getting`/`Replacing` grouped, `Deleting` flat | the same; a writable file without pending change is TFP0402 (exit 1) with the `/overwrite` hint; conflicts TFP0403 (exit 1) with the conflict line on stderr and the folder header on stdout |
+| `resolve /auto:AutoMergeForced` | accepts the merge with conflict markers | `AcceptMergeWithConflicts` of the client library |
+| `reconcile /promote` | promoted nothing in the golden run | pends the detected adds and deletes (`/adds`, `/deletes` restrict), `/preview` lists them as `Would promote <change>: <name>`; `/exclude` patterns match the file name or the whole path |
+| `reconcile /clean` | deletes untracked files (ran with `/noprompt`) | the same list (`Deleting <name>` grouped), TFP0405 without `/preview` or `/noprompt`; `/ignore`, `/unmapped`, `/diff` are accepted without effect (the detection already honors `.tfignore`) |
+| `workspaces /format:detailed` | `Collection` in the display form, `File time: Current` | normalized collection URL, `Last access` (ISO) instead of the file-time setting |
+| `workfold <folder>` | the matching mapping | the same; an unmapped folder is TFP0203 |
+| `localversions` | leading blank line | no leading blank line; the rest identical |
+| Sorting of listings | culture order (`_golden` before `README.md`) | invariant-culture, case-insensitive order |
 
 ## 8. `localversions`, `properties`/`info`
 

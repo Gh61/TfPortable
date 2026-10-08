@@ -111,9 +111,9 @@ namespace TfPortable.Tests
             Assert.Equal(100, exit);
             Assert.StartsWith("ERROR TFP0003: Command 'checkin' is not supported by tfp", stderr);
 
-            var (exit2, _, stderr2) = Run("add", "a.cs");
+            var (exit2, _, stderr2) = Run("changeset", "81");
             Assert.Equal(100, exit2);
-            Assert.StartsWith("ERROR TFP0003: Command 'add' is not available in this build", stderr2);
+            Assert.StartsWith("ERROR TFP0003: Command 'changeset' is not available in this build", stderr2);
 
             var (exit3, _, stderr3) = Run("git", "permission");
             Assert.Equal(100, exit3);
