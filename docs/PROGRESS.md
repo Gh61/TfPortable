@@ -10,33 +10,30 @@ Read this first in every session. Update it at the end of every session (see CLA
 | 1 | Spike: `tfp whoami` + `tfp status` with PAT, Costura single exe, clean machine | local | done (clean-machine test passed, Gate B approved 2026-10-08) | user approves architecture |
 | 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | done: [PR #1](https://github.com/Gh61/TfPortable/pull/1) merged into `main` on 2026-10-08 after an independent review | – |
 | 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | done: [PR #2](https://github.com/Gh61/TfPortable/pull/2) merged into `main` on 2026-10-08 after an independent review (findings under Decisions) | – |
-| 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | code complete on `m4-history` ([PR #3](https://github.com/Gh61/TfPortable/pull/3)); CI green on the pre-review head, review findings applied (commit d099adb), waiting for CI, then merge | – |
-| 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | in progress on `m5-integration` ([PR #4](https://github.com/Gh61/TfPortable/pull/4), branched from `m4-history`): docs/CLAUDE.md, compatibility tests, embedded-assembly check and THIRD-PARTY-NOTICES done, CI green, review findings applied; merge after PR #3. The release (tag `v0.1.0`) waits for the developer | user approves release |
+| 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | done: [PR #3](https://github.com/Gh61/TfPortable/pull/3) merged into `main` on 2026-10-08 (merge commit ff64062) after an independent review (findings under Decisions) | – |
+| 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | done except the release: [PR #4](https://github.com/Gh61/TfPortable/pull/4) (docs/CLAUDE.md, compatibility tests, embedded-assembly check, THIRD-PARTY-NOTICES) reviewed, CI green and merged into `main` on 2026-10-08; the release (tag `v0.1.0`) waits for the developer | user approves release |
 | – | Phase 2 commands | – | not planned | separate brief |
 
 Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
-1. [PR #3](https://github.com/Gh61/TfPortable/pull/3) (`m4-history`, milestone 4): wait for CI on
-   commit d099adb (the review fixes; the integration tests are the only run of the linear-space
-   diff and of the `GetItems` lookup of `history` against a server). Green → mark ready, merge with a
-   merge commit. Red → fix on `m4-history`, merge forward into `m5-integration`.
-2. [PR #4](https://github.com/Gh61/TfPortable/pull/4) (`m5-integration`, milestone 5): after PR #3
-   is merged, its diff against `main` shrinks to the milestone 5 files; CI green → merge. If a
-   package changes, update `src/TfPortable/embedded-assemblies.txt` from the CI step output and
-   THIRD-PARTY-NOTICES section 3.
-3. Release `v0.1.0` (developer gate, see "Needs the user"): the developer creates the tag; the CI
-   workflow builds `tfp.exe`, writes the SHA-256 and publishes the GitHub release.
-4. Phase 2 commands need a separate brief (SPEC.md "Fáze 2"); the catalog already lists them as
+1. Release `v0.1.0` (developer gate, see "Needs the user"): the developer creates the tag on `main`;
+   the CI workflow builds `tfp.exe`, writes the SHA-256 and publishes the GitHub release. Every
+   milestone branch (`m2-core` … `m5-integration`) is merged; new work starts from `main`.
+2. If a package changes later, update `src/TfPortable/embedded-assemblies.txt` from the output of
+   the CI step "Check the embedded assemblies against THIRD-PARTY-NOTICES" and THIRD-PARTY-NOTICES
+   section 3.
+3. Phase 2 commands need a separate brief (SPEC.md "Fáze 2"); the catalog already lists them as
    planned (TFP0003), `docs/json-schema.md` is the contract of the first release.
-5. Open questions worth an integration test when the developer has time: `/encoding:` value format,
-   `history /workitem` on Azure DevOps Services, `reconcile /promote` promoting nothing (milestone 3).
+4. Open questions worth an integration test when the developer has time: `/encoding:` value format,
+   `history /workitem` on Azure DevOps Services, `reconcile /promote` promoting nothing (milestone 3),
+   and the review nits of PR #3 listed under "Open questions".
 
 ## Needs the user
 
-- Approve the release of milestone 5 (SPEC.md gate): create the tag `v0.1.0` on `main` after PR #3
-  and PR #4 are merged; CI publishes `tfp.exe` with its SHA-256. Before that, a lawyer's look at
+- Approve the release of milestone 5 (SPEC.md gate): create the tag `v0.1.0` on `main` (PR #3 and
+  PR #4 are merged); CI publishes `tfp.exe` with its SHA-256. Before that, a lawyer's look at
   LICENSE-EXCEPTION and THIRD-PARTY-NOTICES (Decisions 2026-10-07) is still open.
 - Decide on branch protection for `main` (the cloud agent merges its own pull requests after an
   independent review; protection would require a human approval per merge).
@@ -189,7 +186,8 @@ Open:
   `docs/CLAUDE.md`, `CompatibilityTests`, the embedded-assembly CI check with
   `src/TfPortable/embedded-assemblies.txt` (33 assemblies + Costura resources), THIRD-PARTY-NOTICES
   section 3 updated; reviewed, findings applied.
-- Next: CI of PR #3 → merge; CI of PR #4 → merge; the developer tags `v0.1.0`.
+- Next: PR #3 merged (ff64062); PR #4 merges after this docs push passes CI; the developer tags
+  `v0.1.0`.
 - Blockers: the release gate (developer); nothing else.
 
 ### 2026-10-08 – cloud session 1 continued, review of PR #1 and milestone 3
