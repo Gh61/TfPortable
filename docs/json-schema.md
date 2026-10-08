@@ -112,9 +112,15 @@ Enumerations:
 | `labels` | `{ "labels": [ { "name", "scope", "owner", "date", "comment", "items": [ { "serverPath", "changesetId", "deletionId" } ] } ] }` (`items` only with `/format:detailed`) |
 | `branches` | `{ "root": "$/...", "branches": [ { "serverPath", "parent", "branchedFromVersion", "children": [...] } ] }` |
 | `merge /candidate` | `{ "source", "target", "candidates": [ Changeset + "partial": bool ] }` (`changes` filled with `/format:detailed`) |
+| `checkin` | `{ "changeset": n or null (with `/validate`), "validated": bool, "changes": [PendingChange], "conflicts": [ { "serverPath", "message", "resolvable" } ], "policyFailures": [string], "overridden": bool, "workItems": [ { "id", "linked": bool } ] }`; a work item that could not be linked after a successful checkin is TFP0501 in `errors` (exit 1) |
+| `shelve` | `{ "shelveset": { "name", "owner" }, "changes": [PendingChange], "replaced": bool, "moved": bool }`; `shelve /delete` returns `{ "shelveset", "deleted": true }` |
+| `shelvesets` | `{ "shelvesets": [ { "name", "owner", "ownerUniqueName", "date", "comment" } ] }` |
+| `unshelve` | `{ "shelveset": { "name", "owner" }, "changes": [PendingChange], "conflicts": [Conflict] }`; open conflicts are TFP0403 in `errors` (exit 1) |
+| `label`, `unlabel` | `{ "label": { "name", "scope" }, "results": [ { "name", "scope", "status": "created"\|"updated"\|"deleted" } ], "skipped": [ { "localPath", "reason" } ] }`; a skipped item is TFP0301 in `errors` (exit 1) |
+| `lock` | `{ "lock": "none"\|"checkout"\|"checkin", "changes": [PendingChange], "count", "skipped": [...] }` |
 
-Phase 2 commands (`merges`, `annotate`, `folderdiff`, `shelvesets`, `unshelve`, `undelete`,
-`rollback`, `branch`, `merge`) add their sections when implemented.
+Phase 2 commands (`merges`, `annotate`, `folderdiff`, `undelete`, `rollback`, `branch`, `merge`)
+add their sections when implemented.
 
 ## 4. Open points for Gate A
 

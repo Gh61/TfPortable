@@ -288,13 +288,54 @@ tf vc folderdiff [sourcePath] targetPath [/recursive] [/noprompt] [/collection:u
               [/filterLocalPathsOnly] [/login:u,[p]] [/view:same,different,sourceOnly,targetOnly]
 ```
 
+## Phase 3 (the everyday write path; protection level 2, `/override` and `/delete` level 3)
+
+### checkin (alias `ci`, from the Microsoft docs)
+
+```
+tf vc checkin [/author:author name] [/comment:("comment"|@commentfile)] [/noprompt] [/notes:(...)]
+           [/override:(reason|@reasonfile)] [/recursive] [/saved] [/validate] [itemspec] [/bypass] [/force]
+           [/noautoresolve] [/login:u,[p]] [/new]
+tf vc checkin /shelveset:shelvesetname[;shelvesetowner] [/bypass] [/noprompt] [/login:u,[p]] [/collection:url]
+           [/author:author name] [/force]
+```
+
+| Switch | TfPortable |
+| --- | --- |
+| `/comment:` | ✓ required (tfp never opens the checkin dialog); `@file` reads it from a file |
+| `/recursive`, `/validate`, `/author:`, `/noautoresolve` | ✓ (`/validate` evaluates conflicts, policies and notes and checks nothing in) |
+| `/override:` | ✓ at protection level 3; records the reason with the policy failures of the evaluation |
+| `/associate:id[,id]` | **+** links the work items to the changeset over the REST work item API after the checkin (the "Fixed in Changeset" link) |
+| `/force` | ~ accepted, no effect in this build (unchanged content is reported as TFP0301) |
+| `/notes:`, `/saved`, `/bypass`, `/new`, `/shelveset:` | ✗ |
+
+Output: `Checking in <change>: <name>` grouped by folder, then `Changeset #<n> checked in.` Nothing pending is TFP0301 (exit 100),
+conflicts TFP0406, policy or note failures TFP0407 (exit 100, nothing checked in).
+
+### shelve
+
+```
+tf vc shelve [/replace] [/comment:("comment"|@commentfile)] [shelvesetname] [/validate] [/noprompt] [/login:u,[p]] [/new]
+tf vc shelve [/move] [/replace] [/comment:("comment"|@commentfile)] [/recursive] [shelvesetname] itemspec [/validate] [/noprompt]
+             [/login:u,[p]] [/new]
+tf vc shelve /delete shelvesetname[;owner] [/login:u,[p]] [/collection:url]
+```
+
+| Switch | TfPortable |
+| --- | --- |
+| `shelvesetname` | ✓ required; an owner part is accepted only when it is the authenticated user |
+| `/comment:`, `/replace`, `/move`, `/recursive` | ✓ (a shelveset that exists without `/replace` is TFP0408) |
+| `/delete` | ✓ at protection level 3 (prints `Shelveset <name>;<owner> deleted.`; tf.exe is silent) |
+| `/validate`, `/new` | ✗ |
+
 ### shelvesets
 
 ```
 tf vc shelvesets [/owner:name] [/format:(brief|detailed|xml)] [/collection:url] [/login:u,[p]] shelvesetname
 ```
 
-`/format:xml` ✗.
+`/owner:` and `/format:brief|detailed` ✓ (the default owner is the authenticated user, `*` everyone); `/format:xml` ✗. A named
+shelveset that does not exist is TFP0301 (exit 100, as tf.exe); an empty list without a name prints `No shelvesets found.` (exit 0).
 
 ### unshelve
 
@@ -302,7 +343,39 @@ tf vc shelvesets [/owner:name] [/format:(brief|detailed|xml)] [/collection:url] 
 tf vc unshelve [/move] [shelvesetname[;username]] [itemspec] [/recursive] [/nomerge] [/noautoresolve] [/noprompt] [/login:u,[p]]
 ```
 
-`/move` ✗ (deletes the shelveset on the server, SPEC.md).
+`shelvesetname` ✓ required (tfp never opens the dialog); `/recursive`, `/nomerge`, `/noautoresolve` ✓; `/move` ✗ (deletes the
+shelveset on the server, SPEC.md). Open conflicts of the merge are TFP0403 (exit 1); a local pending change in the way is TFP0401 (exit 100).
+
+### label
+
+```
+tf vc label labelname[@scope] [/owner:ownername] itemspec [/version:versionspec] [/comment:("comment"|@commentfile)]
+         [/child:(replace|merge)] [/recursive] [/login:u,[p]] [/collection:url]
+tf vc label /delete labelname[@scope] itemspec [/login:u,[p]] [/collection:url]
+```
+
+| Switch | TfPortable |
+| --- | --- |
+| `labelname[@scope]` | ✓; without a scope the team project of the first item |
+| `/version:`, `/comment:`, `/child:replace\|merge`, `/recursive` | ✓ (default `/child:fail`); without `/version` a local path is labelled at the workspace version, a server path at the latest |
+| `/delete` | ✓ at protection level 3 (takes `labelname@scope` only) |
+| `/owner:` | ✗ (the label belongs to the authenticated user) |
+
+### unlabel
+
+```
+tf vc unlabel [/collection:url] [/recursive] [/login:u,[p]] labelname itemspec
+```
+
+✓ as in tf.exe; an item that is not in the label is TFP0301 (exit 1).
+
+### lock
+
+```
+tf vc lock itemspec /lock:(none|checkout|checkin) [/workspace:workspacename] [/recursive] [/login:u,[p]] [/collection:url]
+```
+
+`/lock:` ✓ required, `/recursive` ✓, `/workspace:` ✗ (locks of another workspace are phase 4).
 
 ### undelete
 
@@ -330,9 +403,8 @@ tf vc branch olditem newitem [/version:versionspec] [/noget] [/lock:(none|checki
 
 ## Out of scope (recognized, TFP0003)
 
-`checkin`, `shelve` (incl. `/delete`), `lock`, `label`, `unlabel`, `destroy`, `permission`,
-`workspace` (`/new`, `/delete`, edit), `configure`, `proxy` (`tf settings proxy`), `certificates`,
-`msdn`, `property`, `resolvePath`. Their help texts are in `tests/golden/help/` for reference.
+`destroy`, `permission`, `workspace` (`/new`, `/delete`, edit), `configure`, `proxy` (`tf settings proxy`),
+`certificates`, `msdn`, `property`, `resolvePath`. Their help texts are in `tests/golden/help/` for reference.
 
 ## Aliases
 

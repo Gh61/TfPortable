@@ -421,6 +421,9 @@ tabulka v `docs/compat.md` §1.1 (např. TFP0301 je 1 u `add`, `delete`, `view`,
 | TFP0403 | Get vytvořil konflikty | – | Seznam konfliktů, `tfp resolve /auto:...` | 1 |
 | TFP0404 | Položka je zamčená jiným uživatelem | – | Kdo zámek drží a od kdy | 1 |
 | TFP0405 | `reconcile /clean` bez potvrzení | – | Spustit s `/preview`, pak s `/noprompt` | 100 |
+| TFP0406 | Checkin zastavily konflikty (novější verze na serveru, zámek) | TF10141 | `tfp get`, `tfp resolve`, u zámku jeho vlastník | 100 |
+| TFP0407 | Checkin zastavily checkin policies nebo povinné poznámky, nebo je checkin gated | – | Opravit, nebo `/override:<důvod>` na úrovni 3 | 100 |
+| TFP0408 | Shelveset stejného jména už existuje | – | Jiné jméno, nebo `/replace` | 100 |
 | TFP0501 | Chyba serveru | HTTP 5xx | ActivityId, zkusit znovu | 100 |
 | TFP0900 | Neočekávaná chyba | jakákoli | Cesta k `last-error.txt`, `tfp version` | 100 |
 

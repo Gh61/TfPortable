@@ -337,7 +337,34 @@ Milestone 4 (2026-10-08) notes on §9–§14, found while implementing against t
 | `folderdiff/main-release` | exit 0; three `====` sections (only in source, only in target, different content), pairs `src - ` + tab-indented target, summary line with counts | follow |
 | `annotate/attempt` | exit 2 "Unrecognized command: annotate" – tf.exe has no `annotate` | TfPortable adds it as an extension |
 
-## 16. Out-of-scope commands (TFP0003, reference only)
+## 16. Phase 3 commands: `checkin`, `shelve`, `shelvesets`, `unshelve`, `label`, `unlabel`, `lock`
+
+Implemented on 2026-10-08 from the captures below and the Microsoft docs (the developer could not run
+tf.exe for the missing cases; `tools/capture-tf-golden-phase3.ps1` captures them later). Messages are
+English and come from SPEC.md; the shapes follow the original.
+
+| Case | Original | TfPortable | Decision |
+| --- | --- | --- | --- |
+| `checkin/add-files`, `edit-file`, `delete-file`, `rename-file` | exit 0; grouped `Checking in <change>: <name>`, then `Changeset #84 checked in.` | the same, after an evaluation of conflicts, policies and notes | follow |
+| `checkin/nothing-pending` | exit 100; stderr "No pending changes match the items." + "No files checked in." | TFP0301, exit 100 | follow |
+| `checkin/out-of-date` | exit 100; stdout lists the item, stderr `Conflict: A newer version ... exists on the server.` + TF10141 | the listing, `Conflict: <message>` lines, TFP0406 | follow |
+| `checkin/blocked-by-lock` | exit 100; stderr "item is locked in workspace X;owner" + "No files checked in." | TFP0406 (an evaluation conflict) or TFP0404 with exit 100 when the server rejects the checkin itself | follow |
+| checkin policy failure (no capture) | tf.exe lists the failures and needs `/override` | TFP0407, exit 100; `/override:<reason>` at protection level 3; a policy that tfp cannot evaluate (its assembly is not embedded) counts as a failure, as in tf.exe without the policy installed | follow |
+| `checkin /associate:<id>` (no capture; Microsoft docs) | links the work item | the link is written over the REST work item API after the checkin ("Fixed in Changeset"); a failed link is TFP0501 with exit 1, the changeset stays | deviate: REST instead of the work item object model, which tfp does not embed |
+| `checkin /validate` (no capture) | evaluates without checking in | the same, `Validating <change>: <name>` and a summary line; JSON `validated: true` | follow |
+| `shelve/create` | exit 0; grouped `Shelving <change>: <name>`, then `Shelveset X created.` | the same; `replaced.` with `/replace` when it existed | follow |
+| `shelve` of an existing name | error (TF14000 family) | TFP0408, exit 100, hint `/replace` | follow |
+| `shelve/delete` | exit 0, silent | exit 0, `Shelveset X;owner deleted.`, protection level 3 | deviate: one line of confirmation |
+| `shelvesets/list` | table Shelveset / Owner / Comment | the same (ISO date in `/format:detailed`) | follow |
+| `shelvesets/not-found` (named) | exit 100 | TFP0301, exit 100 | follow |
+| `unshelve/basic` | exit 0; grouped `Unshelving <change>: <name>` | the same; open merge conflicts are TFP0403 (exit 1) | follow |
+| `unshelve/not-found` | exit 100 | TFP0301, exit 100 | follow |
+| `label/create` | exit 0; `Created label name@scope` | the same (`Updated label` on an update, as `unlabel/item`) | follow |
+| `label/not-found-item` | exit 100; VS403405 | TFP0301, exit 100 | follow |
+| `unlabel/not-labeled` | exit 1; TF203060 | TFP0301 per item, exit 1 | follow |
+| `lock/checkin-lock`, `checkout-lock`, `remove` | exit 0; grouped item names | the same | follow |
+
+## 17. Out-of-scope commands (TFP0003, reference only)
 
 | Case | Original |
 | --- | --- |
@@ -357,7 +384,7 @@ Milestone 4 (2026-10-08) notes on §9–§14, found while implementing against t
 | `destroy/preview` | exit 0; "Destroyed: $/path" even in preview. TfPortable refuses `destroy` entirely, including `/preview` |
 | `workspace/*` | exit 0; silent |
 
-## 17. Protection levels (extension, phase 3)
+## 18. Protection levels (extension, phase 3)
 
 tf.exe has no notion of protection; every command runs as the user's permissions allow. TfPortable
 adds three levels (SPEC.md "Úrovně ochrany"): 1 read-only, 2 everyday work (default), 3 everything.
@@ -366,7 +393,7 @@ connects to the server. The level is stored in `%APPDATA%\TfPortable\settings.js
 only by `tfp protection set <n>` in an interactive terminal (raising asks for a typed confirmation).
 It is a guard rail and a clear contract for scripts and agents, not a security boundary.
 
-## 18. Open questions raised by this analysis
+## 19. Open questions raised by this analysis
 
 Recorded in `docs/PROGRESS.md`:
 
