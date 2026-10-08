@@ -8,39 +8,38 @@ Read this first in every session. Update it at the end of every session (see CLA
 | --- | --- | --- | --- | --- |
 | 0 | Spec refinement from golden files (`docs/compat.md`, SPEC.md updates) | local | done (Gate A passed 2026-10-07; help capture still to be reviewed) | user approves SPEC.md |
 | 1 | Spike: `tfp whoami` + `tfp status` with PAT, Costura single exe, clean machine | local | done (clean-machine test passed, Gate B approved 2026-10-08) | user approves architecture |
-| 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | done in [PR #1](https://github.com/Gh61/TfPortable/pull/1) (branch `m2-core`, CI green on 2026-10-08: 144 unit + 18 integration tests, standalone exe); awaiting the developer's review and merge | developer merges PR #1 |
-| 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | CI green on `m3-workspace` ([PR #2](https://github.com/Gh61/TfPortable/pull/2)), golden scenario passes against the test collection; independent review and merge in progress | – |
-| 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | in progress (branch `m4-history`, [PR #3](https://github.com/Gh61/TfPortable/pull/3), code complete, CI loop) | – |
-| 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | not started | user approves release |
+| 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | done: [PR #1](https://github.com/Gh61/TfPortable/pull/1) merged into `main` on 2026-10-08 after an independent review | – |
+| 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | done: [PR #2](https://github.com/Gh61/TfPortable/pull/2) merged into `main` on 2026-10-08 after an independent review (findings under Decisions) | – |
+| 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | code complete on `m4-history` ([PR #3](https://github.com/Gh61/TfPortable/pull/3)); CI green on the pre-review head, review findings applied (commit d099adb), waiting for CI, then merge | – |
+| 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | in progress on `m5-integration` ([PR #4](https://github.com/Gh61/TfPortable/pull/4), branched from `m4-history`): docs/CLAUDE.md, compatibility tests, embedded-assembly check and THIRD-PARTY-NOTICES done, CI green, review findings applied; merge after PR #3. The release (tag `v0.1.0`) waits for the developer | user approves release |
 | – | Phase 2 commands | – | not planned | separate brief |
 
 Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
-1. Milestone 2 ([PR #1](https://github.com/Gh61/TfPortable/pull/1), branch `m2-core`) is green and
-   ready for review. The repository secrets exist, so the integration tests run for real (18
-   passed, 0 skipped, including the golden workspace fixture, `tfp login /pat:-`, the three
-   `status` golden cases and `whoami`); a "Skipped" count in the summary would mean the secrets
-   were removed. If the developer asks for changes, continue on `m2-core`.
-2. Developer: review and merge PR #1.
-3. Milestone 3 (`m3-workspace`, from `main` after the merge): extend `ITfvcClient`/`ITfvcWorkspace`
-   (`Context/ITfvcClient.cs`) with the operations each command needs and return DTOs from
-   `Context/TfvcModels.cs`; register each command in `Program.Commands()` and flip its catalog
-   entry (`Cli/CommandCatalog.cs`) from `Planned` to `Implemented` (the unit test
-   `Every_implemented_command_in_the_program_is_in_the_catalog_and_marked_implemented` enforces
-   the pairing); `status /format:detailed`, `/user`, `/shelveset` currently throw TFP0003 in
-   `Commands/StatusCommand.cs`. Golden cases: reuse `tests/TfPortable.IntegrationTests/Golden/`
-   (`GoldenCase`, `TfpRunner`, `GoldenComparison` with `GoldenChecks.All`,
-   `GoldenWorkspaceFixture` creates the local workspace and runs `Get`); the pending-change
-   scenario of `index.json` must run in index order and end with `undo`.
-4. Milestone 4 (`m4-history`): `history` detailed format and search extensions are rejected with
-   TFP0003 in `Commands/HistoryCommand.cs`; the catalog already lists the switches.
+1. [PR #3](https://github.com/Gh61/TfPortable/pull/3) (`m4-history`, milestone 4): wait for CI on
+   commit d099adb (the review fixes; the integration tests are the only run of the linear-space
+   diff and of the `GetItems` lookup of `history` against a server). Green → mark ready, merge with a
+   merge commit. Red → fix on `m4-history`, merge forward into `m5-integration`.
+2. [PR #4](https://github.com/Gh61/TfPortable/pull/4) (`m5-integration`, milestone 5): after PR #3
+   is merged, its diff against `main` shrinks to the milestone 5 files; CI green → merge. If a
+   package changes, update `src/TfPortable/embedded-assemblies.txt` from the CI step output and
+   THIRD-PARTY-NOTICES section 3.
+3. Release `v0.1.0` (developer gate, see "Needs the user"): the developer creates the tag; the CI
+   workflow builds `tfp.exe`, writes the SHA-256 and publishes the GitHub release.
+4. Phase 2 commands need a separate brief (SPEC.md "Fáze 2"); the catalog already lists them as
+   planned (TFP0003), `docs/json-schema.md` is the contract of the first release.
+5. Open questions worth an integration test when the developer has time: `/encoding:` value format,
+   `history /workitem` on Azure DevOps Services, `reconcile /promote` promoting nothing (milestone 3).
 
 ## Needs the user
 
-- Review and merge [PR #1](https://github.com/Gh61/TfPortable/pull/1) (milestone 2). Decide on
-  branch protection for `main`.
+- Approve the release of milestone 5 (SPEC.md gate): create the tag `v0.1.0` on `main` after PR #3
+  and PR #4 are merged; CI publishes `tfp.exe` with its SHA-256. Before that, a lawyer's look at
+  LICENSE-EXCEPTION and THIRD-PARTY-NOTICES (Decisions 2026-10-07) is still open.
+- Decide on branch protection for `main` (the cloud agent merges its own pull requests after an
+  independent review; protection would require a human approval per merge).
 - The golden fixture creates a temporary local workspace named `tfp-golden-<id>` on the CI runner
   (owner: the PAT's user) and deletes it at the end; a run that dies mid-way may leave one behind
   in the collection (harmless, but visible in `tf workspaces /owner:*`). Delete such leftovers
@@ -128,6 +127,7 @@ Statuses: not started, in progress, blocked, done.
 | 2026-10-08 | Golden comparison gained `ChangesetsSubset` and a relative-path resolution for `File:` / `+++ Local:` lines of diffs; the milestone 4 cases compare line by line where the seeded state is stable (changeset blocks, view content, `dir /version:C75`, `labels /format:detailed v1.0`, `properties` at C75, `difference` of C75~C81) and shape plus subsets where later golden runs extended the server (history of Main, dir of Main, branches, merge candidates, labels list) | docs/golden-format.md §6 |
 | 2026-10-08 | First CI run of milestone 4 (18 failures) fixed: (1) the seeded changesets belong to the developer, so the fixture maps the owner display name of the oldest changeset of `$/TfsPortableTestRepo` to `<OWNER>` as well as the CI identity; (2) the Czech → English dictionary of `GoldenText` is applied longest first and on whole words only (`Typ` no longer turns tfp's `Type` into `Typee`); (3) `properties` cases skip the stream check (the original's deprecation warning on stderr is an intended deviation, compat §1.3); (4) "Item … was not found in source control at version …" of the client library (no TF code, not an `ItemNotFoundException`) maps to TFP0301, so `view` exits 1 and `history` prints the empty result; (5) `changeset` lists items by parent folder, then name, as tf.exe (a folder's direct children before its subfolders' items); (6) the unified diff matches the common prefix and suffix before running Myers, as tf.exe: a block inserted in front of a repeated `}` is reported before that line; (7) `history/brief` and `merge/candidate` compare shape only: the 300 padding changesets of the `long-default` capture push the seed changesets past the 256 limit, and changeset 83 was merged to Release by the later golden changeset 91 | CI log of run 37785311952 |
 | 2026-10-08 | Review of PR #3 (independent agent, no blocking findings) and the fixes applied before the merge: (1) linked work items are read only for `changeset` and `history /format:detailed` (`Changeset.AssociatedWorkItems` is a server call per access), `/workitem` resolves the work item's links once through `ILinking.GetReferencingArtifacts` with a per-changeset fallback; (2) `changeset /diff` compares a merged or branched file with its own previous version, only a rename looks under the old name; (3) `history` and `view` accept wildcards and `history` of a deleted item works (lookup through `GetItems` with deleted items); (4) the unified diff treats CRLF/LF and a missing final newline as differences unless `/ignoreeol` (`\ No newline at end of file` marker) and is now linear-space Myers (middle snake, deletes before inserts in a block; the trace version needed O(D·(N+M)) memory); (5) `difference /shelveset` prints the change line and the `File:` line as the original and the local side is decoded with the server encoding; (6) a single `/version` with two itemspecs applies to both sides; (7) the history continuation hint uses the scanned range and the sort order, and the 256 limit is detected by fetching one row more; (8) `dir <file>` lists the file; `merge /candidate /format:detailed` reads the items per candidate; `properties` outside a workspace reports no lock; the client no longer fabricates a `TF14019` message; `view` strips the final CRLF. Not done (nits recorded as open questions): N+1 downloads of `view /recursive` and `difference /shelveset`, shelved content through a temp file, `branches` of a non-root item prints only the subtree | Review findings; the linear-space diff was cross-checked against a DP edit distance on 3000 random inputs in a scratch .NET 10 project |
+| 2026-10-08 | Review of PR #4 (independent agent, one should-fix: PROGRESS.md was stale): status table, next steps and "Needs the user" rewritten for the hand-over; `docs/CLAUDE.md` keeps only the `-candidate` permission rule (the `/candidate` form never arrives from Git Bash) and says the switch must follow `merge`, names the three meanings of exit 120 (no workspace, path not mapped, server workspace), notes that `view -output:` writes a file and that aliases (`hist`, `stat`, ...) are not in the allow list; the compatibility test checks the `undo` and that no detected change is left; the CI step trims the list lines before the `#` check; SPEC.md points to `docs/CLAUDE.md` as the maintained template | Review findings |
 
 ## Open questions
 
@@ -173,6 +173,24 @@ Open:
   `tools/capture-tf-golden-extra.ps1` (from C84, including history padding).
 
 ## Session log
+
+### 2026-10-08 – cloud session 1 continued, milestones 3–5 to the merge
+
+- Done: PR #2 (milestone 3) reviewed by an independent agent, four should-fix items and two nits
+  applied, CI green, merged into `main` (merge commit 106c574). Milestone 4 CI brought from 18
+  failures to green (owner placeholder of the seed changesets, whole-word Czech → English phrase
+  mapping, properties without the stream check, `was not found in source control` → TFP0301,
+  changeset item order by parent folder, diff prefix/suffix matching; two golden cases that later
+  golden runs invalidated compare shape or items only). PR #3 reviewed (13 should-fix items, no
+  blockers) and the fixes applied (commit d099adb; linear-space Myers diff, work items on request,
+  `/workitem` through the linking service, wildcards and deleted items in `history`/`view`, CRLF
+  and final-newline differences, shelveset diff lines, `dir <file>`, merge candidates detailed).
+  Milestone 5 on `m5-integration` ([PR #4](https://github.com/Gh61/TfPortable/pull/4)):
+  `docs/CLAUDE.md`, `CompatibilityTests`, the embedded-assembly CI check with
+  `src/TfPortable/embedded-assemblies.txt` (33 assemblies + Costura resources), THIRD-PARTY-NOTICES
+  section 3 updated; reviewed, findings applied.
+- Next: CI of PR #3 → merge; CI of PR #4 → merge; the developer tags `v0.1.0`.
+- Blockers: the release gate (developer); nothing else.
 
 ### 2026-10-08 – cloud session 1 continued, review of PR #1 and milestone 3
 

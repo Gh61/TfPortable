@@ -30,8 +30,11 @@ Setup (once, by a person):
 - Do not check in; the tool does not support it. Leave the work as pending changes.
 - Exit code 110 means a problem with the PAT: tell the user to run `tfp login` in their own
   terminal. Never ask for a PAT and never enter one yourself.
-- Exit code 120 means no workspace or collection was found: run the command inside a mapped
-  folder or pass `-collection:<url>`.
+- Exit code 120 means TfPortable found no workspace or collection, the path is not mapped, or the
+  workspace is a server workspace; follow the hint of the error (`-collection:<url>` or `cd` into a
+  mapped folder for the first case).
+- Use the canonical command names (`status`, `history`, ...): the permission rules below do not
+  list the aliases (`stat`, `hist`, `lv`, `co`, `del`, ...), so an alias asks for confirmation.
 - Before `tfp get`, `tfp undo` and `tfp reconcile` run the `-preview` variant first when the
   command has one.
 - `tfp history` returns at most 256 changesets without `-stopafter:<n>`; the output says how to
@@ -43,6 +46,9 @@ Setup (once, by a person):
 ## Permissions for `.claude/settings.json`
 
 Read-only commands run without confirmation; commands that change the workspace ask first.
+The rules are prefix matches: `merge -candidate` is allowed only with the switch directly after
+`merge` (the order tf.exe uses). `view -output:<file>` writes a local file; move `view` to `ask`
+if that matters in your project.
 
 ```json
 {
@@ -52,8 +58,8 @@ Read-only commands run without confirmation; commands that change the workspace 
       "Bash(tfp view:*)", "Bash(tfp diff:*)", "Bash(tfp difference:*)", "Bash(tfp dir:*)",
       "Bash(tfp info:*)", "Bash(tfp properties:*)", "Bash(tfp localversions:*)",
       "Bash(tfp workfold:*)", "Bash(tfp workspaces:*)", "Bash(tfp whoami:*)",
-      "Bash(tfp labels:*)", "Bash(tfp branches:*)", "Bash(tfp merge /candidate:*)",
-      "Bash(tfp merge -candidate:*)", "Bash(tfp help:*)", "Bash(tfp version:*)"
+      "Bash(tfp labels:*)", "Bash(tfp branches:*)", "Bash(tfp merge -candidate:*)",
+      "Bash(tfp help:*)", "Bash(tfp version:*)"
     ],
     "ask": [
       "Bash(tfp get:*)", "Bash(tfp undo:*)", "Bash(tfp reconcile:*)",

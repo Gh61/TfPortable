@@ -84,7 +84,8 @@ namespace TfPortable.IntegrationTests
             }
             finally
             {
-                Run("undo Main -recursive -noprompt");
+                var undo = Run("undo Main -recursive -noprompt");
+                Assert.True(undo.ExitCode == 0 || undo.ExitCode == 1, undo.Stderr);
                 try
                 {
                     if (Directory.Exists(scratch))
@@ -99,7 +100,9 @@ namespace TfPortable.IntegrationTests
             }
 
             var clean = Run("status -recursive -format:json");
-            Assert.Equal(0, (int)JObject.Parse(clean.Stdout)["data"]!["counts"]!["changes"]!);
+            var counts = JObject.Parse(clean.Stdout)["data"]!["counts"]!;
+            Assert.Equal(0, (int)counts["changes"]!);
+            Assert.Equal(0, (int)counts["detected"]!);
         }
     }
 }

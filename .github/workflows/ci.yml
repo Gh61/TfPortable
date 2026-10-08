@@ -76,7 +76,7 @@ jobs:
           if (-not (Test-Path $expectedFile)) {
             throw "Missing $expectedFile; create it with the list above and check THIRD-PARTY-NOTICES."
           }
-          $expected = Get-Content $expectedFile | Where-Object { $_ -and -not $_.StartsWith('#') } | ForEach-Object { $_.Trim() } | Sort-Object -Unique
+          $expected = Get-Content $expectedFile | ForEach-Object { $_.Trim() } | Where-Object { $_ -and -not $_.StartsWith('#') } | Sort-Object -Unique
           $diff = Compare-Object -ReferenceObject @($expected) -DifferenceObject @($names)
           if ($diff) {
             $diff | ForEach-Object { Write-Host "$($_.SideIndicator) $($_.InputObject)" }
