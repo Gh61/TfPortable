@@ -121,13 +121,23 @@ Exit codes: `0` success, `1` partial success or a per-item failure, `2` unknown 
 | `merge /candidate` | Changesets not yet merged between two branches |
 | `help`, `version` | Command catalog (`/format:json` for agents); versions of tfp and the client libraries |
 
-Phase 2 commands (`merges`, `annotate`, `folderdiff`, `shelvesets`, `unshelve`, `undelete`,
-`rollback`, `branch`, `merge`) are recognized and answer `TFP0003` until they are implemented.
-
 Every switch of every command, and what TfPortable does with it, is in
 [docs/commands.md](docs/commands.md). Where TfPortable deliberately differs from `tf.exe`
 (exit codes, dates, truncation, encoding) is in [docs/compat.md](docs/compat.md). The JSON output
 is described in [docs/json-schema.md](docs/json-schema.md).
+
+## Phases and progress
+
+TfPortable grows in phases (the authoritative definition is in `docs/SPEC.md`, the day-to-day
+state in [docs/PROGRESS.md](docs/PROGRESS.md)). A command of a later phase is recognized and
+answers `TFP0003` with the phase it is planned for.
+
+| Phase | Scope | Status |
+| --- | --- | --- |
+| 1 | Reading and workspace work: the commands in the table above (PAT sign-in, status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces, history, changeset, view, difference, dir, properties, labels, branches, merge /candidate). Everything it changes is local and reversible with `undo` | **done**, released as [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) (2026-10-08) |
+| 2 | More reading and pending-change work: `annotate`, `merges`, `folderdiff`, `shelvesets`, `unshelve`, `undelete`; `merge`, `branch` and `rollback` as pending changes only; content search in history | planned |
+| 3 | The everyday write path: `checkin`, `label`/`unlabel`, `shelve` (without `/delete`), so that work can be checked in, labelled and parked on the server | planned |
+| 4 | The rest of `tf.exe`, including commands that change the server irreversibly (`destroy`, `permission`, `lock`, `workspace /new` and `/delete`, `shelve /delete`, `proxy`, `configure`). Whether the tool should offer them is undecided | hypothetical |
 
 ## For AI agents
 

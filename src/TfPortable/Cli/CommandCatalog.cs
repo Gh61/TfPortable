@@ -320,25 +320,26 @@ namespace TfPortable.Cli
                 Lock,
                 new SwitchSpec("silent", null, SwitchValue.None, "Less output.")),
 
-            // Recognized but refused (SPEC.md: they write to the server immediately, open dialogs or manage the server).
-            OutOfScope("checkin", "Checks pending changes into the server."),
-            OutOfScope("shelve", "Stores pending changes on the server as a shelveset."),
-            OutOfScope("lock", "Locks or unlocks items on the server."),
-            OutOfScope("label", "Creates or edits a label on the server."),
-            OutOfScope("unlabel", "Removes items from a label on the server."),
-            OutOfScope("destroy", "Permanently deletes items on the server."),
-            OutOfScope("permission", "Edits permissions on the server."),
-            OutOfScope("workspace", "Creates, edits or deletes workspaces."),
-            OutOfScope("configure", "Opens the source control settings dialog."),
-            OutOfScope("proxy", "Configures a version control proxy."),
-            OutOfScope("certificates", "Configures client certificates."),
-            OutOfScope("msdn", "Opens the documentation."),
-            OutOfScope("property", "Edits item properties on the server."),
-            OutOfScope("resolvepath", "Translates a server path to a local path."),
+            // Recognized but refused in this build (SPEC.md): phase 3 is the everyday write path (checkin, label, shelve),
+            // phase 4 the rest of tf.exe including what changes the server irreversibly; msdn opens a browser and never fits.
+            OutOfScope("checkin", "Checks pending changes into the server.", 3),
+            OutOfScope("shelve", "Stores pending changes on the server as a shelveset.", 3),
+            OutOfScope("lock", "Locks or unlocks items on the server.", 4),
+            OutOfScope("label", "Creates or edits a label on the server.", 3),
+            OutOfScope("unlabel", "Removes items from a label on the server.", 3),
+            OutOfScope("destroy", "Permanently deletes items on the server.", 4),
+            OutOfScope("permission", "Edits permissions on the server.", 4),
+            OutOfScope("workspace", "Creates, edits or deletes workspaces.", 4),
+            OutOfScope("configure", "Opens the source control settings dialog.", 4),
+            OutOfScope("proxy", "Configures a version control proxy.", 4),
+            OutOfScope("certificates", "Configures client certificates.", 4),
+            OutOfScope("msdn", "Opens the documentation.", null),
+            OutOfScope("property", "Edits item properties on the server.", 4),
+            OutOfScope("resolvepath", "Translates a server path to a local path.", 4),
         };
 
-        private static CommandSpec OutOfScope(string name, string summary) =>
-            new CommandSpec(name, Array.Empty<string>(), null, CommandStatus.OutOfScope, summary, "");
+        private static CommandSpec OutOfScope(string name, string summary, int? phase) =>
+            new CommandSpec(name, Array.Empty<string>(), phase, CommandStatus.OutOfScope, summary, "");
 
         /// <summary>Command groups of tf.exe other than version control (`tf git ...`, `tf settings ...`).</summary>
         public static readonly string[] OtherGroups = { "git", "settings" };

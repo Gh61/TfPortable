@@ -113,8 +113,9 @@ namespace TfPortable
         {
             if (spec.Status == CommandStatus.OutOfScope)
             {
+                string planned = spec.Phase == null ? string.Empty : $" Planned for phase {spec.Phase}.";
                 return new TfpException(ErrorCodes.NotSupported, ExitCodes.GeneralError,
-                    $"Command '{spec.Name}' is not supported by {toolName}: {spec.Summary}",
+                    $"Command '{spec.Name}' is not supported by {toolName}: {spec.Summary}{planned}",
                     "Use Visual Studio or the original tf.exe for it.");
             }
 

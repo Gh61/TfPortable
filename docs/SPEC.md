@@ -30,7 +30,11 @@ TfPortable nahrazuje originální tf.exe pro práci s TFVC v Azure DevOps Servic
 
 **Fáze 2: rozšíření** – `annotate`, `merges`, `merge` (jen pending), `branch` (jen pending), `undelete`, `rollback` (jen pending), `shelvesets`, `unshelve`, `folderdiff`, vyhledávání v obsahu historie.
 
-**Mimo rozsah (zatím)** – `checkin`, `shelve`, `lock`, `label`/`unlabel`, `destroy`, `permission`, `workspace /new` a `/delete`, `proxy`, `configure`. Tyto příkazy nástroj rozpozná a vrátí jasnou chybu `TFP0003 NotSupported` s doporučením použít Visual Studio nebo originální tf.exe. Důvod: všechny zapisují na server okamžitě a nevratně, kdežto pending changes ve fázi 1 jdou kdykoli vzít zpět přes `undo`.
+**Fáze 3: zápis na server pro běžnou práci** – `checkin` (klasický checkin pending changes), `label`/`unlabel` (označkování checkinu), `shelve` bez `/delete` (uložení rozdělané práce na server a návrat k ní přes `unshelve` z fáze 2). Rozsah přepínačů a doplňky vhodné pro běžnou práci určí samostatné zadání.
+
+**Fáze 4 (hypotetická): zbytek tf.exe** – všechny zbývající příkazy a přepínače včetně těch, které mění server nevratně (`destroy`, `permission`, `lock`, `workspace /new` a `/delete`, `shelve /delete`, `proxy`, `configure`). Zda je má nástroj umožnit, zatím není rozhodnuto; smysl by to mělo jen jako úplná náhrada tf.exe.
+
+Příkazy pozdějších fází nástroj rozpozná a vrátí jasnou chybu `TFP0003 NotSupported` s číslem fáze a doporučením použít Visual Studio nebo originální tf.exe. Důvod: zapisují na server okamžitě a nevratně, kdežto pending changes ve fázi 1 jdou kdykoli vzít zpět přes `undo`.
 
 ## Architektura a build
 
