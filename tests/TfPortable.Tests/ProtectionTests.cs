@@ -10,6 +10,7 @@ using Xunit;
 namespace TfPortable.Tests
 {
     /// <summary>Protection levels (SPEC.md "Úrovně ochrany"): the catalog map, the settings file and the gate in Program.</summary>
+    [Collection("ToolSettings")]
     public sealed class ProtectionTests : IDisposable
     {
         private readonly string directory = Path.Combine(Path.GetTempPath(), "tfp-tests-" + Guid.NewGuid().ToString("N"));

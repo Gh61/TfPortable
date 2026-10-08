@@ -10,6 +10,7 @@ using Xunit;
 namespace TfPortable.Tests
 {
     /// <summary>Argument handling of the phase 3 commands that needs no server: comments, work item ids, shelveset and label specs, rendering.</summary>
+    [Collection("ToolSettings")]
     public class Phase3CommandTests
     {
         private static (int Exit, string Out, string Err) Run(params string[] args)
