@@ -79,7 +79,8 @@ namespace TfPortable.Tests
             JsonAssert.Null(envelope["collection"]!);
             var commands = (JArray)envelope["data"]!["commands"]!;
             Assert.Contains(commands, c => (string)c["name"]! == "status" && (bool)c["supported"]!);
-            Assert.Contains(commands, c => (string)c["name"]! == "checkin" && !(bool)c["supported"]!);
+            Assert.Contains(commands, c => (string)c["name"]! == "checkin" && (bool)c["supported"]!);
+            Assert.Contains(commands, c => (string)c["name"]! == "destroy" && !(bool)c["supported"]!);
 
             var (_, single, _) = Run("help", "history", "/format:json");
             Assert.Single((JArray)JObject.Parse(single)["data"]!["commands"]!);
@@ -107,9 +108,9 @@ namespace TfPortable.Tests
         [Fact]
         public void Out_of_scope_and_planned_commands_are_TFP0003_with_exit_100()
         {
-            var (exit, _, stderr) = Run("checkin", "/comment:x");
+            var (exit, _, stderr) = Run("destroy", "$/a");
             Assert.Equal(100, exit);
-            Assert.StartsWith("ERROR TFP0003: Command 'checkin' is not supported by tfp", stderr);
+            Assert.StartsWith("ERROR TFP0003: Command 'destroy' is not supported by tfp", stderr);
 
             var (exit2, _, stderr2) = Run("merges", "$/a", "$/b");
             Assert.Equal(100, exit2);

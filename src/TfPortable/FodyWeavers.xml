@@ -53,7 +53,7 @@
       Microsoft.TeamFoundation.WorkItemTracking.Common
       Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi
       Microsoft.TeamFoundation.WorkItemTracking.Proxy
-      Microsoft.TeamFoundation.WorkItemTracking.WebApi
+      <!-- WorkItemTracking.WebApi stays embedded: checkin /associate links work items over REST (phase 3) -->
       Microsoft.VisualStudio.Services.TestManagement.TestPlanning.WebApi
       Microsoft.VisualStudio.Services.TestResults.WebApi
       Microsoft.Azure.Pipelines.WebApi
