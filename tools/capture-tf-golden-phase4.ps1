@@ -339,7 +339,9 @@ Write-Host ''
 
 $failed = $null
 $ownerSpec = if ($owner) { $owner } else { $env:USERNAME }
-$checkinExtra = @("/associate:$WorkItem", "/override:Golden4 capture ($run)")
+# /override is listed by the captured help of checkin and satisfies a work item policy of the project; /associate is not
+# in that help (Microsoft docs only), so the phase 3 script captures it as a case and this script does not rely on it.
+$checkinExtra = @("/override:Golden4 capture ($run)")
 try {
     # --- Setup: the run folder with three files, checked in; the second workspace ----------------
     Write-Host '--- setup' -ForegroundColor Cyan
@@ -354,6 +356,7 @@ try {
 
     # --- property ------------------------------------------------------------------------------------
     Write-Host '--- property' -ForegroundColor Cyan
+    # No help capture exists for property (only the one-line listing of `tf vc help`); the forms follow the Microsoft docs.
     Invoke-Case 'property' 'read' @('property', "$WsA\$GL\a.txt") | Out-Null
     Invoke-Case 'property' 'set' @('property', '/setproperty:tfp-golden=1', "$WsA\$GL\a.txt") | Out-Null
     Invoke-Case 'property' 'read-after-set' @('property', "$WsA\$GL\a.txt") | Out-Null
@@ -390,10 +393,14 @@ try {
     Write-File $WsB "$GL\c.txt" @('this file is shelved from workspace B', 'and checked in from the shelveset')
     Invoke-Case 'shelve' 'validate' @('shelve', $shelf, "$WsB\$GL", '/recursive', '/validate', "/comment:Golden4 shelveset ($run)", '/noprompt') -WorkingDirectory $WsB | Out-Null
     Invoke-Case 'shelve' 'move-from-b' @('shelve', $shelf, "$WsB\$GL", '/recursive', '/move', "/comment:Golden4 shelveset ($run)", '/noprompt') -WorkingDirectory $WsB | Out-Null
-    Invoke-Case 'checkin' 'shelveset' (@('checkin', "/shelveset:$shelf;$ownerSpec", '/noprompt') + $checkinExtra) | Out-Null
-    $changesets['checkin-shelveset'] = Get-LatestChangeset
+    # The shelveset form of checkin lists neither /override nor /associate in its help: with a work item policy on the
+    # project this case captures the refusal, which is a result of its own.
+    $fromShelveset = Invoke-Case 'checkin' 'shelveset' @('checkin', "/shelveset:$shelf;$ownerSpec", '/noprompt')
     Invoke-Case 'shelvesets' 'after-checkin-shelveset' @('shelvesets', $shelf) | Out-Null
-    Invoke-Case 'changeset' 'from-shelveset' @('changeset', "$($changesets['checkin-shelveset'])", '/noprompt') | Out-Null
+    if ($fromShelveset.ExitCode -eq 0) {
+        $changesets['checkin-shelveset'] = Get-LatestChangeset
+        Invoke-Case 'changeset' 'from-shelveset' @('changeset', "$($changesets['checkin-shelveset'])", '/noprompt') | Out-Null
+    }
     Invoke-Step @('get', "$WsA\$GL", '/recursive', '/noprompt') -Expect @(0, 1) | Out-Null
 
     Write-File $WsA "$GL\moved.txt" @('new file, shelved with /move and taken back with unshelve /move')
@@ -442,7 +449,7 @@ finally {
         }
     }
     foreach ($name in @($shelf, $shelfMove)) {
-        Invoke-TfRaw -Arguments @('shelve', '/delete', "$name;$ownerSpec", '/noprompt') -WorkingDirectory $WsA | Out-Null
+        Invoke-TfRaw -Arguments @('shelve', '/delete', "$name;$ownerSpec") -WorkingDirectory $WsA | Out-Null
     }
     Invoke-TfRaw -Arguments @('permission', '/remove:*', "/user:$ownerSpec", $GS) -WorkingDirectory $WsA | Out-Null
     # The run folder should be destroyed by the capture; when destroy was refused, delete it with a checkin.

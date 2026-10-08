@@ -130,20 +130,23 @@ namespace TfPortable.Tests
                 new CheckinPolicyInfo("Work Items", "Microsoft.TeamFoundation.VersionControl.Controls.Checkin.WorkItemPolicy"),
                 new CheckinPolicyInfo("Changeset Comments Policy", "Microsoft.TeamFoundation.VersionControl.Controls.Checkin.CheckForCommentsPolicy"),
                 new CheckinPolicyInfo("Builds", "Microsoft.TeamFoundation.Build.Controls.BuildPolicy"),
+                new CheckinPolicyInfo("Work Item Query Policy", "Microsoft.TeamFoundation.PowerTools.CheckinPolicies.WorkItemQueryPolicy"),
+                new CheckinPolicyInfo("Code Review Comments", "Contoso.Policies.CodeReviewCommentsPolicy"),
+                new CheckinPolicyInfo("Work Items", null),
                 new CheckinPolicyInfo("Pracovní položky", null),
             };
 
             var withoutWorkItem = CheckinPolicies.Evaluate(policies, "fix", Array.Empty<int>());
-            Assert.Equal(new[] { PolicyStatus.Failed, PolicyStatus.Passed, PolicyStatus.Unknown, PolicyStatus.Unknown }, withoutWorkItem.Select(p => p.Status));
+            Assert.Equal(new[] { PolicyStatus.Failed, PolicyStatus.Passed, PolicyStatus.Unknown, PolicyStatus.Unknown, PolicyStatus.Unknown, PolicyStatus.Failed, PolicyStatus.Unknown }, withoutWorkItem.Select(p => p.Status));
             Assert.Contains("/associate", withoutWorkItem[0].Message);
 
             var withWorkItem = CheckinPolicies.Evaluate(policies, "fix", new[] { 1 });
-            Assert.Equal(new[] { PolicyStatus.Passed, PolicyStatus.Passed, PolicyStatus.Unknown, PolicyStatus.Unknown }, withWorkItem.Select(p => p.Status));
+            Assert.Equal(new[] { PolicyStatus.Passed, PolicyStatus.Passed, PolicyStatus.Unknown, PolicyStatus.Unknown, PolicyStatus.Unknown, PolicyStatus.Passed, PolicyStatus.Unknown }, withWorkItem.Select(p => p.Status));
 
             var evaluation = new CheckinEvaluation(Array.Empty<CheckinConflictInfo>(), Array.Empty<string>(), withoutWorkItem);
-            Assert.Single(evaluation.PolicyFailures);
-            Assert.Equal(2, evaluation.UnknownPolicies.Count());
-            Assert.Equal(3, evaluation.OverridableFailures.Count());
+            Assert.Equal(2, evaluation.PolicyFailures.Count());
+            Assert.Equal(4, evaluation.UnknownPolicies.Count());
+            Assert.Equal(6, evaluation.OverridableFailures.Count());
         }
 
         [Fact]

@@ -294,7 +294,18 @@ namespace TfPortable.Context
             // the implementing class name is stable but not public, so it is read through reflection when available.
             var field = typeof(PolicyEnvelope).GetField("m_className", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var result = new List<CheckinPolicyInfo>();
-            foreach (var envelope in VersionControl.GetCheckinPoliciesForServerPaths(serverPaths.ToArray()) ?? Array.Empty<PolicyEnvelope>())
+            string[] paths = serverPaths.ToArray();
+            // Current Visual Studio versions store the policies under the "client policies" annotation; the library's own
+            // evaluation reads that key first and falls back to the legacy key, so does tfp.
+            var envelopes = VersionControl.GetCheckinClientPoliciesForServerPaths(paths);
+            if (envelopes == null || envelopes.Length == 0)
+            {
+#pragma warning disable CS0618 // The legacy annotation of older servers and clients.
+                envelopes = VersionControl.GetCheckinPoliciesForServerPaths(paths);
+#pragma warning restore CS0618
+            }
+
+            foreach (var envelope in envelopes ?? Array.Empty<PolicyEnvelope>())
             {
                 if (!envelope.Enabled)
                 {

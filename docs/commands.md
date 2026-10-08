@@ -288,7 +288,7 @@ tf vc folderdiff [sourcePath] targetPath [/recursive] [/noprompt] [/collection:u
               [/filterLocalPathsOnly] [/login:u,[p]] [/view:same,different,sourceOnly,targetOnly]
 ```
 
-## Phase 3 (the everyday write path; protection level 2, `/override` and `/delete` level 3)
+## Phase 3 (the everyday write path; protection level 2, `/delete` level 3)
 
 ### checkin (alias `ci`, from the Microsoft docs)
 

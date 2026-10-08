@@ -38,12 +38,20 @@ namespace TfPortable.Commands
             return result;
         }
 
-        private static bool IsWorkItemPolicy(CheckinPolicyInfo policy) =>
-            Contains(policy.ClassName, "WorkItemPolicy") || Contains(policy.TypeName, "Work Item");
+        // The implementing class decides when it is known (a "Work Item Query Policy" or a custom "Code Review Comments" policy
+        // must stay unknown); the display name counts only when the class could not be read, and only as an exact match.
+        private static bool IsWorkItemPolicy(CheckinPolicyInfo policy) => Is(policy, ".WorkItemPolicy", "Work Items");
 
-        private static bool IsCommentPolicy(CheckinPolicyInfo policy) =>
-            Contains(policy.ClassName, "CheckForCommentsPolicy") || Contains(policy.TypeName, "Comment");
+        private static bool IsCommentPolicy(CheckinPolicyInfo policy) => Is(policy, ".CheckForCommentsPolicy", "Changeset Comments Policy");
 
-        private static bool Contains(string? text, string value) => text != null && text.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0;
+        private static bool Is(CheckinPolicyInfo policy, string classSuffix, string displayName)
+        {
+            if (!string.IsNullOrEmpty(policy.ClassName))
+            {
+                return policy.ClassName!.EndsWith(classSuffix, StringComparison.OrdinalIgnoreCase);
+            }
+
+            return string.Equals(policy.TypeName, displayName, StringComparison.OrdinalIgnoreCase);
+        }
     }
 }

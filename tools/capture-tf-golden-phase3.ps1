@@ -329,7 +329,12 @@ try {
     Invoke-Case 'checkin' 'validate' @('checkin', "$WsA\$GL", '/recursive', "/comment:Golden3 validate ($run)", '/validate', '/noprompt') | Out-Null
     Invoke-Case 'status' 'after-validate' @('status', "$WsA\$GL", '/recursive', '/noprompt') | Out-Null
 
-    Invoke-Case 'checkin' 'associate' @('checkin', "$WsA\$GL", '/recursive', "/comment:Golden3 add files ($run)", "/associate:$WorkItem", '/noprompt') -Expect @(0) | Out-Null
+    # /associate comes from the Microsoft docs, not from the captured help: when tf.exe refuses it, the files are checked
+    # in without it so that the rest of the run has its folder on the server.
+    $associate = Invoke-Case 'checkin' 'associate' @('checkin', "$WsA\$GL", '/recursive', "/comment:Golden3 add files ($run)", "/associate:$WorkItem", '/noprompt')
+    if ($associate.ExitCode -ne 0) {
+        Invoke-Step @('checkin', "$WsA\$GL", '/recursive', "/comment:Golden3 add files ($run)", "/override:Golden3 capture ($run)", '/noprompt') | Out-Null
+    }
     $changesets['associate'] = Get-LatestChangeset
     Invoke-Case 'changeset' 'with-work-item' @('changeset', "$($changesets['associate'])", '/noprompt') | Out-Null
     Invoke-Case 'history' 'by-work-item' @('history', $GS, '/recursive', "/workitem:$WorkItem", '/noprompt') | Out-Null
@@ -337,7 +342,7 @@ try {
     [System.IO.File]::WriteAllText($commentFile, "Golden3 comment from a file ($run)`r`nsecond line of the comment`r`n", $script:Utf8NoBom)
     Invoke-Step @('checkout', "$WsA\$GL\a.txt", '/noprompt') | Out-Null
     Write-File $WsA "$GL\a.txt" @('first line', 'edited line')
-    Invoke-Case 'checkin' 'comment-file' @('checkin', "$WsA\$GL\a.txt", "/comment:@$commentFile", '/noprompt') -Expect @(0) | Out-Null
+    Invoke-Case 'checkin' 'comment-file' @('checkin', "$WsA\$GL\a.txt", "/comment:@$commentFile", "/override:Golden3 capture ($run)", '/noprompt') -Expect @(0) | Out-Null
     $changesets['comment-file'] = Get-LatestChangeset
     Invoke-Case 'changeset' 'comment-file' @('changeset', "$($changesets['comment-file'])", '/noprompt') | Out-Null
 
@@ -405,7 +410,7 @@ finally {
     if (Test-Path -LiteralPath "$WsA\$GL") {
         $delete = Invoke-TfRaw -Arguments @('delete', "$WsA\$GL", '/recursive', '/noprompt') -WorkingDirectory $WsA
         if ($delete.ExitCode -eq 0) {
-            Invoke-Case 'checkin' 'delete-folder' @('checkin', "$WsA\$GL", '/recursive', "/comment:Golden3 cleanup ($run)", '/noprompt') | Out-Null
+            Invoke-Case 'checkin' 'delete-folder' @('checkin', "$WsA\$GL", '/recursive', "/comment:Golden3 cleanup ($run)", "/override:Golden3 cleanup ($run)", '/noprompt') | Out-Null
             $changesets['delete-folder'] = Get-LatestChangeset
         }
         else {

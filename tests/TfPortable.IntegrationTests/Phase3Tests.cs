@@ -133,7 +133,7 @@ namespace TfPortable.IntegrationTests
                 if (committed)
                 {
                     Run($"delete {argument} /recursive /noprompt");
-                    var cleanup = Run($"checkin {argument} /recursive /comment:\"CI cleanup ({RunId})\" /associate:1 /override:\"CI cleanup\" /noprompt");
+                    var cleanup = Run($"checkin {argument} /recursive /comment:\"CI cleanup ({RunId})\" /override:\"CI cleanup\" /noprompt");
                     if (cleanup.ExitCode != 0)
                     {
                         Run($"undo {argument} /recursive /noprompt");
@@ -283,7 +283,7 @@ namespace TfPortable.IntegrationTests
                 File.WriteAllText(Path.Combine(folder, "locked.txt"), "to be locked\r\n");
                 var add = Run($"add {argument} /recursive /noprompt");
                 Assert.True(add.ExitCode == 0, add.Stderr);
-                var checkin = Run($"checkin {argument} /recursive /comment:\"CI lock test ({RunId})\" /associate:1 /override:\"CI lock test\" /noprompt");
+                var checkin = Run($"checkin {argument} /recursive /comment:\"CI lock test ({RunId})\" /override:\"CI lock test\" /noprompt");
                 committed = true;
                 Assert.True(checkin.ExitCode == 0, checkin.Stderr);
 
@@ -313,7 +313,7 @@ namespace TfPortable.IntegrationTests
                 if (committed)
                 {
                     Run($"delete {argument} /recursive /noprompt");
-                    var cleanup = Run($"checkin {argument} /recursive /comment:\"CI cleanup ({RunId})\" /associate:1 /override:\"CI cleanup\" /noprompt");
+                    var cleanup = Run($"checkin {argument} /recursive /comment:\"CI cleanup ({RunId})\" /override:\"CI cleanup\" /noprompt");
                     if (cleanup.ExitCode != 0)
                     {
                         Run($"undo {argument} /recursive /noprompt");
