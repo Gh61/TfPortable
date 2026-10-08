@@ -146,9 +146,9 @@ namespace TfPortable.Cli
                 {
                     ValidateValue(spec, switchSpec, raw.Value, toolName);
                 }
-                else if (!help && raw.Value != null && !switchSpec.Accepts(raw.Value))
+                else if (!help && rawCommand.Length == 0 && raw.Value != null && !switchSpec.Accepts(raw.Value))
                 {
-                    // No command: validate the global switch without a command name in the message.
+                    // No command: validate the global switch without a command name in the message (an unknown command stays TFP0001).
                     throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError,
                         $"{Shown(switchSpec, raw.Value)} is not a valid value of '/{switchSpec.Name}'.",
                         $"Valid values: {string.Join(", ", switchSpec.Values)}. See '{toolName} help'.");
