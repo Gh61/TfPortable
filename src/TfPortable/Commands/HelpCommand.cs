@@ -71,7 +71,7 @@ namespace TfPortable.Commands
                 yield return line;
             }
 
-            foreach (var line in Section("Phase 3 (planned):", CommandCatalog.Commands.Where(c => c.Phase == 3 && c.Status == CommandStatus.Planned)))
+            foreach (var line in Section("Phase 3 (writes to the server, protection level 2):", CommandCatalog.Commands.Where(c => c.Phase == 3)))
             {
                 yield return line;
             }

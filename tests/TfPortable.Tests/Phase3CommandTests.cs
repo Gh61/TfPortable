@@ -82,8 +82,23 @@ namespace TfPortable.Tests
             Assert.StartsWith("ERROR TFP0002: label needs the label name", Run("label").Err);
             Assert.StartsWith("ERROR TFP0002: unlabel needs the label name", Run("unlabel", "v1").Err);
             Assert.StartsWith("ERROR TFP0002: lock needs /lock:none", Run("lock", "a.txt").Err);
-            Assert.StartsWith("ERROR TFP0002: shelve /delete takes only the shelveset name.", Run("shelve", "/delete", "x", "y").Err);
-            Assert.StartsWith("ERROR TFP0002: label /delete needs the scope", Run("label", "/delete", "v1").Err);
+
+            // /delete is protection level 3: blocked at the default level, argument errors behind it.
+            Assert.StartsWith("ERROR TFP0004: Switch '/delete' of 'shelve' needs protection level 3.", Run("shelve", "/delete", "x", "y").Err);
+            string path = Path.Combine(Path.GetTempPath(), "tfp-tests-" + Guid.NewGuid().ToString("N") + ".json");
+            var previous = TfPortable.Settings.ToolSettings.PathProvider;
+            try
+            {
+                File.WriteAllText(path, "{ \"protectionLevel\": 3 }");
+                TfPortable.Settings.ToolSettings.PathProvider = () => path;
+                Assert.StartsWith("ERROR TFP0002: shelve /delete takes only the shelveset name.", Run("shelve", "/delete", "x", "y").Err);
+                Assert.StartsWith("ERROR TFP0002: label /delete needs the scope", Run("label", "/delete", "v1").Err);
+            }
+            finally
+            {
+                TfPortable.Settings.ToolSettings.PathProvider = previous;
+                File.Delete(path);
+            }
         }
 
         [Fact]
