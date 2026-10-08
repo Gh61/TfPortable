@@ -17,7 +17,8 @@ Read before you start, in this order:
    `docs/golden-format.md` (golden files and how tests compare).
 4. The code of the spike in `src/TfPortable/` (milestone 1): `Auth/`, `Cli/`, `Context/`,
    `Commands/`, `Errors/`, `Output/`. It works end to end for `login`, `logout`, `whoami`,
-   `status` (brief) and is the base to extend, not to rewrite.
+   `status` (brief) and `history` (brief, no search extensions) and is the base to extend, not
+   to rewrite.
 
 ## Working loop
 
@@ -135,8 +136,10 @@ brief; `Microsoft.TeamFoundation.VersionControl.Client.Difference` or an own Mye
 `dir`, `properties`/`info`, `labels`, `branches`, `merge /candidate`.
 
 - Behavior and shape: SPEC.md rows, `docs/compat.md` §9–§14, `docs/commands.md`.
-- `history`: default slot mode; unknown path exit 0 with the empty-result message; unknown
-  `/user` exit 100 (TF14045); `/format:xml` rejected, `json` accepted; comment never truncated.
+- `history`: the spike's `HistoryCommand` already does brief/JSON, ranges, sorting on the server
+  (`QueryHistory(..., sortAscending)`), slot/item mode and the 256 limit; add `/format:detailed`,
+  the search extensions, `/files`, and a precise mapping of TF14045 (now TFP0501, exit 100 is right).
+  Unknown path exit 0 with the empty-result message; `/format:xml` rejected; comment never truncated.
 - `view/czech-name`: produce correct UTF-8 (the golden text is a bug of the original).
 - Golden cases: `history/*` (long cases compare the first 256 rows), `changeset/*` except
   `edit-comment`/`after-comment-edit` (TFP0003 for `/comment`), `view/*`, `difference/*` except

@@ -35,6 +35,7 @@ namespace TfPortable
                 new LogoutCommand(),
                 new WhoamiCommand(),
                 new StatusCommand(),
+                new HistoryCommand(),
             };
 
             bool json = args.Any(a => a.Length > 1 && (a[0] == '/' || a[0] == '-') && a.Substring(1).Equals("format:json", StringComparison.OrdinalIgnoreCase));
@@ -49,6 +50,10 @@ namespace TfPortable
                 if (commandName == "stat")
                 {
                     commandName = "status";
+                }
+                else if (commandName == "hist")
+                {
+                    commandName = "history";
                 }
 
                 var command = commands.FirstOrDefault(c => c.Name == commandName);
