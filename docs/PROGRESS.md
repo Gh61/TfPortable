@@ -8,7 +8,7 @@ Read this first in every session. Update it at the end of every session (see CLA
 | --- | --- | --- | --- | --- |
 | 0 | Spec refinement from golden files (`docs/compat.md`, SPEC.md updates) | local | done (Gate A passed 2026-10-07; help capture still to be reviewed) | user approves SPEC.md |
 | 1 | Spike: `tfp whoami` + `tfp status` with PAT, Costura single exe, clean machine | local | done (clean-machine test passed, Gate B approved 2026-10-08) | user approves architecture |
-| 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | in progress (branch `m2-core`, draft [PR #1](https://github.com/Gh61/TfPortable/pull/1); code complete, CI loop running, see session log 2026-10-08 cloud) | – |
+| 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | done in [PR #1](https://github.com/Gh61/TfPortable/pull/1) (branch `m2-core`, CI green on 2026-10-08: 144 unit + 18 integration tests, standalone exe); awaiting the developer's review and merge | developer merges PR #1 |
 | 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | not started | – |
 | 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | not started | – |
 | 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | not started | user approves release |
@@ -18,11 +18,11 @@ Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
-1. Milestone 2 ([PR #1](https://github.com/Gh61/TfPortable/pull/1), branch `m2-core`): read the
-   latest CI run of the branch; when it is green, mark the PR ready for review. The repository
-   secrets exist, so the integration tests run for real (run 5: 18 passed, 0 skipped, including
-   the golden workspace fixture, `tfp login /pat:-`, the three `status` golden cases and `whoami`);
-   a "Skipped" count in the summary would mean the secrets were removed.
+1. Milestone 2 ([PR #1](https://github.com/Gh61/TfPortable/pull/1), branch `m2-core`) is green and
+   ready for review. The repository secrets exist, so the integration tests run for real (18
+   passed, 0 skipped, including the golden workspace fixture, `tfp login /pat:-`, the three
+   `status` golden cases and `whoami`); a "Skipped" count in the summary would mean the secrets
+   were removed. If the developer asks for changes, continue on `m2-core`.
 2. Developer: review and merge PR #1.
 3. Milestone 3 (`m3-workspace`, from `main` after the merge): extend `ITfvcClient`/`ITfvcWorkspace`
    (`Context/ITfvcClient.cs`) with the operations each command needs and return DTOs from
@@ -172,6 +172,7 @@ Open:
   and `whoami` ran against the test collection; the standalone exe ran `version`, `help
   /format:json` (48 commands), `status` outside a workspace (120) and an unknown command (2), but
   the step failed on PowerShell's handling of the last exit code (fixed: `exit 0` at the end).
+  Runs 11 and 12 (head `1e8017e`): green. PR #1 marked ready for review.
 - Next: see "Next steps" 1–3.
 - Blockers: PR review by the developer.
 
