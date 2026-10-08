@@ -109,7 +109,7 @@ namespace TfPortable.Tests
                 Assert.Contains(spec.Name, text);
             }
 
-            Assert.Contains("(planned)", text);
+            Assert.DoesNotContain("(planned)", text);
             Assert.Contains("Global switches:", text);
         }
 

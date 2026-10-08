@@ -112,10 +112,6 @@ namespace TfPortable.Tests
             Assert.Equal(100, exit);
             Assert.StartsWith("ERROR TFP0003: Command 'destroy' is not supported by tfp", stderr);
 
-            var (exit2, _, stderr2) = Run("merges", "$/a", "$/b");
-            Assert.Equal(100, exit2);
-            Assert.StartsWith("ERROR TFP0003: Command 'merges' is not available in this build", stderr2);
-
             var (exit3, _, stderr3) = Run("git", "permission");
             Assert.Equal(100, exit3);
             Assert.StartsWith("ERROR TFP0003:", stderr3);
