@@ -1,18 +1,17 @@
 # TfPortable
 
 **TfPortable** (`tfp.exe`) is a portable replacement for the TFVC part of Microsoft's `tf.exe`:
-one file, no Visual Studio, no dialogs, sign-in with a Personal Access Token, and output that
-both people and AI coding agents can read.
+one file, no Visual Studio, no dialogs, sign-in with a Personal Access Token, and output that is
+easy to read for people and easy to parse for scripts and AI coding agents.
 
-> Status: pre-alpha. The specification is finished, the behavior of the original is captured in
-> `tests/golden/`, and the commands are being implemented milestone by milestone
-> (`docs/PROGRESS.md`). Every phase 1 command of the table below is implemented (milestones 2–4);
-> phase 2 commands answer `TFP0003`. The release (milestone 5) is pending. Nothing is released yet.
+> Status: phase 1 (reading and workspace work) is released as
+> [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0). Later phases (see "Phases and
+> progress") answer `TFP0003` until they are implemented. Day-to-day state: `docs/PROGRESS.md`.
 
 ## Why this project exists
 
-Teams that keep their code in TFVC (Team Foundation Version Control) and want to use AI coding
-agents such as Claude Code hit the same wall every day:
+Teams that keep their code in TFVC (Team Foundation Version Control) and want to work with it
+from a plain terminal, a build box or an AI coding agent hit the same wall every day:
 
 - **Signing in with `tf.exe` barely works anymore.** This is the main reason for this project.
   The sign-in window of `tf.exe` crashes on JavaScript errors, the whole sign-in process gets
@@ -135,17 +134,19 @@ answers `TFP0003` with the phase it is planned for.
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 1 | Reading and workspace work: the commands in the table above (PAT sign-in, status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces, history, changeset, view, difference, dir, properties, labels, branches, merge /candidate). Everything it changes is local and reversible with `undo` | **done**, released as [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) (2026-10-08) |
-| 2 | More reading and pending-change work: `annotate`, `merges`, `folderdiff`, `shelvesets`, `unshelve`, `undelete`; `merge`, `branch` and `rollback` as pending changes only; content search in history | planned |
-| 3 | The everyday write path: `checkin`, `label`/`unlabel`, `shelve` (without `/delete`), so that work can be checked in, labelled and parked on the server | planned |
-| 4 | The rest of `tf.exe`, including commands that change the server irreversibly (`destroy`, `permission`, `lock`, `workspace /new` and `/delete`, `shelve /delete`, `proxy`, `configure`). Whether the tool should offer them is undecided | hypothetical |
+| 2 | More reading and pending-change work: `annotate`, `merges`, `folderdiff`, `undelete`; `merge`, `branch` and `rollback` as pending changes only; content search in history | planned |
+| 3 | The everyday write path: `checkin`, `label`/`unlabel`, `shelve` (without `/delete`) with `shelvesets` and `unshelve`, `lock`/`unlock`, so that work can be checked in, labelled, parked on the server and taken up again. Comes with the protection levels (`docs/SPEC.md`, "Úrovně ochrany") | planned, brief in progress |
+| 4 | The rest of `tf.exe`, including commands that change the server irreversibly (`destroy`, `permission`, `workspace /new` and `/delete`, `shelve /delete`, `proxy`, `configure`). Whether the tool should offer them is undecided | hypothetical |
 
 ## For AI agents
 
+TfPortable works with any agent that runs shell commands: every command has a stable exit code,
+a `TFPxxxx` error code with a next step, and `-format:json`. For Claude Code,
 [docs/CLAUDE.md](docs/CLAUDE.md) is a ready-made section for the `CLAUDE.md` of a TFVC project
 plus a permissions snippet for `.claude/settings.json`: which commands to use, dash switches,
 `-format:json`, what exit codes 110 and 120 mean, and that the agent never asks for or enters a
 PAT. Read-only commands can be allowed without confirmation; `get`, `undo`, `reconcile`,
-`resolve` and `delete` should ask.
+`resolve` and `delete` should ask. Other agents can use the same text as a starting point.
 
 ## Build
 

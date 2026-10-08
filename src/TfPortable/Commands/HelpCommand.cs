@@ -71,7 +71,12 @@ namespace TfPortable.Commands
                 yield return line;
             }
 
-            yield return "Not supported (they write to the server at once, open dialogs or manage the server; use Visual Studio or tf.exe):";
+            foreach (var line in Section("Phase 3 (planned):", CommandCatalog.Commands.Where(c => c.Phase == 3 && c.Status == CommandStatus.Planned)))
+            {
+                yield return line;
+            }
+
+            yield return "Not available in this build (planned for a later phase or never offered; use Visual Studio or tf.exe):";
             yield return "  " + string.Join(", ", CommandCatalog.Commands.Where(c => c.Status == CommandStatus.OutOfScope).Select(c => c.Name));
             yield return string.Empty;
             yield return "Global switches: " + string.Join(" ", CommandCatalog.GlobalSwitches.Select(s => s.Usage));
