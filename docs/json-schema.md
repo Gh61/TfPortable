@@ -37,12 +37,12 @@ Rules (from SPEC.md, "Rozšíření pro AI"):
 | `ok` | bool | `exitCode == 0` |
 | `command` | string | Canonical command name (`status`, not `stat`; `difference`, not `diff`) |
 | `exitCode` | int | Process exit code |
-| `collection` | string or null | Normalized collection URL, null when the command needed none (`help`, `version`, `login` failure before connecting) |
-| `workspace` | string or null | `<name>;<owner>` of the workspace used, null when none was needed |
+| `collection` | string or null | Normalized collection URL, null when the command needed none (`help`, `version`, `login` failure before connecting). Filled as soon as the context resolver knows it, so an error envelope (PAT rejected, workspace not found) carries it too |
+| `workspace` | string or null | `<name>;<owner>` of the workspace used (owner = display name, as tf.exe prints it), null when none was needed or found. Filled as soon as it is known, also on errors |
 | `data` | object | Command-specific payload (section 3). Always an object, `{}` when there is nothing |
 | `truncated` | object or null | `{ "returned": 256, "limit": 256, "hint": "Use /stopafter:<n> or /version:C137~C1 to continue." }` when a result was cut (history default limit, search scan limit) |
 | `warnings` | array of Message | Non-fatal findings (e.g. `/user` ignored for local workspaces, PAT without Code scope) |
-| `errors` | array of Message | What failed. Empty when `ok` |
+| `errors` | array of Message | What failed. Empty when `ok`. Per-item errors that did not stop the command come first (the exit code is then 1), a fatal error is the last element |
 
 Message:
 
@@ -87,11 +87,11 @@ Enumerations:
 
 | Command | `data` |
 | --- | --- |
-| `login` | `{ "collection", "identity": { "displayName", "uniqueName", "id" }, "stored": true, "storedAt", "codeScope": true\|false\|null }` |
+| `login` | `{ "collection", "identity": { "displayName", "uniqueName", "id" }, "stored": true, "storedAt", "codeScope": true\|false\|null, "versionControlConnection": bool }`. `identity` comes from the REST check; `versionControlConnection` is whether the TFVC (SOAP) connection also succeeded (false with a warning `TFP0103` when the PAT lacks full access) |
 | `logout` | `{ "collection", "removed": bool }` |
-| `whoami` | `{ "collection", "identity": {…}, "patStoredAt", "workspace": Workspace or null, "cwd" }` |
+| `whoami` | `{ "collection", "identity": {…}, "patStoredAt" (ISO date or null when the PAT came from `/login`), "workspace": Workspace or null, "cwd" }` |
 | `version` | `{ "version", "informationalVersion", "clientLibraries": { "Microsoft.TeamFoundationServer.ExtendedClient": "20.256.2", … }, "runtime" }` |
-| `help` | `{ "commands": [ { "name", "aliases": [], "phase", "supported": bool, "summary", "switches": [ { "name", "short", "value": "none"\|"optional"\|"required", "values": [], "summary", "extension": bool } ] } ] }`; with `help <command>` the array has one element |
+| `help` | `{ "commands": [ { "name", "aliases": [], "phase": 1\|2\|null, "supported": bool, "status": "implemented"\|"planned"\|"out-of-scope", "summary", "switches": [ { "name", "short", "value": "none"\|"optional"\|"required", "values": [], "summary", "extension": bool } ] } ] }`; with `help <command>` the array has one element. `phase` is null for the tool's own commands (`login`, `help`, …) and for out-of-scope commands; `supported` is true only for commands that run in this build (`status` is "implemented"); `switches` include the global ones; `values` lists the accepted values of an enumeration switch (`format` always contains `json`), empty for free text |
 | `status` | `{ "changes": [PendingChange], "detectedChanges": [PendingChange], "counts": { "changes", "detected" } }` |
 | `add`, `checkout`, `delete`, `rename` | `{ "changes": [PendingChange], "skipped": [ { "localPath", "reason": "ignored"\|"alreadyVersioned"\|"notFound"\|"locked" } ] }` |
 | `undo` | `{ "undone": [PendingChange], "notFound": [string] }` |

@@ -98,6 +98,21 @@ mode the whole result is one JSON document on stdout and stderr stays empty exce
 | `dash-switches`, `short-switches` | `-recursive -noprompt`, `-R -I` work | same | follow |
 | `outside-workspace` | exit 100, stderr "cannot determine the source control server" | TFP0201, exit 120 | deviate (exit 120, see 1.1) |
 
+Milestone 2 (2026-10-08): all nine cases are replayed by `GeneralGoldenTests`; the six that need no
+server run on every CI build, the three `status` cases inside the fixture's workspace when the
+secrets exist. Further details of the parser that the golden files do not show:
+
+| Topic | Original | TfPortable |
+| --- | --- | --- |
+| Unknown switch value (`status /format:xml`) | TF10120, exit 100 | TFP0002, exit 100, the hint lists the valid values |
+| Switch of another command (`status -X`) | "option not allowed", exit 100 | TFP0002, exit 100 (short forms are resolved per command) |
+| Out-of-scope command with switches (`checkin /comment:x`) | runs | TFP0003, exit 100; the switches are not validated |
+| Command of a later milestone (`add` before milestone 3, `annotate` before phase 2) | runs (`annotate`: exit 2) | TFP0003, exit 100 with the phase in the message; `help` marks them "(planned)" |
+| `tf git ...`, `tf settings ...` | other command groups | TFP0003, exit 100 |
+| `@file` arguments | supported | supported: UTF-8, one argument per line, blank lines skipped, relative to the current directory; a missing file is TFP0002 |
+| `/login:user,pat` | signs in for the run | used for the run only, never stored, with a warning that the token stays in the shell history |
+| Ctrl+C in the PAT prompt | – | TFP0101, exit 110 (the prompt is a TfPortable feature) |
+
 ## 3. Workspace context: `workspaces`, `workfold`, `workspace`
 
 | Case | Original | SPEC.md | Decision |
