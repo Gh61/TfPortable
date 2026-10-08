@@ -136,7 +136,7 @@ namespace TfPortable.Tests
             {
                 var (exit, stdout, stderr) = Run(args);
                 Assert.True(exit == 0, string.Join(" ", args) + ": " + stderr);
-                Assert.Contains("Usage:", stdout);
+                Assert.StartsWith(args[0] == "help" ? args[1] : args[0], stdout);
             }
         }
 
