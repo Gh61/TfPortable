@@ -1,0 +1,44 @@
+# Assemblies Costura embeds into tfp.exe (resource names without the costura. prefix and the
+# .dll[.compressed] suffix), as printed by the CI step "Check the embedded assemblies against
+# THIRD-PARTY-NOTICES". Every entry must be covered by THIRD-PARTY-NOTICES. Update this file
+# from the CI output after a package change; the step fails when the two differ.
+#
+# Costura's own resources (loader and its metadata; MIT, see THIRD-PARTY-NOTICES section 3):
+costura
+metadata
+# Microsoft Azure DevOps / Team Foundation Server client libraries (section 1):
+microsoft.teamfoundation.client
+microsoft.teamfoundation.common
+microsoft.teamfoundation.core.webapi
+microsoft.teamfoundation.diff
+microsoft.teamfoundation.sourcecontrol.webapi
+microsoft.teamfoundation.versioncontrol.client
+microsoft.teamfoundation.versioncontrol.common
+microsoft.teamfoundation.versioncontrol.common.integration
+microsoft.visualstudio.services.client.interactive
+microsoft.visualstudio.services.common
+microsoft.visualstudio.services.webapi
+# Microsoft.AspNet.WebApi.Client (section 2):
+system.net.http.formatting
+# Components under the MIT License (section 3):
+microsoft.bcl.asyncinterfaces
+microsoft.bcl.memory
+microsoft.bcl.timeprovider
+microsoft.extensions.logging.abstractions
+newtonsoft.json
+system.buffers
+system.configuration.configurationmanager
+system.diagnostics.diagnosticsource
+system.io.filesystem.accesscontrol
+system.memory
+system.memory.data
+system.numerics.vectors
+system.runtime.compilerservices.unsafe
+system.security.accesscontrol
+system.security.cryptography.protecteddata
+system.security.permissions
+system.security.principal.windows
+system.text.encodings.web
+system.text.json
+system.threading.tasks.extensions
+system.valuetuple

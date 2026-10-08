@@ -143,11 +143,26 @@ http://www.microsoft.com/web/webpi/eula/net_library_eula_ENU.htm
 3. Components under the MIT License
 ===============================================================================
 
-  - Microsoft.Data.SqlClient 5.2.2        Copyright (c) Microsoft Corporation
-  - System.IdentityModel.Tokens.Jwt 8.7.0 Copyright (c) Microsoft Corporation
   - Newtonsoft.Json 13.0.3                Copyright (c) 2007 James Newton-King
   - Fody and Costura.Fody (build-time assembly embedding; a small loader is
     embedded into tfp.exe)                Copyright (c) Simon Cropp and contributors
+  - .NET Foundation libraries, Copyright (c) .NET Foundation and Contributors
+    (dependencies of the client libraries; published under the MIT License, the
+    older ones through https://github.com/dotnet/corefx/blob/master/LICENSE.TXT):
+      Microsoft.Bcl.AsyncInterfaces 8.0.0, Microsoft.Bcl.Memory 9.0.0,
+      Microsoft.Bcl.TimeProvider 8.0.1, Microsoft.Extensions.Logging.Abstractions 6.0.0,
+      System.Buffers 4.5.1, System.Configuration.ConfigurationManager 6.0.1,
+      System.Diagnostics.DiagnosticSource 6.0.2, System.IO.FileSystem.AccessControl 5.0.0,
+      System.Memory 4.5.5, System.Memory.Data 6.0.0, System.Numerics.Vectors 4.5.0,
+      System.Runtime.CompilerServices.Unsafe 6.0.0, System.Security.AccessControl 6.0.0,
+      System.Security.Cryptography.ProtectedData 4.7.0, System.Security.Permissions 6.0.0,
+      System.Security.Principal.Windows 5.0.0, System.Text.Encodings.Web 8.0.0,
+      System.Text.Json 8.0.5, System.Threading.Tasks.Extensions 4.5.4, System.ValueTuple 4.5.0
+
+The exact list of embedded assemblies is kept in src/TfPortable/embedded-assemblies.txt
+and checked by CI. Packages excluded from the single file (Microsoft.Data.SqlClient, the
+Microsoft.Identity / Azure.Identity stack, Azure DevOps services other than version
+control; see src/TfPortable/FodyWeavers.xml) are not distributed with tfp.exe.
 
 The MIT License (MIT)
 

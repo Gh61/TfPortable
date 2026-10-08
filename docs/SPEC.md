@@ -419,7 +419,7 @@ Claude Code na Windows spouští příkazy přes Git Bash, a to má jednu zásad
 
 **Ochrana proti převodu cest**: chybu `TFP0002` nástroj ohlásí jen u argumentu, který začíná kořenem instalace Git for Windows (zjištěným z prostředí Git Bashe, např. `MSYSTEM`, a z umístění `git.exe`) a pokračuje názvem známého přepínače, např. `C:/Program Files/Git/recursive`. Běžné lokální cesty s dopřednými lomítky (`D:/Projects/App/recursive`) se jako chyba nehlásí. Hláška vysvětlí příčinu a doporučí `-přepínač` nebo `MSYS_NO_PATHCONV=1`.
 
-**Šablona do CLAUDE.md** (v repozitáři jako `docs/CLAUDE.md`)
+**Šablona do CLAUDE.md** (v repozitáři jako `docs/CLAUDE.md`; udržovanou verzí je ten soubor, zde je výchozí znění)
 
 ```markdown
 ## Správa verzí: TFVC přes TfPortable
