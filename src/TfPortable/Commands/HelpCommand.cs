@@ -82,7 +82,8 @@ namespace TfPortable.Commands
             yield return "Global switches: " + string.Join(" ", CommandCatalog.GlobalSwitches.Select(s => s.Usage));
             yield return "Switches accept '/' or '-' (use '-' in Git Bash) and are case-insensitive; values follow ':' (e.g. -format:json).";
             yield return $"'{toolName} help <command>' or '{toolName} <command> /?' lists the switches of a command; '{toolName} help /format:json' is the machine-readable catalog.";
-            yield return "Differences from tf.exe: docs/compat.md. Commands marked (planned) are not available in this build.";
+            yield return "Differences from tf.exe: docs/compat.md."
+                + (CommandCatalog.Commands.Any(c => c.Status == CommandStatus.Planned) ? " Commands marked (planned) are not available in this build." : string.Empty);
         }
 
         private static IEnumerable<string> Section(string title, IEnumerable<CommandSpec> commands)

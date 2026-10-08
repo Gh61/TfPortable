@@ -301,7 +301,7 @@ namespace TfPortable.Cli
                 Recursive,
                 new SwitchSpec("filter", null, SwitchValue.Required, "Filter patterns."),
                 new SwitchSpec("filterlocalpathsonly", null, SwitchValue.None, "Apply the filter to local paths only."),
-                new SwitchSpec("view", null, SwitchValue.Required, "Which items to show.", new[] { "same", "different", "sourceOnly", "targetOnly" })),
+                new SwitchSpec("view", null, SwitchValue.Required, "Which items to show: same, different, sourceOnly, targetOnly (comma-separated).")),
 
             // Phase 3: the everyday write path.
             new CommandSpec("checkin", new[] { "ci" }, 3, CommandStatus.Implemented,

@@ -104,6 +104,7 @@ namespace TfPortable.Commands
         {
             ChangesetInfo[] attribution = Array.Empty<ChangesetInfo>();
             string[] current = Array.Empty<string>();
+            string currentText = string.Empty;
             string? lastPath = null;
             foreach (var changeset in history)
             {
@@ -126,7 +127,8 @@ namespace TfPortable.Commands
 
                 if (current.Length > 0)
                 {
-                    foreach (var pair in UnifiedDiff.MatchingLines(string.Join("\n", current), text))
+                    // Line endings do not change who wrote a line.
+                    foreach (var pair in UnifiedDiff.MatchingLines(currentText, text, DiffOptions.IgnoreEol))
                     {
                         if (pair.Key < attribution.Length && pair.Value < nextAttribution.Length)
                         {
@@ -136,6 +138,7 @@ namespace TfPortable.Commands
                 }
 
                 current = next;
+                currentText = text;
                 attribution = nextAttribution;
             }
 
