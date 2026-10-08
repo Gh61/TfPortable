@@ -10,6 +10,11 @@ the help names. Global switches (`/collection`, `/workspace`, `/login`, `/noprom
 `/verbose`, `/help`) are accepted by every command and not repeated. Behavior and exit codes are
 in SPEC.md and `docs/compat.md`; JSON fields in `docs/json-schema.md`.
 
+The executable form of this table is `src/TfPortable/Cli/CommandCatalog.cs` (milestone 2): `tfp help`,
+`tfp help <command>`, `tfp help /format:json`, the switch validation (TFP0002) and the MSYS
+converted-path detection all derive from it. Keep the two in sync; a switch marked ✗ below is
+simply absent from the catalog (unknown switch), unless its rejection needs a specific message.
+
 Legend: **✓** implemented as in tf.exe · **~** accepted, limited or no-op (see note) ·
 **✗** rejected with TFP0002 (not needed, or would write to the server) · **+** TfPortable extension.
 

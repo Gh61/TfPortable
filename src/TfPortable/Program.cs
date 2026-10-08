@@ -70,18 +70,8 @@ namespace TfPortable
             }
             catch (Exception ex)
             {
+                // TF30063 with a token that REST accepts (PAT without full access, TFP0103) is told apart in ContextResolver.
                 var error = ErrorMapper.Map(ex, toolName, output.Collection);
-                if (error.Code == ErrorCodes.PatRejected && output.Collection != null && !(ex is TfpException))
-                {
-                    // TF30063 with a token that REST accepts means the PAT lacks full access (see SPEC.md "Scope PAT").
-                    var stored = Auth.CredentialStore.Read(output.Collection);
-                    var scope = stored == null ? null : Auth.ConnectionFactory.ExplainSoapRejection(output.Collection, output.Collection, stored.Pat, toolName, ex);
-                    if (scope != null)
-                    {
-                        error = scope;
-                    }
-                }
-
                 error.ExitCode = ErrorCodes.ExitCodeFor(output.Command, error.Code, error.ExitCode);
                 output.Error(error);
                 if (verbose)
