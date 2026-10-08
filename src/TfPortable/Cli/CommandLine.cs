@@ -142,16 +142,10 @@ namespace TfPortable.Cli
                         $"Valid switches: {string.Join(", ", table.Values.Distinct().Select(s => s.Usage).OrderBy(s => s, StringComparer.Ordinal))}. See '{toolName} help {spec.Name}'.");
                 }
 
-                if (!help && spec != null)
+                if (!help && (spec != null || rawCommand.Length == 0))
                 {
-                    ValidateValue(spec, switchSpec, raw.Value, toolName);
-                }
-                else if (!help && rawCommand.Length == 0 && raw.Value != null && !switchSpec.Accepts(raw.Value))
-                {
-                    // No command: validate the global switch without a command name in the message (an unknown command stays TFP0001).
-                    throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError,
-                        $"{Shown(switchSpec, raw.Value)} is not a valid value of '/{switchSpec.Name}'.",
-                        $"Valid values: {string.Join(", ", switchSpec.Values)}. See '{toolName} help'.");
+                    // Known command, or a global switch without any command; an unknown command stays TFP0001.
+                    ValidateValue(spec?.Name, switchSpec, raw.Value, toolName);
                 }
 
                 result.Set(switchSpec.Name, raw.Value);
@@ -229,27 +223,32 @@ namespace TfPortable.Cli
         private static SwitchSpec? Resolve(Dictionary<string, SwitchSpec> table, string name) =>
             table.TryGetValue(name, out var s) ? s : null;
 
-        private static void ValidateValue(CommandSpec command, SwitchSpec s, string? value, string toolName)
+        /// <summary>Value rules of a switch; <paramref name="commandName"/> is null when no command was given (global switch alone).</summary>
+        private static void ValidateValue(string? commandName, SwitchSpec s, string? value, string toolName)
         {
+            string forCommand = commandName == null ? string.Empty : $" for command '{commandName}'";
+            string ofCommand = commandName == null ? string.Empty : $" of command '{commandName}'";
+            string help = commandName == null ? $"{toolName} help" : $"{toolName} help {commandName}";
+
             if (s.Value == SwitchValue.None && value != null)
             {
                 throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError,
-                    $"Switch '/{s.Name}' of command '{command.Name}' does not take a value ({Shown(s, value)} given).",
-                    $"Write '/{s.Name}' alone. See '{toolName} help {command.Name}'.");
+                    $"Switch '/{s.Name}'{ofCommand} does not take a value ({Shown(s, value)} given).",
+                    $"Write '/{s.Name}' alone. See '{help}'.");
             }
 
             if (s.Value == SwitchValue.Required && string.IsNullOrEmpty(value))
             {
                 throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError,
-                    $"Switch '/{s.Name}' of command '{command.Name}' needs a value.",
-                    $"Write '{s.Usage}'. See '{toolName} help {command.Name}'.");
+                    $"Switch '/{s.Name}'{ofCommand} needs a value.",
+                    $"Write '{s.Usage}'. See '{help}'.");
             }
 
             if (!string.IsNullOrEmpty(value) && !s.Accepts(value!))
             {
                 throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError,
-                    $"{Shown(s, value!)} is not a valid value of '/{s.Name}' for command '{command.Name}'.",
-                    $"Valid values: {string.Join(", ", s.Values)}. See '{toolName} help {command.Name}'.");
+                    $"{Shown(s, value!)} is not a valid value of '/{s.Name}'{forCommand}.",
+                    $"Valid values: {string.Join(", ", s.Values)}. See '{help}'.");
             }
         }
 
