@@ -34,6 +34,10 @@ Statuses: not started, in progress, blocked, done.
 
 ## Needs the user
 
+The checklist with the details lives in `docs/DEVELOPER-TODO.md` (release `v0.2.0`, checkin policies on the
+test project, the golden captures of phases 3 and 4 in one sitting, the permanent shelveset, the decisions
+before phase 4). The items below are kept for history.
+
 - A lawyer's look at LICENSE-EXCEPTION and THIRD-PARTY-NOTICES (Decisions 2026-10-07) is still
   open; `v0.1.0` was released with the current texts.
 - Phase 3 answers of 2026-10-08: CI may check in under `$/TfsPortableTestRepo/CI/<run>` (done, with
