@@ -348,9 +348,14 @@ namespace TfPortable.Context
 
             public PendResult Undo(IReadOnlyList<ItemQuery> items)
             {
+                // The UndonePendingChange event reports a rename under its restored (old) name; tf.exe lists the pending
+                // change as it was, so the changes are read before the undo and reported when the undo took them all.
+                var specs = items.Select(ToItemSpec).ToArray();
+                var before = workspace.GetPendingChanges(specs).Select(p => ToPendingChange(p, false)).ToList();
                 using var collector = new EventCollector(Vcs);
-                int count = workspace.Undo(items.Select(ToItemSpec).ToArray(), true);
-                return new PendResult(collector.Undone, collector.Failures, count);
+                int count = workspace.Undo(specs, true);
+                var undone = count > 0 && count == before.Count ? before : collector.Undone;
+                return new PendResult(undone, collector.Failures, count);
             }
 
             public GetResult Get(IReadOnlyList<ItemQuery>? items, VersionSpec version, GetFlags flags)

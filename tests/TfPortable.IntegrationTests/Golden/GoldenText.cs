@@ -17,7 +17,7 @@ namespace TfPortable.IntegrationTests.Golden
         private static readonly Regex ActivityId = new Regex(@"^\s*ActivityId:.*$", RegexOptions.Compiled | RegexOptions.Multiline);
 
         private static readonly Regex ServerPath = new Regex(@"\$/[^\s;,:""']*[^\s;,:.""']", RegexOptions.Compiled);
-        private static readonly Regex LocalPath = new Regex(@"(?:[A-Za-z]:\\|<(?:WORKSPACE|LOCAL)_[A-Z_]*ROOT>)[^\s:""']*[^\s:.""']", RegexOptions.Compiled);
+        private static readonly Regex LocalPath = new Regex(@"(?:[A-Za-z]:\\|<(?:WORKSPACE|LOCAL)_[A-Z_]*ROOT>)[^\s:;""']*[^\s:;.""']", RegexOptions.Compiled);
         private static readonly Regex ChangesetNumber = new Regex(@"(?<=;C)\d+|(?<=\bC)\d+\b|(?<=Changeset:\s)\d+|(?<=Sada změn:\s)\d+|^\s*\d+(?=\s|\*|$)", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly Regex DeletionId = new Regex(@"(?<=;X)\d+", RegexOptions.Compiled);
         private static readonly Regex TrailerCount = new Regex(@"(?<=\S:\s*)\d+(?=\s*(,|$))", RegexOptions.Compiled | RegexOptions.Multiline);

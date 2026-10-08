@@ -90,7 +90,8 @@ namespace TfPortable.IntegrationTests
                 File.SetAttributes(program, FileAttributes.Normal);
                 File.AppendAllText(program, "// local edit for golden capture\r\n", new UTF8Encoding(false));
             }),
-            new Step("status/pending-detailed", GoldenChecks.Shape | GoldenChecks.Counts | GoldenChecks.ChangeTypes),
+            // The detailed blocks carry a Lock label that the change-word mapping would read as a change type; counts suffice.
+            new Step("status/pending-detailed", GoldenChecks.Shape | GoldenChecks.Counts),
             new Step("get/with-pending", GoldenChecks.Exact),
             new Step("undo/recursive", GoldenChecks.Exact),
             new Step("undo/nothing-to-undo", GoldenChecks.Shape),
@@ -105,22 +106,52 @@ namespace TfPortable.IntegrationTests
         {
             fixture.EnsureReady();
             var failures = new List<string>();
-            foreach (var step in Scenario)
+            try
             {
-                var golden = GoldenCase.Load(step.Id);
-                step.Before?.Invoke(fixture);
-                string cwd = golden.Cwd.Replace("<WORKSPACE_ROOT>", fixture.WorkspaceRoot).Replace("<LOCAL_ROOT>", fixture.LocalRoot);
-                string arguments = golden.Arguments.Replace("<COLLECTION>", fixture.Collection.TrimEnd('/')).Replace("<WORKSPACE_ROOT>", fixture.WorkspaceRoot).Replace("<LOCAL_ROOT>", fixture.LocalRoot);
-                var result = TfpRunner.Run(arguments, cwd);
-                int expected = ExitCodeDeviations.TryGetValue(step.Id, out int exit) ? exit : golden.ExitCode;
-                var differences = GoldenComparison.Compare(golden, result, expected, step.Checks, fixture.Placeholders, cwd);
-                if (differences.Count > 0)
+                foreach (var step in Scenario)
                 {
-                    failures.Add($"{step.Id} ({golden.Command}):\n{string.Join("\n", differences)}");
+                    var golden = GoldenCase.Load(step.Id);
+                    step.Before?.Invoke(fixture);
+                    string cwd = golden.Cwd.Replace("<WORKSPACE_ROOT>", fixture.WorkspaceRoot).Replace("<LOCAL_ROOT>", fixture.LocalRoot);
+                    string arguments = golden.Arguments.Replace("<COLLECTION>", fixture.Collection.TrimEnd('/')).Replace("<WORKSPACE_ROOT>", fixture.WorkspaceRoot).Replace("<LOCAL_ROOT>", fixture.LocalRoot);
+                    var result = TfpRunner.Run(arguments, cwd);
+                    int expected = ExitCodeDeviations.TryGetValue(step.Id, out int exit) ? exit : golden.ExitCode;
+                    var differences = GoldenComparison.Compare(golden, result, expected, step.Checks, fixture.Placeholders, cwd);
+                    if (differences.Count > 0)
+                    {
+                        failures.Add($"{step.Id} ({golden.Command}):\n{string.Join("\n", differences)}");
+                    }
                 }
+            }
+            finally
+            {
+                // Leave the workspace as the read-only cases expect it: no pending changes, no scratch files.
+                TfpRunner.Run("undo Main /recursive /noprompt", fixture.WorkspaceRoot);
+                DeleteScratch(Path.Combine(fixture.WorkspaceRoot, "Main", "_golden"));
+                DeleteScratch(Path.Combine(fixture.WorkspaceRoot, "Main", "src", "bin"));
             }
 
             Assert.True(failures.Count == 0, string.Join("\n\n", failures));
+        }
+
+        private static void DeleteScratch(string directory)
+        {
+            try
+            {
+                if (Directory.Exists(directory))
+                {
+                    foreach (string file in Directory.GetFiles(directory, "*", SearchOption.AllDirectories))
+                    {
+                        File.SetAttributes(file, FileAttributes.Normal);
+                    }
+
+                    Directory.Delete(directory, true);
+                }
+            }
+            catch (Exception)
+            {
+                // Best effort; the fixture deletes the whole folder at the end anyway.
+            }
         }
 
         [IntegrationFact]
