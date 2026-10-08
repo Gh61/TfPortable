@@ -82,6 +82,16 @@ namespace TfPortable.IntegrationTests
                 {
                     Assert.NotEmpty(Changes(Run($"status {Release} /recursive /nodetect /format:json")));
                 }
+
+                // /discard pends the merge without taking the content (the changes are marked as merged).
+                Assert.True(Run($"undo {Release} /recursive /noprompt").ExitCode == 0 || candidateCount == 0);
+                var discard = Run($"merge {Main} {Release} /recursive /discard /noprompt /format:json");
+                Assert.True(discard.ExitCode == 0 || discard.ExitCode == 1, discard.Stderr);
+                if (candidateCount > 0)
+                {
+                    var pending = Changes(Run($"status {Release} /recursive /nodetect /format:json"));
+                    Assert.Contains(pending, c => c["changeTypes"]!.Any(t => (string?)t == "merge"));
+                }
             }
             finally
             {
@@ -122,6 +132,12 @@ namespace TfPortable.IntegrationTests
                 var pending = Changes(Run($"status {argument} /recursive /nodetect /format:json"));
                 Assert.Contains(pending, c => c["changeTypes"]!.Any(t => (string?)t == "rollback"));
                 Assert.Equal("one\r\n", File.ReadAllText(Path.Combine(folder, "r.txt")));
+                Assert.True(Run($"undo {argument} /recursive /noprompt").ExitCode == 0);
+
+                // Without an itemspec the whole workspace is rolled back (golden rollback/changeset).
+                var whole = Run($"rollback /changeset:C{edit} /noprompt /format:json");
+                Assert.True(whole.ExitCode == 0, whole.Stderr);
+                Assert.Contains((JArray)Data(whole)["changes"]!, c => c["changeTypes"]!.Any(t => (string?)t == "rollback"));
                 Assert.True(Run($"undo {argument} /recursive /noprompt").ExitCode == 0);
 
                 // /toversion back to the first changeset gives the same pending change.
@@ -179,6 +195,12 @@ namespace TfPortable.IntegrationTests
             Assert.True(diff.ExitCode == 0, diff.Stderr);
             Assert.True((int)Data(diff)["counts"]!["files"]! > 0);
             Assert.Contains("Summary:", Run($"folderdiff {Main} {Release} /recursive /noprompt").Stdout);
+            var filtered = Run($"folderdiff {Main} {Release} /recursive /filter:*.md /noprompt /format:json");
+            Assert.True(filtered.ExitCode == 0, filtered.Stderr);
+            Assert.All(((JArray)Data(filtered)["sourceOnly"]!).Concat((JArray)Data(filtered)["targetOnly"]!), p => Assert.EndsWith(".md", (string)p!, StringComparison.OrdinalIgnoreCase));
+            var missing = Run($"folderdiff {Main}/no-such-{RunId} {Release} /recursive /noprompt");
+            Assert.Equal(100, missing.ExitCode);
+            Assert.Contains("TFP0301", missing.Stderr);
 
             // One path: the local folder against its server folder; the workspace is up to date, nothing differs.
             var local = Run("folderdiff Main\\data /recursive /noprompt /format:json");

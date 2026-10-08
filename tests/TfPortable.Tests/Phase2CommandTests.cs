@@ -35,6 +35,8 @@ namespace TfPortable.Tests
             Assert.Equal("rename, edit, rollback: $/P/a.txt;C85~C87 -> $/P/a.txt;C87",
                 Change("rename, edit, rollback", "$/P/a.txt", 87, new MergeSourceInfo("$/P/a.txt", 85, 87, true)).MergeLine);
             Assert.Equal("edit: $/P/b.txt;C5", Change("edit", "$/P/b.txt", 5).MergeLine);
+            // A preview operation knows the source item but not its version range.
+            Assert.Equal("merge, edit: $/P/Main/a.txt -> $/P/Release/a.txt;C80", Change("merge, edit", "$/P/Release/a.txt", 80, new MergeSourceInfo("$/P/Main/a.txt", 0, 0, false)).MergeLine);
             Assert.NotNull(Change("merge, edit", "$/P/x", 1, new MergeSourceInfo("$/P/y", 1, 1, false)).ToJson()["mergeSources"]);
         }
 
@@ -99,6 +101,17 @@ namespace TfPortable.Tests
             Assert.StartsWith("ERROR TFP0002: folderdiff needs a target path", Run("folderdiff").Err);
             Assert.StartsWith("ERROR TFP0002: annotate needs exactly one file.", Run("annotate").Err);
             Assert.StartsWith("ERROR TFP0002: /view:bogus is not one of", Run("folderdiff", "$/a", "$/b", "/view:bogus").Err);
+            Assert.StartsWith("ERROR TFP0302: rollback /changeset needs changeset numbers.", Run("rollback", "/changeset:T").Err);
+            Assert.StartsWith("ERROR TFP0302: rollback /changeset needs changeset numbers.", Run("rollback", "/changeset:D2026-01-01~C5", "a").Err);
+        }
+
+        [Fact]
+        public void Annotate_skips_a_changeset_without_the_item()
+        {
+            var odd = new ChangesetInfo(5, "Ann", null, new DateTime(2026, 1, 1), "other", new[] { new ChangeInfo("add", "$/P/other.txt", 5, 0, null, false, 99, "utf-8") });
+            var c1 = new ChangesetInfo(10, "Ann", null, new DateTime(2026, 1, 1), "first", new[] { new ChangeInfo("add", "$/P/f.txt", 10, 0, null, false, 7, "utf-8") });
+            var lines = AnnotateCommand.Annotate(new[] { odd, c1 }, 7, (path, id) => "one\r\n");
+            Assert.Equal(new[] { 10 }, lines.Select(l => l.Changeset.Id));
         }
 
         [Fact]

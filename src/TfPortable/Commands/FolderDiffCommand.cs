@@ -223,6 +223,11 @@ namespace TfPortable.Commands
             {
                 var version = spec.Version ?? VersionSpec.Latest;
                 var side = new Side(spec.Path, $"{spec.Path};{spec.VersionText ?? "T"}", true);
+                if (context.Client.GetItem(spec.Path, version, 0) == null)
+                {
+                    throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError, $"The server folder {spec.Path} does not exist at version {spec.VersionText ?? "T"}.", $"Check the path with '{toolName} dir'.", item: spec.Path);
+                }
+
                 foreach (var item in context.Client.GetItems(new ItemQuery(spec.Path, recursive ? RecursionType.Full : RecursionType.OneLevel), version, false, false))
                 {
                     if (string.Equals(item.ServerPath, spec.Path, StringComparison.OrdinalIgnoreCase))

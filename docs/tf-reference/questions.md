@@ -49,10 +49,9 @@ agent; it adjusts the code and `docs/compat.md`.
 
 ## merge, branch, rollback, undelete (phase 2)
 
-27. `merge /preview`: which library call lists the merge without pending it (a `MergeOptionsEx` flag,
-    a preview workspace, or the pending change is pended and undone)? tfp lists the changes of the candidate
-    changesets instead (`docs/compat.md` §15), so its preview lines name `C<n>` of the source changeset and
-    cannot show conflicts.
+27. `merge /preview`: does tf.exe use the `NoMerge` merge option (the server's preview) and from which data does
+    it print the `C<from>~C<to>` source range of each line (the get operations carry only the source item)?
+    tfp uses `NoMerge` and prints the lines without the source range (`docs/compat.md` §15).
 28. `merge` summary lines (the count of merged items and conflicts, suppressed by `/nosummary`): exact text and
     whether they go to stdout.
 29. `branch /version:` default: latest, or the workspace version of a local source path?
@@ -61,6 +60,8 @@ agent; it adjusts the code and `docs/compat.md`.
 31. `undelete` of an item deleted several times without `;X<n>`: which deletion is restored (the latest)?
 32. `folderdiff`: compared by hash, by size and date, or by content? Which items does `/filterLocalPathsOnly`
     exclude? (tfp: by the MD5 hash of the item, local files computed.)
+33. `rollback /toversion:<v>`: which `versionFrom` does tf.exe pass to the library (it refuses null)? Latest, the
+    workspace version of the items, or the `/version` value? (tfp: Latest.)
 
 ## protection-relevant commands (phase 4 candidates)
 

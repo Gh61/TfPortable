@@ -265,7 +265,7 @@ tf vc merge [/recursive] [/force] [/candidate] [/discard] [/version:versionspec]
 | --- | --- |
 | `/candidate` with `/recursive`, `/version:`, `/format:` | ✓ phase 1 |
 | `/force`, `/baseless`, `/discard`, `/noimplicitbaseless`, `/conservative`, `/noautoresolve`, `/recursive`, `/version:from~to` | ✓ phase 2, as pending changes (mapped to the merge options of the client library; a single `/version:C<n>` is the upper bound) |
-| `/preview` | ~ phase 2: the client library has no merge preview, so tfp lists the changes of the candidate changesets in the shape a merge would pend them (`merge, edit: $/src;C83 -> $/dst`), without conflicts (compat.md §15) |
+| `/preview` | ✓ phase 2 through the server's preview (the `NoMerge` merge option): the operations a merge would pend, `merge, edit: $/src -> $/dst;C80` (the source version range of the real merge line is not available in a preview, compat.md §15); predicted conflicts are a summary TFP0403 |
 | `/lock:none` | ✓; `/lock:checkin\|checkout` ✗ (server locks) |
 | `/nosummary` | ✗ (tfp prints no summary) |
 | `/format:brief\|detailed` | ~ accepted; the pending merge listing has one shape |
@@ -432,7 +432,8 @@ tf vc branch olditem newitem [/version:versionspec] [/noget] [/lock:(none|checki
 ```
 
 `olditem newitem`, `/version:` (default latest), `/noget`, `/silent`, `/lock:none` ✓ (prints the target
-path and the branched tree grouped like `add`); `/lock:checkin|checkout` ✗; `/checkin`, `/comment:`,
+path and the branched tree grouped like `add`; with `/silent` the server returns no items, so nothing is
+listed or downloaded); `/lock:checkin|checkout` ✗; `/checkin`, `/comment:`,
 `/author:`, `/notes:` ✗ (they check in immediately).
 
 ## Out of scope (recognized, TFP0003)

@@ -816,14 +816,32 @@ namespace TfPortable.Context
                 var options = MergeOptionsEx.None;
                 if (flags.HasFlag(MergeFlags.Force)) { options |= MergeOptionsEx.ForceMerge; }
                 if (flags.HasFlag(MergeFlags.Baseless)) { options |= MergeOptionsEx.Baseless; }
-                if (flags.HasFlag(MergeFlags.Discard)) { options |= MergeOptionsEx.NoMerge; }
+                if (flags.HasFlag(MergeFlags.Discard)) { options |= MergeOptionsEx.AlwaysAcceptMine; }
+                if (flags.HasFlag(MergeFlags.Preview)) { options |= MergeOptionsEx.NoMerge; }
                 if (flags.HasFlag(MergeFlags.NoAutoResolve)) { options |= MergeOptionsEx.NoAutoResolve; }
                 if (flags.HasFlag(MergeFlags.NoImplicitBaseless)) { options |= MergeOptionsEx.NoImplicitBaseless; }
                 if (flags.HasFlag(MergeFlags.Conservative)) { options |= MergeOptionsEx.Conservative; }
 
                 using var collector = new EventCollector(Vcs);
                 GetStatus status = workspace.Merge(ToItemSpec(source), targetPath, versionFrom, versionTo, LockLevel.None, options);
-                return ToMergeResult(status, collector, new[] { targetPath }, source.Recursion != RecursionType.None);
+                var result = ToMergeResult(status, collector, new[] { targetPath }, source.Recursion != RecursionType.None);
+                if (flags.HasFlag(MergeFlags.Preview))
+                {
+                    // A preview pends nothing: the merge operations the server reported stand in for the pending changes.
+                    return new MergeResult(collector.MergeOperations, result.Conflicts, result.Failures, result.NumOperations, result.NumConflicts, result.NoActionNeeded);
+                }
+
+                if (flags.HasFlag(MergeFlags.Discard) && result.Changes.Count == 0)
+                {
+                    // A discard merge raises no pending-change events in the library: the pending merges under the target are the result.
+                    var pended = workspace.GetPendingChanges(new[] { new ItemSpec(targetPath, source.Recursion) })
+                        .Where(p => (p.ChangeType & ChangeType.Merge) != 0)
+                        .Select(p => ToPendingChange(p, false))
+                        .ToList();
+                    return new MergeResult(pended, result.Conflicts, result.Failures, Math.Max(result.NumOperations, pended.Count), result.NumConflicts, result.NoActionNeeded && pended.Count == 0);
+                }
+
+                return result;
             }
 
             public PendResult PendBranch(string sourcePath, string targetPath, VersionSpec version, bool updateDisk, bool silent)
@@ -847,6 +865,8 @@ namespace TfPortable.Context
                 if (keepMergeHistory) { options |= RollbackOptions.KeepMergeHistory; }
                 if (noAutoResolve) { options |= RollbackOptions.NoAutoResolve; }
 
+                // The library needs the version rolled back from in both modes; /toversion rolls back from the latest version.
+                versionFrom ??= VersionSpec.Latest;
                 using var collector = new EventCollector(Vcs);
                 GetStatus status;
                 if (items == null || items.Count == 0)
@@ -864,8 +884,16 @@ namespace TfPortable.Context
 
             private MergeResult ToMergeResult(GetStatus status, EventCollector collector, string[]? conflictPaths, bool recursive)
             {
+                // The library raises the NonFatalError event for the failures it also returns: keep each one once.
                 var failures = new List<FailureInfo>(collector.Failures);
-                failures.AddRange(status.GetFailures().Select(ToFailure));
+                foreach (var failure in status.GetFailures().Select(ToFailure))
+                {
+                    if (!failures.Any(f => f.Message == failure.Message && f.ServerPath == failure.ServerPath && f.LocalPath == failure.LocalPath))
+                    {
+                        failures.Add(failure);
+                    }
+                }
+
                 var conflicts = new List<ConflictInfo>();
                 if (status.NumConflicts > 0)
                 {
@@ -915,6 +943,9 @@ namespace TfPortable.Context
 
             public List<FailureInfo> Failures { get; } = new List<FailureInfo>();
 
+            /// <summary>The merge operations of a preview (`Getting` events with the change type and the source item).</summary>
+            public List<PendingChangeInfo> MergeOperations { get; } = new List<PendingChangeInfo>();
+
             public List<GetOperationInfo> Operations { get; } = new List<GetOperationInfo>();
 
             public PendResult ToPendResult(int count) => new PendResult(Changes, Failures, count);
@@ -950,6 +981,14 @@ namespace TfPortable.Context
             private void OnGetting(object sender, GettingEventArgs e)
             {
                 Operations.Add(new GetOperationInfo(OperationName(e.Status), e.TargetLocalItem ?? e.SourceLocalItem, e.ServerItem, e.Version, e.ItemType == ItemType.Folder, e.IsDelete));
+                if (e.ChangeType != ChangeType.None && e.ServerItem != null)
+                {
+                    var sources = string.IsNullOrEmpty(e.SourceServerItem) || string.Equals(e.SourceServerItem, e.ServerItem, StringComparison.OrdinalIgnoreCase)
+                        ? new List<MergeSourceInfo>()
+                        : new List<MergeSourceInfo> { new MergeSourceInfo(e.SourceServerItem, 0, 0, false) };
+                    MergeOperations.Add(new PendingChangeInfo(ChangeText(e.ChangeType), e.ServerItem, e.TargetLocalItem ?? e.SourceLocalItem, e.ItemType == ItemType.Folder, e.Version,
+                        sources.Count > 0 ? e.SourceServerItem : null, "none", null, DateTime.UtcNow, string.Empty, string.Empty, false, null, sources));
+                }
             }
 
             public void Dispose()

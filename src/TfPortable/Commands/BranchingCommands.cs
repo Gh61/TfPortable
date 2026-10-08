@@ -40,48 +40,6 @@ namespace TfPortable.Commands
                 to = range.To;
             }
 
-            if (commandLine.Has("preview"))
-            {
-                // The client library has no preview of a merge: the candidates (the changesets not yet merged) and their
-                // changes are listed in the form a merge would pend them (docs/compat.md §15).
-                var candidates = context.Client.GetMergeCandidates(source, target, recursion);
-                var preview = new List<JObject>();
-                var lines = new List<string>();
-                foreach (var candidate in candidates)
-                {
-                    var changeset = context.Client.GetChangeset(candidate.Changeset.Id);
-                    foreach (var change in (changeset.Changes ?? Array.Empty<ChangeInfo>()).Where(c => IsUnder(c.ServerPath, source)))
-                    {
-                        string targetPath = target + change.ServerPath.Substring(source.Length);
-                        lines.Add($"merge, {change.ChangeText}: {change.ServerPath};C{changeset.Id} -> {targetPath}");
-                        preview.Add(new JObject
-                        {
-                            ["changeTypes"] = new JArray(change.ChangeTypes.Cast<object>().ToArray()),
-                            ["sourcePath"] = change.ServerPath,
-                            ["sourceVersion"] = changeset.Id,
-                            ["targetPath"] = targetPath,
-                            ["partial"] = candidate.Partial,
-                        });
-                    }
-                }
-
-                if (lines.Count == 0)
-                {
-                    output.Line("There are no changes to merge.");
-                }
-
-                output.Lines(lines);
-                output.Success(new JObject
-                {
-                    ["source"] = source,
-                    ["target"] = target,
-                    ["preview"] = true,
-                    ["changes"] = new JArray(preview.Cast<object>().ToArray()),
-                    ["conflicts"] = new JArray(),
-                });
-                return ExitCodes.Success;
-            }
-
             var flags = MergeFlags.None;
             if (commandLine.Has("force")) { flags |= MergeFlags.Force; }
             if (commandLine.Has("baseless")) { flags |= MergeFlags.Baseless; }
@@ -89,14 +47,17 @@ namespace TfPortable.Commands
             if (commandLine.Has("noautoresolve")) { flags |= MergeFlags.NoAutoResolve; }
             if (commandLine.Has("noimplicitbaseless")) { flags |= MergeFlags.NoImplicitBaseless; }
             if (commandLine.Has("conservative")) { flags |= MergeFlags.Conservative; }
+            bool preview = commandLine.Has("preview");
+            if (preview) { flags |= MergeFlags.Preview; }
 
+            // The preview is the server's own (the NoMerge option): the same operations a merge would pend, nothing pended.
             var result = workspace.Merge(new ItemQuery(source, recursion), target, from, to, flags);
-            ReportMergeResult(output, result, "There are no changes to merge.", toolName);
+            ReportMergeResult(output, result, "There are no changes to merge.", toolName, preview);
             output.Success(new JObject
             {
                 ["source"] = source,
                 ["target"] = target,
-                ["preview"] = false,
+                ["preview"] = preview,
                 ["changes"] = new JArray(result.Changes.Select(c => c.ToJson()).Cast<object>().ToArray()),
                 ["conflicts"] = new JArray(result.Conflicts.Select(c => c.ToJson()).Cast<object>().ToArray()),
             });
@@ -104,16 +65,28 @@ namespace TfPortable.Commands
         }
 
         /// <summary>Lines of a merge-like result and its conflicts (TFP0403, exit 1) and failures.</summary>
-        internal static void ReportMergeResult(OutputWriter output, MergeResult result, string nothingText, string toolName)
+        internal static void ReportMergeResult(OutputWriter output, MergeResult result, string nothingText, string toolName, bool preview = false)
         {
             foreach (var change in result.Changes)
             {
                 output.Line(change.MergeLine);
             }
 
-            if (result.Changes.Count == 0 && result.Conflicts.Count == 0 && result.Failures.Count == 0)
+            if (result.Changes.Count == 0 && result.NumOperations > 0)
+            {
+                // The server reported operations the events did not describe (a preview of an older server).
+                output.Line($"{result.NumOperations} change(s) {(preview ? "would be" : "were")} pended.");
+            }
+            else if (result.Changes.Count == 0 && result.Conflicts.Count == 0 && result.Failures.Count == 0 && result.NumConflicts == 0)
             {
                 output.Line(nothingText);
+            }
+
+            if (result.NumConflicts > result.Conflicts.Count)
+            {
+                // Conflicts the conflict query did not return (a preview, or a query that failed): the count still counts.
+                output.ItemError(new TfpException(ErrorCodes.GetConflicts, ExitCodes.PartialSuccess,
+                    $"{result.NumConflicts - result.Conflicts.Count} conflict(s) {(preview ? "would be" : "were")} created.", $"'{toolName} resolve' lists them."));
             }
 
             foreach (var conflict in result.Conflicts)
@@ -128,10 +101,6 @@ namespace TfPortable.Commands
                 output.ItemError(WorkspaceCommandSupport.ToError(failure, toolName));
             }
         }
-
-        private static bool IsUnder(string path, string folder) =>
-            string.Equals(path, folder, StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith(folder.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>`tfp branch olditem newitem [/version:v] [/noget] [/silent]`: the branch is a pending change until `checkin`.</summary>
@@ -209,6 +178,17 @@ namespace TfPortable.Commands
             }
 
             var items = WorkspaceCommandSupport.Items(commandLine, toolName, true, "rollback /changeset:C85");
+            if (changesetText != null)
+            {
+                // Changeset numbers only (checked before the connection); a date, a label or a workspace version is TFP0302.
+                var check = VersionSpecParser.ParseRange(changesetText, null, null);
+                if (!(check.To is ChangesetVersionSpec) || (check.IsRange && !(check.From is ChangesetVersionSpec)))
+                {
+                    throw new TfpException(ErrorCodes.InvalidVersionSpec, ExitCodes.GeneralError, "rollback /changeset needs changeset numbers.",
+                        $"Write '/changeset:C<n>' or '/changeset:C<from>~C<to>', for example '{toolName} rollback /changeset:C85'.");
+                }
+            }
+
             if (toVersionText != null && items.Count == 0)
             {
                 throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "rollback /toversion needs at least one itemspec.", $"Example: '{toolName} rollback /toversion:C84 Main\\\\src /recursive'.");
@@ -272,7 +252,7 @@ namespace TfPortable.Commands
             var merges = context.Client.QueryMerges(source, target, commandLine.Has("recursive") ? RecursionType.Full : RecursionType.None, commandLine.Has("showall"));
 
             output.Lines(RenderTable(merges));
-            if (detailed)
+            if (detailed && merges.Count > 0)
             {
                 // The detailed form adds the block of every target changeset with its items (one call per distinct changeset).
                 var detailedMerges = new List<MergeHistoryInfo>();

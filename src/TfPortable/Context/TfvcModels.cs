@@ -194,9 +194,9 @@ namespace TfPortable.Context
                     return $"{ChangeText}: {target}";
                 }
 
-                string from = source.VersionFrom > 0 && source.VersionFrom != source.VersionTo ? $"C{source.VersionFrom}~C{source.VersionTo}"
-                    : source.VersionFrom > 0 ? $"C{source.VersionFrom}~C{source.VersionTo}" : $"C{source.VersionTo}";
-                return $"{ChangeText}: {source.ServerPath};{from} -> {target}";
+                string from = source.VersionFrom > 0 ? $";C{source.VersionFrom}~C{source.VersionTo}"
+                    : source.VersionTo > 0 ? $";C{source.VersionTo}" : string.Empty;
+                return $"{ChangeText}: {source.ServerPath}{from} -> {target}";
             }
         }
 

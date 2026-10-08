@@ -110,7 +110,13 @@ namespace TfPortable.Commands
             {
                 // The path of the item in this changeset: the change with the item's id, else the last known path.
                 var change = (changeset.Changes ?? Array.Empty<ChangeInfo>()).FirstOrDefault(c => c.ItemId == itemId);
-                string path = change?.ServerPath ?? lastPath ?? throw new InvalidOperationException("The first changeset of the history does not contain the item.");
+                string? path = change?.ServerPath ?? lastPath;
+                if (path == null)
+                {
+                    // A changeset without the item (an odd history): nothing to attribute yet.
+                    continue;
+                }
+
                 lastPath = path;
                 if (change != null && change.ChangeTypes.Contains("delete") && !change.ChangeTypes.Contains("undelete"))
                 {

@@ -245,6 +245,8 @@ namespace TfPortable.Context
         NoAutoResolve = 8,
         NoImplicitBaseless = 16,
         Conservative = 32,
+        /// <summary>The server's preview (`NoMerge`): the operations are reported, nothing is pended.</summary>
+        Preview = 64,
     }
 
     /// <summary>One row of `merges`: a source changeset merged into a target changeset.</summary>
