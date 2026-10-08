@@ -49,6 +49,14 @@ namespace TfPortable
             new WorkfoldCommand(),
             new WorkspacesCommand(),
             new HistoryCommand(),
+            new ChangesetCommand(),
+            new ViewCommand(),
+            new DifferenceCommand(),
+            new DirCommand(),
+            new PropertiesCommand(),
+            new LabelsCommand(),
+            new BranchesCommand(),
+            new MergeCommand(),
         };
 
         /// <summary>Parses, dispatches and maps errors; returns the exit code. Testable with any writers.</summary>

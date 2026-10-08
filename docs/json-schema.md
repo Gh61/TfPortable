@@ -101,15 +101,15 @@ Enumerations:
 | `localversions` | `{ "items": [ { "localPath", "serverPath", "changesetId", "isFolder" } ], "count" }` |
 | `workfold` | `{ "workspace": Workspace }` (mappings included; with a folder argument the text shows the matching mapping only, the JSON the whole workspace) |
 | `workspaces` | `{ "workspaces": [Workspace] }`; no match is exit 1 with an empty array. `/remove:` returns `{ "removed": [string], "workspaces": [] }` |
-| `history` | `{ "changesets": [Changeset], "count", "mode": "slot"\|"item", "scanned": n (search extensions only) }` |
-| `changeset` | `{ "changeset": Changeset, "diff": string or null }` (`diff` only with `/diff`) |
-| `view` | `{ "item": Item, "version", "content": string, "output": null or path }`; binary items need `/output`, then `content` is null |
+| `history` | `{ "changesets": [Changeset], "count", "mode": "slot"\|"item", "scanned": n (search extensions only) }`. `changes` and `workItems` of a Changeset are filled with `/format:detailed`, `/files`, `/changetype` and for a single file (the Change column), null otherwise |
+| `changeset` | `{ "changeset": Changeset (with `changes` and `workItems`), "diff": string or null }` (`diff` only with `/diff`: one unified diff per file, binary files summarized) |
+| `view` | `{ "item": Item, "version", "content": string, "output": null or path }`; binary items need `/output`, then `content` is null. With `/recursive` the first file fills these fields and `items` lists every file |
 | `difference` | `{ "files": [ { "path", "source": { "kind": "server"\|"local"\|"shelveset", "path", "version" }, "target": {…}, "status": "identical"\|"different"\|"binary", "diff": string or null } ], "format": "unified"\|"brief" }` |
 | `dir` | `{ "folders": [ { "serverPath", "items": [Item] } ], "count" }` |
-| `properties` | `{ "items": [ { "local": { "localPath", "serverPath", "changesetId", "changeTypes", "isFolder" } or null, "server": Item and `lock`, `lockOwner` } ] }` |
+| `properties` | `{ "items": [ { "local": { "localPath", "serverPath", "changesetId", "changeTypes", "isFolder" } or null (outside a workspace), "server": Item and `lock`, `lockOwner` } ] }`; a missing item is TFP0301 in `errors` (exit 1) |
 | `labels` | `{ "labels": [ { "name", "scope", "owner", "date", "comment", "items": [ { "serverPath", "changesetId", "deletionId" } ] } ] }` (`items` only with `/format:detailed`) |
 | `branches` | `{ "root": "$/...", "branches": [ { "serverPath", "parent", "branchedFromVersion", "children": [...] } ] }` |
-| `merge /candidate` | `{ "source", "target", "candidates": [ Changeset + "partial": bool ] }` |
+| `merge /candidate` | `{ "source", "target", "candidates": [ Changeset + "partial": bool ] }` (`changes` filled with `/format:detailed`) |
 
 Phase 2 commands (`merges`, `annotate`, `folderdiff`, `shelvesets`, `unshelve`, `undelete`,
 `rollback`, `branch`, `merge`) add their sections when implemented.

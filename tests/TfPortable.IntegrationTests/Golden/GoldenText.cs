@@ -41,12 +41,35 @@ namespace TfPortable.IntegrationTests.Golden
 
         /// <summary>
         /// Czech phrases of the golden output → the English phrases tfp prints, for the line comparison (<see cref="GoldenChecks.Lines"/>).
-        /// Longer phrases first so that `Zjištěné změny:` is not hit by `Změny:`. Message wording is still never *required* to match:
-        /// the dictionary only exists so that lines of listings and tables can be compared one by one.
+        /// Applied longest first and only on whole words (<see cref="PhrasePatterns"/>), so that `Zjištěné změny:` is not hit by
+        /// `Změny:` and the English output is left alone (`Typ` must not turn `Type` into `Typee`). Message wording is still never
+        /// *required* to match: the dictionary only exists so that lines of listings and tables can be compared one by one.
         /// </summary>
         private static readonly (string Czech, string English)[] Phrases =
         {
             ("Nejsou žádné probíhající změny.", "There are no pending changes."),
+            ("Porovnání místních s posledními:", "Comparing local with latest:"),
+            ("Nebyly nalezeny žádné položky historie pro kombinaci položky a verze.", "No history entries were found for the item and version combination."),
+            ("Místní informace:", "Local information:"),
+            ("Informace o serveru:", "Server information:"),
+            ("Naposledy změněno", "Last modified"),
+            ("Vlastník zámku", "Lock owner"),
+            ("ID odstranění", "Deletion ID"),
+            ("Cesta na server", "Server path"),
+            ("Místní cesta", "Local path"),
+            ("Sada změn", "Changeset"),
+            ("Odložená změna", "Shelved change"),
+            ("soubory jsou rozdílné", "files differ"),
+            ("Větev vytvořená z verze", "Branched from version"),
+            ("Soubor:", "File:"),
+            ("Popisek", "Label"),
+            ("Rozsah", "Scope"),
+            ("Položky:", "Items:"),
+            ("Položka", "Item"),
+            ("Komentář:", "Comment:"),
+            ("Velikost", "Size"),
+            ("složka", "folder"),
+            ("soubor", "file"),
             ("Všechny soubory jsou aktuální.", "All files are up to date."),
             ("Nejsou žádné konflikty, které by bylo potřeba vyřešit.", "There are no conflicts to resolve."),
             ("Nenašly se žádné odpovídající probíhající změny.", "No matching pending changes were found."),
@@ -77,12 +100,20 @@ namespace TfPortable.IntegrationTests.Golden
             ("Změnit", "Change"),
             ("Datum", "Date"),
             ("žádný", "none"),
+            ("Typ souboru", "File type"),
+            ("Typ", "Type"),
             ("Místní", "Local"),
             ("(skrytá)", "(cloaked)"),
         };
 
+        private static readonly (Regex Pattern, string English)[] PhrasePatterns = Phrases
+            .OrderByDescending(p => p.Czech.Length)
+            .Select(p => (new Regex(@"(?<![\p{L}\p{N}])" + Regex.Escape(p.Czech) + @"(?![\p{L}\p{N}])", RegexOptions.Compiled), p.English))
+            .ToArray();
+
         private static readonly Regex RelativeHeader = new Regex(@"^(?![A-Za-z]:\\|\$/|<)([^\s:][^:]*):$", RegexOptions.Compiled);
         private static readonly Regex LabelLine = new Regex(@"^(\s*)([A-Za-z][A-Za-z ]*?)\s*:(\s+|$)(.*)$", RegexOptions.Compiled);
+        private static readonly Regex RelativeFileLabel = new Regex(@"^(?<prefix>(?:(?:\+\+\+|---) )?(?:File|Local): )(?<path>[^$<\s][^:]*)$", RegexOptions.Compiled);
 
         /// <summary>
         /// Lines of a golden or tfp output made comparable (§7): normalized, Czech phrases and change words in English,
@@ -92,9 +123,9 @@ namespace TfPortable.IntegrationTests.Golden
         public static IReadOnlyList<string> ComparableLines(string text, string cwd, IReadOnlyDictionary<string, string>? placeholders = null)
         {
             string t = Normalize(text, placeholders);
-            foreach (var (czech, english) in Phrases)
+            foreach (var (pattern, english) in PhrasePatterns)
             {
-                t = t.Replace(czech, english);
+                t = pattern.Replace(t, english);
             }
 
             foreach (var (pattern, word) in ChangeWords)
@@ -116,6 +147,13 @@ namespace TfPortable.IntegrationTests.Golden
                 if (label.Success)
                 {
                     line = $"{label.Groups[1].Value}{label.Groups[2].Value}: {label.Groups[4].Value}".TrimEnd();
+                }
+
+                // `File: Main\src\a.cs` and `+++ Local: Main\src\a.cs` of difference are relative to the capture's cwd.
+                var fileLabel = RelativeFileLabel.Match(line);
+                if (fileLabel.Success && !fileLabel.Groups["path"].Value.StartsWith("$/", StringComparison.Ordinal) && !Regex.IsMatch(fileLabel.Groups["path"].Value, @"^[A-Za-z]:\\"))
+                {
+                    line = fileLabel.Groups["prefix"].Value + cwd.TrimEnd('\\') + "\\" + fileLabel.Groups["path"].Value;
                 }
 
                 line = Regex.Replace(line, @"-{2,}", "--");
@@ -251,6 +289,9 @@ namespace TfPortable.IntegrationTests.Golden
         /// <summary>The golden items are a subset of tfp's (for server state that later golden runs extended).</summary>
         ItemsSubset = 128,
 
+        /// <summary>The golden changeset numbers are a subset of tfp's.</summary>
+        ChangesetsSubset = 256,
+
         /// <summary>Exit code and stream emptiness only (help text and error messages are never compared).</summary>
         Shape = ExitCode | Streams,
 
@@ -327,6 +368,17 @@ namespace TfPortable.IntegrationTests.Golden
                 if (missing.Count > 0)
                 {
                     differences.Add($"items missing in tfp output: [{string.Join(", ", missing)}]");
+                }
+            }
+
+            if (checks.HasFlag(GoldenChecks.ChangesetsSubset))
+            {
+                var expected = GoldenText.ChangesetNumbers(goldenAll);
+                var got = new HashSet<string>(GoldenText.ChangesetNumbers(actualAll), StringComparer.OrdinalIgnoreCase);
+                var missing = expected.Where(i => !got.Contains(i)).ToList();
+                if (missing.Count > 0)
+                {
+                    differences.Add($"changesets missing in tfp output: [{string.Join(", ", missing)}]");
                 }
             }
 

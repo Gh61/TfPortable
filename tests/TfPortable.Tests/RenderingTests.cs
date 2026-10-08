@@ -102,21 +102,21 @@ namespace TfPortable.Tests
                 new ChangesetInfo(83, "Jan Novak", "jan@contoso.com", Date, "Fix null check\r\nsecond line"),
                 new ChangesetInfo(82, "Jan Novak", "jan@contoso.com", Date, null),
             };
-            var lines = HistoryCommand.Render(changesets, false).ToList();
+            var lines = HistoryCommand.Render(changesets, false, null, false).ToList();
             Assert.Equal("Changeset User      Date                      Comment", lines[0]);
             Assert.Equal("83        Jan Novak 2026-10-07T19:07:27" + Offset(Date) + " Fix null check", lines[2]);
             Assert.Equal("82        Jan Novak 2026-10-07T19:07:27" + Offset(Date), lines[3]);
 
-            var truncated = HistoryCommand.Render(changesets, true).ToList();
+            var truncated = HistoryCommand.Render(changesets, true, null, false).ToList();
             Assert.Contains("Showing the newest 256 changesets. Use /stopafter:<n> for more, or /version:C81 to continue from the next one.", truncated);
 
-            var json = HistoryCommand.ToJson(changesets, true);
+            var json = HistoryCommand.ToJson(changesets, true, false, null);
             Assert.Equal(2, (int)json["count"]!);
             Assert.Equal("slot", (string)json["mode"]!);
             Assert.Equal(83, (int)json["changesets"]![0]!["id"]!);
             JsonAssert.Null(json["changesets"]![1]!["comment"]!);
 
-            Assert.Equal(new[] { "No history entries were found for the item and version combination." }, HistoryCommand.Render(new List<ChangesetInfo>(), false));
+            Assert.Equal(new[] { "No history entries were found for the item and version combination." }, HistoryCommand.Render(new List<ChangesetInfo>(), false, null, false));
         }
 
         private static string Offset(DateTime date) => new DateTimeOffset(date).ToString("zzz");

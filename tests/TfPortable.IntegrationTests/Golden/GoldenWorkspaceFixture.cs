@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Common;
@@ -36,6 +37,9 @@ namespace TfPortable.IntegrationTests.Golden
 
         public string OwnerDisplayName { get; private set; } = "<OWNER>";
 
+        /// <summary>Display name of the owner of the seeded changesets (the developer who ran `tools/`); the capture printed it as `<OWNER>` too.</summary>
+        public string SeedOwnerDisplayName { get; private set; } = "<OWNER>";
+
         public bool IsReady => workspace != null;
 
         /// <summary>Values of the golden placeholders in this run (actual value → placeholder), for normalization (§7).</summary>
@@ -70,6 +74,11 @@ namespace TfPortable.IntegrationTests.Golden
                     map[OwnerDisplayName] = "<OWNER>";
                 }
 
+                if (SeedOwnerDisplayName != "<OWNER>")
+                {
+                    map[SeedOwnerDisplayName] = "<OWNER>";
+                }
+
                 return map;
             }
         }
@@ -98,6 +107,16 @@ namespace TfPortable.IntegrationTests.Golden
                 OwnerDisplayName = connection.AuthorizedIdentity.DisplayName;
 
                 var vcs = connection.GetService<VersionControlServer>();
+                try
+                {
+                    var oldest = vcs.QueryHistory(ServerRoot, VersionSpec.Latest, 0, RecursionType.Full, null, null, null, 1, false, false, false, true).Cast<Changeset>().FirstOrDefault();
+                    SeedOwnerDisplayName = string.IsNullOrEmpty(oldest?.OwnerDisplayName) ? "<OWNER>" : oldest!.OwnerDisplayName;
+                }
+                catch (Exception)
+                {
+                    // The owner placeholder is a comparison aid only; the tests still run without it.
+                }
+
                 var parameters = new CreateWorkspaceParameters(WorkspaceName)
                 {
                     Location = WorkspaceLocation.Local,

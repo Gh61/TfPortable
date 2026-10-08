@@ -9,8 +9,8 @@ Read this first in every session. Update it at the end of every session (see CLA
 | 0 | Spec refinement from golden files (`docs/compat.md`, SPEC.md updates) | local | done (Gate A passed 2026-10-07; help capture still to be reviewed) | user approves SPEC.md |
 | 1 | Spike: `tfp whoami` + `tfp status` with PAT, Costura single exe, clean machine | local | done (clean-machine test passed, Gate B approved 2026-10-08) | user approves architecture |
 | 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | done in [PR #1](https://github.com/Gh61/TfPortable/pull/1) (branch `m2-core`, CI green on 2026-10-08: 144 unit + 18 integration tests, standalone exe); awaiting the developer's review and merge | developer merges PR #1 |
-| 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | in progress (branch `m3-workspace`, code complete, CI loop; see session log) | – |
-| 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | not started | – |
+| 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | CI green on `m3-workspace` ([PR #2](https://github.com/Gh61/TfPortable/pull/2)), golden scenario passes against the test collection; independent review and merge in progress | – |
+| 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | in progress (branch `m4-history`, [PR #3](https://github.com/Gh61/TfPortable/pull/3), code complete, CI loop) | – |
 | 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | not started | user approves release |
 | – | Phase 2 commands | – | not planned | separate brief |
 
@@ -123,6 +123,11 @@ Statuses: not started, in progress, blocked, done.
 | 2026-10-08 | Golden comparison gained `GoldenChecks.Lines` (every stdout line after a Czech → English dictionary of the golden vocabulary, relative folder headers resolved against the capture's cwd, label spacing and column padding collapsed) and `ItemsSubset` (golden items ⊆ tfp items, for listings whose server state the later golden runs extended, e.g. `localversions` after C84+). The milestone 3 scenario of `index.json` runs as one ordered test (`WorkspaceGoldenTests`) that recreates the capture's files (`Main\_golden\*`, `Main\src\bin\Debug\ignored.txt`, the Program.cs edit) and ends with `undo` | docs/golden-format.md §6–8 |
 | 2026-10-08 | Review of PR #2 (independent agent, no blocking findings) and the fixes applied before the merge: (1) `reconcile` without an itemspec covers the current folder with the depth of `/recursive`, never the whole workspace (`/clean` deletes files); (2) a server workspace is TFP0204 only for commands that need a workspace, the others run with the collection alone as compat.md §3 says; (3) the second argument of `GetPendingChangesWithCandidates` is `includeDownloadInfo`, so `/nodetect` now calls `GetPendingChanges` and the default no longer asks for download URLs; (4) "No pending changes were found" of `undo` maps to TFP0301 in `ToError`; (5) `resolve` prints the `Getting`/`Replacing` lines of the resolution under the folder header as the original (`ResolveResult.Operations`); (6) a failure without an item no longer starts with ": " | Review findings |
 
+| 2026-10-08 | Milestone 4: `difference` uses TfPortable's own Myers line diff (`Output/UnifiedDiff.cs`, three lines of context) instead of the client library's diff classes, so the output does not depend on their formatting; `view` decodes by the server encoding with BOM priority (`Output/TextContent`); `history` looks the item up first (`GetItem`) to decide on the Change column and to turn an unknown path into the empty result; the search extensions filter on the client over at most 5000 changesets; `changeset /diff` compares each file with `C<n-1>` of the same or the source item | KICKOFF-CLOUD milestone 4; docs/compat.md milestone 4 notes |
+| 2026-10-08 | Golden comparison gained `ChangesetsSubset` and a relative-path resolution for `File:` / `+++ Local:` lines of diffs; the milestone 4 cases compare line by line where the seeded state is stable (changeset blocks, view content, `dir /version:C75`, `labels /format:detailed v1.0`, `properties` at C75, `difference` of C75~C81) and shape plus subsets where later golden runs extended the server (history of Main, dir of Main, branches, merge candidates, labels list) | docs/golden-format.md §6 |
+| 2026-10-08 | First CI run of milestone 4 (18 failures) fixed: (1) the seeded changesets belong to the developer, so the fixture maps the owner display name of the oldest changeset of `$/TfsPortableTestRepo` to `<OWNER>` as well as the CI identity; (2) the Czech → English dictionary of `GoldenText` is applied longest first and on whole words only (`Typ` no longer turns tfp's `Type` into `Typee`); (3) `properties` cases skip the stream check (the original's deprecation warning on stderr is an intended deviation, compat §1.3); (4) "Item … was not found in source control at version …" of the client library (no TF code, not an `ItemNotFoundException`) maps to TFP0301, so `view` exits 1 and `history` prints the empty result; (5) `changeset` lists items by parent folder, then name, as tf.exe (a folder's direct children before its subfolders' items); (6) the unified diff matches the common prefix and suffix before running Myers, as tf.exe: a block inserted in front of a repeated `}` is reported before that line; (7) `history/brief` and `merge/candidate` compare shape only: the 300 padding changesets of the `long-default` capture push the seed changesets past the 256 limit, and changeset 83 was merged to Release by the later golden changeset 91 | CI log of run 37785311952 |
+| 2026-10-08 | Review of PR #3 (independent agent, no blocking findings) and the fixes applied before the merge: (1) linked work items are read only for `changeset` and `history /format:detailed` (`Changeset.AssociatedWorkItems` is a server call per access), `/workitem` resolves the work item's links once through `ILinking.GetReferencingArtifacts` with a per-changeset fallback; (2) `changeset /diff` compares a merged or branched file with its own previous version, only a rename looks under the old name; (3) `history` and `view` accept wildcards and `history` of a deleted item works (lookup through `GetItems` with deleted items); (4) the unified diff treats CRLF/LF and a missing final newline as differences unless `/ignoreeol` (`\ No newline at end of file` marker) and is now linear-space Myers (middle snake, deletes before inserts in a block; the trace version needed O(D·(N+M)) memory); (5) `difference /shelveset` prints the change line and the `File:` line as the original and the local side is decoded with the server encoding; (6) a single `/version` with two itemspecs applies to both sides; (7) the history continuation hint uses the scanned range and the sort order, and the 256 limit is detected by fetching one row more; (8) `dir <file>` lists the file; `merge /candidate /format:detailed` reads the items per candidate; `properties` outside a workspace reports no lock; the client no longer fabricates a `TF14019` message; `view` strips the final CRLF. Not done (nits recorded as open questions): N+1 downloads of `view /recursive` and `difference /shelveset`, shelved content through a temp file, `branches` of a non-root item prints only the subtree | Review findings; the linear-space diff was cross-checked against a DP edit distance on 3000 random inputs in a scratch .NET 10 project |
+
 ## Open questions
 
 Closed on 2026-10-07 by the golden analysis (see "Decisions" and `docs/compat.md`): `merges /extended`
@@ -142,6 +147,13 @@ Open:
   rejection; both stay as specified in SPEC.md until captured.
 - `index-extra.json` (run 2610071920) has no run suffix although the script writes
   `index-extra-<run>.json`; harmless, but the golden test loader must accept both names.
+- `history /workitem:<id>` uses the linking service (`ILinking.GetReferencingArtifacts`) of the collection; whether
+  Azure DevOps Services still answers it with a PAT is unverified (the code falls back to one `GetChangeset` per
+  candidate changeset when the call fails). The test project has no work items, so no golden case covers it.
+- Review nits of PR #3 left open: `view /recursive` and `difference /shelveset` download one file per call (N+1);
+  `DownloadShelved` goes through a temp file in `%TEMP%\TfPortable`; `branches` of a non-root item prints only the
+  subtree below it (tf.exe prints the whole tree and marks the item); `merge` accepts `/version:` and `difference`
+  `/encoding:` without using them; `view /recursive /output:` treats the target as a file when exactly one file matches.
 - `add`/`checkout /encoding:<value>` passes the value verbatim as the client library's `fileType`
   string (`TfvcClient.ParseEncoding` is unused). Whether the library accepts names such as
   `windows-1250` or only code pages is unverified; the integration tests do not cover `/encoding`.
@@ -172,7 +184,14 @@ Open:
   `/shelveset`; shared helpers in `Commands/WorkspaceCommandSupport.cs`. Rendering unit tests;
   `WorkspaceGoldenTests` scenario; docs (`json-schema.md` rows, `compat.md` §1.3 and milestone 3
   notes, README status).
-- Next: CI of `m3-workspace`; PR; independent review; merge; milestone 4.
+- CI of `m3-workspace` went green after three fixes (undo names a rename as pended, golden item
+  suffixes stripped, scenario cleanup; a label-width unit test). Independent review of PR #2 started.
+- Milestone 4 on `m4-history` ([PR #3](https://github.com/Gh61/TfPortable/pull/3)): client methods
+  for changesets, items, content, labels, branches and merge candidates; commands history (full),
+  changeset, view, difference, dir, properties, labels, branches, merge /candidate; own unified
+  diff; unit tests; `HistoryGoldenTests`; docs (json-schema rows, compat.md milestone 4 notes,
+  README status). CLAUDE.md gained the review-and-merge loop on the developer's request.
+- Next: review findings of PR #2 → fix → merge; CI of `m4-history` → review → merge; milestone 5.
 - Blockers: none.
 
 ### 2026-10-08 – cloud session 1, milestone 2 (Claude Code on Linux, CI on windows-latest)

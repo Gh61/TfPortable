@@ -62,7 +62,8 @@ namespace TfPortable.Errors
                     tfCode, message, activityId: activityId, inner: exception);
             }
 
-            if (exception is ItemNotFoundException || exception is ChangesetNotFoundException || tfCode == "TF14019" || tfCode == "TF14022")
+            if (exception is ItemNotFoundException || exception is ChangesetNotFoundException || tfCode == "TF14019" || tfCode == "TF14022"
+                || (message != null && message.IndexOf("was not found in source control", StringComparison.OrdinalIgnoreCase) >= 0))
             {
                 return new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError,
                     "The item or version does not exist on the server.",
