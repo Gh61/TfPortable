@@ -65,8 +65,9 @@ namespace TfPortable.Commands
                 IReadOnlyList<ItemInfo> items;
                 try
                 {
-                    items = commandLine.Has("recursive")
-                        ? context.Client.GetItems(new ItemQuery(path, RecursionType.Full, item.DeletionId), version, item.DeletionId > 0, false).Where(i => !i.IsFolder).ToList()
+                    // A wildcard itemspec goes through GetItems too: GetItem rejects wildcards before any server call.
+                    items = commandLine.Has("recursive") || item.HasWildcard
+                        ? context.Client.GetItems(new ItemQuery(path, commandLine.Has("recursive") ? RecursionType.Full : RecursionType.None, item.DeletionId), version, item.DeletionId > 0, false).Where(i => !i.IsFolder).ToList()
                         : new[] { context.Client.GetItem(path, version, item.DeletionId) ?? throw NotFound(path, toolName) }.ToList();
                 }
                 catch (Exception ex) when (ErrorMapper.Map(ex, toolName, context.CollectionUrl).Code == ErrorCodes.ItemNotFound)
@@ -115,7 +116,9 @@ namespace TfPortable.Commands
                         output.Line($"{content.Item.ServerPath};C{content.Item.ChangesetId}:");
                     }
 
-                    output.Line(text.EndsWith("\n", StringComparison.Ordinal) ? text.Substring(0, text.Length - 1) : text);
+                    // The final line ending is supplied by the console; a CRLF file must not end in a stray CR.
+                    output.Line(text.EndsWith("\r\n", StringComparison.Ordinal) ? text.Substring(0, text.Length - 2)
+                        : text.EndsWith("\n", StringComparison.Ordinal) ? text.Substring(0, text.Length - 1) : text);
                 }
 
                 data.Add(new JObject

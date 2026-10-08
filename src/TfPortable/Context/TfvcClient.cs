@@ -102,11 +102,35 @@ namespace TfPortable.Context
             return VersionControl
                 .QueryHistory(query.Path, query.Version, query.DeletionId, query.Recursion, query.User, query.From, query.To, query.MaxCount, query.IncludeChanges, query.SlotMode, false, query.Ascending)
                 .Cast<Changeset>()
-                .Select(cs => ToChangeset(cs, query.IncludeChanges))
+                .Select(cs => ToChangeset(cs, query.IncludeChanges, query.IncludeWorkItems))
                 .ToList();
         }
 
-        public ChangesetInfo GetChangeset(int id) => ToChangeset(VersionControl.GetChangeset(id, true, false, true), true);
+        public ChangesetInfo GetChangeset(int id) => ToChangeset(VersionControl.GetChangeset(id, true, false, true), true, true);
+
+        public IReadOnlyCollection<int> GetWorkItemChangesets(int workItemId)
+        {
+            // One linking call from the work item side instead of one call per candidate changeset.
+            var linking = connection.GetService<Microsoft.TeamFoundation.ILinking>();
+            var artifacts = linking.GetReferencingArtifacts(new[] { $"vstfs:///WorkItemTracking/WorkItem/{workItemId}" }, null);
+            const string prefix = "vstfs:///VersionControl/Changeset/";
+            var ids = new HashSet<int>();
+            if (artifacts == null)
+            {
+                return ids;
+            }
+
+            foreach (var artifact in artifacts)
+            {
+                string? uri = artifact?.Uri;
+                if (uri != null && uri.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && int.TryParse(uri.Substring(prefix.Length), out int id))
+                {
+                    ids.Add(id);
+                }
+            }
+
+            return ids;
+        }
 
         public int GetLatestChangesetId() => VersionControl.GetLatestChangesetId();
 
@@ -127,7 +151,7 @@ namespace TfPortable.Context
             var item = VersionControl.GetItem(serverPath, version, deletionId, GetItemsOptions.Download);
             if (item == null)
             {
-                throw new ItemNotFoundException($"TF14019: The item {serverPath} does not exist at the specified version.");
+                throw new ItemNotFoundException($"The item {serverPath} does not exist at the specified version.");
             }
 
             if (item.ItemType == ItemType.Folder)
@@ -216,9 +240,15 @@ namespace TfPortable.Context
 
         internal static ItemSpec ToItemSpec(ItemQuery i) => new ItemSpec(i.Path, i.Recursion, i.DeletionId);
 
-        internal static ChangesetInfo ToChangeset(Changeset cs) => ToChangeset(cs, false);
+        internal static ChangesetInfo ToChangeset(Changeset cs) => ToChangeset(cs, false, false);
 
-        internal static ChangesetInfo ToChangeset(Changeset cs, bool includeChanges)
+        internal static ChangesetInfo ToChangeset(Changeset cs, bool includeChanges) => ToChangeset(cs, includeChanges, false);
+
+        /// <summary>
+        /// Work items are read only on request: `Changeset.AssociatedWorkItems` is a linking call to the server on every access,
+        /// so including them for every row of a history listing would cost one round trip per changeset.
+        /// </summary>
+        internal static ChangesetInfo ToChangeset(Changeset cs, bool includeChanges, bool includeWorkItems)
         {
             IReadOnlyList<ChangeInfo>? changes = null;
             IReadOnlyList<WorkItemInfo>? workItems = null;
@@ -227,6 +257,10 @@ namespace TfPortable.Context
                 changes = (cs.Changes ?? Array.Empty<Change>()).Select(c => new ChangeInfo(ChangeText(c.ChangeType), c.Item.ServerItem, c.Item.ChangesetId, c.Item.DeletionId,
                     (c.ChangeType & (ChangeType.Rename | ChangeType.Branch | ChangeType.Merge)) != 0 ? c.MergeSources?.FirstOrDefault()?.ServerItem : null,
                     c.Item.ItemType == ItemType.Folder, c.Item.ItemId, c.Item.ItemType == ItemType.Folder ? null : EncodingName(c.Item.Encoding))).ToList();
+            }
+
+            if (includeWorkItems)
+            {
                 try
                 {
                     workItems = (cs.AssociatedWorkItems ?? Array.Empty<AssociatedWorkItemInfo>()).Select(w => new WorkItemInfo(w.Id, w.Title)).ToList();

@@ -91,6 +91,9 @@ namespace TfPortable.Context
         /// <summary>A changeset with its changes and work items; the library's exception for an unknown number.</summary>
         ChangesetInfo GetChangeset(int id);
 
+        /// <summary>Ids of the changesets linked to a work item (one linking call).</summary>
+        IReadOnlyCollection<int> GetWorkItemChangesets(int workItemId);
+
         int GetLatestChangesetId();
 
         /// <summary>Items at a version; `deletedState` true includes deleted items; folders only when asked.</summary>

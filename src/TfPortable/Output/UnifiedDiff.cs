@@ -55,9 +55,30 @@ namespace TfPortable.Output
                 {
                     switch (edit.Kind)
                     {
-                        case EditKind.Equal: output.Add(" " + a.Original[edit.AIndex]); break;
-                        case EditKind.Delete: output.Add("-" + a.Original[edit.AIndex]); break;
-                        case EditKind.Insert: output.Add("+" + b.Original[edit.BIndex]); break;
+                        case EditKind.Equal:
+                            output.Add(" " + a.Original[edit.AIndex]);
+                            if (a.MissingFinalNewline && edit.AIndex == a.Original.Length - 1)
+                            {
+                                output.Add(NoNewline);
+                            }
+
+                            break;
+                        case EditKind.Delete:
+                            output.Add("-" + a.Original[edit.AIndex]);
+                            if (a.MissingFinalNewline && edit.AIndex == a.Original.Length - 1)
+                            {
+                                output.Add(NoNewline);
+                            }
+
+                            break;
+                        case EditKind.Insert:
+                            output.Add("+" + b.Original[edit.BIndex]);
+                            if (b.MissingFinalNewline && edit.BIndex == b.Original.Length - 1)
+                            {
+                                output.Add(NoNewline);
+                            }
+
+                            break;
                     }
                 }
             }
@@ -68,36 +89,45 @@ namespace TfPortable.Output
         /// <summary>`start,count` of a unified hunk; a zero-length side is written as `start,0` with start = the line before.</summary>
         private static string Range(int start, int count) => count == 0 ? $"{start},0" : count == 1 ? $"{start + 1}" : $"{start + 1},{count}";
 
+        /// <summary>The marker of a last line without a line ending, as GNU diff prints it.</summary>
+        private const string NoNewline = "\\ No newline at end of file";
+
         private sealed class Split
         {
-            public Split(string[] original, string[] keys)
+            public Split(string[] original, string[] keys, bool missingFinalNewline)
             {
                 Original = original;
                 Keys = keys;
+                MissingFinalNewline = missingFinalNewline;
             }
 
+            /// <summary>Lines as displayed (without the line ending).</summary>
             public string[] Original { get; }
 
+            /// <summary>Lines as compared: the `\r` of a CRLF ending stays unless /ignoreeol or /ignorespace.</summary>
             public string[] Keys { get; }
+
+            public bool MissingFinalNewline { get; }
         }
 
         private static Split Lines(string text, DiffOptions options)
         {
-            string normalized = text.Replace("\r\n", "\n").Replace('\r', '\n');
-            string[] lines = normalized.Length == 0 ? Array.Empty<string>() : normalized.Split('\n');
-            if (lines.Length > 0 && normalized.EndsWith("\n", StringComparison.Ordinal))
+            string[] lines = text.Length == 0 ? Array.Empty<string>() : text.Split('\n');
+            bool missingFinalNewline = text.Length > 0 && !text.EndsWith("\n", StringComparison.Ordinal);
+            if (lines.Length > 0 && !missingFinalNewline)
             {
                 lines = lines.Take(lines.Length - 1).ToArray();
             }
 
-            var keys = lines.Select(l =>
+            bool ignoreEol = options.HasFlag(DiffOptions.IgnoreEol) || options.HasFlag(DiffOptions.IgnoreSpace);
+            var keys = lines.Select((l, i) =>
             {
                 string k = l;
                 if (options.HasFlag(DiffOptions.IgnoreSpace))
                 {
                     k = new string(k.Where(c => !char.IsWhiteSpace(c)).ToArray());
                 }
-                else if (options.HasFlag(DiffOptions.IgnoreEol))
+                else if (ignoreEol)
                 {
                     k = k.TrimEnd('\r');
                 }
@@ -107,9 +137,16 @@ namespace TfPortable.Output
                     k = k.ToUpperInvariant();
                 }
 
+                // A missing final newline is an end-of-line difference of the last line.
+                if (missingFinalNewline && i == lines.Length - 1 && !ignoreEol)
+                {
+                    k += "\0";
+                }
+
                 return k;
             }).ToArray();
-            return new Split(lines, keys);
+            var shown = lines.Select(l => l.EndsWith("\r", StringComparison.Ordinal) ? l.Substring(0, l.Length - 1) : l).ToArray();
+            return new Split(shown, keys, missingFinalNewline);
         }
 
         private enum EditKind
@@ -170,91 +207,206 @@ namespace TfPortable.Output
             return edits;
         }
 
-        /// <summary>Myers' greedy algorithm with a trace; returns the edit script as equal/delete/insert steps.</summary>
+        /// <summary>
+        /// Linear-space Myers (middle snake, divide and conquer): O(N+M) memory, O((N+M)·D) time. Within a block of
+        /// changes the deletes are listed before the inserts, as diff tools print them.
+        /// </summary>
         private static List<Edit> MyersCore(string[] a, string[] b)
         {
-            int n = a.Length;
-            int m = b.Length;
-            int max = n + m;
-            var v = new int[2 * max + 2];
-            var trace = new List<int[]>();
-            int offset = max;
-            bool found = false;
+            var edits = new List<Edit>();
+            Recurse(a, b, 0, a.Length, 0, b.Length, edits);
+            return Grouped(edits);
+        }
 
-            for (int d = 0; d <= max && !found; d++)
+        private static void Recurse(string[] a, string[] b, int a0, int a1, int b0, int b1, List<Edit> edits)
+        {
+            while (a0 < a1 && b0 < b1 && string.Equals(a[a0], b[b0], StringComparison.Ordinal))
             {
-                trace.Add((int[])v.Clone());
-                for (int k = -d; k <= d; k += 2)
+                edits.Add(new Edit { Kind = EditKind.Equal, AIndex = a0, BIndex = b0 });
+                a0++;
+                b0++;
+            }
+
+            int suffix = 0;
+            while (a0 < a1 - suffix && b0 < b1 - suffix && string.Equals(a[a1 - 1 - suffix], b[b1 - 1 - suffix], StringComparison.Ordinal))
+            {
+                suffix++;
+            }
+
+            int a1s = a1 - suffix;
+            int b1s = b1 - suffix;
+            int n = a1s - a0;
+            int m = b1s - b0;
+            if (n == 0)
+            {
+                for (int j = b0; j < b1s; j++)
                 {
-                    int x;
-                    if (k == -d || (k != d && v[offset + k - 1] < v[offset + k + 1]))
+                    edits.Add(new Edit { Kind = EditKind.Insert, AIndex = a0, BIndex = j });
+                }
+            }
+            else if (m == 0)
+            {
+                for (int i = a0; i < a1s; i++)
+                {
+                    edits.Add(new Edit { Kind = EditKind.Delete, AIndex = i, BIndex = b0 });
+                }
+            }
+            else
+            {
+                int d = MiddleSnake(a, a0, n, b, b0, m, out int x, out int y, out int u, out int v);
+                if (d == 1)
+                {
+                    // One edit at the first position (the common prefix is gone); the rest is equal.
+                    if (n > m)
                     {
-                        x = v[offset + k + 1];
+                        edits.Add(new Edit { Kind = EditKind.Delete, AIndex = a0, BIndex = b0 });
+                        for (int i = 0; i < m; i++)
+                        {
+                            edits.Add(new Edit { Kind = EditKind.Equal, AIndex = a0 + 1 + i, BIndex = b0 + i });
+                        }
                     }
                     else
                     {
-                        x = v[offset + k - 1] + 1;
+                        edits.Add(new Edit { Kind = EditKind.Insert, AIndex = a0, BIndex = b0 });
+                        for (int i = 0; i < n; i++)
+                        {
+                            edits.Add(new Edit { Kind = EditKind.Equal, AIndex = a0 + i, BIndex = b0 + 1 + i });
+                        }
                     }
-
-                    int y = x - k;
-                    while (x < n && y < m && string.Equals(a[x], b[y], StringComparison.Ordinal))
-                    {
-                        x++;
-                        y++;
-                    }
-
-                    v[offset + k] = x;
-                    if (x >= n && y >= m)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-            }
-
-            // Backtrack.
-            var edits = new List<Edit>();
-            int px = n, py = m;
-            for (int d = trace.Count - 1; d >= 0; d--)
-            {
-                var vd = trace[d];
-                int k = px - py;
-                int prevK;
-                if (k == -d || (k != d && vd[offset + k - 1] < vd[offset + k + 1]))
-                {
-                    prevK = k + 1;
                 }
                 else
                 {
-                    prevK = k - 1;
-                }
-
-                int prevX = vd[offset + prevK];
-                int prevY = prevX - prevK;
-                while (px > prevX && py > prevY)
-                {
-                    px--;
-                    py--;
-                    edits.Add(new Edit { Kind = EditKind.Equal, AIndex = px, BIndex = py });
-                }
-
-                if (d > 0)
-                {
-                    if (px == prevX)
+                    Recurse(a, b, a0, a0 + x, b0, b0 + y, edits);
+                    for (int i = 0; i < u - x; i++)
                     {
-                        py--;
-                        edits.Add(new Edit { Kind = EditKind.Insert, AIndex = px, BIndex = py });
+                        edits.Add(new Edit { Kind = EditKind.Equal, AIndex = a0 + x + i, BIndex = b0 + y + i });
                     }
-                    else
+
+                    Recurse(a, b, a0 + u, a1s, b0 + v, b1s, edits);
+                }
+            }
+
+            for (int i = 0; i < suffix; i++)
+            {
+                edits.Add(new Edit { Kind = EditKind.Equal, AIndex = a1s + i, BIndex = b1s + i });
+            }
+        }
+
+        /// <summary>
+        /// The middle snake of a[a0..a0+n) against b[b0..b0+m): the forward and the reverse search meet on one diagonal.
+        /// Returns the edit distance D; (x, y)–(u, v) is the snake in local coordinates.
+        /// </summary>
+        private static int MiddleSnake(string[] a, int a0, int n, string[] b, int b0, int m, out int x, out int y, out int u, out int v)
+        {
+            int max = (n + m + 1) / 2 + 1;
+            int delta = n - m;
+            bool odd = (delta & 1) != 0;
+            var vf = new int[2 * max + 3];
+            var vb = new int[2 * max + 3];
+            int off = max + 1;
+            for (int d = 0; d <= max; d++)
+            {
+                for (int k = -d; k <= d; k += 2)
+                {
+                    int xx = k == -d || (k != d && vf[off + k - 1] < vf[off + k + 1]) ? vf[off + k + 1] : vf[off + k - 1] + 1;
+                    int yy = xx - k;
+                    int sx = xx;
+                    int sy = yy;
+                    while (xx < n && yy < m && string.Equals(a[a0 + xx], b[b0 + yy], StringComparison.Ordinal))
                     {
-                        px--;
-                        edits.Add(new Edit { Kind = EditKind.Delete, AIndex = px, BIndex = py });
+                        xx++;
+                        yy++;
+                    }
+
+                    vf[off + k] = xx;
+                    int rk = delta - k;
+                    if (odd && rk >= -(d - 1) && rk <= d - 1 && xx + vb[off + rk] >= n)
+                    {
+                        x = sx;
+                        y = sy;
+                        u = xx;
+                        v = yy;
+                        return 2 * d - 1;
+                    }
+                }
+
+                for (int k = -d; k <= d; k += 2)
+                {
+                    // The reverse search runs on the mirrored texts: x' = n - x, y' = m - y, k' = delta - k.
+                    int xx = k == -d || (k != d && vb[off + k - 1] < vb[off + k + 1]) ? vb[off + k + 1] : vb[off + k - 1] + 1;
+                    int yy = xx - k;
+                    int sx = xx;
+                    int sy = yy;
+                    while (xx < n && yy < m && string.Equals(a[a0 + n - 1 - xx], b[b0 + m - 1 - yy], StringComparison.Ordinal))
+                    {
+                        xx++;
+                        yy++;
+                    }
+
+                    vb[off + k] = xx;
+                    int fk = delta - k;
+                    if (!odd && fk >= -d && fk <= d && xx + vf[off + fk] >= n)
+                    {
+                        x = n - xx;
+                        y = m - yy;
+                        u = n - sx;
+                        v = m - sy;
+                        return 2 * d;
                     }
                 }
             }
 
-            edits.Reverse();
-            return edits;
+            throw new InvalidOperationException("The middle snake was not found.");
+        }
+
+        /// <summary>Within every run of changes: the deletes first, then the inserts, with the positions a hunk header needs.</summary>
+        private static List<Edit> Grouped(List<Edit> edits)
+        {
+            var result = new List<Edit>(edits.Count);
+            int i = 0;
+            while (i < edits.Count)
+            {
+                if (edits[i].Kind == EditKind.Equal)
+                {
+                    result.Add(edits[i]);
+                    i++;
+                    continue;
+                }
+
+                int start = i;
+                while (i < edits.Count && edits[i].Kind != EditKind.Equal)
+                {
+                    i++;
+                }
+
+                int aStart = int.MaxValue;
+                int bStart = int.MaxValue;
+                for (int j = start; j < i; j++)
+                {
+                    aStart = Math.Min(aStart, edits[j].AIndex);
+                    bStart = Math.Min(bStart, edits[j].BIndex);
+                }
+
+                int deletes = 0;
+                for (int j = start; j < i; j++)
+                {
+                    if (edits[j].Kind == EditKind.Delete)
+                    {
+                        result.Add(new Edit { Kind = EditKind.Delete, AIndex = edits[j].AIndex, BIndex = bStart });
+                        deletes++;
+                    }
+                }
+
+                for (int j = start; j < i; j++)
+                {
+                    if (edits[j].Kind == EditKind.Insert)
+                    {
+                        result.Add(new Edit { Kind = EditKind.Insert, AIndex = aStart + deletes, BIndex = edits[j].BIndex });
+                    }
+                }
+            }
+
+            return result;
         }
 
         private static IEnumerable<Hunk> Hunks(List<Edit> edits)
@@ -352,7 +504,7 @@ namespace TfPortable.Output
         }
 
         /// <summary>A local file read as text (BOM-aware, UTF-8 by default); null when it looks binary.</summary>
-        public static string? ReadLocal(string path)
+        public static string? ReadLocal(string path, string? encodingName = null)
         {
             byte[] bytes = System.IO.File.ReadAllBytes(path);
             if (LooksBinary(bytes))
@@ -360,7 +512,7 @@ namespace TfPortable.Output
                 return null;
             }
 
-            return Decode(bytes, null);
+            return Decode(bytes, encodingName);
         }
 
         public static bool LooksBinary(byte[] bytes)

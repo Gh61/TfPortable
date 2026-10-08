@@ -261,11 +261,12 @@ namespace TfPortable.Context
     /// <summary>Parameters of a history query (`history` and the search extensions).</summary>
     internal sealed class HistoryQuery
     {
-        public HistoryQuery(string path, VersionSpec version, RecursionType recursion, string? user, VersionSpec? from, VersionSpec? to, int maxCount, bool slotMode, bool ascending, int deletionId = 0, bool includeChanges = false)
+        public HistoryQuery(string path, VersionSpec version, RecursionType recursion, string? user, VersionSpec? from, VersionSpec? to, int maxCount, bool slotMode, bool ascending, int deletionId = 0, bool includeChanges = false, bool includeWorkItems = false)
         {
             Path = path;
             DeletionId = deletionId;
             IncludeChanges = includeChanges;
+            IncludeWorkItems = includeWorkItems;
             Version = version;
             Recursion = recursion;
             User = user;
@@ -283,6 +284,9 @@ namespace TfPortable.Context
 
         /// <summary>Also fetch the changes (items) of every changeset.</summary>
         public bool IncludeChanges { get; }
+
+        /// <summary>Also fetch the linked work items (one server call per changeset).</summary>
+        public bool IncludeWorkItems { get; }
 
         public VersionSpec Version { get; }
 

@@ -289,14 +289,20 @@ Milestone 4 (2026-10-08) notes on §9–§14, found while implementing against t
 
 | Topic | Original | TfPortable |
 | --- | --- | --- |
-| `history` of a single file | Change column | the same; the item is looked up first (`GetItem`), which also turns an unknown path into the empty result |
-| `history` search (`/comment`, `/changetype`, `/workitem`) | – | client-side filter over at most 5000 changesets; `/stopafter` counts matches; the JSON reports `scanned` and `truncated` names the changeset to continue from; `/workitem` fetches the work items per candidate changeset |
-| `changeset /diff` | – | every file against its previous version (`C<n-1>` of the same or the source item); adds against nothing, deletes to nothing, binary items as "Binary files differ." |
+| `history` of a single file | Change column | the same; the item is looked up first (`GetItems`, deleted items and wildcards included), which also turns an unknown path into the empty result |
+| `history` search (`/comment`, `/changetype`, `/workitem`) | – | client-side filter over at most 5000 changesets; `/stopafter` counts matches; the JSON reports `scanned` and `truncated` names the changeset to continue from (`C<n>~T` with `/sort:ascending`); `/workitem` reads the work item's links once (linking service) and falls back to one lookup per candidate changeset |
+| `history` work items | – | linked work items are read only for `changeset` and `history /format:detailed` (one server call per changeset) |
+| `changeset /diff` | – | every file against its previous version (`C<n-1>` of the same item, of the old name for a rename); adds, branches and undeletes against nothing, deletes to nothing, binary items as "Binary files differ." |
 | `view` encoding | console code page | the server encoding (`Item.Encoding`) decodes the bytes, a BOM wins; output is UTF-8 |
 | `view /recursive` | each file preceded by its path | `$/path;C<n>:` before each file |
 | `difference` labels | `--- Server: Program.cs;75` / `+++ Server: Program.cs;81` for two versions, `--- Server: $/path;C81` / `+++ Local: <path>` for a local edit, `Local:` for two server paths | the same shapes; two server paths are labelled `Server:` (compat §12); the `File:` line names the mapped local path when the workspace knows it, else the server path; the diff is TfPortable's own Myers line diff with three lines of context (hunk boundaries may differ from the original in rare cases); an added file is `@@ -0,0 +1,N @@` where the original prints `@@ -1,0 +1,N @@` |
 | `difference` with no pending change | `Comparing local with latest: <path>` | the same, after comparing the file with the latest server version |
-| `dir` sorting | ordinal-ignore-case, folders first | the same; the queried folder heads the listing and is not counted |
+| `difference` line endings | CRLF and LF differ unless `/ignoreeol` | the same; a missing final newline is an end-of-line difference and is marked `\ No newline at end of file` as GNU diff does; the local side is decoded with the item's server encoding (a BOM wins) |
+| `difference` algorithm | – | linear-space Myers (no size limit); within a block of changes the deletes come before the inserts; a single `/version:C<n>` with two itemspecs applies to both sides |
+| `difference /shelveset` | `<change>: $/path;C<n>` then `Soubor: <name>` per file | the same lines (`File:`); JSON `files[].path` is the server path |
+| `dir` sorting | ordinal-ignore-case, folders first | the same; the queried folder heads the listing and is not counted; a file itemspec lists the file |
+| `properties` outside a workspace | `Lock: none` | the lock state is not queried without a workspace: `Lock:` is empty and `lock` is null in JSON |
+| `merge /candidate /format:detailed` | changeset blocks with items | the same; the items are read per candidate (one call each) |
 | `properties` outside a workspace | needs a workspace | works with a server path: only the `Server information:` section |
 | `labels` with extra labels on the server | – | the golden brief listing compares shape only (later golden runs added labels) |
 | `branches` of a path that is not branched | error | TFP0301 (exit 100) |

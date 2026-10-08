@@ -55,7 +55,7 @@ namespace TfPortable.Commands
             string? diff = null;
             if (commandLine.Has("diff"))
             {
-                diff = string.Join("\n", Diff(changeset, context.Client));
+                diff = string.Join("\n", Diff(changeset, context.Client, toolName));
                 output.Line(string.Empty);
                 output.Line(diff);
             }
@@ -104,7 +104,7 @@ namespace TfPortable.Commands
         }
 
         /// <summary>Unified diff of every file of the changeset against its previous version; binary and folder items are summarized.</summary>
-        internal static IEnumerable<string> Diff(ChangesetInfo cs, ITfvcClient client)
+        internal static IEnumerable<string> Diff(ChangesetInfo cs, ITfvcClient client, string toolName)
         {
             foreach (var change in (cs.Changes ?? Array.Empty<ChangeInfo>()).OrderBy(c => c.ServerPath, StringComparer.InvariantCultureIgnoreCase))
             {
@@ -117,6 +117,8 @@ namespace TfPortable.Commands
                 bool isAdd = change.ChangeTypes.Contains("add") || change.ChangeTypes.Contains("branch") || change.ChangeTypes.Contains("undelete");
                 bool isDelete = change.ChangeTypes.Contains("delete");
 
+                // The previous version of a renamed item lives under its old name; a merge or branch keeps the target path.
+                string previousPath = change.ChangeTypes.Contains("rename") ? change.SourceServerPath ?? change.ServerPath : change.ServerPath;
                 string? before = null;
                 string? after = null;
                 bool binary = change.Encoding == "binary";
@@ -133,11 +135,11 @@ namespace TfPortable.Commands
                     {
                         try
                         {
-                            var previous = client.Download(change.SourceServerPath ?? change.ServerPath, new ChangesetVersionSpec(cs.Id - 1), 0);
+                            var previous = client.Download(previousPath, new ChangesetVersionSpec(cs.Id - 1), 0);
                             before = TextContent.Decode(previous.Bytes, previous.Item.Encoding);
                             binary = before == null;
                         }
-                        catch (Exception)
+                        catch (Exception ex) when (ErrorMapper.Map(ex, toolName, null).Code == ErrorCodes.ItemNotFound)
                         {
                             before = null;
                         }
@@ -152,7 +154,7 @@ namespace TfPortable.Commands
                 }
                 else
                 {
-                    string leftLabel = before == null ? "[no source file]" : $"Server: {change.SourceServerPath ?? change.ServerPath};C{cs.Id - 1}";
+                    string leftLabel = before == null ? "[no source file]" : $"Server: {previousPath};C{cs.Id - 1}";
                     string rightLabel = after == null ? "[no target file]" : $"Server: {change.ServerPath};C{cs.Id}";
                     var lines = UnifiedDiff.Render(before ?? string.Empty, after ?? string.Empty, leftLabel, rightLabel);
                     if (lines.Count == 0)

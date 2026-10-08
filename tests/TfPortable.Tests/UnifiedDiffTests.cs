@@ -14,7 +14,29 @@ namespace TfPortable.Tests
         public void Equal_texts_give_no_diff()
         {
             Assert.Empty(UnifiedDiff.Render("a\nb\nc\n", "a\nb\nc\n", "L", "R"));
-            Assert.True(UnifiedDiff.AreEqual("a\r\nb\r\n", "a\nb\n", DiffOptions.None));
+            Assert.False(UnifiedDiff.AreEqual("a\r\nb\r\n", "a\nb\n", DiffOptions.None));
+            Assert.True(UnifiedDiff.AreEqual("a\r\nb\r\n", "a\nb\n", DiffOptions.IgnoreEol));
+        }
+
+        [Fact]
+        public void Missing_final_newline_is_a_difference_with_a_marker()
+        {
+            Assert.False(UnifiedDiff.AreEqual("a\nb\n", "a\nb", DiffOptions.None));
+            Assert.True(UnifiedDiff.AreEqual("a\nb\n", "a\nb", DiffOptions.IgnoreEol));
+            var lines = UnifiedDiff.Render("a\nb\n", "a\nb", "L", "R").ToList();
+            Assert.Equal(new[] { "--- L", "+++ R", "@@ -1,2 +1,2 @@", " a", "-b", "+b", "\\ No newline at end of file" }, lines);
+        }
+
+        [Fact]
+        public void Large_texts_with_nothing_in_common_are_replaced_whole()
+        {
+            string before = string.Concat(Enumerable.Range(0, 3100).Select(i => "a" + i + "\n"));
+            string after = string.Concat(Enumerable.Range(0, 3100).Select(i => "b" + i + "\n"));
+            var lines = UnifiedDiff.Render(before, after, "L", "R").ToList();
+            Assert.Equal("@@ -1,3100 +1,3100 @@", lines[2]);
+            Assert.Equal(3 + 6200, lines.Count);
+            Assert.Equal("-a0", lines[3]);
+            Assert.Equal("+b3099", lines[lines.Count - 1]);
         }
 
         [Fact]

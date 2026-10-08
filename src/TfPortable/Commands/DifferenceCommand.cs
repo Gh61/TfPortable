@@ -25,7 +25,7 @@ namespace TfPortable.Commands
 
         private sealed class Side
         {
-            public Side(string kind, string path, int? version, string? text, bool binary, string label)
+            public Side(string kind, string path, int? version, string? text, bool binary, string label, string? encoding = null)
             {
                 Kind = kind;
                 Path = path;
@@ -33,7 +33,11 @@ namespace TfPortable.Commands
                 Text = text;
                 Binary = binary;
                 Label = label;
+                Encoding = encoding;
             }
+
+            /// <summary>The server encoding name of the item, so that the local side is decoded the same way.</summary>
+            public string? Encoding { get; }
 
             public string Kind { get; }
 
@@ -74,17 +78,18 @@ namespace TfPortable.Commands
                 range = VersionSpecParser.ParseRange(versionText!, workspace?.Name, workspace?.Owner);
             }
 
-            var pairs = new List<(string Path, Side Left, Side Right, string? Change)>();
+            var pairs = new List<(string Path, string JsonPath, Side Left, Side Right, string? Change)>();
             if (shelveset != null)
             {
                 pairs.AddRange(ShelvesetPairs(context, shelveset, items, toolName));
             }
             else if (items.Count == 2)
             {
-                var left = Load(context, items[0], range?.From ?? items[0].Version, "left", toolName);
+                // A single /version applies to both sides; a range gives each side its own version.
+                var left = Load(context, items[0], (range != null && !range.IsRange ? range.To : range?.From) ?? items[0].Version, "left", toolName);
                 var right = Load(context, items[1], range?.To ?? items[1].Version, "right", toolName);
                 string shown = items[1].IsServerPath ? context.Workspace?.GetLocalItemForServerItem(items[1].Path) ?? items[1].Path : items[1].Path;
-                pairs.Add((shown, left, right, null));
+                pairs.Add((shown, shown, left, right, null));
             }
             else if (range != null && range.IsRange)
             {
@@ -93,7 +98,7 @@ namespace TfPortable.Commands
                 {
                     // The original names the file by its mapped local path when the workspace knows it.
                     string shown = context.Workspace?.GetLocalItemForServerItem(file) ?? file;
-                    pairs.Add((shown, Server(context, file, range.From!, 0, true), Server(context, file, range.To, 0, true), null));
+                    pairs.Add((shown, shown, Server(context, file, range.From!, 0, true), Server(context, file, range.To, 0, true), null));
                 }
             }
             else
@@ -110,12 +115,17 @@ namespace TfPortable.Commands
                 if (pair.Left.Binary || pair.Right.Binary)
                 {
                     status = "binary";
-                    output.Line(pair.Change != null ? $"{pair.Change}: {pair.Path}" : $"{pair.Path}: binary files differ");
+                    if (pair.Change != null)
+                    {
+                        output.Line(pair.Change);
+                    }
+
+                    output.Line($"{pair.Path}: binary files differ");
                 }
                 else if (UnifiedDiff.AreEqual(pair.Left.Text ?? string.Empty, pair.Right.Text ?? string.Empty, options))
                 {
                     status = "identical";
-                    if (pair.Change == null && pair.Left.Kind == "local" || pair.Right.Kind == "local")
+                    if (pair.Change == null && (pair.Left.Kind == "local" || pair.Right.Kind == "local"))
                     {
                         output.Line($"Comparing local with latest: {pair.Path}");
                     }
@@ -137,7 +147,7 @@ namespace TfPortable.Commands
                         diff = string.Join("\n", lines);
                         if (pair.Change != null)
                         {
-                            output.Line($"{pair.Change}: {pair.Path}");
+                            output.Line(pair.Change);
                         }
 
                         output.Line($"File: {pair.Path}");
@@ -149,7 +159,7 @@ namespace TfPortable.Commands
 
                 files.Add(new JObject
                 {
-                    ["path"] = pair.Path,
+                    ["path"] = pair.JsonPath,
                     ["source"] = pair.Left.ToJson(),
                     ["target"] = pair.Right.ToJson(),
                     ["status"] = status,
@@ -172,13 +182,14 @@ namespace TfPortable.Commands
             var content = context.Client.Download(serverPath, version, deletionId);
             string? text = TextContent.Decode(content.Bytes, content.Item.Encoding);
             string name = shortLabel ? Microsoft.TeamFoundation.VersionControl.Common.VersionControlPath.GetFileName(serverPath) : serverPath;
-            return new Side("server", serverPath, content.Item.ChangesetId, text, text == null, $"Server: {name};{(shortLabel ? string.Empty : "C")}{content.Item.ChangesetId}");
+            return new Side("server", serverPath, content.Item.ChangesetId, text, text == null, $"Server: {name};{(shortLabel ? string.Empty : "C")}{content.Item.ChangesetId}", content.Item.Encoding);
         }
 
-        private static Side Local(string localPath, string? serverPath)
+        /// <summary>The local file decoded with the item's server encoding (a BOM wins), so that both sides compare alike.</summary>
+        private static Side Local(string localPath, string? encoding)
         {
-            string? text = TextContent.ReadLocal(localPath);
-            return new Side("local", localPath, null, text, text == null, $"Local: {localPath}");
+            string? text = TextContent.ReadLocal(localPath, encoding);
+            return new Side("local", localPath, null, text, text == null, $"Local: {localPath}", encoding);
         }
 
         private static Side Load(WorkspaceContext context, ParsedItemSpec item, VersionSpec? version, string what, string toolName)
@@ -197,7 +208,7 @@ namespace TfPortable.Commands
             return Local(item.Path, null);
         }
 
-        private IEnumerable<(string Path, Side Left, Side Right, string? Change)> LocalPairs(WorkspaceContext context, ParsedItemSpec item, VersionSpec? version, bool recursive, string toolName)
+        private IEnumerable<(string Path, string JsonPath, Side Left, Side Right, string? Change)> LocalPairs(WorkspaceContext context, ParsedItemSpec item, VersionSpec? version, bool recursive, string toolName)
         {
             var workspace = context.RequireWorkspace(toolName);
             string serverPath = context.ServerPathOf(item, toolName);
@@ -215,8 +226,8 @@ namespace TfPortable.Commands
             {
                 // No pending change: compare the file with the latest (or the given) server version anyway.
                 var server = Server(context, serverPath, version ?? VersionSpec.Latest, 0, false);
-                var local = Local(localPath, serverPath);
-                yield return (localPath, server, local, null);
+                var local = Local(localPath, server.Encoding);
+                yield return (localPath, localPath, server, local, null);
                 yield break;
             }
 
@@ -231,17 +242,17 @@ namespace TfPortable.Commands
                 {
                     var content = context.Client.Download(edit.SourceServerPath ?? edit.ServerPath, version ?? new ChangesetVersionSpec(edit.Version), 0);
                     string? text = TextContent.Decode(content.Bytes, content.Item.Encoding);
-                    left = new Side("server", edit.ServerPath, content.Item.ChangesetId, text, text == null, $"Server: {edit.ServerPath};C{content.Item.ChangesetId}");
+                    left = new Side("server", edit.ServerPath, content.Item.ChangesetId, text, text == null, $"Server: {edit.ServerPath};C{content.Item.ChangesetId}", content.Item.Encoding);
                 }
 
                 Side right = File.Exists(edit.LocalPath)
-                    ? Local(edit.LocalPath!, edit.ServerPath)
+                    ? Local(edit.LocalPath!, left.Encoding ?? edit.Encoding)
                     : new Side("local", edit.LocalPath!, null, string.Empty, false, "[no target file]");
-                yield return (edit.LocalPath!, left, right, edit.ChangeText);
+                yield return (edit.LocalPath!, edit.LocalPath!, left, right, $"{edit.ChangeText}: {edit.LocalPath}");
             }
         }
 
-        private IEnumerable<(string Path, Side Left, Side Right, string? Change)> ShelvesetPairs(WorkspaceContext context, string shelveset, List<ParsedItemSpec> items, string toolName)
+        private IEnumerable<(string Path, string JsonPath, Side Left, Side Right, string? Change)> ShelvesetPairs(WorkspaceContext context, string shelveset, List<ParsedItemSpec> items, string toolName)
         {
             string[] parts = shelveset.Split(new[] { ';' }, 2);
             var queries = items.Select(i => new ItemQuery(context.ServerPathOf(i, toolName), RecursionType.Full)).ToList();
@@ -263,8 +274,9 @@ namespace TfPortable.Commands
                     left = new Side("server", change.ServerPath, content.Item.ChangesetId, text, text == null, $"Server: {change.ServerPath};C{content.Item.ChangesetId}");
                 }
 
+                // The original prints `<change>: $/path;C<n>` and then `File: <name>` (golden difference/shelveset).
                 string label = change.Version > 0 ? $"{change.ServerPath};C{change.Version}" : change.ServerPath;
-                yield return (Microsoft.TeamFoundation.VersionControl.Common.VersionControlPath.GetFileName(change.ServerPath), left, right, $"{change.ChangeText}: {label}".Replace($": {label}", string.Empty) + ": " + label);
+                yield return (Microsoft.TeamFoundation.VersionControl.Common.VersionControlPath.GetFileName(change.ServerPath), change.ServerPath, left, right, $"{change.ChangeText}: {label}");
             }
         }
     }

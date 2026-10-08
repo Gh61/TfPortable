@@ -56,7 +56,8 @@ namespace TfPortable.Commands
                 return ExitCodes.PartialSuccess;
             }
 
-            var listed = items.Where(i => !ReferenceEquals(i, root)).ToList();
+            // A file itemspec lists the file itself; only a queried folder heads the listing without being counted.
+            var listed = items.Where(i => !(root != null && root.IsFolder && ReferenceEquals(i, root))).ToList();
             string rootFolder = root != null && root.IsFolder ? root.ServerPath : VersionControlPath.GetFolderName(path);
             output.Lines(Render(rootFolder, listed));
             output.Success(new JObject
@@ -197,7 +198,7 @@ namespace TfPortable.Commands
         private static JObject ServerJson(ItemInfo s, ExtendedItemInfo? l)
         {
             var json = s.ToJson(l?.LocalPath);
-            json["lock"] = l?.Lock ?? "none";
+            json["lock"] = l?.Lock;
             json["lockOwner"] = l?.LockOwner;
             return json;
         }
@@ -228,7 +229,7 @@ namespace TfPortable.Commands
                     new KeyValuePair<string, string?>("Server path", server.ServerPath),
                     new KeyValuePair<string, string?>("Changeset", server.ChangesetId.ToString()),
                     new KeyValuePair<string, string?>("Deletion ID", server.DeletionId.ToString()),
-                    new KeyValuePair<string, string?>("Lock", local?.Lock ?? "none"),
+                    new KeyValuePair<string, string?>("Lock", local?.Lock),
                     new KeyValuePair<string, string?>("Lock owner", local?.LockOwner),
                     new KeyValuePair<string, string?>("Last modified", OutputWriter.IsoDate(server.LastModified)),
                     new KeyValuePair<string, string?>("Type", server.IsFolder ? "folder" : "file"),
@@ -425,6 +426,11 @@ namespace TfPortable.Commands
             string source = context.ServerPathOf(items[0], toolName);
             string target = context.ServerPathOf(items[1], toolName);
             var candidates = context.Client.GetMergeCandidates(source, target, commandLine.Has("recursive") ? RecursionType.Full : RecursionType.None);
+            if (detailed)
+            {
+                // The candidate query returns the changeset header only; the detailed block needs the items (json-schema.md).
+                candidates = candidates.Select(c => new MergeCandidateInfo(context.Client.GetChangeset(c.Changeset.Id), c.Partial)).ToList();
+            }
 
             output.Lines(Render(candidates, detailed));
             output.Success(new JObject
