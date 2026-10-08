@@ -12,12 +12,12 @@ both people and AI coding agents can read.
 
 **The main reason: signing in with `tf.exe` has become unreliable to the point of not working.**
 `tf.exe` depends on the Entra ID token cache of Visual Studio. The cache expires, MFA prompts
-appear in the middle of a script, a sign-in window opens on a desktop nobody is looking at or
-does not open at all, and the result is `TF30063: You are not authorized` over and over again.
-On some days it is simply not possible to sign in from the command line anymore, no matter how
-many times the token cache is cleared. For a person this is an annoyance; for an AI coding agent
-such as Claude Code, which runs `tf.exe` from a terminal, it is a hard stop: the agent sees a
-hang or a hidden dialog and cannot do anything about it.
+appear in the middle of a script, and the sign-in window itself crashes on JavaScript errors, so
+the whole sign-in process gets stuck and there is practically no way to authenticate. The result
+is `TF30063: You are not authorized` over and over again, no matter how many times the token
+cache is cleared. For a person this is an annoyance; for an AI coding agent such as Claude Code,
+which runs `tf.exe` from a terminal, it is a hard stop: the agent sees a hang or a hidden dialog
+and cannot do anything about it.
 
 TfPortable replaces that sign-in with one thing that works every time: a Personal Access Token,
 stored once in the Windows Credential Manager, used for every command, never prompting unless a
