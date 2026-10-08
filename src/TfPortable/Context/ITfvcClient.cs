@@ -48,6 +48,24 @@ namespace TfPortable.Context
 
         /// <summary>Local and server state of items (`properties`): pending change, lock, local and latest version.</summary>
         IReadOnlyList<ExtendedItemInfo> GetExtendedItems(IReadOnlyList<ItemQuery> items);
+
+        /// <summary>Asks the server what would stop a checkin of the changes: conflicts, policy and note failures (`checkin /validate`).</summary>
+        CheckinEvaluation EvaluateCheckin(IReadOnlyList<PendingChangeInfo> changes, string comment);
+
+        /// <summary>
+        /// Checks the changes in and returns the changeset number (0 when the server committed nothing). `overrideReason`
+        /// with the evaluation's policy handles records a policy override; the library's checkin exceptions propagate.
+        /// </summary>
+        int CheckIn(IReadOnlyList<PendingChangeInfo> changes, string comment, string? author, string? overrideReason, CheckinEvaluation? evaluation, bool noAutoResolve, bool allowUnchangedContent);
+
+        /// <summary>Shelves the changes under `name` for the authenticated user; `replace` overwrites an existing shelveset, `move` undoes the local changes.</summary>
+        void Shelve(string name, string? comment, IReadOnlyList<PendingChangeInfo> changes, bool replace, bool move);
+
+        /// <summary>Restores a shelveset (null owner = the authenticated user, null items = everything) into the workspace.</summary>
+        UnshelveResult Unshelve(string name, string? owner, IReadOnlyList<ItemQuery>? items, bool merge, bool noAutoResolve);
+
+        /// <summary>Locks or unlocks items; the result lists the pending lock changes made or undone.</summary>
+        PendResult SetLock(IReadOnlyList<string> paths, LockLevel level, RecursionType recursion);
     }
 
     /// <summary>
@@ -121,5 +139,22 @@ namespace TfPortable.Context
         IReadOnlyList<BranchInfo> GetBranchHistory(string serverPath, VersionSpec version);
 
         IReadOnlyList<MergeCandidateInfo> GetMergeCandidates(string sourcePath, string targetPath, RecursionType recursion);
+
+        /// <summary>Shelvesets by name and owner (null = any); the owner may be a unique or a display name.</summary>
+        IReadOnlyList<ShelvesetInfo> QueryShelvesets(string? name, string? owner);
+
+        /// <summary>Deletes a shelveset (null owner = the authenticated user); the library's exception when it does not exist.</summary>
+        void DeleteShelveset(string name, string? owner);
+
+        /// <summary>Creates or updates a label with the items; `childOption` is `fail`, `replace` or `merge`.</summary>
+        LabelOperationResult CreateLabel(string name, string scope, string? comment, IReadOnlyList<LabelItemQuery> items, string childOption);
+
+        LabelOperationResult DeleteLabel(string name, string scope);
+
+        /// <summary>Removes items from a label; an item that is not in the label is a failure.</summary>
+        LabelOperationResult UnlabelItems(string name, string scope, IReadOnlyList<ItemQuery> items);
+
+        /// <summary>Links a work item to a changeset (the "Fixed in Changeset" artifact link, REST). Exceptions propagate.</summary>
+        void LinkWorkItemToChangeset(int workItemId, int changesetId);
     }
 }

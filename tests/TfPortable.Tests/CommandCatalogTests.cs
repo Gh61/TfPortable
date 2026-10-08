@@ -59,7 +59,14 @@ namespace TfPortable.Tests
                 Assert.Equal(1, spec!.Phase);
             }
 
-            foreach (string name in new[] { "checkin", "shelve", "lock", "label", "unlabel", "destroy", "permission", "workspace" })
+            foreach (string name in new[] { "checkin", "shelve", "shelvesets", "unshelve", "lock", "label", "unlabel" })
+            {
+                var spec = CommandCatalog.Find(name)!;
+                Assert.Equal(CommandStatus.Implemented, spec.Status);
+                Assert.Equal(3, spec.Phase);
+            }
+
+            foreach (string name in new[] { "destroy", "permission", "workspace" })
             {
                 Assert.Equal(CommandStatus.OutOfScope, CommandCatalog.Find(name)!.Status);
             }

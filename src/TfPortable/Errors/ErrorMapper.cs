@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
@@ -62,6 +63,64 @@ namespace TfPortable.Errors
                     tfCode, message, activityId: activityId, inner: exception);
             }
 
+            if (exception is CheckinException checkin)
+            {
+                var conflicts = checkin.Conflicts ?? Array.Empty<CheckinConflict>();
+                string detail = conflicts.Length == 0 ? message : string.Join(" ", conflicts.Select(c => $"{c.ServerItem}: {c.Message}"));
+                return new TfpException(ErrorCodes.CheckinConflict, ExitCodes.GeneralError,
+                    $"The checkin was rejected: {detail}",
+                    $"Run '{toolName} get' and '{toolName} resolve' for a version conflict; a lock needs the lock owner.",
+                    tfCode, message, activityId: activityId, inner: exception);
+            }
+
+            if (exception is GatedCheckinException)
+            {
+                return new TfpException(ErrorCodes.CheckinPolicy, ExitCodes.GeneralError,
+                    "The checkin is gated by a build; tfp does not queue gated checkins.",
+                    "Use Visual Studio or the original tf.exe for this branch.",
+                    tfCode, message, activityId: activityId, inner: exception);
+            }
+
+            if (exception is ShelvesetExistsException)
+            {
+                return new TfpException(ErrorCodes.ShelvesetExists, ExitCodes.GeneralError,
+                    "A shelveset with that name already exists.",
+                    "Choose another name, or pass /replace to overwrite it.",
+                    tfCode, message, activityId: activityId, inner: exception);
+            }
+
+            if (exception is ShelvesetNotFoundException)
+            {
+                return new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError,
+                    "The shelveset does not exist.",
+                    $"'{toolName} shelvesets /owner:*' lists the shelvesets. Give the owner as name;owner.",
+                    tfCode, message, activityId: activityId, inner: exception);
+            }
+
+            if (exception is LabelNotFoundException)
+            {
+                return new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError,
+                    "The label does not exist.",
+                    $"'{toolName} labels' lists the labels. Give the scope as name@scope.",
+                    tfCode, message, activityId: activityId, inner: exception);
+            }
+
+            if (exception is ItemLockedException)
+            {
+                return new TfpException(ErrorCodes.ItemLocked, ExitCodes.PartialSuccess,
+                    "The item is locked in another workspace.",
+                    "Ask the lock owner to unlock it, or wait for the checkin.",
+                    tfCode, message, activityId: activityId, inner: exception);
+            }
+
+            if (exception is UnshelveException)
+            {
+                return new TfpException(ErrorCodes.PendingChangeConflict, ExitCodes.PartialSuccess,
+                    $"The shelveset could not be restored: {message}",
+                    $"'{toolName} status' shows the local pending changes in the way. Undo or shelve them first.",
+                    tfCode, message, activityId: activityId, inner: exception);
+            }
+
             if (exception is ItemNotFoundException || exception is ChangesetNotFoundException || tfCode == "TF14019" || tfCode == "TF14022"
                 || (message != null && message.IndexOf("was not found in source control", StringComparison.OrdinalIgnoreCase) >= 0))
             {
@@ -83,7 +142,7 @@ namespace TfPortable.Errors
             {
                 return new TfpException(ErrorCodes.ServerError, ExitCodes.GeneralError,
                     "The server returned an error.",
-                    "Read the server message; if it is temporary, try again.",
+                    "Read the server message. If it is temporary, try again.",
                     tfCode, message, activityId: activityId, inner: exception);
             }
 

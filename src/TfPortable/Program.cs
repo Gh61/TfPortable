@@ -36,6 +36,14 @@ namespace TfPortable
             new LoginCommand(),
             new LogoutCommand(),
             new WhoamiCommand(),
+            new ProtectionCommand(),
+            new CheckinCommand(),
+            new ShelveCommand(),
+            new ShelvesetsCommand(),
+            new UnshelveCommand(),
+            new LabelCommand(),
+            new UnlabelCommand(),
+            new LockCommand(),
             new StatusCommand(),
             new AddCommand(),
             new CheckoutCommand(),
@@ -88,6 +96,17 @@ namespace TfPortable
                 if (command == null)
                 {
                     throw NotAvailable(commandLine.Spec!, toolName);
+                }
+
+                // The protection level (SPEC.md "Úrovně ochrany"): the settings file is read only when the command needs more than reading.
+                var required = commandLine.Spec == null || commandName == "help" ? (Level: ProtectionLevels.ReadOnly, Switch: (string?)null) : ProtectionLevels.Required(commandLine.Spec, commandLine);
+                if (required.Level > ProtectionLevels.ReadOnly)
+                {
+                    int current = Settings.ToolSettings.Load().ProtectionLevel;
+                    if (required.Level > current)
+                    {
+                        throw ProtectionLevels.Blocked(commandLine.Spec!.Name, required.Switch, required.Level, current, toolName);
+                    }
                 }
 
                 int exit = command.Run(commandLine, output, toolName);

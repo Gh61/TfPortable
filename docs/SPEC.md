@@ -30,9 +30,9 @@ TfPortable nahrazuje originální tf.exe pro práci s TFVC v Azure DevOps Servic
 
 **Fáze 2: rozšíření** – `annotate`, `merges`, `merge` (jen pending), `branch` (jen pending), `undelete`, `rollback` (jen pending), `folderdiff`, vyhledávání v obsahu historie.
 
-**Fáze 3: zápis na server pro běžnou práci** – `checkin` (klasický checkin pending changes), `label`/`unlabel` (označkování checkinu), `shelve` bez `/delete` spolu se `shelvesets` a `unshelve` (uložení rozdělané práce na server a návrat k ní), `lock`/`unlock` (týmy s výhradním checkoutem). Součástí fáze 3 jsou úrovně ochrany (viz níže). Rozsah přepínačů: `checkin /comment` (povinný), `/associate:<work item>`, `/recursive`, `/noprompt`, `/validate` (zkušební průchod bez zápisu), `/override:<důvod>` (jen úroveň 3); `shelve /comment`, `/move`, `/replace`, `/recursive`; `label /comment`, `/child:replace|merge`, `/recursive`, `/version`; `lock /lock:checkin|checkout|none`, `/recursive`. Rozšíření pro agenty: `checkin /format:json` vrací číslo changesetu a zapsané položky.
+**Fáze 3: zápis na server pro běžnou práci** – `checkin` (klasický checkin pending changes), `label`/`unlabel` (označkování checkinu), `shelve` spolu se `shelvesets` a `unshelve` (uložení rozdělané práce na server a návrat k ní), `lock`/`unlock` (týmy s výhradním checkoutem). Součástí fáze 3 jsou úrovně ochrany (viz níže). Rozsah přepínačů: `checkin /comment` (povinný), `/associate:<work item>`, `/recursive`, `/noprompt`, `/validate` (zkušební průchod bez zápisu), `/override:<důvod>` (jen úroveň 3); `shelve /comment`, `/move`, `/replace`, `/recursive`, `/delete` (jen úroveň 3); `label /comment`, `/child:replace|merge`, `/recursive`, `/version`, `/delete` (jen úroveň 3); `lock /lock:checkin|checkout|none`, `/recursive` (checkout zámek lokální workspace nepodporuje, server vrací TF400022, exit 1). `checkin /force` zapíše i editaci s nezměněným obsahem. Rozšíření pro agenty: `checkin /format:json` vrací číslo changesetu a zapsané položky; konflikty a selhání policy jsou položkové chyby (`errors[]`), `checkin /validate` je vrátí s exit 100 bez zápisu.
 
-**Fáze 4 (hypotetická): zbytek tf.exe** – všechny zbývající příkazy a přepínače včetně těch, které mění server nevratně (`destroy`, `permission`, `workspace /new` a `/delete`, `shelve /delete`, `proxy`, `configure`). Zda je má nástroj umožnit, zatím není rozhodnuto; smysl by to mělo jen jako úplná náhrada tf.exe.
+**Fáze 4 (hypotetická): zbytek tf.exe** – všechny zbývající příkazy a přepínače včetně těch, které mění server nevratně (`destroy`, `permission`, `workspace /new` a `/delete`, `proxy`, `configure`). Zda je má nástroj umožnit, zatím není rozhodnuto; smysl by to mělo jen jako úplná náhrada tf.exe.
 
 Příkazy pozdějších fází nástroj rozpozná a vrátí jasnou chybu `TFP0003 NotSupported` s číslem fáze a doporučením použít Visual Studio nebo originální tf.exe. Důvod: zapisují na server okamžitě a nevratně, kdežto pending changes ve fázi 1 jdou kdykoli vzít zpět přes `undo`.
 
@@ -300,7 +300,7 @@ Fáze 1 pokrývá 21 příkazů tf.exe a 3 příkazy pro správu PAT: vše pro p
 | `unshelve` | `<shelveset>[;<owner>]` `/recursive` | Jen bez `/move` (nemaže shelveset na serveru) | 2 |
 | `merge`, `branch`, `undelete`, `rollback` | dle tf.exe | Jen jako pending changes ve workspace | 2 |
 
-**Správa nástroje** (rozšíření): `login`, `logout`, `whoami` (viz Autentizace), `help [<příkaz>]`, `version`.
+**Správa nástroje** (rozšíření): `login`, `logout`, `whoami` (viz Autentizace), `help [<příkaz>]`, `version`, `protection [set <1|2|3>]` (viz Úrovně ochrany).
 
 ## Úrovně ochrany
 
@@ -310,7 +310,7 @@ Nástroj pracuje v jedné ze tří úrovní ochrany. Každý příkaz a každý 
 | --- | --- | --- |
 | L1 | jen čtení (jediný zápis na disk je `view /output`) | `status`, `history`, `changeset`, `view`, `difference`, `dir`, `properties`, `localversions`, `workfold`, `workspaces`, `labels`, `branches`, `merge /candidate`, `shelvesets`, `annotate`, `merges`, `folderdiff`, `help`, `version`, `whoami`, `login`, `logout`, `protection` (zobrazení) |
 | L2 (výchozí) | běžná práce: pending changes, aktualizace workspace a běžný zápis na server | L1 + `add`, `checkout`, `delete`, `rename`, `undo`, `get`, `resolve`, `reconcile`, `undelete`, `merge`, `branch`, `rollback`, `unshelve`, `checkin`, `shelve`, `label`, `unlabel`, `lock` |
-| L3 | vše, včetně nevratných a cizích změn | L2 + `checkin /override`, `shelve /delete`, `undo /workspace:<cizí>`, `destroy`, `permission`, `workspace /new` a `/delete`, `proxy`, `configure`, `property` |
+| L3 | vše, včetně nevratných a cizích změn | L2 + `checkin /override`, `shelve /delete`, `label /delete`, `undo /workspace:<jméno>` (přepínač zvyšuje úroveň vždy, nástroj nerozlišuje vlastní a cizí workspace před připojením), `destroy`, `permission`, `workspace /new` a `/delete`, `proxy`, `configure`, `property` |
 
 **Uložení**: `%APPDATA%\TfPortable\settings.json` (klíč `protectionLevel`, hodnoty 1–3). Chybí-li soubor, platí L2. CI, které potřebuje jinou úroveň, soubor nastaví v kroku pipeline; proměnná prostředí se nepoužívá.
 
@@ -421,6 +421,9 @@ tabulka v `docs/compat.md` §1.1 (např. TFP0301 je 1 u `add`, `delete`, `view`,
 | TFP0403 | Get vytvořil konflikty | – | Seznam konfliktů, `tfp resolve /auto:...` | 1 |
 | TFP0404 | Položka je zamčená jiným uživatelem | – | Kdo zámek drží a od kdy | 1 |
 | TFP0405 | `reconcile /clean` bez potvrzení | – | Spustit s `/preview`, pak s `/noprompt` | 100 |
+| TFP0406 | Checkin zastavily konflikty (novější verze na serveru, zámek) | TF10141 | `tfp get`, `tfp resolve`, u zámku jeho vlastník | 100 |
+| TFP0407 | Checkin zastavily checkin policies nebo povinné poznámky, nebo je checkin gated | – | Opravit, nebo `/override:<důvod>` na úrovni 3 | 100 |
+| TFP0408 | Shelveset stejného jména už existuje | – | Jiné jméno, nebo `/replace` | 100 |
 | TFP0501 | Chyba serveru | HTTP 5xx | ActivityId, zkusit znovu | 100 |
 | TFP0900 | Neočekávaná chyba | jakákoli | Cesta k `last-error.txt`, `tfp version` | 100 |
 

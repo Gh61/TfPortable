@@ -15,6 +15,7 @@ microsoft.teamfoundation.sourcecontrol.webapi
 microsoft.teamfoundation.versioncontrol.client
 microsoft.teamfoundation.versioncontrol.common
 microsoft.teamfoundation.versioncontrol.common.integration
+microsoft.teamfoundation.workitemtracking.webapi
 microsoft.visualstudio.services.client.interactive
 microsoft.visualstudio.services.common
 microsoft.visualstudio.services.webapi

@@ -20,6 +20,7 @@ namespace TfPortable.Errors
         public const string UnknownCommand = "TFP0001";
         public const string InvalidSwitch = "TFP0002";
         public const string NotSupported = "TFP0003";
+        public const string ProtectionLevel = "TFP0004";
 
         public const string PatMissing = "TFP0101";
         public const string PatRejected = "TFP0102";
@@ -40,6 +41,9 @@ namespace TfPortable.Errors
         public const string GetConflicts = "TFP0403";
         public const string ItemLocked = "TFP0404";
         public const string CleanNeedsConfirmation = "TFP0405";
+        public const string CheckinConflict = "TFP0406";
+        public const string CheckinPolicy = "TFP0407";
+        public const string ShelvesetExists = "TFP0408";
 
         public const string ServerError = "TFP0501";
         public const string Unexpected = "TFP0900";
@@ -50,6 +54,7 @@ namespace TfPortable.Errors
             [UnknownCommand] = ExitCodes.UnknownCommand,
             [InvalidSwitch] = ExitCodes.GeneralError,
             [NotSupported] = ExitCodes.GeneralError,
+            [ProtectionLevel] = ExitCodes.GeneralError,
             [PatMissing] = ExitCodes.Authentication,
             [PatRejected] = ExitCodes.Authentication,
             [PatScope] = ExitCodes.Authentication,
@@ -65,6 +70,9 @@ namespace TfPortable.Errors
             [WritableFileSkipped] = ExitCodes.PartialSuccess,
             [GetConflicts] = ExitCodes.PartialSuccess,
             [ItemLocked] = ExitCodes.PartialSuccess,
+            [CheckinConflict] = ExitCodes.GeneralError,
+            [CheckinPolicy] = ExitCodes.GeneralError,
+            [ShelvesetExists] = ExitCodes.GeneralError,
             [CleanNeedsConfirmation] = ExitCodes.GeneralError,
             [ServerError] = ExitCodes.GeneralError,
             [Unexpected] = ExitCodes.GeneralError,
@@ -86,6 +94,8 @@ namespace TfPortable.Errors
             ["rename:" + ItemNotFound] = ExitCodes.GeneralError,
             ["changeset:" + ItemNotFound] = ExitCodes.GeneralError,
             ["label:" + ItemNotFound] = ExitCodes.GeneralError,
+            ["checkin:" + ItemLocked] = ExitCodes.GeneralError,
+            ["unshelve:" + PendingChangeConflict] = ExitCodes.GeneralError,
         };
 
         /// <summary>The exit code of a TFP code for a command: the compat.md override, else the catalog default, else the given one.</summary>

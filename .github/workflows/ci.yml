@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ['**']
+    branches: ['main']
     tags: ['v*']
   pull_request:
   workflow_dispatch:
@@ -14,6 +14,13 @@ on:
 
 permissions:
   contents: write   # release upload on tags; read is enough for everything else
+
+# The integration tests write to one test collection (checkins, shelvesets, labels, locks): two runs at the
+# same time see each other's changes (a `get` that is not up to date, a lock held by the other run). Runs
+# queue up instead; nothing is cancelled.
+concurrency:
+  group: tfvc-test-collection
+  cancel-in-progress: false
 
 jobs:
   build:

@@ -90,9 +90,10 @@ Enumerations:
 | --- | --- |
 | `login` | `{ "collection", "identity": { "displayName", "uniqueName", "id" }, "stored": true, "storedAt", "codeScope": true\|false\|null, "versionControlConnection": bool }`. `identity` comes from the REST check; `versionControlConnection` is whether the TFVC (SOAP) connection also succeeded (false with a warning `TFP0103` when the PAT lacks full access) |
 | `logout` | `{ "collection", "removed": bool }` |
-| `whoami` | `{ "collection", "identity": {…}, "patStoredAt" (ISO date or null when the PAT came from `/login`), "workspace": Workspace or null, "cwd" }` |
+| `whoami` | `{ "collection", "identity": {…}, "patStoredAt" (ISO date or null when the PAT came from `/login`), "protectionLevel": 1\|2\|3, "workspace": Workspace or null, "cwd" }` |
+| `protection` | `{ "protectionLevel": 1\|2\|3, "settingsPath" }`; `protection set <n>` adds `"previous"` (the level before). Levels: 1 read-only, 2 everyday work, 3 everything (SPEC.md "Úrovně ochrany") |
 | `version` | `{ "version", "informationalVersion", "clientLibraries": { "Microsoft.TeamFoundationServer.ExtendedClient": "20.256.2", … }, "runtime" }` |
-| `help` | `{ "commands": [ { "name", "aliases": [], "phase": 1\|2\|null, "supported": bool, "status": "implemented"\|"planned"\|"out-of-scope", "summary", "switches": [ { "name", "short", "value": "none"\|"optional"\|"required", "values": [], "summary", "extension": bool } ] } ] }`; with `help <command>` the array has one element. `phase` is null for the tool's own commands (`login`, `help`, …) and for out-of-scope commands; `supported` is true only for commands that run in this build (`status` is "implemented"); `switches` include the global ones; `values` lists the accepted values of an enumeration switch (`format` always contains `json`), empty for free text |
+| `help` | `{ "commands": [ { "name", "aliases": [], "phase": 1\|2\|null, "supported": bool, "status": "implemented"\|"planned"\|"out-of-scope", "summary", "protectionLevel": 1\|2\|3, "switches": [ { "name", "short", "value": "none"\|"optional"\|"required", "values": [], "summary", "extension": bool } ] } ] }`; with `help <command>` the array has one element. `phase` is null for the tool's own commands (`login`, `help`, …) and for out-of-scope commands; `supported` is true only for commands that run in this build (`status` is "implemented"); `switches` include the global ones; `values` lists the accepted values of an enumeration switch (`format` always contains `json`), empty for free text |
 | `status` | `{ "changes": [PendingChange], "detectedChanges": [PendingChange], "counts": { "changes", "detected" } }` |
 | `add`, `checkout`, `delete`, `rename` | `{ "changes": [PendingChange], "skipped": [ { "localPath", "reason": "alreadyVersioned"\|"notFound"\|"locked"\|"error" } ] }`. Every skipped item is also a Message in `errors` (exit 1); `rename` of a missing source is a fatal TFP0301 (exit 100, docs/compat.md §1.1). The `ignored` reason of the draft is not produced: the client library skips ignored items silently during `/recursive` and wildcard expansion |
 | `undo` | `{ "undone": [PendingChange], "notFound": [string] }`; nothing to undo is a TFP0301 in `errors` with exit 1 |
@@ -111,9 +112,15 @@ Enumerations:
 | `labels` | `{ "labels": [ { "name", "scope", "owner", "date", "comment", "items": [ { "serverPath", "changesetId", "deletionId" } ] } ] }` (`items` only with `/format:detailed`) |
 | `branches` | `{ "root": "$/...", "branches": [ { "serverPath", "parent", "branchedFromVersion", "children": [...] } ] }` |
 | `merge /candidate` | `{ "source", "target", "candidates": [ Changeset + "partial": bool ] }` (`changes` filled with `/format:detailed`) |
+| `checkin` | `{ "changeset": n or null (with `/validate`), "validated": bool, "changes": [PendingChange], "conflicts": [ { "serverPath", "message", "resolvable" } ], "policyFailures": [string], "overridden": bool, "workItems": [ { "id", "linked": bool } ] }`; every conflict is a TFP0406 and every policy failure a TFP0407 entry in `errors` (with `/validate` the data is returned and the exit is 100, without it a summary error follows and `data` is empty); a work item that could not be linked after a successful checkin is TFP0501 in `errors` (exit 1) |
+| `shelve` | `{ "shelveset": { "name", "owner" }, "changes": [PendingChange], "replaced": bool, "moved": bool }`; `shelve /delete` returns `{ "shelveset", "deleted": true }` |
+| `shelvesets` | `{ "shelvesets": [ { "name", "owner", "ownerUniqueName", "date", "comment" } ] }` |
+| `unshelve` | `{ "shelveset": { "name", "owner" }, "changes": [PendingChange], "conflicts": [Conflict] }`; open conflicts are TFP0403 in `errors` (exit 1) |
+| `label`, `unlabel` | `{ "label": { "name", "scope" }, "results": [ { "name", "scope", "status": "created"\|"updated"\|"deleted" } ], "skipped": [ { "localPath", "reason" } ] }`; a skipped item is TFP0301 in `errors` (exit 1) |
+| `lock` | `{ "lock": "none"\|"checkout"\|"checkin", "changes": [PendingChange], "count", "skipped": [...] }` |
 
-Phase 2 commands (`merges`, `annotate`, `folderdiff`, `shelvesets`, `unshelve`, `undelete`,
-`rollback`, `branch`, `merge`) add their sections when implemented.
+Phase 2 commands (`merges`, `annotate`, `folderdiff`, `undelete`, `rollback`, `branch`, `merge`)
+add their sections when implemented.
 
 ## 4. Open points for Gate A
 

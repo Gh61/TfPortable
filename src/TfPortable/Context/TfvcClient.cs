@@ -251,6 +251,67 @@ namespace TfPortable.Context
             return VersionControl.GetMergeCandidates(sourcePath, targetPath, recursion).Select(c => new MergeCandidateInfo(ToChangeset(c.Changeset, false), c.Partial)).ToList();
         }
 
+        public IReadOnlyList<ShelvesetInfo> QueryShelvesets(string? name, string? owner)
+        {
+            return VersionControl.QueryShelvesets(string.IsNullOrEmpty(name) ? null : name, string.IsNullOrEmpty(owner) ? null : owner)
+                .Select(s => new ShelvesetInfo(s.Name, s.OwnerDisplayName ?? s.OwnerName, s.OwnerName, s.CreationDate, string.IsNullOrEmpty(s.Comment) ? null : s.Comment))
+                .ToList();
+        }
+
+        public void DeleteShelveset(string name, string? owner)
+        {
+            var vcs = VersionControl;
+            vcs.DeleteShelveset(name, string.IsNullOrEmpty(owner) ? vcs.AuthorizedUser : owner);
+        }
+
+        public LabelOperationResult CreateLabel(string name, string scope, string? comment, IReadOnlyList<LabelItemQuery> items, string childOption)
+        {
+            var vcs = VersionControl;
+            var label = new VersionControlLabel(vcs, name, vcs.AuthorizedUser, scope, comment);
+            var specs = items.Select(i => new LabelItemSpec(ToItemSpec(i.Item), i.Version, i.Exclude)).ToArray();
+            var option = string.Equals(childOption, "replace", StringComparison.OrdinalIgnoreCase) ? LabelChildOption.Replace
+                : string.Equals(childOption, "merge", StringComparison.OrdinalIgnoreCase) ? LabelChildOption.Merge
+                : LabelChildOption.Fail;
+            var results = vcs.CreateLabel(label, specs, option, out Failure[] failures);
+            return new LabelOperationResult(results.Select(ToLabelResult).ToList(), (failures ?? Array.Empty<Failure>()).Select(ToFailure).ToList());
+        }
+
+        public LabelOperationResult DeleteLabel(string name, string scope)
+        {
+            return new LabelOperationResult(VersionControl.DeleteLabel(name, scope).Select(ToLabelResult).ToList(), Array.Empty<FailureInfo>());
+        }
+
+        public LabelOperationResult UnlabelItems(string name, string scope, IReadOnlyList<ItemQuery> items)
+        {
+            // The version to remove is the label's own (the library's documented choice).
+            var results = VersionControl.UnlabelItem(name, scope, items.Select(ToItemSpec).ToArray(), new LabelVersionSpec(name, scope), null, out Failure[] failures);
+            return new LabelOperationResult(results.Select(ToLabelResult).ToList(), (failures ?? Array.Empty<Failure>()).Select(ToFailure).ToList());
+        }
+
+        public void LinkWorkItemToChangeset(int workItemId, int changesetId)
+        {
+            // The TFVC (SOAP) checkin links work items only through the work item tracking object model, which tfp does
+            // not embed. The REST work item API adds the same "Fixed in Changeset" artifact link in one PATCH.
+            var client = connection.GetClient<Microsoft.TeamFoundation.WorkItemTracking.WebApi.WorkItemTrackingHttpClient>();
+            var patch = new Microsoft.VisualStudio.Services.WebApi.Patch.Json.JsonPatchDocument
+            {
+                new Microsoft.VisualStudio.Services.WebApi.Patch.Json.JsonPatchOperation
+                {
+                    Operation = Microsoft.VisualStudio.Services.WebApi.Patch.Operation.Add,
+                    Path = "/relations/-",
+                    Value = new
+                    {
+                        rel = "ArtifactLink",
+                        url = $"vstfs:///VersionControl/Changeset/{changesetId}",
+                        attributes = new { name = "Fixed in Changeset" },
+                    },
+                },
+            };
+            client.UpdateWorkItemAsync(patch, workItemId).GetAwaiter().GetResult();
+        }
+
+        private static LabelResultInfo ToLabelResult(LabelResult r) => new LabelResultInfo(r.Label, r.Scope, r.Status.ToString().ToLowerInvariant());
+
         public void Dispose() => connection.Dispose();
 
         internal static ItemSpec ToItemSpec(ItemQuery i) => new ItemSpec(i.Path, i.Recursion, i.DeletionId);
@@ -645,6 +706,81 @@ namespace TfPortable.Context
             }
 
             private static string? FileType(string? encoding) => string.IsNullOrWhiteSpace(encoding) ? null : encoding!.Trim();
+
+            public CheckinEvaluation EvaluateCheckin(IReadOnlyList<PendingChangeInfo> changes, string comment)
+            {
+                var pending = Handles(changes);
+                CheckinEvaluationResult result = workspace.EvaluateCheckin2(CheckinEvaluationOptions.All, pending, comment, null, null);
+                var conflicts = (result.Conflicts ?? Array.Empty<CheckinConflict>()).Select(c => new CheckinConflictInfo(c.ServerItem, c.Message, c.Resolvable)).ToList();
+                var policies = (result.PolicyFailures ?? Array.Empty<PolicyFailure>()).Select(p => p.Message).ToList();
+                var notes = (result.NoteFailures ?? Array.Empty<CheckinNoteFailure>()).Select(n => n.Message).ToList();
+                return new CheckinEvaluation(conflicts, policies, notes, result.PolicyEvaluationException?.Message) { PolicyHandles = result.PolicyFailures };
+            }
+
+            public int CheckIn(IReadOnlyList<PendingChangeInfo> changes, string comment, string? author, string? overrideReason, CheckinEvaluation? evaluation, bool noAutoResolve, bool allowUnchangedContent)
+            {
+                var parameters = new WorkspaceCheckInParameters(Handles(changes), comment)
+                {
+                    NoAutoResolve = noAutoResolve,
+                    AllowUnchangedContent = allowUnchangedContent,
+                };
+                if (!string.IsNullOrEmpty(author))
+                {
+                    parameters.Author = author;
+                }
+
+                if (overrideReason != null)
+                {
+                    parameters.PolicyOverride = new PolicyOverrideInfo(overrideReason, evaluation?.PolicyHandles as PolicyFailure[] ?? Array.Empty<PolicyFailure>());
+                }
+
+                return workspace.CheckIn(parameters);
+            }
+
+            public void Shelve(string name, string? comment, IReadOnlyList<PendingChangeInfo> changes, bool replace, bool move)
+            {
+                var shelveset = new Shelveset(Vcs, name, Vcs.AuthorizedUser) { Comment = comment ?? string.Empty };
+                var options = ShelvingOptions.None;
+                if (replace) { options |= ShelvingOptions.Replace; }
+                if (move) { options |= ShelvingOptions.Move; }
+                workspace.Shelve(shelveset, Handles(changes), options);
+            }
+
+            public UnshelveResult Unshelve(string name, string? owner, IReadOnlyList<ItemQuery>? items, bool merge, bool noAutoResolve)
+            {
+                using var collector = new EventCollector(Vcs);
+                var specs = items == null || items.Count == 0 ? null : items.Select(ToItemSpec).ToArray();
+                workspace.Unshelve(name, string.IsNullOrEmpty(owner) ? Vcs.AuthorizedUser : owner, specs, null, null, null, merge, noAutoResolve,
+                    out PendingChange[] changes, out Conflict[] conflicts);
+                var restored = (changes ?? Array.Empty<PendingChange>()).Select(c => ToPendingChange(c, false)).ToList();
+                if (restored.Count == 0 && collector.Changes.Count > 0)
+                {
+                    restored = collector.Changes;
+                }
+
+                var open = (conflicts ?? Array.Empty<Conflict>()).Where(c => !c.IsResolved).Select(ToConflict).ToList();
+                return new UnshelveResult(restored, open, collector.Failures);
+            }
+
+            public PendResult SetLock(IReadOnlyList<string> paths, LockLevel level, RecursionType recursion)
+            {
+                using var collector = new EventCollector(Vcs);
+                int count = workspace.SetLock(paths.ToArray(), level, recursion, false);
+                var changes = level == LockLevel.None && collector.Changes.Count == 0 ? collector.Undone : collector.Changes;
+                return new PendResult(changes, collector.Failures, count);
+            }
+
+            /// <summary>The library's pending changes behind the infos (from a query of this workspace).</summary>
+            private static PendingChange[] Handles(IReadOnlyList<PendingChangeInfo> changes)
+            {
+                var handles = changes.Select(c => c.Handle as PendingChange).Where(h => h != null).Select(h => h!).ToArray();
+                if (handles.Length != changes.Count)
+                {
+                    throw new InvalidOperationException("A pending change without its library handle cannot be written to the server.");
+                }
+
+                return handles;
+            }
         }
 
         /// <summary>Collects the events the library raises during one operation (new/undone pending changes, get operations, non-fatal errors).</summary>
