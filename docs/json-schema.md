@@ -1,6 +1,7 @@
 # `/format:json` output – schema
 
-**Status: approved at Gate A (2026-10-07) as the basis for milestone 2**, on the condition that
+**Status: implemented for every phase 1 command (milestones 2–4, 2026-10-08); the field names below
+are the contract of the first release.** Approved at Gate A (2026-10-07) as the basis for milestone 2, on the condition that
 the types stay derived from what the original prints in the golden outputs (PendingChange from
 `status /format:detailed`, Item from `properties`, Changeset/Change from `changeset`,
 Workspace/Mapping from `workspaces /format:detailed` and `workfold`). The implementer fills in

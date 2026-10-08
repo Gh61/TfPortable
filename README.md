@@ -121,18 +121,21 @@ Exit codes: `0` success, `1` partial success or a per-item failure, `2` unknown 
 | `merge /candidate` | Changesets not yet merged between two branches |
 | `help`, `version` | Command catalog (`/format:json` for agents); versions of tfp and the client libraries |
 
+Phase 2 commands (`merges`, `annotate`, `folderdiff`, `shelvesets`, `unshelve`, `undelete`,
+`rollback`, `branch`, `merge`) are recognized and answer `TFP0003` until they are implemented.
+
 Every switch of every command, and what TfPortable does with it, is in
 [docs/commands.md](docs/commands.md). Where TfPortable deliberately differs from `tf.exe`
 (exit codes, dates, truncation, encoding) is in [docs/compat.md](docs/compat.md). The JSON output
-is described in [docs/json-schema.md](docs/json-schema.md). Phase 2 (`merges`, `annotate`,
-`folderdiff`, `shelvesets`, `unshelve`, `undelete`, `rollback`, `branch`, `merge`) comes later.
+is described in [docs/json-schema.md](docs/json-schema.md).
 
 ## For AI agents
 
-`docs/CLAUDE.md` (milestone 5) is a ready-made section for the `CLAUDE.md` of a TFVC project:
-which commands to use, dash switches, `-format:json`, what exit code 110 means, and that the
-agent never asks for or enters a PAT. Read-only commands can be allowed without confirmation;
-`get`, `undo`, `reconcile`, `resolve` and `delete` should ask.
+[docs/CLAUDE.md](docs/CLAUDE.md) is a ready-made section for the `CLAUDE.md` of a TFVC project
+plus a permissions snippet for `.claude/settings.json`: which commands to use, dash switches,
+`-format:json`, what exit codes 110 and 120 mean, and that the agent never asks for or enters a
+PAT. Read-only commands can be allowed without confirmation; `get`, `undo`, `reconcile`,
+`resolve` and `delete` should ask.
 
 ## Build
 

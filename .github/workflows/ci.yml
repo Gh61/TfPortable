@@ -60,6 +60,30 @@ jobs:
           "$hash *tfp.exe" | Out-File -Encoding ascii -NoNewline artifacts/tfp.exe.sha256
           Write-Host "tfp.exe: $((Get-Item artifacts/tfp.exe).Length) bytes, SHA-256 $hash"
 
+      - name: Check the embedded assemblies against THIRD-PARTY-NOTICES
+        shell: pwsh
+        run: |
+          # Costura embeds every non-excluded dependency as a resource. The list must match
+          # src/TfPortable/embedded-assemblies.txt, which THIRD-PARTY-NOTICES covers (milestone 5).
+          $asm = [System.Reflection.Assembly]::LoadFile((Resolve-Path artifacts/tfp.exe).Path)
+          $names = $asm.GetManifestResourceNames() |
+            Where-Object { $_ -like 'costura.*' } |
+            ForEach-Object { ($_ -replace '^costura\.', '') -replace '\.dll(\.compressed)?$', '' } |
+            Sort-Object -Unique
+          Write-Host "Embedded assemblies ($($names.Count)):"
+          $names | ForEach-Object { Write-Host "  $_" }
+          $expectedFile = 'src/TfPortable/embedded-assemblies.txt'
+          if (-not (Test-Path $expectedFile)) {
+            throw "Missing $expectedFile; create it with the list above and check THIRD-PARTY-NOTICES."
+          }
+          $expected = Get-Content $expectedFile | Where-Object { $_ -and -not $_.StartsWith('#') } | ForEach-Object { $_.Trim() } | Sort-Object -Unique
+          $diff = Compare-Object -ReferenceObject @($expected) -DifferenceObject @($names)
+          if ($diff) {
+            $diff | ForEach-Object { Write-Host "$($_.SideIndicator) $($_.InputObject)" }
+            throw "The embedded assemblies differ from $expectedFile (=> embedded but not listed, <= listed but not embedded). Update the list and THIRD-PARTY-NOTICES."
+          }
+          exit 0
+
       - name: Run tfp.exe alone in an empty folder
         shell: pwsh
         run: |
