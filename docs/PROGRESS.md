@@ -13,34 +13,38 @@ Read this first in every session. Update it at the end of every session (see CLA
 | 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | done: [PR #3](https://github.com/Gh61/TfPortable/pull/3) merged into `main` on 2026-10-08 (merge commit ff64062) after an independent review (findings under Decisions) | – |
 | 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | done: [PR #4](https://github.com/Gh61/TfPortable/pull/4) (docs/CLAUDE.md, compatibility tests, embedded-assembly check, THIRD-PARTY-NOTICES) reviewed, CI green and merged into `main` on 2026-10-08; release [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) published the same day (developer approved; `tfp.exe` + SHA-256 from the CI run on 2a1c007) | user approved the release on 2026-10-08 |
 | – | Phase 2 commands | – | not planned | separate brief |
+| P3 | Phase 3: protection levels, `checkin`, `shelve`/`shelvesets`/`unshelve`, `label`/`unlabel`, `lock` | cloud + CI | in progress: [PR #9](https://github.com/Gh61/TfPortable/pull/9) (branch `p3-protection`, draft), code, unit tests, CI integration tests, docs and the capture script written on 2026-10-08; CI loop and the independent review pending | release `v0.2.0` (developer) |
 
 Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
-1. Release `v0.1.0` (developer gate, see "Needs the user"): the developer creates the tag on `main`;
-   the CI workflow builds `tfp.exe`, writes the SHA-256 and publishes the GitHub release. Every
-   milestone branch (`m2-core` … `m5-integration`) is merged; new work starts from `main`.
-2. If a package changes later, update `src/TfPortable/embedded-assemblies.txt` from the output of
-   the CI step "Check the embedded assemblies against THIRD-PARTY-NOTICES" and THIRD-PARTY-NOTICES
-   section 3.
-3. Phase 2 commands need a separate brief (SPEC.md "Fáze 2"); the catalog already lists them as
-   planned (TFP0003), `docs/json-schema.md` is the contract of the first release.
-4. Open questions worth an integration test when the developer has time: `/encoding:` value format,
-   `history /workitem` on Azure DevOps Services, `reconcile /promote` promoting nothing (milestone 3),
-   and the review nits of PR #3 listed under "Open questions".
+1. Phase 3 on branch `p3-protection` ([PR #9](https://github.com/Gh61/TfPortable/pull/9)): drive CI
+   to green (`Phase3Tests` runs the write path against the test collection: a checkin into
+   `$/TfsPortableTestRepo/CI/<run>-checkin` with the work item 1 link, a shelve round trip, a label,
+   a lock), then the independent review (CLAUDE.md "Pull requests"), fix the findings, record them
+   under "Decisions", mark the PR ready and merge it with a merge commit.
+2. After the merge: ask the developer to run `tools/capture-tf-golden-phase3.ps1` (the cases without
+   a golden file: `checkin /validate`, `/associate`, a comment file, an unchanged edit, `shelve /replace`,
+   `/move`, an existing name, `unshelve` with a local file in the way, `/nomerge`, `label` without a
+   scope, `/child:*`, `label /delete`, `lock` edge cases) and compare tfp against the captures
+   (`docs/compat.md` §16 lists the assumed shapes).
+3. Release `v0.2.0` (developer gate): run the CI workflow manually on `main` with `release_tag`.
+4. If a package changes later, update `src/TfPortable/embedded-assemblies.txt` from the output of
+   the CI step "Check the embedded assemblies against THIRD-PARTY-NOTICES" and THIRD-PARTY-NOTICES.
+5. Phase 2 commands need a separate brief (SPEC.md "Fáze 2"); the catalog lists them as planned
+   (TFP0003). Phase 4 is undecided (README "Phases and progress").
 
 ## Needs the user
 
 - A lawyer's look at LICENSE-EXCEPTION and THIRD-PARTY-NOTICES (Decisions 2026-10-07) is still
   open; `v0.1.0` was released with the current texts.
-- Before phase 3 starts: (1) confirm that CI may check in to the test collection (every run would
-  create changesets, proposed under a dedicated folder `$/TfsPortableTestRepo/CI/<run>` with a
-  delete checkin at the end); (2) golden captures for `checkin`, `label`/`unlabel` and `lock` do
-  not exist (only `checkin/nothing-pending`, `shelve`, `shelvesets`, `unshelve`): capture them with
-  the original tf.exe if possible, otherwise phase 3 follows the Microsoft documentation and the
-  help captures; (3) a work item in the test project if `checkin /associate` should have a live
-  test.
+- Phase 3 answers of 2026-10-08: CI may check in under `$/TfsPortableTestRepo/CI/<run>` (done, with
+  a delete checkin at the end), the developer cannot easily run tf.exe for new captures (so phase 3
+  follows the existing captures and the Microsoft docs; `tools/capture-tf-golden-phase3.ps1` is ready
+  for later), and work item #1 (a bug) exists for `checkin /associate`.
+- After PR #9 merges: run `tools/capture-tf-golden-phase3.ps1` when tf.exe is at hand (see "Next
+  steps" 2), and release `v0.2.0` (see "Next steps" 3).
 - The permanent shelveset `tfp-golden-shelveset` was created by the developer on 2026-10-08;
   `ShelvesetTests` finds it by name (any owner) and fails with the visible shelveset names when it
   does not.
@@ -142,6 +146,9 @@ Statuses: not started, in progress, blocked, done.
 | 2026-10-08 | Open questions closed after the release (branch `open-questions`): `/encoding` values are whatever the client library's `FileType` parser accepts (names, code pages, `binary`/`text`/`auto`; decompiled), the dead `ParseEncoding` is gone; `reconcile /promote` promotes adds and deletes without `/adds`/`/deletes` (the capture's empty result is recorded as a deviation); a recursive `add` leaves `.tfignore` matches out silently with exit 0; a modified file in a local workspace makes `get` of an older version a TFP0403 conflict; `history /workitem` is answered by the linking service with a PAT; the golden loader finds cases in every `index*.json`. Review nits of PR #3 done: `view` downloads through one listing (`DownloadItems`) and treats `/output` as a directory for `/recursive` and wildcards, shelved content streams without a temp file and without a second query (`PendingChangeInfo.Handle`), `branches` prints the whole tree with the requested item marked, `merge /candidate /version` filters by changeset number, `difference /encoding` overrides the decoding. All verified by `tests/TfPortable.IntegrationTests/OpenQuestionTests.cs` against the test collection | Developer's request to close the open questions |
 | 2026-10-08 | Review of the open-questions branch (independent agent): `difference /encoding` resolves the value once (name or code page → web name, `binary`; unknown → TFP0002, the silent UTF-8 fallback is gone); SPEC.md's `add` row says exit 0 with `.tfignore` matches left out; a shelved change without content (rename-only, property, lock) no longer crashes `difference /shelveset` or `view /shelveset` (`DownloadShelved` returns null); the conflict test resolves with `TakeTheirs`, undoes, gets the latest and asserts that no conflict or pending change is left; the golden loader searches `index-extra.json` before the suffixed runs | Review findings |
 | 2026-10-08 | The developer approved the release of milestone 5 (`v0.1.0`). A tag cannot be pushed from the cloud session (the session's git proxy accepts branch pushes only and refuses writes to the tags API), so the CI workflow gained a `workflow_dispatch` input `release_tag`: a manual run publishes the release for that tag from the chosen branch and creates the tag on its head when it does not exist; the tag push that follows re-runs the job, which finds the release and does nothing. A pushed tag still releases as before | Developer's instruction of 2026-10-08; the cloud environment's git proxy |
+| 2026-10-08 | Protection levels implemented (PR #9): `Cli/ProtectionLevels` maps every catalog command to a level (a unit test checks that none is missing) and the switches that raise it (`checkin /override`, `undo /workspace`, `label /delete`, `shelve /delete` → 3; `workfold /map`, `/unmap`, `/cloak`, `/decloak` → 2; `merge /candidate` lowers `merge` to 1); `Settings/ToolSettings` reads `%APPDATA%\TfPortable\settings.json` (missing file → level 2, an invalid or unreadable file → TFP0004); `Program` loads the file only when a command needs more than reading and throws TFP0004 with the SPEC.md wording; `tfp protection` shows the level, `tfp protection set <n>` changes it in an interactive terminal only (`PatPrompt.IsInteractive`), raising asks to type the level number; `help <command>` and `whoami` print the level. The agent template denies `tfp protection set` | SPEC.md "Úrovně ochrany" |
+| 2026-10-08 | Phase 3 commands (PR #9): `checkin` evaluates the changes first (`EvaluateCheckin2` with conflicts, notes and policies): conflicts are TFP0406, policy or note failures TFP0407 unless `/override:<reason>` (level 3) records a `PolicyOverrideInfo`; a policy that tfp cannot evaluate (its assembly is not embedded) counts as a failure, as in tf.exe without the policy installed; `/validate` stops after the evaluation; `/comment` is required (`@file` accepted); `/associate:<ids>` links the work items after the checkin over the REST work item API (`WorkItemTrackingHttpClient`, a "Fixed in Changeset" artifact link), because the SOAP checkin links work items only through the work item object model that tfp does not embed, so `Microsoft.TeamFoundation.WorkItemTracking.WebApi` is now embedded (250 KB); a failed link is TFP0501 with exit 1 and the changeset stays. `shelve` needs the name, accepts `/comment`, `/replace`, `/move`, `/recursive`, reports TFP0408 for an existing name and `/delete` at level 3; `shelvesets` defaults to the authenticated user (`/owner:*` everyone), a named shelveset that is missing is TFP0301 exit 100 as tf.exe; `unshelve` needs the name, merges with local changes unless `/nomerge`, open conflicts are TFP0403 (exit 1), a local change in the way (`UnshelveException`) TFP0401 with exit 100; `label` defaults the scope to the team project of the first item and the version to the workspace version for local paths (latest for server paths), `/child:fail` is the default, `/delete` is level 3; `unlabel` removes at the label's version (`LabelVersionSpec`, the library's documented choice), an item not in the label is TFP0301 exit 1; `lock` needs `/lock:` and lists the lock changes from the library's events. The `/lock:checkin|checkout` switches of `add`, `checkout`, `delete`, `rename` stay refused (unchanged scope) | docs/compat.md §16, docs/commands.md "Phase 3" |
+| 2026-10-08 | CI tests of the write path (`Phase3Tests`) check in under `$/TfsPortableTestRepo/CI/<run>-<test>` and delete the folder with a last checkin; shelvesets and labels carry the run id and are deleted through `shelve /delete` and `label /delete` at level 3 (`ProtectionLevelScope` writes the runner's `%APPDATA%\TfPortable\settings.json` for the block and restores it), with the client library as the fallback cleanup. The `CI` folder itself stays on the server | Developer's answer (1) of 2026-10-08 |
 | 2026-10-08 | Review of PR #4 (independent agent, one should-fix: PROGRESS.md was stale): status table, next steps and "Needs the user" rewritten for the hand-over; `docs/CLAUDE.md` keeps only the `-candidate` permission rule (the `/candidate` form never arrives from Git Bash) and says the switch must follow `merge`, names the three meanings of exit 120 (no workspace, path not mapped, server workspace), notes that `view -output:` writes a file and that aliases (`hist`, `stat`, ...) are not in the allow list; the compatibility test checks the `undo` and that no detected change is left; the CI step trims the list lines before the `#` check; SPEC.md points to `docs/CLAUDE.md` as the maintained template | Review findings |
 
 ## Open questions
@@ -163,8 +170,12 @@ Open:
 
 - No golden case exists for TFP0402 (the library's "writable" status of `get`): tfp maps it as SPEC.md says, but no
   capture or integration test has produced it (local workspaces report a conflict instead).
-- A shelveset diff has no live test: the golden run's shelveset was deleted at its end (`shelve/delete`), and tfp
-  cannot create one (`shelve` is phase 2). `difference /shelveset` is covered by unit tests of the rendering only.
+- Phase 3 shapes assumed without a capture (docs/compat.md §16): `checkin /validate`, `/associate`, a policy
+  failure, `shelve /replace` and `/move` wording, `label` without a scope, `label /delete`, `lock` of an unknown
+  item. `tools/capture-tf-golden-phase3.ps1` captures them when the developer has tf.exe at hand.
+- Checkin policies: tfp evaluates them through the client library, which loads policy assemblies from the
+  registry of the machine; in a single exe none is available, so a project with policies always needs
+  `/override` (level 3). Whether that is acceptable, or whether tfp should skip the evaluation, is open.
 
 ## Golden files – facts
 
@@ -180,6 +191,22 @@ Open:
   `tools/capture-tf-golden-extra.ps1` (from C84, including history padding).
 
 ## Session log
+
+### 2026-10-08 – cloud session, phase 3 (branch `p3-protection`, PR #9)
+
+- Done: protection levels (settings file, catalog map, `protection` command, TFP0004, level in `help` and
+  `whoami`); `checkin` (evaluation, `/validate`, `/override`, `/associate` over REST), `shelve` (`/replace`,
+  `/move`, `/delete`), `shelvesets`, `unshelve`, `label` (`/child`, `/delete`), `unlabel`, `lock`; error codes
+  TFP0406–TFP0408; unit tests (`ProtectionTests`, `Phase3CommandTests`); CI tests (`Phase3Tests`) with the
+  CI folder and the cleanup; docs (commands.md, json-schema.md, compat.md §16 and §18, SPEC.md error rows and
+  tool commands, the agent template with `checkin`/`shelve` guidance and the `protection set` deny rule);
+  `tools/capture-tf-golden-phase3.ps1` for the developer. The first CI runs failed on four unit tests (the
+  help catalog had no section for implemented phase 3 commands, the no-argument run hit the protection gate
+  with a null spec, the error catalog test and a `/delete` argument test lacked the new codes and the gate):
+  fixed in 9a072bd.
+- Next: CI green, independent review, merge, then "Next steps" 2 and 3.
+- Blockers: none from the developer; the usage limit of the session may pause the work (the developer asked
+  to stop at about 90 % and continue after the reset).
 
 ### 2026-10-08 – cloud session 1 continued, milestones 3–5 to the merge
 
