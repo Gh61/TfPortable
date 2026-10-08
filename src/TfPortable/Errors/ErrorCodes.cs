@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace TfPortable.Errors
 {
     /// <summary>Exit codes (SPEC.md "Exit kódy", docs/compat.md §1.1).</summary>
@@ -32,7 +35,70 @@ namespace TfPortable.Errors
         public const string InvalidVersionSpec = "TFP0302";
         public const string BinaryContent = "TFP0303";
 
+        public const string PendingChangeConflict = "TFP0401";
+        public const string WritableFileSkipped = "TFP0402";
+        public const string GetConflicts = "TFP0403";
+        public const string ItemLocked = "TFP0404";
+        public const string CleanNeedsConfirmation = "TFP0405";
+
         public const string ServerError = "TFP0501";
         public const string Unexpected = "TFP0900";
+
+        /// <summary>Default exit code of every code in the catalog (SPEC.md "Katalog", column Exit).</summary>
+        public static readonly IReadOnlyDictionary<string, int> DefaultExitCodes = new Dictionary<string, int>(StringComparer.Ordinal)
+        {
+            [UnknownCommand] = ExitCodes.UnknownCommand,
+            [InvalidSwitch] = ExitCodes.GeneralError,
+            [NotSupported] = ExitCodes.GeneralError,
+            [PatMissing] = ExitCodes.Authentication,
+            [PatRejected] = ExitCodes.Authentication,
+            [PatScope] = ExitCodes.Authentication,
+            [CredentialManager] = ExitCodes.Authentication,
+            [WorkspaceNotFound] = ExitCodes.WorkspaceNotFound,
+            [ServerUnavailable] = ExitCodes.GeneralError,
+            [PathNotMapped] = ExitCodes.WorkspaceNotFound,
+            [ServerWorkspaceNotSupported] = ExitCodes.WorkspaceNotFound,
+            [ItemNotFound] = ExitCodes.GeneralError,
+            [InvalidVersionSpec] = ExitCodes.GeneralError,
+            [BinaryContent] = ExitCodes.GeneralError,
+            [PendingChangeConflict] = ExitCodes.PartialSuccess,
+            [WritableFileSkipped] = ExitCodes.PartialSuccess,
+            [GetConflicts] = ExitCodes.PartialSuccess,
+            [ItemLocked] = ExitCodes.PartialSuccess,
+            [CleanNeedsConfirmation] = ExitCodes.GeneralError,
+            [ServerError] = ExitCodes.GeneralError,
+            [Unexpected] = ExitCodes.GeneralError,
+        };
+
+        /// <summary>
+        /// Per-command exit codes where the original differs from the catalog default (docs/compat.md §1.1):
+        /// "item not found" is 1 for add/delete/view/dir/undelete, 100 for rename/changeset/label, 0 for history.
+        /// </summary>
+        private static readonly Dictionary<string, int> Overrides = new Dictionary<string, int>(StringComparer.Ordinal)
+        {
+            ["add:" + ItemNotFound] = ExitCodes.PartialSuccess,
+            ["delete:" + ItemNotFound] = ExitCodes.PartialSuccess,
+            ["view:" + ItemNotFound] = ExitCodes.PartialSuccess,
+            ["dir:" + ItemNotFound] = ExitCodes.PartialSuccess,
+            ["undelete:" + ItemNotFound] = ExitCodes.PartialSuccess,
+            ["unlabel:" + ItemNotFound] = ExitCodes.PartialSuccess,
+            ["rename:" + ItemNotFound] = ExitCodes.GeneralError,
+            ["changeset:" + ItemNotFound] = ExitCodes.GeneralError,
+            ["label:" + ItemNotFound] = ExitCodes.GeneralError,
+            ["history:" + ItemNotFound] = ExitCodes.Success,
+        };
+
+        /// <summary>The exit code of a TFP code for a command: the compat.md override, else the catalog default, else the given one.</summary>
+        public static int ExitCodeFor(string command, string code, int fallback)
+        {
+            if (Overrides.TryGetValue(command + ":" + code, out int exit))
+            {
+                return exit;
+            }
+
+            return DefaultExitCodes.TryGetValue(code, out exit) ? exit : fallback;
+        }
+
+        public static bool IsKnown(string code) => DefaultExitCodes.ContainsKey(code);
     }
 }

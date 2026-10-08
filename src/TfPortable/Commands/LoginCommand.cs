@@ -18,8 +18,6 @@ namespace TfPortable.Commands
     {
         public string Name => "login";
 
-        public string[] Switches => new[] { "pat" };
-
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
             string collectionUrl = ResolveCollection(commandLine, toolName);
@@ -31,11 +29,6 @@ namespace TfPortable.Commands
             if (patSwitch == "-")
             {
                 pat = PatPrompt.ReadFromStdin();
-            }
-            else if (patSwitch != null)
-            {
-                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "/pat accepts only '-' (read the token from standard input).",
-                    "Never pass the token on the command line; use '/pat:-' and pipe it, or run without /pat for a hidden prompt.");
             }
             else if (PatPrompt.IsInteractive)
             {
@@ -160,8 +153,6 @@ namespace TfPortable.Commands
     internal sealed class LogoutCommand : ICommand
     {
         public string Name => "logout";
-
-        public string[] Switches => Array.Empty<string>();
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {

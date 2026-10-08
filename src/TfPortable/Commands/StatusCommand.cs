@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Common;
@@ -14,114 +13,107 @@ namespace TfPortable.Commands
 {
     /// <summary>
     /// `tfp status [itemspec ...] [/recursive] [/format:brief|json]`: pending changes and, in a local workspace,
-    /// detected changes (candidates) in a separate section. Shape per docs/compat.md §4; spike version (brief format only).
+    /// detected changes (candidates) in a separate section. Shape per docs/compat.md §4; brief format only until
+    /// milestone 3 adds /format:detailed, /user and /shelveset.
     /// </summary>
     internal sealed class StatusCommand : ICommand
     {
         public string Name => "status";
 
-        public string[] Switches => new[] { "recursive", "nodetect", "user", "shelveset" };
-
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
             string? format = commandLine.Value("format");
-            if (format != null && !format.Equals("brief", StringComparison.OrdinalIgnoreCase) && !format.Equals("json", StringComparison.OrdinalIgnoreCase))
+            if (format != null && format.Equals("detailed", StringComparison.OrdinalIgnoreCase))
             {
-                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, $"/format:{format} is not supported in this build.", "Use /format:brief or /format:json (detailed comes with milestone 3).");
+                throw new TfpException(ErrorCodes.NotSupported, ExitCodes.GeneralError, "/format:detailed is not available in this build.", "Use /format:brief or /format:json; detailed comes with milestone 3.");
             }
 
             if (commandLine.Has("user") || commandLine.Has("shelveset"))
             {
-                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "/user and /shelveset are not supported in this build.", "They come with milestone 3.");
+                throw new TfpException(ErrorCodes.NotSupported, ExitCodes.GeneralError, "/user and /shelveset are not available in this build.", "They come with milestone 3.");
             }
 
-            using var context = ContextResolver.Resolve(commandLine, toolName, requireWorkspace: true);
-            var workspace = context.Workspace!;
-            output.Collection = context.CollectionUrl;
-            output.Workspace = context.WorkspaceSpec;
+            var items = commandLine.Positionals.Select(p => ItemSpecParser.Parse(p)).ToList();
+            using var context = ContextResolver.Resolve(commandLine, output, toolName, requireWorkspace: true);
+            var workspace = context.RequireWorkspace(toolName);
 
             var recursion = commandLine.Has("recursive") ? RecursionType.Full : RecursionType.OneLevel;
-            ItemSpec[] specs = commandLine.Positionals.Count == 0
-                ? new[] { new ItemSpec(VersionControlPath.RootFolder, RecursionType.Full) }
-                : commandLine.Positionals.Select(p => new ItemSpec(NormalizeItem(p), recursion)).ToArray();
+            var queries = items.Count == 0
+                ? new List<ItemQuery> { new ItemQuery(VersionControlPath.RootFolder, RecursionType.Full) }
+                : items.Select(i => new ItemQuery(i.Path, recursion, i.DeletionId)).ToList();
 
-            bool detect = !commandLine.Has("nodetect") && workspace.Location == WorkspaceLocation.Local;
-            PendingChange[] candidates;
-            PendingChange[] pending = workspace.GetPendingChangesWithCandidates(specs, detect, out candidates);
-            candidates = detect ? candidates : Array.Empty<PendingChange>();
-
-            if (pending.Length == 0 && candidates.Length == 0)
-            {
-                output.Line("There are no pending changes.");
-            }
-            else
-            {
-                if (pending.Length > 0)
-                {
-                    foreach (string line in RenderTable(pending))
-                    {
-                        output.Line(line);
-                    }
-                }
-
-                if (candidates.Length > 0)
-                {
-                    if (pending.Length > 0)
-                    {
-                        output.Line();
-                    }
-
-                    string rule = new string('-', 79);
-                    output.Line(rule);
-                    output.Line("Detected changes:");
-                    output.Line(rule);
-                    foreach (string line in RenderTable(candidates))
-                    {
-                        output.Line(line);
-                    }
-                }
-
-                output.Line();
-                output.Line(candidates.Length > 0 ? $"Changes: {pending.Length}, detected changes: {candidates.Length}" : $"Changes: {pending.Length}");
-            }
-
-            output.Success(new JObject
-            {
-                ["changes"] = new JArray(pending.Select(p => ToJson(p, false)).Cast<object>().ToArray()),
-                ["detectedChanges"] = new JArray(candidates.Select(p => ToJson(p, true)).Cast<object>().ToArray()),
-                ["counts"] = new JObject { ["changes"] = pending.Length, ["detected"] = candidates.Length },
-            });
+            var changes = workspace.GetPendingChanges(queries, detectCandidates: !commandLine.Has("nodetect"));
+            output.Lines(Render(changes));
+            output.Success(ToJson(changes));
             return ExitCodes.Success;
         }
 
-        private static string NormalizeItem(string item)
+        internal static IEnumerable<string> Render(PendingChangeSet changes)
         {
-            if (VersionControlPath.IsServerItem(item))
+            var pending = changes.Pending;
+            var candidates = changes.Candidates;
+            if (pending.Count == 0 && candidates.Count == 0)
             {
-                return item;
+                yield return "There are no pending changes.";
+                yield break;
             }
 
-            return Path.GetFullPath(item.Replace('/', Path.DirectorySeparatorChar));
+            if (pending.Count > 0)
+            {
+                foreach (string line in RenderTable(pending))
+                {
+                    yield return line;
+                }
+            }
+
+            if (candidates.Count > 0)
+            {
+                if (pending.Count > 0)
+                {
+                    yield return string.Empty;
+                }
+
+                yield return TextBlocks.Separator;
+                yield return "Detected changes:";
+                yield return TextBlocks.Separator;
+                foreach (string line in RenderTable(candidates))
+                {
+                    yield return line;
+                }
+            }
+
+            yield return string.Empty;
+            yield return candidates.Count > 0 ? $"Changes: {pending.Count}, detected changes: {candidates.Count}" : $"Changes: {pending.Count}";
+        }
+
+        internal static JObject ToJson(PendingChangeSet changes)
+        {
+            return new JObject
+            {
+                ["changes"] = new JArray(changes.Pending.Select(p => p.ToJson()).Cast<object>().ToArray()),
+                ["detectedChanges"] = new JArray(changes.Candidates.Select(p => p.ToJson()).Cast<object>().ToArray()),
+                ["counts"] = new JObject { ["changes"] = changes.Pending.Count, ["detected"] = changes.Candidates.Count },
+            };
         }
 
         /// <summary>Table "File name / Change / Local path" grouped by server folder, as tf.exe prints it.</summary>
-        private static IEnumerable<string> RenderTable(PendingChange[] changes)
+        internal static IEnumerable<string> RenderTable(IReadOnlyList<PendingChangeInfo> changes)
         {
             var ordered = changes
-                .OrderBy(c => VersionControlPath.GetFolderName(c.ServerItem), StringComparer.OrdinalIgnoreCase)
-                .ThenBy(c => VersionControlPath.GetFileName(c.ServerItem), StringComparer.OrdinalIgnoreCase)
+                .OrderBy(c => VersionControlPath.GetFolderName(c.ServerPath), StringComparer.OrdinalIgnoreCase)
+                .ThenBy(c => VersionControlPath.GetFileName(c.ServerPath), StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            int nameWidth = Math.Max("File name".Length, ordered.Max(c => VersionControlPath.GetFileName(c.ServerItem).Length));
-            int changeWidth = Math.Max("Change".Length, ordered.Max(c => ChangeText(c).Length));
+            int nameWidth = Math.Max("File name".Length, ordered.Max(c => VersionControlPath.GetFileName(c.ServerPath).Length));
+            int changeWidth = Math.Max("Change".Length, ordered.Max(c => c.ChangeText.Length));
 
             yield return $"{"File name".PadRight(nameWidth)} {"Change".PadRight(changeWidth)} Local path";
-            yield return $"{new string('-', nameWidth)} {new string('-', changeWidth)} {new string('-', Math.Max("Local path".Length, ordered.Max(c => (c.LocalItem ?? string.Empty).Length)))}";
+            yield return $"{new string('-', nameWidth)} {new string('-', changeWidth)} {new string('-', Math.Max("Local path".Length, ordered.Max(c => (c.LocalPath ?? string.Empty).Length)))}";
 
             string? currentFolder = null;
             foreach (var change in ordered)
             {
-                string folder = VersionControlPath.GetFolderName(change.ServerItem);
+                string folder = VersionControlPath.GetFolderName(change.ServerPath);
                 if (!string.Equals(folder, currentFolder, StringComparison.OrdinalIgnoreCase))
                 {
                     if (currentFolder != null)
@@ -133,51 +125,7 @@ namespace TfPortable.Commands
                     currentFolder = folder;
                 }
 
-                yield return $"{VersionControlPath.GetFileName(change.ServerItem).PadRight(nameWidth)} {ChangeText(change).PadRight(changeWidth)} {change.LocalItem}".TrimEnd();
-            }
-        }
-
-        /// <summary>Change types in the English wording of the client library ("edit", "merge, edit"), lower-case like tf.exe.</summary>
-        internal static string ChangeText(PendingChange change) => PendingChange.GetLocalizedStringForChangeType(change.ChangeType).ToLowerInvariant();
-
-        private static JObject ToJson(PendingChange change, bool detected)
-        {
-            return new JObject
-            {
-                ["changeTypes"] = new JArray(ChangeText(change).Split(new[] { ", " }, StringSplitOptions.RemoveEmptyEntries).Cast<object>().ToArray()),
-                ["serverPath"] = change.ServerItem,
-                ["localPath"] = change.LocalItem,
-                ["isFolder"] = change.ItemType == ItemType.Folder,
-                ["version"] = change.Version,
-                ["sourceServerPath"] = change.IsRename || change.IsBranch || change.IsMerge ? change.SourceServerItem : null,
-                ["lock"] = change.LockLevel.ToString().ToLowerInvariant(),
-                ["encoding"] = change.ItemType == ItemType.Folder ? null : EncodingName(change.Encoding),
-                ["date"] = OutputWriter.IsoDate(change.CreationDate),
-                ["owner"] = change.PendingSetOwner,
-                ["workspace"] = change.PendingSetName,
-                ["detected"] = detected,
-            };
-        }
-
-        internal static string? EncodingName(int codePage)
-        {
-            if (codePage == -1)
-            {
-                return "binary";
-            }
-
-            if (codePage <= 0)
-            {
-                return null;
-            }
-
-            try
-            {
-                return System.Text.Encoding.GetEncoding(codePage).WebName;
-            }
-            catch (Exception)
-            {
-                return codePage.ToString();
+                yield return $"{VersionControlPath.GetFileName(change.ServerPath).PadRight(nameWidth)} {change.ChangeText.PadRight(changeWidth)} {change.LocalPath}".TrimEnd();
             }
         }
     }

@@ -23,7 +23,8 @@ namespace TfPortable.Errors
 
         public string Code { get; }
 
-        public int ExitCode { get; }
+        /// <summary>Process exit code; the command may adjust it per docs/compat.md §1.1 (<see cref="ErrorCodes.ExitCodeFor"/>).</summary>
+        public int ExitCode { get; set; }
 
         public string? Hint { get; }
 

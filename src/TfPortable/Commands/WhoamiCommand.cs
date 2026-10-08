@@ -1,8 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using Microsoft.TeamFoundation.VersionControl.Client;
 using Newtonsoft.Json.Linq;
+using TfPortable.Auth;
 using TfPortable.Cli;
 using TfPortable.Context;
 using TfPortable.Errors;
@@ -15,65 +15,47 @@ namespace TfPortable.Commands
     {
         public string Name => "whoami";
 
-        public string[] Switches => Array.Empty<string>();
-
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            using var context = ContextResolver.Resolve(commandLine, toolName, requireWorkspace: false);
-            output.Collection = context.CollectionUrl;
-            output.Workspace = context.Workspace == null ? null : context.WorkspaceSpec;
-
-            var identity = context.Connection.AuthorizedIdentity;
+            using var context = ContextResolver.Resolve(commandLine, output, toolName, requireWorkspace: false);
+            var identity = context.Client.Authenticate();
             string cwd = Directory.GetCurrentDirectory();
-            var workspace = context.Workspace;
+            var workspace = context.Workspace?.Summary;
 
-            output.Line($"Identity   : {identity.DisplayName} ({identity.UniqueName})");
-            output.Line($"Collection : {context.CollectionUrl}");
-            output.Line($"PAT stored : {context.StoredPat?.StoredAt ?? "unknown"} (Windows Credential Manager, {context.StoredPat?.Target ?? "-"})");
-            if (workspace == null)
-            {
-                output.Line($"Workspace  : none maps {cwd}");
-            }
-            else
-            {
-                output.Line($"Workspace  : {workspace.Name};{workspace.OwnerDisplayName} ({workspace.Location.ToString().ToLowerInvariant()}, computer {workspace.Computer})");
-                foreach (var folder in workspace.Folders)
-                {
-                    output.Line(folder.IsCloaked ? $"  (cloaked) {folder.ServerItem}:" : $"  {folder.ServerItem}: {folder.LocalItem}");
-                }
-            }
-
-            output.Success(new JObject
-            {
-                ["collection"] = context.CollectionUrl,
-                ["identity"] = new JObject { ["displayName"] = identity.DisplayName, ["uniqueName"] = identity.UniqueName, ["id"] = identity.TeamFoundationId.ToString() },
-                ["patStoredAt"] = context.StoredPat?.StoredAt,
-                ["workspace"] = workspace == null ? null : WorkspaceJson(workspace),
-                ["cwd"] = cwd,
-            });
+            output.Lines(Render(identity, context.CollectionUrl, context.StoredPat, workspace, cwd));
+            output.Success(ToJson(identity, context.CollectionUrl, context.StoredPat, workspace, cwd));
             return ExitCodes.Success;
         }
 
-        internal static JObject WorkspaceJson(Workspace workspace)
+        internal static IEnumerable<string> Render(IdentityInfo identity, string collection, StoredPat? pat, WorkspaceSummary? workspace, string cwd)
+        {
+            yield return $"Identity   : {identity.DisplayName} ({identity.UniqueName})";
+            yield return $"Collection : {collection}";
+            yield return pat == null
+                ? "PAT stored : no (the PAT of this run came from /login)"
+                : $"PAT stored : {pat.StoredAt ?? "unknown"} (Windows Credential Manager, {pat.Target})";
+            if (workspace == null)
+            {
+                yield return $"Workspace  : none maps {cwd}";
+                yield break;
+            }
+
+            yield return $"Workspace  : {workspace.Spec} ({workspace.Location}, computer {workspace.Computer})";
+            foreach (var mapping in workspace.Mappings)
+            {
+                yield return " " + mapping.ListingLine;
+            }
+        }
+
+        internal static JObject ToJson(IdentityInfo identity, string collection, StoredPat? pat, WorkspaceSummary? workspace, string cwd)
         {
             return new JObject
             {
-                ["name"] = workspace.Name,
-                ["owner"] = workspace.OwnerDisplayName,
-                ["ownerUniqueName"] = workspace.OwnerName,
-                ["computer"] = workspace.Computer,
-                ["comment"] = workspace.Comment,
-                ["collection"] = workspace.VersionControlServer.TeamProjectCollection.Uri.AbsoluteUri,
-                ["location"] = workspace.Location.ToString().ToLowerInvariant(),
-                ["permission"] = workspace.PermissionsProfile?.Name?.ToLowerInvariant(),
-                ["lastAccess"] = OutputWriter.IsoDate(workspace.LastAccessDate),
-                ["mappings"] = new JArray(workspace.Folders.Select(f => new JObject
-                {
-                    ["serverPath"] = f.ServerItem,
-                    ["localPath"] = f.IsCloaked ? null : f.LocalItem,
-                    ["cloaked"] = f.IsCloaked,
-                    ["recursionType"] = f.Depth == RecursionType.Full ? "full" : "onelevel",
-                }).Cast<object>().ToArray()),
+                ["collection"] = collection,
+                ["identity"] = identity.ToJson(),
+                ["patStoredAt"] = pat?.StoredAt,
+                ["workspace"] = workspace?.ToJson(),
+                ["cwd"] = cwd,
             };
         }
     }
