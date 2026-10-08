@@ -37,38 +37,45 @@ namespace TfPortable.Auth
     internal static class ConnectionFactory
     {
         /// <summary>
-        /// Resolves the PAT for the collection: stored one, or an interactive prompt that verifies and stores it.
+        /// Resolves the PAT for the collection: the stored one, or an interactive prompt that verifies and stores it.
         /// Without an interactive terminal fails with TFP0101 and the exact login command.
         /// </summary>
-        public static TfsTeamProjectCollection Connect(string collectionUrl, string toolName, out StoredPat stored)
+        public static string ResolvePat(string collectionUrl, string toolName, out StoredPat? stored)
         {
             string normalized = CollectionUrl.Normalize(collectionUrl);
             StoredPat? existing = CredentialStore.Read(normalized);
-            if (existing == null)
+            if (existing != null)
             {
-                if (!PatPrompt.IsInteractive)
-                {
-                    throw new TfpException(ErrorCodes.PatMissing, ExitCodes.Authentication,
-                        $"No Personal Access Token is stored for collection {normalized}.",
-                        $"Run '{toolName} login /collection:{normalized}' in your own terminal (not through an AI agent), then repeat this command.");
-                }
-
-                string pat = PatPrompt.ReadHidden(normalized);
-                var rest = CheckPatOverRest(collectionUrl, pat);
-                if (!rest.Ok)
-                {
-                    throw new TfpException(ErrorCodes.PatRejected, ExitCodes.Authentication,
-                        $"The server {normalized} rejected the PAT; nothing was stored. {rest.Summary}",
-                        "Check that the token was copied completely, is not expired and belongs to this organization.");
-                }
-
-                CredentialStore.Write(normalized, pat, rest.UniqueName, DateTimeOffset.Now);
-                stored = CredentialStore.Read(normalized)!;
-                return Open(collectionUrl, pat);
+                stored = existing;
+                return existing.Pat;
             }
 
-            stored = existing;
-            return Open(collectionUrl, existing.Pat);
+            if (!PatPrompt.IsInteractive)
+            {
+                throw new TfpException(ErrorCodes.PatMissing, ExitCodes.Authentication,
+                    $"No Personal Access Token is stored for collection {normalized}.",
+                    $"Run '{toolName} login /collection:{normalized}' in your own terminal (not through an AI agent), then repeat this command.");
+            }
+
+            string pat = PatPrompt.ReadHidden(normalized);
+            var rest = CheckPatOverRest(collectionUrl, pat);
+            if (!rest.Ok)
+            {
+                throw new TfpException(ErrorCodes.PatRejected, ExitCodes.Authentication,
+                    $"The server {normalized} rejected the PAT; nothing was stored. {rest.Summary}",
+                    "Check that the token was copied completely, is not expired and belongs to this organization.");
+            }
+
+            CredentialStore.Write(normalized, pat, rest.UniqueName, DateTimeOffset.Now);
+            stored = CredentialStore.Read(normalized);
+            return pat;
+        }
+
+        /// <summary>Resolves the PAT (see <see cref="ResolvePat"/>) and opens the collection with it.</summary>
+        public static TfsTeamProjectCollection Connect(string collectionUrl, string toolName, out StoredPat? stored)
+        {
+            string pat = ResolvePat(collectionUrl, toolName, out stored);
+            return Open(collectionUrl, pat);
         }
 
         /// <summary>

@@ -8,7 +8,8 @@ namespace TfPortable.Auth
     /// <summary>Text and input of the PAT prompt (SPEC.md "Text výzvy při chybějícím PAT").</summary>
     internal static class PatPrompt
     {
-        public static bool IsInteractive => !Console.IsInputRedirected && !Console.IsOutputRedirected && Environment.UserInteractive;
+        /// <summary>SPEC.md "Tok při každém příkazu" step 3: the prompt needs an interactive stdin; stdout may be redirected (the prompt goes to stderr).</summary>
+        public static bool IsInteractive => !Console.IsInputRedirected && Environment.UserInteractive;
 
         public static string Explanation(string normalizedCollection)
         {
@@ -55,12 +56,49 @@ namespace TfPortable.Auth
             Console.Error.Write("Paste the PAT (shown as *, Enter to confirm, Esc to clear): ");
 
             var sb = new StringBuilder();
+            bool treatControlC = Console.TreatControlCAsInput;
+            try
+            {
+                // Ctrl+C must end with a message and exit 110, not silently (milestone 2 note in docs/KICKOFF-CLOUD.md).
+                Console.TreatControlCAsInput = true;
+            }
+            catch (Exception)
+            {
+                // Not a real console; Ctrl+C then terminates the process as before.
+            }
+
+            try
+            {
+                return ReadHiddenLoop(sb);
+            }
+            finally
+            {
+                try
+                {
+                    Console.TreatControlCAsInput = treatControlC;
+                }
+                catch (Exception)
+                {
+                    // Ignore: nothing to restore.
+                }
+            }
+        }
+
+        private static string ReadHiddenLoop(StringBuilder sb)
+        {
             while (true)
             {
                 var key = Console.ReadKey(intercept: true);
                 if (key.Key == ConsoleKey.Enter)
                 {
                     break;
+                }
+
+                if (key.Key == ConsoleKey.C && (key.Modifiers & ConsoleModifiers.Control) != 0)
+                {
+                    Console.Error.WriteLine();
+                    throw new TfpException(ErrorCodes.PatMissing, ExitCodes.Authentication, "The PAT prompt was cancelled (Ctrl+C); nothing was stored.",
+                        "Run the command again and paste the token, or use '/pat:-' to read it from standard input.");
                 }
 
                 if (key.Key == ConsoleKey.Backspace)

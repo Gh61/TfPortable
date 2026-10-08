@@ -6,7 +6,10 @@ both people and AI coding agents can read.
 
 > Status: pre-alpha. The specification is finished, the behavior of the original is captured in
 > `tests/golden/`, and the commands are being implemented milestone by milestone
-> (`docs/PROGRESS.md`). Nothing is released yet.
+> (`docs/PROGRESS.md`). Milestone 2 (the core: parser, workspace context, errors, JSON envelope,
+> `login`/`logout`/`whoami`/`help`/`version`) is in review; `status` and `history` run in their
+> milestone 1 form; every other command answers `TFP0003` until its milestone lands. Nothing is
+> released yet.
 
 ## Why this project exists
 

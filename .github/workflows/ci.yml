@@ -60,6 +60,32 @@ jobs:
           "$hash *tfp.exe" | Out-File -Encoding ascii -NoNewline artifacts/tfp.exe.sha256
           Write-Host "tfp.exe: $((Get-Item artifacts/tfp.exe).Length) bytes, SHA-256 $hash"
 
+      - name: Run tfp.exe alone in an empty folder
+        shell: pwsh
+        run: |
+          # Excluded assemblies are still present in bin/, so only a copy of the exe alone proves the Costura packaging.
+          $dir = Join-Path $env:RUNNER_TEMP ('tfp-alone-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          Copy-Item artifacts/tfp.exe (Join-Path $dir 'tfp.exe')
+          Push-Location $dir
+          try {
+            & .\tfp.exe version
+            if ($LASTEXITCODE -ne 0) { throw "tfp version exited with $LASTEXITCODE" }
+            $json = & .\tfp.exe help /format:json | Out-String
+            if ($LASTEXITCODE -ne 0) { throw "tfp help /format:json exited with $LASTEXITCODE" }
+            $envelope = $json | ConvertFrom-Json
+            if (-not $envelope.ok -or $envelope.command -ne 'help' -or $envelope.data.commands.Count -lt 20) { throw "unexpected help envelope: $json" }
+            Write-Host "help /format:json: $($envelope.data.commands.Count) commands"
+            & .\tfp.exe status /recursive /noprompt
+            if ($LASTEXITCODE -ne 120) { throw "tfp status outside a workspace exited with $LASTEXITCODE, expected 120 (TFP0201)" }
+            & .\tfp.exe nosuchcommand
+            if ($LASTEXITCODE -ne 2) { throw "tfp nosuchcommand exited with $LASTEXITCODE, expected 2" }
+          } finally {
+            Pop-Location
+          }
+          # The last native command deliberately exited with 2; pwsh would otherwise report the step as failed.
+          exit 0
+
       - uses: actions/upload-artifact@v4
         with:
           name: tfp-${{ steps.version.outputs.version }}
