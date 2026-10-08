@@ -40,7 +40,8 @@ namespace TfPortable.IntegrationTests
             fixture.EnsureReady();
             var result = TfpRunner.Run($"whoami /collection:{fixture.Collection.TrimEnd('/')} /login:nobody,not-a-valid-pat", Path.GetTempPath());
             Assert.Equal(110, result.ExitCode);
-            Assert.StartsWith("ERROR TFP0102", result.Stderr);
+            // The /login warning ("used for this run only") precedes the error on stderr.
+            Assert.Contains("ERROR TFP0102", result.Stderr);
             Assert.DoesNotContain("not-a-valid-pat", result.Stdout + result.Stderr);
         }
 
