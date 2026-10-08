@@ -240,32 +240,57 @@ namespace TfPortable.IntegrationTests
         [IntegrationFact]
         public void Lock_and_unlock_an_item()
         {
+            // The twin CI runs of one commit (push and pull_request) run at the same time against the same server, so the
+            // locked item must belong to this run: a file checked in under the CI folder, deleted at the end.
             fixture.EnsureReady();
+            string folder = CiFolder("lock");
+            string argument = CiArgument("lock");
+            string file = argument + "\\locked.txt";
+            bool committed = false;
             try
             {
-                var lockIt = Run("lock Main\\data\\counter.txt /lock:checkin /noprompt");
-                Assert.True(lockIt.ExitCode == 0, lockIt.Stderr);
-                Assert.Contains("counter.txt", lockIt.Stdout);
+                Directory.CreateDirectory(folder);
+                File.WriteAllText(Path.Combine(folder, "locked.txt"), "to be locked\r\n");
+                var add = Run($"add {argument} /recursive /noprompt");
+                Assert.True(add.ExitCode == 0, add.Stderr);
+                var checkin = Run($"checkin {argument} /recursive /comment:\"CI lock test ({RunId})\" /noprompt");
+                committed = true;
+                Assert.True(checkin.ExitCode == 0, checkin.Stderr);
 
-                var properties = Run("properties Main\\data\\counter.txt /format:json");
+                var lockIt = Run($"lock {file} /lock:checkin /noprompt");
+                Assert.True(lockIt.ExitCode == 0, lockIt.Stderr);
+                Assert.Contains("locked.txt", lockIt.Stdout);
+
+                var properties = Run($"properties {file} /format:json");
                 Assert.True(properties.ExitCode == 0, properties.Stderr);
                 var server = ((JArray)Data(properties)["items"]!).Single()["server"]!;
                 Assert.Equal("checkin", (string)server["lock"]!);
 
-                var pending = Run("status Main\\data\\counter.txt /nodetect /format:json");
-                var unlock = Run("lock Main\\data\\counter.txt /lock:none /noprompt /format:json");
+                var pending = Run($"status {file} /nodetect /format:json");
+                var unlock = Run($"lock {file} /lock:none /noprompt /format:json");
                 Assert.True(unlock.ExitCode == 0, unlock.Stderr);
                 Assert.Equal("none", (string)Data(unlock)["lock"]!);
-                var afterStatus = Run("status Main\\data\\counter.txt /nodetect /format:json");
-                var after = ((JArray)Data(Run("properties Main\\data\\counter.txt /format:json"))["items"]!).Single()["server"]!;
+                var afterStatus = Run($"status {file} /nodetect /format:json");
+                var after = ((JArray)Data(Run($"properties {file} /format:json"))["items"]!).Single()["server"]!;
                 Assert.True("none" == (string)after["lock"]!,
                     $"The lock stayed. Status while locked: {pending.Stdout} Unlock output: {unlock.Stdout} Status after: {afterStatus.Stdout}");
                 Assert.Empty(Changes(afterStatus));
             }
             finally
             {
-                Run("lock Main\\data\\counter.txt /lock:none /noprompt");
-                Run("undo Main\\data\\counter.txt /noprompt");
+                Run($"lock {file} /lock:none /noprompt");
+                Run($"undo {argument} /recursive /noprompt");
+                if (committed)
+                {
+                    Run($"delete {argument} /recursive /noprompt");
+                    var cleanup = Run($"checkin {argument} /recursive /comment:\"CI cleanup ({RunId})\" /noprompt");
+                    if (cleanup.ExitCode != 0)
+                    {
+                        Run($"undo {argument} /recursive /noprompt");
+                    }
+                }
+
+                DeleteScratch(folder);
             }
         }
 
