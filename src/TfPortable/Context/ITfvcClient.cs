@@ -66,6 +66,21 @@ namespace TfPortable.Context
 
         /// <summary>Locks or unlocks items; the result lists the pending lock changes made or undone.</summary>
         PendResult SetLock(IReadOnlyList<string> paths, LockLevel level, RecursionType recursion);
+
+        /// <summary>Pends a merge of the source (server path with recursion) into the target path; null versions = everything.</summary>
+        MergeResult Merge(ItemQuery source, string targetPath, VersionSpec? versionFrom, VersionSpec? versionTo, MergeFlags flags);
+
+        /// <summary>Pends a branch of the source at the version into the target path; `updateDisk` false = /noget.</summary>
+        PendResult PendBranch(string sourcePath, string targetPath, VersionSpec version, bool updateDisk, bool silent);
+
+        /// <summary>Pends undeletes of deleted items (deletion id in the query, 0 = the only deleted one); `updateDisk` false = /noget.</summary>
+        PendResult PendUndelete(IReadOnlyList<ItemQuery> items, bool updateDisk);
+
+        /// <summary>
+        /// Pends the reverse of the changesets `versionFrom`..`versionTo` (null items = the whole workspace), or with `toVersion`
+        /// brings the items back to `versionTo`. `itemVersion` is the version the item paths refer to (null = the library's default).
+        /// </summary>
+        MergeResult Rollback(IReadOnlyList<ItemQuery>? items, VersionSpec? itemVersion, VersionSpec? versionFrom, VersionSpec versionTo, bool toVersion, bool keepMergeHistory, bool noAutoResolve);
     }
 
     /// <summary>
@@ -139,6 +154,9 @@ namespace TfPortable.Context
         IReadOnlyList<BranchInfo> GetBranchHistory(string serverPath, VersionSpec version);
 
         IReadOnlyList<MergeCandidateInfo> GetMergeCandidates(string sourcePath, string targetPath, RecursionType recursion);
+
+        /// <summary>Merge history into the target (`merges`); null source = from anywhere; `showAll` includes merges of deleted items.</summary>
+        IReadOnlyList<MergeHistoryInfo> QueryMerges(string? sourcePath, string targetPath, RecursionType recursion, bool showAll);
 
         /// <summary>Shelvesets by name and owner (null = any); the owner may be a unique or a display name.</summary>
         IReadOnlyList<ShelvesetInfo> QueryShelvesets(string? name, string? owner);

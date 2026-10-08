@@ -411,14 +411,14 @@ namespace TfPortable.Commands
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            if (!commandLine.Has("candidate"))
-            {
-                throw new TfpException(ErrorCodes.NotSupported, ExitCodes.GeneralError, "merge without /candidate (the merge itself) is not available in this build (phase 2).", $"Use '{toolName} merge /candidate <source> <destination>' to list the unmerged changesets, or Visual Studio / tf.exe to merge.");
-            }
-
             if (commandLine.Positionals.Count != 2)
             {
-                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "merge /candidate needs a source and a destination.", $"Example: '{toolName} merge /candidate $/Project/Main $/Project/Release /recursive'.");
+                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "merge needs a source and a destination.", $"Example: '{toolName} merge $/Project/Main $/Project/Release /recursive'.");
+            }
+
+            if (!commandLine.Has("candidate"))
+            {
+                return BranchingCommands.Merge(commandLine, output, toolName);
             }
 
             bool detailed = string.Equals(commandLine.Value("format"), "detailed", StringComparison.OrdinalIgnoreCase);

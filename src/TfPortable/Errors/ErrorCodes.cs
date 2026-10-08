@@ -92,6 +92,7 @@ namespace TfPortable.Errors
             ["view:" + ItemNotFound] = ExitCodes.PartialSuccess,
             ["dir:" + ItemNotFound] = ExitCodes.PartialSuccess,
             ["undelete:" + ItemNotFound] = ExitCodes.PartialSuccess,
+            ["annotate:" + ItemNotFound] = ExitCodes.PartialSuccess,
             ["unlabel:" + ItemNotFound] = ExitCodes.PartialSuccess,
             ["rename:" + ItemNotFound] = ExitCodes.GeneralError,
             ["changeset:" + ItemNotFound] = ExitCodes.GeneralError,

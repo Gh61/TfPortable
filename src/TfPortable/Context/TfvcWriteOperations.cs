@@ -208,4 +208,69 @@ namespace TfPortable.Context
 
         public IReadOnlyList<FailureInfo> Failures { get; }
     }
+
+    /// <summary>Result of a merge or a rollback: the pended changes, the conflicts the server left open and the per-item failures.</summary>
+    internal sealed class MergeResult
+    {
+        public MergeResult(IReadOnlyList<PendingChangeInfo> changes, IReadOnlyList<ConflictInfo> conflicts, IReadOnlyList<FailureInfo> failures, int numOperations, int numConflicts, bool noActionNeeded)
+        {
+            Changes = changes;
+            Conflicts = conflicts;
+            Failures = failures;
+            NumOperations = numOperations;
+            NumConflicts = numConflicts;
+            NoActionNeeded = noActionNeeded;
+        }
+
+        public IReadOnlyList<PendingChangeInfo> Changes { get; }
+
+        public IReadOnlyList<ConflictInfo> Conflicts { get; }
+
+        public IReadOnlyList<FailureInfo> Failures { get; }
+
+        public int NumOperations { get; }
+
+        public int NumConflicts { get; }
+
+        public bool NoActionNeeded { get; }
+    }
+
+    [Flags]
+    internal enum MergeFlags
+    {
+        None = 0,
+        Force = 1,
+        Baseless = 2,
+        Discard = 4,
+        NoAutoResolve = 8,
+        NoImplicitBaseless = 16,
+        Conservative = 32,
+        /// <summary>The server's preview (`NoMerge`): the operations are reported, nothing is pended.</summary>
+        Preview = 64,
+    }
+
+    /// <summary>One row of `merges`: a source changeset merged into a target changeset.</summary>
+    internal sealed class MergeHistoryInfo
+    {
+        public MergeHistoryInfo(int sourceChangeset, ChangesetInfo targetChangeset, bool partial)
+        {
+            SourceChangeset = sourceChangeset;
+            TargetChangeset = targetChangeset;
+            Partial = partial;
+        }
+
+        public int SourceChangeset { get; }
+
+        public ChangesetInfo TargetChangeset { get; }
+
+        /// <summary>Only part of the source changeset was merged.</summary>
+        public bool Partial { get; }
+
+        public JObject ToJson(bool detailed) => new JObject
+        {
+            ["sourceChangeset"] = SourceChangeset,
+            ["targetChangeset"] = TargetChangeset.ToJson(detailed),
+            ["partial"] = Partial,
+        };
+    }
 }

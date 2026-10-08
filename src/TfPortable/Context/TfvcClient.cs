@@ -251,6 +251,13 @@ namespace TfPortable.Context
             return VersionControl.GetMergeCandidates(sourcePath, targetPath, recursion).Select(c => new MergeCandidateInfo(ToChangeset(c.Changeset, false), c.Partial)).ToList();
         }
 
+        public IReadOnlyList<MergeHistoryInfo> QueryMerges(string? sourcePath, string targetPath, RecursionType recursion, bool showAll)
+        {
+            return VersionControl.QueryMerges(sourcePath, sourcePath == null ? null : VersionSpec.Latest, targetPath, VersionSpec.Latest, null, null, recursion, showAll)
+                .Select(m => new MergeHistoryInfo(m.SourceVersion, ToChangeset(m.TargetChangeset, false), m.Partial))
+                .ToList();
+        }
+
         public IReadOnlyList<ShelvesetInfo> QueryShelvesets(string? name, string? owner)
         {
             return VersionControl.QueryShelvesets(string.IsNullOrEmpty(name) ? null : name, string.IsNullOrEmpty(owner) ? null : owner)
@@ -383,7 +390,8 @@ namespace TfPortable.Context
 
         internal static ItemInfo ToItem(Item item) =>
             new ItemInfo(item.ServerItem, item.ItemType == ItemType.Folder, item.ChangesetId, item.DeletionId,
-                item.ItemType == ItemType.Folder ? null : EncodingName(item.Encoding), item.ItemType == ItemType.Folder ? null : (long?)item.ContentLength, item.CheckinDate, item.ItemId);
+                item.ItemType == ItemType.Folder ? null : EncodingName(item.Encoding), item.ItemType == ItemType.Folder ? null : (long?)item.ContentLength, item.CheckinDate, item.ItemId,
+                item.ItemType == ItemType.Folder || item.HashValue == null || item.HashValue.Length == 0 ? null : BitConverter.ToString(item.HashValue).Replace("-", string.Empty).ToLowerInvariant());
 
         internal static PendingSetInfo ToPendingSet(PendingSet set) =>
             new PendingSetInfo(set.Name, set.OwnerDisplayName ?? set.OwnerName, set.OwnerName, set.Computer, set.Type == PendingSetType.Shelveset,
@@ -431,7 +439,8 @@ namespace TfPortable.Context
                 change.PendingSetOwner,
                 change.PendingSetName,
                 detected,
-                change);
+                change,
+                (change.MergeSources == null ? new List<MergeSourceInfo>() : change.MergeSources.Select(m => new MergeSourceInfo(m.ServerItem, m.VersionFrom, m.VersionTo, m.IsRename)).ToList()));
         }
 
         /// <summary>Change types in the English wording of the client library ("edit", "merge, edit"), lower-case like tf.exe.</summary>
@@ -802,6 +811,102 @@ namespace TfPortable.Context
                 return new PendResult(changes, collector.Failures, count);
             }
 
+            public MergeResult Merge(ItemQuery source, string targetPath, VersionSpec? versionFrom, VersionSpec? versionTo, MergeFlags flags)
+            {
+                var options = MergeOptionsEx.None;
+                if (flags.HasFlag(MergeFlags.Force)) { options |= MergeOptionsEx.ForceMerge; }
+                if (flags.HasFlag(MergeFlags.Baseless)) { options |= MergeOptionsEx.Baseless; }
+                if (flags.HasFlag(MergeFlags.Discard)) { options |= MergeOptionsEx.AlwaysAcceptMine; }
+                if (flags.HasFlag(MergeFlags.Preview)) { options |= MergeOptionsEx.NoMerge; }
+                if (flags.HasFlag(MergeFlags.NoAutoResolve)) { options |= MergeOptionsEx.NoAutoResolve; }
+                if (flags.HasFlag(MergeFlags.NoImplicitBaseless)) { options |= MergeOptionsEx.NoImplicitBaseless; }
+                if (flags.HasFlag(MergeFlags.Conservative)) { options |= MergeOptionsEx.Conservative; }
+
+                using var collector = new EventCollector(Vcs);
+                GetStatus status = workspace.Merge(ToItemSpec(source), targetPath, versionFrom, versionTo, LockLevel.None, options);
+                var result = ToMergeResult(status, collector, new[] { targetPath }, source.Recursion != RecursionType.None);
+                if (flags.HasFlag(MergeFlags.Discard) && result.Changes.Count == 0)
+                {
+                    // A discard merge raises no pending-change events in the library: the pending merges under the target are the result.
+                    var pended = workspace.GetPendingChanges(new[] { new ItemSpec(targetPath, source.Recursion) })
+                        .Where(p => (p.ChangeType & ChangeType.Merge) != 0)
+                        .Select(p => ToPendingChange(p, false))
+                        .ToList();
+                    return new MergeResult(pended, result.Conflicts, result.Failures, Math.Max(result.NumOperations, pended.Count), result.NumConflicts, result.NoActionNeeded && pended.Count == 0);
+                }
+
+                return result;
+            }
+
+            public PendResult PendBranch(string sourcePath, string targetPath, VersionSpec version, bool updateDisk, bool silent)
+            {
+                using var collector = new EventCollector(Vcs);
+                int count = workspace.PendBranch(sourcePath, targetPath, version, LockLevel.None, updateDisk, true, silent);
+                return collector.ToPendResult(count);
+            }
+
+            public PendResult PendUndelete(IReadOnlyList<ItemQuery> items, bool updateDisk)
+            {
+                using var collector = new EventCollector(Vcs);
+                int count = workspace.PendUndelete(items.Select(ToItemSpec).ToArray(), LockLevel.None, updateDisk, true);
+                return collector.ToPendResult(count);
+            }
+
+            public MergeResult Rollback(IReadOnlyList<ItemQuery>? items, VersionSpec? itemVersion, VersionSpec? versionFrom, VersionSpec versionTo, bool toVersion, bool keepMergeHistory, bool noAutoResolve)
+            {
+                var options = RollbackOptions.None;
+                if (toVersion) { options |= RollbackOptions.ToVersion; }
+                if (keepMergeHistory) { options |= RollbackOptions.KeepMergeHistory; }
+                if (noAutoResolve) { options |= RollbackOptions.NoAutoResolve; }
+
+                // The library needs both versions in both modes.
+                versionFrom ??= VersionSpec.Latest;
+                using var collector = new EventCollector(Vcs);
+                GetStatus status;
+                if (items == null || items.Count == 0)
+                {
+                    // Without items the library's workspace-wide overload pends nothing on a local workspace:
+                    // the mapped folders of the workspace, recursively, are the scope instead (as `rollback /changeset:C85` of tf.exe).
+                    var roots = workspace.Folders.Where(f => !f.IsCloaked).Select(f => f.ServerItem).ToArray();
+                    status = workspace.Rollback(roots, RecursionType.Full, null, versionFrom, versionTo, LockLevel.None, options, null);
+                }
+                else
+                {
+                    var recursion = items.Max(i => i.Recursion);
+                    status = workspace.Rollback(items.Select(i => i.Path).ToArray(), recursion, itemVersion, versionFrom, versionTo, LockLevel.None, options, null);
+                }
+
+                return ToMergeResult(status, collector, items?.Select(i => i.Path).ToArray(), items != null && items.Any(i => i.Recursion != RecursionType.None));
+            }
+
+            private MergeResult ToMergeResult(GetStatus status, EventCollector collector, string[]? conflictPaths, bool recursive)
+            {
+                // The library raises the NonFatalError event for the failures it also returns: keep each one once.
+                var failures = new List<FailureInfo>(collector.Failures);
+                foreach (var failure in status.GetFailures().Select(ToFailure))
+                {
+                    if (!failures.Any(f => f.Message == failure.Message && f.ServerPath == failure.ServerPath && f.LocalPath == failure.LocalPath))
+                    {
+                        failures.Add(failure);
+                    }
+                }
+
+                var conflicts = new List<ConflictInfo>();
+                if (status.NumConflicts > 0)
+                {
+                    try
+                    {
+                        conflicts = workspace.QueryConflicts(conflictPaths, recursive).Where(c => !c.IsResolved).Select(ToConflict).ToList();
+                    }
+                    catch (Exception)
+                    {
+                        // The conflict list is informative; the counts still tell the truth.
+                    }
+                }
+
+                return new MergeResult(collector.Changes, conflicts, failures, status.NumOperations, status.NumConflicts, status.NoActionNeeded);
+            }
+
             /// <summary>The library's pending changes behind the infos (from a query of this workspace).</summary>
             private static PendingChange[] Handles(IReadOnlyList<PendingChangeInfo> changes)
             {
@@ -827,6 +932,7 @@ namespace TfPortable.Context
                 vcs.UndonePendingChange += OnUndonePendingChange;
                 vcs.NonFatalError += OnNonFatalError;
                 vcs.Getting += OnGetting;
+                vcs.Merging += OnMerging;
             }
 
             public List<PendingChangeInfo> Changes { get; } = new List<PendingChangeInfo>();
@@ -872,12 +978,43 @@ namespace TfPortable.Context
                 Operations.Add(new GetOperationInfo(OperationName(e.Status), e.TargetLocalItem ?? e.SourceLocalItem, e.ServerItem, e.Version, e.ItemType == ItemType.Folder, e.IsDelete));
             }
 
+            /// <summary>
+            /// Merge and rollback operations arrive through the Merging event (the library raises neither NewPendingChange nor Getting
+            /// for them): a pended change when there is one, else the operation as the event describes it (a preview).
+            /// Conflicts are left to the conflict query and the counts.
+            /// </summary>
+            private void OnMerging(object sender, MergeEventArgs e)
+            {
+                if (e.IsConflict || e.Status == OperationStatus.Conflict)
+                {
+                    return;
+                }
+
+                if (e.PendingChange != null)
+                {
+                    Changes.Add(ToPendingChange(e.PendingChange, false));
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(e.TargetServerItem) || e.ChangeType == ChangeType.None)
+                {
+                    return;
+                }
+
+                var sources = string.IsNullOrEmpty(e.SourceServerItem)
+                    ? new List<MergeSourceInfo>()
+                    : new List<MergeSourceInfo> { new MergeSourceInfo(e.SourceServerItem, e.SourceVersionFrom?.ChangesetId ?? 0, e.SourceVersionTo?.ChangesetId ?? 0, false) };
+                Changes.Add(new PendingChangeInfo(ChangeText(e.ChangeType), e.TargetServerItem, e.TargetLocalItem, false, e.TargetVersionPended?.ChangesetId ?? 0,
+                    sources.Count > 0 ? e.SourceServerItem : null, "none", null, DateTime.UtcNow, string.Empty, string.Empty, false, null, sources));
+            }
+
             public void Dispose()
             {
                 vcs.NewPendingChange -= OnNewPendingChange;
                 vcs.UndonePendingChange -= OnUndonePendingChange;
                 vcs.NonFatalError -= OnNonFatalError;
                 vcs.Getting -= OnGetting;
+                vcs.Merging -= OnMerging;
             }
         }
     }

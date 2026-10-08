@@ -126,9 +126,11 @@ namespace TfPortable.Context
     internal sealed class PendingChangeInfo
     {
         public PendingChangeInfo(string changeText, string serverPath, string? localPath, bool isFolder, int version, string? sourceServerPath,
-            string lockLevel, string? encoding, DateTime date, string? owner, string? workspace, bool detected, object? handle = null)
+            string lockLevel, string? encoding, DateTime date, string? owner, string? workspace, bool detected, object? handle = null,
+            IReadOnlyList<MergeSourceInfo>? mergeSources = null)
         {
             Handle = handle;
+            MergeSources = mergeSources ?? Array.Empty<MergeSourceInfo>();
             ChangeText = changeText;
             ServerPath = serverPath;
             LocalPath = localPath;
@@ -174,6 +176,30 @@ namespace TfPortable.Context
         /// <summary>The library's pending change, needed to download shelved content; never serialized.</summary>
         public object? Handle { get; }
 
+        /// <summary>Where a merge, branch or rollback change comes from (empty for other changes).</summary>
+        public IReadOnlyList<MergeSourceInfo> MergeSources { get; }
+
+        /// <summary>
+        /// The line tf.exe prints for a merge-like change: `merge, edit: $/src;C83~C83 -> $/dst;C80`, `merge, branch: $/src;C84 -> $/dst`.
+        /// Without a merge source the change is `<change>: <serverPath>`.
+        /// </summary>
+        public string MergeLine
+        {
+            get
+            {
+                var source = MergeSources.Count > 0 ? MergeSources[0] : null;
+                string target = Version > 0 ? $"{ServerPath};C{Version}" : ServerPath;
+                if (source == null)
+                {
+                    return $"{ChangeText}: {target}";
+                }
+
+                string from = source.VersionFrom > 0 ? $";C{source.VersionFrom}~C{source.VersionTo}"
+                    : source.VersionTo > 0 ? $";C{source.VersionTo}" : string.Empty;
+                return $"{ChangeText}: {source.ServerPath}{from} -> {target}";
+            }
+        }
+
         public JObject ToJson() => new JObject
         {
             ["changeTypes"] = new JArray(ChangeTypes.Cast<object>().ToArray()),
@@ -188,6 +214,35 @@ namespace TfPortable.Context
             ["owner"] = Owner,
             ["workspace"] = Workspace,
             ["detected"] = Detected,
+            ["mergeSources"] = MergeSources.Count == 0 ? null : new JArray(MergeSources.Select(m => m.ToJson()).Cast<object>().ToArray()),
+        };
+    }
+
+    /// <summary>Source of a merge, branch or rollback pending change: the item and the version range taken from it.</summary>
+    internal sealed class MergeSourceInfo
+    {
+        public MergeSourceInfo(string serverPath, int versionFrom, int versionTo, bool isRename)
+        {
+            ServerPath = serverPath;
+            VersionFrom = versionFrom;
+            VersionTo = versionTo;
+            IsRename = isRename;
+        }
+
+        public string ServerPath { get; }
+
+        public int VersionFrom { get; }
+
+        public int VersionTo { get; }
+
+        public bool IsRename { get; }
+
+        public JObject ToJson() => new JObject
+        {
+            ["serverPath"] = ServerPath,
+            ["versionFrom"] = VersionFrom,
+            ["versionTo"] = VersionTo,
+            ["isRename"] = IsRename,
         };
     }
 

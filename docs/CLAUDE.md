@@ -49,6 +49,9 @@ Setup (once, by a person):
 - `tfp history` returns at most 256 changesets without `-stopafter:<n>`; the output says how to
   continue. `tfp history ... -comment:<text>`, `-changetype:<types>` and `-workitem:<id>` search.
 - `tfp changeset <n> -diff` shows what a checkin changed as a unified diff.
+- `tfp merge`, `tfp branch`, `tfp rollback` and `tfp undelete` only pend changes in the workspace
+  (`tfp undo` takes them back); `tfp merge -candidate` and `tfp merge ... -preview` show what a merge
+  would bring first. Nothing reaches the server until a checkin.
 - `tfp help <command>` lists the switches of a command; `tfp help -format:json` the whole catalog.
 ```
 
@@ -68,6 +71,7 @@ if that matters in your project.
       "Bash(tfp info:*)", "Bash(tfp properties:*)", "Bash(tfp localversions:*)",
       "Bash(tfp workfold:*)", "Bash(tfp workspaces:*)", "Bash(tfp whoami:*)",
       "Bash(tfp labels:*)", "Bash(tfp branches:*)", "Bash(tfp merge -candidate:*)",
+      "Bash(tfp merges:*)", "Bash(tfp folderdiff:*)", "Bash(tfp annotate:*)",
       "Bash(tfp shelvesets:*)", "Bash(tfp help:*)", "Bash(tfp version:*)", "Bash(tfp protection)"
     ],
     "deny": [
@@ -76,7 +80,8 @@ if that matters in your project.
     "ask": [
       "Bash(tfp get:*)", "Bash(tfp undo:*)", "Bash(tfp reconcile:*)",
       "Bash(tfp resolve:*)", "Bash(tfp delete:*)", "Bash(tfp checkin:*)", "Bash(tfp shelve:*)",
-      "Bash(tfp unshelve:*)", "Bash(tfp label:*)", "Bash(tfp unlabel:*)", "Bash(tfp lock:*)"
+      "Bash(tfp unshelve:*)", "Bash(tfp label:*)", "Bash(tfp unlabel:*)", "Bash(tfp lock:*)",
+      "Bash(tfp merge:*)", "Bash(tfp branch:*)", "Bash(tfp rollback:*)", "Bash(tfp undelete:*)"
     ]
   }
 }
@@ -95,6 +100,8 @@ if that matters in your project.
 | Recent history of a folder | `tfp history '$/Project/Main' -recursive -stopafter:20 -format:json` |
 | Who touched a file and why | `tfp history 'Main\src\App.cs' -format:detailed` |
 | A file at a version | `tfp view '$/Project/Main/src/App.cs' -version:C1234` |
+| Who wrote each line | `tfp annotate 'Main\src\App.cs' -format:json` |
+| What was merged between branches | `tfp merges '$/Project/Main' '$/Project/Release' -recursive`, `tfp folderdiff '$/Project/Main' '$/Project/Release' -recursive` |
 | Local change against the server | `tfp diff 'Main\src\App.cs'` |
 | Start editing, add, rename, delete | `tfp checkout`, `tfp add`, `tfp rename`, `tfp delete` (all pending, reversible with `tfp undo`) |
 | Update the workspace | `tfp get -recursive -preview`, then `tfp get -recursive` |
