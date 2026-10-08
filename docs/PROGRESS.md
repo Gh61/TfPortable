@@ -11,7 +11,7 @@ Read this first in every session. Update it at the end of every session (see CLA
 | 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | done: [PR #1](https://github.com/Gh61/TfPortable/pull/1) merged into `main` on 2026-10-08 after an independent review | – |
 | 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | done: [PR #2](https://github.com/Gh61/TfPortable/pull/2) merged into `main` on 2026-10-08 after an independent review (findings under Decisions) | – |
 | 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | done: [PR #3](https://github.com/Gh61/TfPortable/pull/3) merged into `main` on 2026-10-08 (merge commit ff64062) after an independent review (findings under Decisions) | – |
-| 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | done except the release: [PR #4](https://github.com/Gh61/TfPortable/pull/4) (docs/CLAUDE.md, compatibility tests, embedded-assembly check, THIRD-PARTY-NOTICES) reviewed, CI green and merged into `main` on 2026-10-08; the release (tag `v0.1.0`) waits for the developer | user approves release |
+| 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | done: [PR #4](https://github.com/Gh61/TfPortable/pull/4) (docs/CLAUDE.md, compatibility tests, embedded-assembly check, THIRD-PARTY-NOTICES) reviewed, CI green and merged into `main` on 2026-10-08; release [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) published the same day (developer approved; `tfp.exe` + SHA-256 from the CI run on 2a1c007) | user approved the release on 2026-10-08 |
 | – | Phase 2 commands | – | not planned | separate brief |
 
 Statuses: not started, in progress, blocked, done.
@@ -32,11 +32,14 @@ Statuses: not started, in progress, blocked, done.
 
 ## Needs the user
 
-- Approve the release of milestone 5 (SPEC.md gate): create the tag `v0.1.0` on `main` (PR #3 and
-  PR #4 are merged); CI publishes `tfp.exe` with its SHA-256. Before that, a lawyer's look at
-  LICENSE-EXCEPTION and THIRD-PARTY-NOTICES (Decisions 2026-10-07) is still open.
-- Decide on branch protection for `main` (the cloud agent merges its own pull requests after an
-  independent review; protection would require a human approval per merge).
+- A lawyer's look at LICENSE-EXCEPTION and THIRD-PARTY-NOTICES (Decisions 2026-10-07) is still
+  open; `v0.1.0` was released with the current texts.
+- Set up the `main` ruleset the developer agreed to on 2026-10-08: pull request required, the CI
+  check `Build, test, package (windows-latest)` required (branch up to date), force pushes and
+  deletions blocked, no required approvals (the agent merges after an independent review), no
+  linear-history requirement (merge commits are the convention).
+- Later releases: run the CI workflow manually on `main` with `release_tag` (Actions → CI → Run
+  workflow), or push a tag `v*` from a machine that can push tags.
 - The golden fixture creates a temporary local workspace named `tfp-golden-<id>` on the CI runner
   (owner: the PAT's user) and deletes it at the end; a run that dies mid-way may leave one behind
   in the collection (harmless, but visible in `tf workspaces /owner:*`). Delete such leftovers
