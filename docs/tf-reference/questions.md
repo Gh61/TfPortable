@@ -59,8 +59,8 @@ agent; it adjusts the code and `docs/compat.md`.
 31. `undelete` of an item deleted several times without `;X<n>`: which deletion is restored (the latest)?
 32. `folderdiff`: compared by hash, by size and date, or by content? Which items does `/filterLocalPathsOnly`
     exclude? (tfp: by the MD5 hash of the item, local files computed.)
-33. `rollback /toversion:<v>`: which `versionFrom` does tf.exe pass to the library (it refuses null)? Latest, the
-    workspace version of the items, or the `/version` value? (tfp: Latest.)
+33. `rollback /toversion:<v>`: which `versionFrom` and `versionTo` does tf.exe pass to the library with the
+    ToVersion option (it refuses null)? (tfp: `v` as from and Latest as to, found by trial in CI.)
 
 ## protection-relevant commands (phase 4 candidates)
 

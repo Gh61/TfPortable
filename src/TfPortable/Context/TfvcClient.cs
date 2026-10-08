@@ -859,7 +859,7 @@ namespace TfPortable.Context
                 if (keepMergeHistory) { options |= RollbackOptions.KeepMergeHistory; }
                 if (noAutoResolve) { options |= RollbackOptions.NoAutoResolve; }
 
-                // The library needs the version rolled back from in both modes; /toversion rolls back from the latest version.
+                // The library needs both versions in both modes.
                 versionFrom ??= VersionSpec.Latest;
                 using var collector = new EventCollector(Vcs);
                 GetStatus status;

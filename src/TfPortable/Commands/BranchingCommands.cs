@@ -207,8 +207,10 @@ namespace TfPortable.Commands
             bool toVersion = toVersionText != null;
             if (toVersion)
             {
-                from = null;
-                to = VersionSpecParser.ParseSingle(toVersionText!, summary?.Name, summary?.Owner);
+                // The ToVersion option of the library rolls back everything after the given version: the range runs from
+                // that version up to the latest (with the given version as the upper bound the server pends nothing).
+                from = VersionSpecParser.ParseSingle(toVersionText!, summary?.Name, summary?.Owner);
+                to = VersionSpec.Latest;
             }
             else
             {
