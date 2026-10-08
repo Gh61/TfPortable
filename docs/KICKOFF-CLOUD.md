@@ -148,7 +148,8 @@ brief; `Microsoft.TeamFoundation.VersionControl.Client.Difference` or an own Mye
 
 - `docs/CLAUDE.md`: the template for users from SPEC.md "Šablona do CLAUDE.md" plus the
   permissions snippet.
-- README.md keeps the structure the developer asked for: why the project exists, install, sign-in
+- README.md keeps the structure the developer asked for: why the project exists (the main reason
+  is the unreliable, often impossible sign-in of `tf.exe`; portability and output come second), install, sign-in
   with Full access, usage examples, the command table with one line per command, links to
   `docs/commands.md` (every switch), `docs/compat.md` and `docs/json-schema.md`. When a milestone
   adds or changes a command, update the README table and `docs/commands.md` in the same pull
