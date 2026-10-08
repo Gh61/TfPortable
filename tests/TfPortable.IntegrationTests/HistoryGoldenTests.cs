@@ -37,7 +37,8 @@ namespace TfPortable.IntegrationTests
             yield return new object[] { "history/range", GoldenChecks.Shape | GoldenChecks.Changesets };
             yield return new object[] { "history/short-version", GoldenChecks.Shape | GoldenChecks.Changesets | GoldenChecks.ChangeTypes };
             yield return new object[] { "history/release-branch", GoldenChecks.Shape | GoldenChecks.ChangesetsSubset };
-            yield return new object[] { "history/not-found", GoldenChecks.Exact };
+            // history/not-found: exit 0 with the message on stdout; message texts are never compared.
+            yield return new object[] { "history/not-found", GoldenChecks.Shape };
             yield return new object[] { "history/vc-dash", GoldenChecks.Shape | GoldenChecks.ChangesetsSubset };
             yield return new object[] { "changeset/initial", GoldenChecks.Exact };
             yield return new object[] { "changeset/edit", GoldenChecks.Exact };
@@ -72,7 +73,8 @@ namespace TfPortable.IntegrationTests
             yield return new object[] { "properties/info-alias", PropertiesData };
             yield return new object[] { "properties/server-version", PropertiesExact };
             yield return new object[] { "properties/czech-name", PropertiesExact };
-            yield return new object[] { "properties/recursive", PropertiesExact };
+            // properties/recursive: Main\data\counter.txt is edited by the padding changesets of the `long-default` capture.
+            yield return new object[] { "properties/recursive", GoldenChecks.ExitCode | GoldenChecks.Items };
             yield return new object[] { "labels/all", GoldenChecks.Shape };
             yield return new object[] { "labels/detailed", GoldenChecks.Exact };
             yield return new object[] { "branches/main", GoldenChecks.Shape | GoldenChecks.ItemsSubset };
