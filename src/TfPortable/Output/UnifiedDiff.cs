@@ -133,8 +133,45 @@ namespace TfPortable.Output
             public List<Edit> Edits = new List<Edit>();
         }
 
-        /// <summary>Myers' greedy algorithm with a trace; returns the edit script as equal/delete/insert steps.</summary>
+        /// <summary>
+        /// Edit script as equal/delete/insert steps. The common prefix and suffix are matched first, as tf.exe does: a block
+        /// inserted in front of a repeated closing line (`}`) is reported before that line, not after it.
+        /// </summary>
         private static List<Edit> Myers(string[] a, string[] b)
+        {
+            int prefix = 0;
+            while (prefix < a.Length && prefix < b.Length && string.Equals(a[prefix], b[prefix], StringComparison.Ordinal))
+            {
+                prefix++;
+            }
+
+            int suffix = 0;
+            while (suffix < a.Length - prefix && suffix < b.Length - prefix && string.Equals(a[a.Length - 1 - suffix], b[b.Length - 1 - suffix], StringComparison.Ordinal))
+            {
+                suffix++;
+            }
+
+            var edits = new List<Edit>();
+            for (int i = 0; i < prefix; i++)
+            {
+                edits.Add(new Edit { Kind = EditKind.Equal, AIndex = i, BIndex = i });
+            }
+
+            foreach (var edit in MyersCore(a.Skip(prefix).Take(a.Length - prefix - suffix).ToArray(), b.Skip(prefix).Take(b.Length - prefix - suffix).ToArray()))
+            {
+                edits.Add(new Edit { Kind = edit.Kind, AIndex = edit.AIndex + prefix, BIndex = edit.BIndex + prefix });
+            }
+
+            for (int i = 0; i < suffix; i++)
+            {
+                edits.Add(new Edit { Kind = EditKind.Equal, AIndex = a.Length - suffix + i, BIndex = b.Length - suffix + i });
+            }
+
+            return edits;
+        }
+
+        /// <summary>Myers' greedy algorithm with a trace; returns the edit script as equal/delete/insert steps.</summary>
+        private static List<Edit> MyersCore(string[] a, string[] b)
         {
             int n = a.Length;
             int m = b.Length;

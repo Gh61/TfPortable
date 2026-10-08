@@ -12,7 +12,8 @@ namespace TfPortable.IntegrationTests
     /// Golden cases of milestone 4 (`docs/KICKOFF-CLOUD.md`): history, changeset, view, difference, dir, properties,
     /// labels, branches and merge /candidate of `index.json`, read-only against the seeded project. Listings whose
     /// server state the later golden runs extended (newer changesets in Main, extra folders, labels and branches)
-    /// compare shape and subsets; stable ones compare line by line (docs/golden-format.md §6–8).
+    /// compare shape and subsets; stable ones compare line by line (docs/golden-format.md §6–8). `properties` cases skip
+    /// the stream check: the original prints a deprecation warning on stderr that TfPortable leaves out (compat.md §1.3).
     /// </summary>
     [Collection(GoldenCollection.Name)]
     public class HistoryGoldenTests
@@ -24,9 +25,13 @@ namespace TfPortable.IntegrationTests
             this.fixture = fixture;
         }
 
+        private const GoldenChecks PropertiesExact = GoldenChecks.ExitCode | GoldenChecks.Lines;
+        private const GoldenChecks PropertiesData = GoldenChecks.ExitCode | GoldenChecks.Items | GoldenChecks.Changesets;
+
         public static IEnumerable<object[]> Cases()
         {
-            yield return new object[] { "history/brief", GoldenChecks.Shape | GoldenChecks.ChangesetsSubset };
+            // history/brief: the 300 padding changesets of the `long-default` capture push the seed changesets past the 256 limit.
+            yield return new object[] { "history/brief", GoldenChecks.Shape };
             yield return new object[] { "history/detailed-stopafter", GoldenChecks.Shape };
             yield return new object[] { "history/renamed-file", GoldenChecks.Shape | GoldenChecks.Changesets | GoldenChecks.ChangeTypes };
             yield return new object[] { "history/range", GoldenChecks.Shape | GoldenChecks.Changesets };
@@ -63,15 +68,16 @@ namespace TfPortable.IntegrationTests
             yield return new object[] { "dir/deleted", GoldenChecks.Shape | GoldenChecks.ItemsSubset };
             yield return new object[] { "dir/at-version", GoldenChecks.Exact };
             yield return new object[] { "dir/not-found", GoldenChecks.Shape };
-            yield return new object[] { "properties/local-file", GoldenChecks.Shape | GoldenChecks.Items | GoldenChecks.Changesets };
-            yield return new object[] { "properties/info-alias", GoldenChecks.Shape | GoldenChecks.Items | GoldenChecks.Changesets };
-            yield return new object[] { "properties/server-version", GoldenChecks.Exact };
-            yield return new object[] { "properties/czech-name", GoldenChecks.Exact };
-            yield return new object[] { "properties/recursive", GoldenChecks.Exact };
+            yield return new object[] { "properties/local-file", PropertiesData };
+            yield return new object[] { "properties/info-alias", PropertiesData };
+            yield return new object[] { "properties/server-version", PropertiesExact };
+            yield return new object[] { "properties/czech-name", PropertiesExact };
+            yield return new object[] { "properties/recursive", PropertiesExact };
             yield return new object[] { "labels/all", GoldenChecks.Shape };
             yield return new object[] { "labels/detailed", GoldenChecks.Exact };
             yield return new object[] { "branches/main", GoldenChecks.Shape | GoldenChecks.ItemsSubset };
-            yield return new object[] { "merge/candidate", GoldenChecks.Shape | GoldenChecks.ChangesetsSubset };
+            // merge/candidate: changeset 83 of the capture was merged to Release by a later golden run (changeset 91).
+            yield return new object[] { "merge/candidate", GoldenChecks.Shape };
         }
 
         [IntegrationTheory]
