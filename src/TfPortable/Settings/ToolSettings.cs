@@ -35,17 +35,18 @@ namespace TfPortable.Settings
             try
             {
                 var json = JObject.Parse(File.ReadAllText(path, Encoding.UTF8));
-                int? level = (int?)json["protectionLevel"];
-                if (level != null)
+                var token = json["protectionLevel"];
+                if (token != null && token.Type != JTokenType.Null)
                 {
-                    if (level < 1 || level > 3)
+                    long? level = token.Type == JTokenType.Integer ? (long?)token : null;
+                    if (level == null || level < 1 || level > 3)
                     {
                         throw new TfpException(ErrorCodes.ProtectionLevel, ExitCodes.GeneralError,
-                            $"The settings file {path} has protectionLevel {level}. Only 1, 2 and 3 are valid.",
+                            $"The settings file {path} has protectionLevel {token.ToString(Newtonsoft.Json.Formatting.None)}. Only 1, 2 and 3 are valid.",
                             "Fix the value or delete the file to return to level 2.");
                     }
 
-                    settings.ProtectionLevel = level.Value;
+                    settings.ProtectionLevel = (int)level.Value;
                 }
 
                 return settings;

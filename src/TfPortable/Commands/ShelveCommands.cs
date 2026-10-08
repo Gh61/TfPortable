@@ -76,8 +76,8 @@ namespace TfPortable.Commands
             var changes = workspace.GetPendingChanges(WorkspaceCommandSupport.Queries(items, recursion, context), false).Pending;
             if (changes.Count == 0)
             {
-                throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError, "No pending changes match the given items. Nothing was shelved.",
-                    $"'{toolName} status' lists the pending changes; pass /recursive for a folder.");
+                throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError, "Nothing to shelve: the given items have no pending changes.",
+                    $"'{toolName} status' lists the pending changes. Pass /recursive for a folder.");
             }
 
             bool replace = commandLine.Has("replace");

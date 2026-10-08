@@ -93,7 +93,7 @@ namespace TfPortable.Errors
             {
                 return new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError,
                     "The shelveset does not exist.",
-                    $"'{toolName} shelvesets /owner:*' lists the shelvesets; give the owner as name;owner.",
+                    $"'{toolName} shelvesets /owner:*' lists the shelvesets. Give the owner as name;owner.",
                     tfCode, message, activityId: activityId, inner: exception);
             }
 
@@ -101,7 +101,7 @@ namespace TfPortable.Errors
             {
                 return new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError,
                     "The label does not exist.",
-                    $"'{toolName} labels' lists the labels; give the scope as name@scope.",
+                    $"'{toolName} labels' lists the labels. Give the scope as name@scope.",
                     tfCode, message, activityId: activityId, inner: exception);
             }
 
@@ -117,7 +117,7 @@ namespace TfPortable.Errors
             {
                 return new TfpException(ErrorCodes.PendingChangeConflict, ExitCodes.PartialSuccess,
                     $"The shelveset could not be restored: {message}",
-                    $"'{toolName} status' shows the local pending changes in the way; undo or shelve them first.",
+                    $"'{toolName} status' shows the local pending changes in the way. Undo or shelve them first.",
                     tfCode, message, activityId: activityId, inner: exception);
             }
 
@@ -142,7 +142,7 @@ namespace TfPortable.Errors
             {
                 return new TfpException(ErrorCodes.ServerError, ExitCodes.GeneralError,
                     "The server returned an error.",
-                    "Read the server message; if it is temporary, try again.",
+                    "Read the server message. If it is temporary, try again.",
                     tfCode, message, activityId: activityId, inner: exception);
             }
 

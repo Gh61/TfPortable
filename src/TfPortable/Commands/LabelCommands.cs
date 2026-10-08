@@ -188,7 +188,25 @@ namespace TfPortable.Commands
             var paths = WorkspaceCommandSupport.LocalPaths(items, context, toolName);
             var recursion = commandLine.Has("recursive") ? RecursionType.Full : RecursionType.None;
 
-            var result = workspace.SetLock(paths, lockLevel, recursion);
+            PendResult result;
+            try
+            {
+                result = workspace.SetLock(paths, lockLevel, recursion);
+            }
+            catch (Exception ex) when (!(ex is TfpException) && IsCheckoutLockRefusal(ex.Message))
+            {
+                // TF400022: checkout locks do not exist in local workspaces (golden `lock/checkout-lock`, exit 1).
+                output.ItemError(CheckoutLockRefused(ex.Message, paths.Count == 1 ? paths[0] : null));
+                output.Success(new JObject { ["lock"] = "checkout", ["changes"] = new JArray(), ["count"] = 0, ["skipped"] = new JArray() });
+                return ExitCodes.Success;
+            }
+
+            foreach (var failure in result.Failures.Where(f => IsCheckoutLockRefusal(f.Message)).ToList())
+            {
+                output.ItemError(CheckoutLockRefused(failure.Message, failure.LocalPath ?? failure.ServerPath));
+            }
+
+            result = new PendResult(result.Changes, result.Failures.Where(f => !IsCheckoutLockRefusal(f.Message)).ToList(), result.Count);
             if (result.Changes.Count == 0 && result.Failures.Count == 0 && result.Count > 0)
             {
                 // The library reported no pending change event (an unlock); list what was asked for.
@@ -212,5 +230,11 @@ namespace TfPortable.Commands
             });
             return ExitCodes.Success;
         }
+
+        private static bool IsCheckoutLockRefusal(string? message) => message != null && message.IndexOf("TF400022", StringComparison.Ordinal) >= 0;
+
+        private static TfpException CheckoutLockRefused(string serverMessage, string? item) =>
+            new TfpException(ErrorCodes.ServerError, ExitCodes.PartialSuccess, "Checkout locks are not supported in local workspaces.",
+                "Use /lock:checkin, which local workspaces support.", "TF400022", serverMessage, item);
     }
 }

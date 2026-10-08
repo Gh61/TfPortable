@@ -306,11 +306,12 @@ tf vc checkin /shelveset:shelvesetname[;shelvesetowner] [/bypass] [/noprompt] [/
 | `/recursive`, `/validate`, `/author:`, `/noautoresolve` | ✓ (`/validate` evaluates conflicts, policies and notes and checks nothing in) |
 | `/override:` | ✓ at protection level 3; records the reason with the policy failures of the evaluation |
 | `/associate:id[,id]` | **+** links the work items to the changeset over the REST work item API after the checkin (the "Fixed in Changeset" link) |
-| `/force` | ~ accepted, no effect in this build (unchanged content is reported as TFP0301) |
+| `/force` | ✓ checks in an edit whose content did not change (`AllowUnchangedContent`); without it the server commits nothing and tfp reports TFP0301 |
 | `/notes:`, `/saved`, `/bypass`, `/new`, `/shelveset:` | ✗ |
 
-Output: `Checking in <change>: <name>` grouped by folder, then `Changeset #<n> checked in.` Nothing pending is TFP0301 (exit 100),
-conflicts TFP0406, policy or note failures TFP0407 (exit 100, nothing checked in).
+Output: `Checking in <change>: <name>` grouped by folder, then `Changeset #<n> checked in.` Nothing pending is TFP0301 (exit 100).
+Every conflict (TFP0406) and policy or note failure (TFP0407) is an item error, followed by a summary error with exit 100 and
+nothing checked in; `/validate` prints the same findings and exits 100 without the summary, 0 when the checkin would pass.
 
 ### shelve
 

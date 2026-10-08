@@ -43,51 +43,60 @@ namespace TfPortable.Commands
             var changes = workspace.GetPendingChanges(WorkspaceCommandSupport.Queries(items, recursion, context), false).Pending;
             if (changes.Count == 0)
             {
-                throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError, "No pending changes match the given items. Nothing was checked in.",
-                    $"'{toolName} status' lists the pending changes; pass /recursive for a folder.");
+                throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError, "Nothing to check in: the given items have no pending changes.",
+                    $"'{toolName} status' lists the pending changes. Pass /recursive for a folder.");
             }
 
             var evaluation = workspace.EvaluateCheckin(changes, comment);
             output.Lines(WorkspaceCommandSupport.GroupedByFolder(changes, c => $"{(validate ? "Validating" : "Checking in")} {c.ChangeText}: {WorkspaceCommandSupport.NameOf(c)}"));
 
-            if (evaluation.Conflicts.Count > 0)
+            // Every conflict and policy failure is an item error (stderr in text mode, `errors[]` in JSON) before the summary.
+            foreach (var conflict in evaluation.Conflicts)
             {
-                output.Line();
-                foreach (var conflict in evaluation.Conflicts)
-                {
-                    output.Line($"Conflict: {conflict.Message}");
-                }
-
-                throw new TfpException(ErrorCodes.CheckinConflict, ExitCodes.GeneralError,
-                    $"{evaluation.Conflicts.Count} conflict(s) stop the checkin. Nothing was checked in.",
-                    $"Run '{toolName} get' and '{toolName} resolve' for a version conflict; a lock needs the lock owner.");
+                output.ItemError(new TfpException(ErrorCodes.CheckinConflict, ExitCodes.GeneralError, $"Conflict: {conflict.Message}",
+                    conflict.Resolvable ? $"Run '{toolName} get' and '{toolName} resolve' for the item." : "The lock owner can release the item.", item: conflict.ServerPath));
             }
 
             var failures = evaluation.OverridableFailures.ToList();
-            if (failures.Count > 0 && overrideReason == null)
+            bool overridden = failures.Count > 0 && overrideReason != null;
+            if (overrideReason == null)
             {
-                output.Line();
                 foreach (string failure in failures)
                 {
-                    output.Line($"Policy: {failure}");
+                    output.ItemError(new TfpException(ErrorCodes.CheckinPolicy, ExitCodes.GeneralError, $"Policy: {failure}",
+                        $"Fix it, or run '{toolName} checkin ... /override:<reason>' at protection level 3."));
                 }
+            }
 
+            bool blocked = evaluation.Conflicts.Count > 0 || (failures.Count > 0 && overrideReason == null);
+            if (validate)
+            {
+                output.Line();
+                output.Line(blocked
+                    ? $"The checkin of {changes.Count} change(s) is blocked by {evaluation.Conflicts.Count} conflict(s) and {(overridden ? 0 : failures.Count)} policy failure(s). Nothing was checked in."
+                    : overridden
+                        ? $"The checkin of {changes.Count} change(s) is valid with the override of {failures.Count} policy failure(s). Nothing was checked in."
+                        : $"The checkin of {changes.Count} change(s) is valid. Nothing was checked in.");
+                int exit = blocked ? ExitCodes.GeneralError : ExitCodes.Success;
+                output.Success(ToJson(null, changes, evaluation, workItems.Select(id => new JObject { ["id"] = id, ["linked"] = false }), true, overridden), exit);
+                return exit;
+            }
+
+            if (evaluation.Conflicts.Count > 0)
+            {
+                throw new TfpException(ErrorCodes.CheckinConflict, ExitCodes.GeneralError,
+                    $"{evaluation.Conflicts.Count} conflict(s) stop the checkin. Nothing was checked in.",
+                    $"Run '{toolName} get' and '{toolName} resolve' for a version conflict. A lock needs the lock owner.");
+            }
+
+            if (failures.Count > 0 && overrideReason == null)
+            {
                 throw new TfpException(ErrorCodes.CheckinPolicy, ExitCodes.GeneralError,
                     $"{failures.Count} checkin policy or note requirement(s) failed. Nothing was checked in.",
                     $"Fix them, or run '{toolName} checkin ... /override:<reason>' at protection level 3.");
             }
 
-            if (validate)
-            {
-                output.Line();
-                output.Line(failures.Count == 0
-                    ? $"The checkin of {changes.Count} change(s) is valid. Nothing was checked in."
-                    : $"The checkin of {changes.Count} change(s) needs the override of {failures.Count} policy failure(s). Nothing was checked in.");
-                output.Success(ToJson(null, changes, evaluation, workItems.Select(id => new JObject { ["id"] = id, ["linked"] = false }), true, overrideReason != null));
-                return ExitCodes.Success;
-            }
-
-            int changeset = workspace.CheckIn(changes, comment, commandLine.Value("author"), failures.Count > 0 ? overrideReason : null, evaluation, commandLine.Has("noautoresolve"));
+            int changeset = workspace.CheckIn(changes, comment, commandLine.Value("author"), overridden ? overrideReason : null, evaluation, commandLine.Has("noautoresolve"), commandLine.Has("force"));
             if (changeset <= 0)
             {
                 throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError, "The server committed nothing: the content of the changes is unchanged.",
@@ -115,7 +124,7 @@ namespace TfPortable.Commands
                 }
             }
 
-            output.Success(ToJson(changeset, changes, evaluation, links, false, failures.Count > 0 && overrideReason != null));
+            output.Success(ToJson(changeset, changes, evaluation, links, false, overridden));
             return ExitCodes.Success;
         }
 

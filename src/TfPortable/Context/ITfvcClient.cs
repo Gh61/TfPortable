@@ -56,7 +56,7 @@ namespace TfPortable.Context
         /// Checks the changes in and returns the changeset number (0 when the server committed nothing). `overrideReason`
         /// with the evaluation's policy handles records a policy override; the library's checkin exceptions propagate.
         /// </summary>
-        int CheckIn(IReadOnlyList<PendingChangeInfo> changes, string comment, string? author, string? overrideReason, CheckinEvaluation? evaluation, bool noAutoResolve);
+        int CheckIn(IReadOnlyList<PendingChangeInfo> changes, string comment, string? author, string? overrideReason, CheckinEvaluation? evaluation, bool noAutoResolve, bool allowUnchangedContent);
 
         /// <summary>Shelves the changes under `name` for the authenticated user; `replace` overwrites an existing shelveset, `move` undoes the local changes.</summary>
         void Shelve(string name, string? comment, IReadOnlyList<PendingChangeInfo> changes, bool replace, bool move);

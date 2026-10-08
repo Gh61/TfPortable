@@ -135,8 +135,8 @@ answers `TFP0003` with the phase it is planned for.
 | --- | --- | --- |
 | 1 | Reading and workspace work: the commands in the table above (PAT sign-in, status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces, history, changeset, view, difference, dir, properties, labels, branches, merge /candidate). Everything it changes is local and reversible with `undo` | **done**, released as [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) (2026-10-08) |
 | 2 | More reading and pending-change work: `annotate`, `merges`, `folderdiff`, `undelete`; `merge`, `branch` and `rollback` as pending changes only; content search in history | planned |
-| 3 | The everyday write path: `checkin`, `label`/`unlabel`, `shelve` (without `/delete`) with `shelvesets` and `unshelve`, `lock`/`unlock`, so that work can be checked in, labelled, parked on the server and taken up again. Comes with the protection levels (`docs/SPEC.md`, "Úrovně ochrany") | in progress ([PR #9](https://github.com/Gh61/TfPortable/pull/9)) |
-| 4 | The rest of `tf.exe`, including commands that change the server irreversibly (`destroy`, `permission`, `workspace /new` and `/delete`, `shelve /delete`, `proxy`, `configure`). Whether the tool should offer them is undecided | hypothetical |
+| 3 | The everyday write path: `checkin`, `label`/`unlabel`, `shelve` with `shelvesets` and `unshelve` (`shelve /delete` and `label /delete` at protection level 3), `lock`/`unlock`, so that work can be checked in, labelled, parked on the server and taken up again. Comes with the protection levels (`docs/SPEC.md`, "Úrovně ochrany") | in progress ([PR #9](https://github.com/Gh61/TfPortable/pull/9)) |
+| 4 | The rest of `tf.exe`, including commands that change the server irreversibly (`destroy`, `permission`, `workspace /new` and `/delete`, `proxy`, `configure`). Whether the tool should offer them is undecided | hypothetical |
 
 ## For AI agents
 

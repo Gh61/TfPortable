@@ -99,7 +99,7 @@ namespace TfPortable
                 }
 
                 // The protection level (SPEC.md "Úrovně ochrany"): the settings file is read only when the command needs more than reading.
-                var required = commandLine.Spec == null ? (Level: ProtectionLevels.ReadOnly, Switch: (string?)null) : ProtectionLevels.Required(commandLine.Spec, commandLine);
+                var required = commandLine.Spec == null || commandName == "help" ? (Level: ProtectionLevels.ReadOnly, Switch: (string?)null) : ProtectionLevels.Required(commandLine.Spec, commandLine);
                 if (required.Level > ProtectionLevels.ReadOnly)
                 {
                     int current = Settings.ToolSettings.Load().ProtectionLevel;

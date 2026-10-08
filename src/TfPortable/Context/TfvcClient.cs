@@ -717,11 +717,12 @@ namespace TfPortable.Context
                 return new CheckinEvaluation(conflicts, policies, notes, result.PolicyEvaluationException?.Message) { PolicyHandles = result.PolicyFailures };
             }
 
-            public int CheckIn(IReadOnlyList<PendingChangeInfo> changes, string comment, string? author, string? overrideReason, CheckinEvaluation? evaluation, bool noAutoResolve)
+            public int CheckIn(IReadOnlyList<PendingChangeInfo> changes, string comment, string? author, string? overrideReason, CheckinEvaluation? evaluation, bool noAutoResolve, bool allowUnchangedContent)
             {
                 var parameters = new WorkspaceCheckInParameters(Handles(changes), comment)
                 {
                     NoAutoResolve = noAutoResolve,
+                    AllowUnchangedContent = allowUnchangedContent,
                 };
                 if (!string.IsNullOrEmpty(author))
                 {

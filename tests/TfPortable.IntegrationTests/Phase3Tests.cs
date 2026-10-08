@@ -169,9 +169,12 @@ namespace TfPortable.IntegrationTests
                 Assert.Equal(100, missing.ExitCode);
                 Assert.StartsWith("ERROR TFP0301", missing.Stderr);
 
-                var blocked = Run($"shelve /delete {name} /noprompt");
-                Assert.Equal(100, blocked.ExitCode);
-                Assert.StartsWith("ERROR TFP0004: Switch '/delete' of 'shelve' needs protection level 3.", blocked.Stderr);
+                using (ProtectionLevelScope.Set(2))
+                {
+                    var blocked = Run($"shelve /delete {name} /noprompt");
+                    Assert.Equal(100, blocked.ExitCode);
+                    Assert.StartsWith("ERROR TFP0004: Switch '/delete' of 'shelve' needs protection level 3.", blocked.Stderr);
+                }
 
                 using (ProtectionLevelScope.Set(3))
                 {
@@ -218,9 +221,12 @@ namespace TfPortable.IntegrationTests
                 Assert.Equal(1, again.ExitCode);
                 Assert.Contains("TFP0301", again.Stderr);
 
-                var blocked = Run($"label /delete {spec} /noprompt");
-                Assert.Equal(100, blocked.ExitCode);
-                Assert.StartsWith("ERROR TFP0004: Switch '/delete' of 'label' needs protection level 3.", blocked.Stderr);
+                using (ProtectionLevelScope.Set(2))
+                {
+                    var blocked = Run($"label /delete {spec} /noprompt");
+                    Assert.Equal(100, blocked.ExitCode);
+                    Assert.StartsWith("ERROR TFP0004: Switch '/delete' of 'label' needs protection level 3.", blocked.Stderr);
+                }
 
                 using (ProtectionLevelScope.Set(3))
                 {
@@ -367,7 +373,8 @@ namespace TfPortable.IntegrationTests
     /// <summary>
     /// Writes the protection level into the settings file tfp.exe reads (`%APPDATA%\TfPortable\settings.json`) for the
     /// duration of a using block and restores the previous file afterwards. The CI runner is ephemeral; locally the
-    /// developer's own level comes back when the block ends.
+    /// developer's own level comes back when the block ends. A test process killed inside the block leaves the file at
+    /// the test's level: check `tfp protection` after an aborted local run.
     /// </summary>
     internal sealed class ProtectionLevelScope : IDisposable
     {

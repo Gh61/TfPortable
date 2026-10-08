@@ -104,6 +104,12 @@ namespace TfPortable.Tests
 
             File.WriteAllText(ToolSettings.FilePath, "not json");
             Assert.Equal("TFP0004", Assert.Throws<TfPortable.Errors.TfpException>(() => ToolSettings.Load()).Code);
+
+            File.WriteAllText(ToolSettings.FilePath, "{ \"protectionLevel\": \"high\" }");
+            Assert.Equal("TFP0004", Assert.Throws<TfPortable.Errors.TfpException>(() => ToolSettings.Load()).Code);
+
+            File.WriteAllText(ToolSettings.FilePath, "{ \"protectionLevel\": null }");
+            Assert.Equal(2, ToolSettings.Load().ProtectionLevel);
         }
 
         [Fact]
@@ -120,6 +126,18 @@ namespace TfPortable.Tests
             var (exitJson, json, _) = Run("add", "file.txt", "/format:json");
             Assert.Equal(100, exitJson);
             Assert.Equal("TFP0004", (string)JObject.Parse(json)["errors"]![0]!["code"]!);
+        }
+
+        [Fact]
+        public void Help_of_a_write_command_is_never_blocked()
+        {
+            new ToolSettings { ProtectionLevel = 1 }.Save();
+            foreach (var args in new[] { new[] { "checkin", "/?" }, new[] { "destroy", "-h" }, new[] { "help", "checkin" }, new[] { "shelve", "/delete", "/help" } })
+            {
+                var (exit, stdout, stderr) = Run(args);
+                Assert.True(exit == 0, string.Join(" ", args) + ": " + stderr);
+                Assert.Contains("Usage:", stdout);
+            }
         }
 
         [Fact]

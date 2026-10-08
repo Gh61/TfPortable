@@ -362,7 +362,9 @@ English and come from SPEC.md; the shapes follow the original.
 | `label/create` | exit 0; `Created label name@scope` | the same (`Updated label` on an update, as `unlabel/item`) | follow |
 | `label/not-found-item` | exit 100; VS403405 | TFP0301, exit 100 | follow |
 | `unlabel/not-labeled` | exit 1; TF203060 | TFP0301 per item, exit 1 | follow |
-| `lock/checkin-lock`, `checkout-lock`, `remove` | exit 0; grouped item names | the same | follow |
+| `lock/checkin-lock`, `remove` | exit 0; grouped item names | the same | follow |
+| `lock/checkout-lock` | exit 1; TF400022 "Checkout locks are not supported in local workspaces" | TFP0501 per item with the TF400022 message, exit 1 | follow |
+| `checkin/out-of-date` conflicts and policy failures | stderr lines | one item error per conflict (TFP0406) or policy failure (TFP0407) on stderr, then the summary error; in JSON they are `errors[]` entries, and `checkin /validate` returns them with exit 100 | follow |
 
 ## 17. Out-of-scope commands (TFP0003, reference only)
 
@@ -391,7 +393,10 @@ adds three levels (SPEC.md "Úrovně ochrany"): 1 read-only, 2 everyday work (de
 A command or switch above the configured level ends with `TFP0004` (exit 100) before the tool
 connects to the server. The level is stored in `%APPDATA%\TfPortable\settings.json` and changed
 only by `tfp protection set <n>` in an interactive terminal (raising asks for a typed confirmation).
-It is a guard rail and a clear contract for scripts and agents, not a security boundary.
+It is a guard rail and a clear contract for scripts and agents, not a security boundary. The gate runs
+before the tool connects, so a switch that raises the level does so for every value: `undo /workspace:<name>`
+needs level 3 even for the user's own workspace (SPEC.md names the foreign workspace as the reason).
+Help (`<command> /?`, `tfp help <command>`) is never gated.
 
 ## 19. Open questions raised by this analysis
 
