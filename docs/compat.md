@@ -357,7 +357,16 @@ Milestone 4 (2026-10-08) notes on §9–§14, found while implementing against t
 | `destroy/preview` | exit 0; "Destroyed: $/path" even in preview. TfPortable refuses `destroy` entirely, including `/preview` |
 | `workspace/*` | exit 0; silent |
 
-## 17. Open questions raised by this analysis
+## 17. Protection levels (extension, phase 3)
+
+tf.exe has no notion of protection; every command runs as the user's permissions allow. TfPortable
+adds three levels (SPEC.md "Úrovně ochrany"): 1 read-only, 2 everyday work (default), 3 everything.
+A command or switch above the configured level ends with `TFP0004` (exit 100) before the tool
+connects to the server. The level is stored in `%APPDATA%\TfPortable\settings.json` and changed
+only by `tfp protection set <n>` in an interactive terminal (raising asks for a typed confirmation).
+It is a guard rail and a clear contract for scripts and agents, not a security boundary.
+
+## 18. Open questions raised by this analysis
 
 Recorded in `docs/PROGRESS.md`:
 

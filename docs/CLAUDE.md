@@ -26,8 +26,12 @@ Setup (once, by a person):
 - Put server paths into single quotes: `'$/Project/src'`.
 - Add `-format:json` when you process the output: one JSON document per command, `ok`,
   `exitCode`, `data`, `errors[]` with a stable `code` (TFPxxxx) and a `hint`.
-- Start with `tfp whoami -format:json` to see the identity, the collection and the workspace.
-- Do not check in; the tool does not support it. Leave the work as pending changes.
+- Start with `tfp whoami -format:json` to see the identity, the collection, the workspace and
+  the protection level.
+- The protection level (1 read-only, 2 everyday work, 3 everything) decides which commands run.
+  Exit code 100 with `TFP0004` means the command is above the level: report it and leave the
+  level alone. Never run `tfp protection set`; a person changes the level in their own terminal.
+- Do not check in unless the task says so; leave the work as pending changes otherwise.
 - Exit code 110 means a problem with the PAT: tell the user to run `tfp login` in their own
   terminal. Never ask for a PAT and never enter one yourself.
 - Exit code 120 means TfPortable found no workspace or collection, the path is not mapped, or the
@@ -59,7 +63,10 @@ if that matters in your project.
       "Bash(tfp info:*)", "Bash(tfp properties:*)", "Bash(tfp localversions:*)",
       "Bash(tfp workfold:*)", "Bash(tfp workspaces:*)", "Bash(tfp whoami:*)",
       "Bash(tfp labels:*)", "Bash(tfp branches:*)", "Bash(tfp merge -candidate:*)",
-      "Bash(tfp help:*)", "Bash(tfp version:*)"
+      "Bash(tfp help:*)", "Bash(tfp version:*)", "Bash(tfp protection)"
+    ],
+    "deny": [
+      "Bash(tfp protection set:*)"
     ],
     "ask": [
       "Bash(tfp get:*)", "Bash(tfp undo:*)", "Bash(tfp reconcile:*)",

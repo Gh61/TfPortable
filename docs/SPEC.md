@@ -300,7 +300,7 @@ Fáze 1 pokrývá 21 příkazů tf.exe a 3 příkazy pro správu PAT: vše pro p
 | `unshelve` | `<shelveset>[;<owner>]` `/recursive` | Jen bez `/move` (nemaže shelveset na serveru) | 2 |
 | `merge`, `branch`, `undelete`, `rollback` | dle tf.exe | Jen jako pending changes ve workspace | 2 |
 
-**Správa nástroje** (rozšíření): `login`, `logout`, `whoami` (viz Autentizace), `help [<příkaz>]`, `version`.
+**Správa nástroje** (rozšíření): `login`, `logout`, `whoami` (viz Autentizace), `help [<příkaz>]`, `version`, `protection [set <1|2|3>]` (viz Úrovně ochrany).
 
 ## Úrovně ochrany
 
