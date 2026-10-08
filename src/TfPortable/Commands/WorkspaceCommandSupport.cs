@@ -125,30 +125,31 @@ namespace TfPortable.Commands
             string code = failure.Code ?? string.Empty;
             string message = failure.Message;
             string? tfCode = ErrorMapper.ExtractTfCode(message);
-            string item = failure.Item;
+            string? item = failure.Item.Length > 0 ? failure.Item : null;
+            string prefix = item == null ? string.Empty : item + ": ";
 
             if (code.IndexOf("NotFound", StringComparison.OrdinalIgnoreCase) >= 0 || code.IndexOf("NoMatch", StringComparison.OrdinalIgnoreCase) >= 0
                 || message.IndexOf("No matching", StringComparison.OrdinalIgnoreCase) >= 0 || message.IndexOf("could not be found", StringComparison.OrdinalIgnoreCase) >= 0
-                || message.IndexOf("does not exist", StringComparison.OrdinalIgnoreCase) >= 0)
+                || message.IndexOf("does not exist", StringComparison.OrdinalIgnoreCase) >= 0 || message.IndexOf("No pending changes", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                return new TfpException(ErrorCodes.ItemNotFound, ExitCodes.PartialSuccess, $"{item}: no matching item in the workspace.",
+                return new TfpException(ErrorCodes.ItemNotFound, ExitCodes.PartialSuccess, $"{prefix}no matching item in the workspace.",
                     $"Check the path with '{toolName} status' or '{toolName} dir'.", tfCode, message, item);
             }
 
             if (code.IndexOf("Exists", StringComparison.OrdinalIgnoreCase) >= 0 || code.IndexOf("Pending", StringComparison.OrdinalIgnoreCase) >= 0
                 || message.IndexOf("already exists", StringComparison.OrdinalIgnoreCase) >= 0 || message.IndexOf("already has pending", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                return new TfpException(ErrorCodes.PendingChangeConflict, ExitCodes.PartialSuccess, $"{item}: the item is already under version control or has another pending change.",
+                return new TfpException(ErrorCodes.PendingChangeConflict, ExitCodes.PartialSuccess, $"{prefix}the item is already under version control or has another pending change.",
                     $"Check it with '{toolName} status'; use '{toolName} undo' to drop the pending change.", tfCode, message, item);
             }
 
             if (code.IndexOf("Lock", StringComparison.OrdinalIgnoreCase) >= 0 || message.IndexOf("locked", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                return new TfpException(ErrorCodes.ItemLocked, ExitCodes.PartialSuccess, $"{item}: the item is locked.",
+                return new TfpException(ErrorCodes.ItemLocked, ExitCodes.PartialSuccess, $"{prefix}the item is locked.",
                     "Ask the lock owner to unlock it, or wait for the checkin.", tfCode, message, item);
             }
 
-            return new TfpException(ErrorCodes.ServerError, ExitCodes.PartialSuccess, $"{item}: {message}",
+            return new TfpException(ErrorCodes.ServerError, ExitCodes.PartialSuccess, $"{prefix}{message}",
                 "Read the server message; if it is temporary, try again.", tfCode, message, item);
         }
 

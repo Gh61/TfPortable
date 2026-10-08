@@ -41,7 +41,10 @@ namespace TfPortable.Commands
             using var context = ContextResolver.Resolve(commandLine, output, toolName, requireWorkspace: true);
             var workspace = context.RequireWorkspace(toolName);
             var recursion = commandLine.Has("recursive") ? RecursionType.Full : RecursionType.OneLevel;
-            var queries = WorkspaceCommandSupport.Queries(items, recursion, context);
+            // Without an itemspec the scope is the current folder (never the whole workspace): /clean deletes files.
+            var queries = items.Count == 0
+                ? new List<ItemQuery> { new ItemQuery(Directory.GetCurrentDirectory(), recursion) }
+                : WorkspaceCommandSupport.Queries(items, recursion, context);
 
             var exclude = commandLine.Values("exclude").Select(Pattern).ToList();
             var candidates = workspace.GetPendingChanges(queries, true).Candidates
