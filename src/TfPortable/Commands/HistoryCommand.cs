@@ -68,51 +68,63 @@ namespace TfPortable.Commands
             }
 
             // A single file gets the Change column of tf.exe; an unknown path is an empty result (compat.md §9).
-            ItemInfo? target;
+            // The lookup goes through GetItems so that deleted items and wildcards (which GetItem rejects) have a history.
+            IReadOnlyList<ItemInfo> targets;
             try
             {
-                target = context.Client.GetItem(path, itemVersion, item.DeletionId);
+                targets = context.Client.GetItems(new ItemQuery(path, RecursionType.None, item.DeletionId), itemVersion, true, false);
             }
             catch (Exception ex) when (ErrorMapper.Map(ex, toolName, context.CollectionUrl).Code == ErrorCodes.ItemNotFound)
             {
-                target = null;
+                targets = Array.Empty<ItemInfo>();
             }
 
-            bool singleFile = target != null && !target.IsFolder;
+            bool singleFile = targets.Count == 1 && !targets[0].IsFolder;
             bool includeChanges = detailed || files || singleFile || filter.NeedsChanges;
             int limit = stopAfter ?? DefaultLimit;
+            // One row more than the limit tells whether the history continues, without a second query.
+            int fetch = stopAfter == null ? limit + 1 : limit;
 
             IReadOnlyList<ChangesetInfo> changesets;
             int scanned = 0;
             bool scanLimitHit = false;
-            if (target == null)
+            int scanBoundary = 0;
+            bool truncated = false;
+            if (targets.Count == 0)
             {
                 changesets = Array.Empty<ChangesetInfo>();
             }
             else if (filter.IsEmpty)
             {
-                changesets = Query(context.Client, path, itemVersion, item.DeletionId, recursion, commandLine.Value("user"), from, to, limit, slotMode, ascending, includeChanges);
+                var result = Query(context.Client, path, itemVersion, item.DeletionId, recursion, commandLine.Value("user"), from, to, fetch, slotMode, ascending, includeChanges, detailed);
+                truncated = result.Count > limit;
+                changesets = truncated ? result.Take(limit).ToList() : result;
                 scanned = changesets.Count;
             }
             else
             {
                 // Filtering happens on the client: /stopafter counts matches, the scan stops after ScanLimit changesets.
-                var all = Query(context.Client, path, itemVersion, item.DeletionId, recursion, commandLine.Value("user"), from, to, ScanLimit, slotMode, ascending, includeChanges);
+                var all = Query(context.Client, path, itemVersion, item.DeletionId, recursion, commandLine.Value("user"), from, to, ScanLimit, slotMode, ascending, includeChanges, detailed);
                 scanned = all.Count;
                 scanLimitHit = all.Count >= ScanLimit;
-                changesets = all.Where(cs => filter.Matches(cs, context.Client)).Take(limit).ToList();
+                scanBoundary = all.Count == 0 ? 0 : (ascending ? all.Max(c => c.Id) : all.Min(c => c.Id));
+                var matches = all.Where(cs => filter.Matches(cs, context.Client)).Take(fetch).ToList();
+                truncated = matches.Count > limit;
+                changesets = truncated ? matches.Take(limit).ToList() : matches;
             }
 
-            bool truncated = stopAfter == null && changesets.Count >= DefaultLimit;
             output.Lines(detailed ? RenderDetailed(changesets, truncated) : Render(changesets, truncated, singleFile ? path : null, files));
             if (truncated || scanLimitHit)
             {
-                int oldest = changesets.Count == 0 ? 1 : changesets.Min(c => c.Id);
-                string hint = scanLimitHit && !truncated
-                    ? $"The search stopped after {ScanLimit} changesets; continue with /version:C{Math.Max(oldest - 1, 1)}."
-                    : $"Use /stopafter:<n> or /version:C{Math.Max(oldest - 1, 1)} to continue.";
-                output.Truncated = new JObject { ["returned"] = changesets.Count, ["limit"] = scanLimitHit && !truncated ? ScanLimit : DefaultLimit, ["hint"] = hint };
-                if (scanLimitHit && !truncated)
+                // The continuation starts after the last changeset scanned (scan limit) or shown (256 limit), in the sort order used.
+                bool scanHint = scanLimitHit && !truncated;
+                int boundary = scanHint ? scanBoundary : (ascending ? changesets.Max(c => c.Id) : changesets.Min(c => c.Id));
+                string continueWith = ascending ? $"/version:C{boundary + 1}~T" : $"/version:C{Math.Max(boundary - 1, 1)}";
+                string hint = scanHint
+                    ? $"The search stopped after {ScanLimit} changesets; continue with {continueWith}."
+                    : $"Use /stopafter:<n> or {continueWith} to continue.";
+                output.Truncated = new JObject { ["returned"] = changesets.Count, ["limit"] = scanHint ? ScanLimit : DefaultLimit, ["hint"] = hint };
+                if (scanHint)
                 {
                     output.Line(string.Empty);
                     output.Line(hint);
@@ -124,10 +136,10 @@ namespace TfPortable.Commands
         }
 
         private static IReadOnlyList<ChangesetInfo> Query(ITfvcClient client, string path, VersionSpec version, int deletionId, RecursionType recursion, string? user,
-            VersionSpec? from, VersionSpec? to, int limit, bool slotMode, bool ascending, bool includeChanges)
+            VersionSpec? from, VersionSpec? to, int limit, bool slotMode, bool ascending, bool includeChanges, bool includeWorkItems)
         {
             // Sorting is done by the server before the limit applies, as in tf.exe (golden history/sort-ascending: the oldest five).
-            return client.QueryHistory(new HistoryQuery(path, version, recursion, user, from, to, limit, slotMode, ascending, deletionId, includeChanges));
+            return client.QueryHistory(new HistoryQuery(path, version, recursion, user, from, to, limit, slotMode, ascending, deletionId, includeChanges, includeWorkItems));
         }
 
         /// <summary>Brief table: Changeset, [Change], User, Date, Comment; with /files the changed items follow each row, indented.</summary>
@@ -245,6 +257,8 @@ namespace TfPortable.Commands
             private readonly Regex? comment;
             private readonly HashSet<string> changeTypes;
             private readonly int? workItem;
+            private IReadOnlyCollection<int>? workItemChangesets;
+            private bool workItemResolved;
 
             private SearchFilter(Regex? comment, HashSet<string> changeTypes, int? workItem)
             {
@@ -311,15 +325,34 @@ namespace TfPortable.Commands
 
                 if (workItem != null)
                 {
-                    var workItems = cs.WorkItems;
-                    if (workItems == null)
+                    if (!workItemResolved)
                     {
-                        workItems = client.GetChangeset(cs.Id).WorkItems ?? Array.Empty<WorkItemInfo>();
+                        // The work item's links name its changesets in one call; without the linking service, ask per changeset.
+                        workItemResolved = true;
+                        try
+                        {
+                            workItemChangesets = client.GetWorkItemChangesets(workItem.Value);
+                        }
+                        catch (Exception)
+                        {
+                            workItemChangesets = null;
+                        }
                     }
 
-                    if (!workItems.Any(w => w.Id == workItem.Value))
+                    if (workItemChangesets != null)
                     {
-                        return false;
+                        if (!workItemChangesets.Contains(cs.Id))
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        var workItems = cs.WorkItems ?? client.GetChangeset(cs.Id).WorkItems ?? Array.Empty<WorkItemInfo>();
+                        if (!workItems.Any(w => w.Id == workItem.Value))
+                        {
+                            return false;
+                        }
                     }
                 }
 
