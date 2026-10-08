@@ -55,4 +55,16 @@ namespace TfPortable.IntegrationTests
             }
         }
     }
+
+    /// <summary>A theory that is skipped when the test collection and PAT are not configured.</summary>
+    public sealed class IntegrationTheoryAttribute : TheoryAttribute
+    {
+        public IntegrationTheoryAttribute()
+        {
+            if (!TestEnvironment.IsConfigured)
+            {
+                Skip = TestEnvironment.SkipReason;
+            }
+        }
+    }
 }

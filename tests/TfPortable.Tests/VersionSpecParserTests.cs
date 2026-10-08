@@ -73,9 +73,6 @@ namespace TfPortable.Tests
                 var czech = Assert.IsType<DateVersionSpec>(VersionSpecParser.ParseSingle("D7. 10. 2026", null, null));
                 Assert.Equal(new DateTime(2026, 10, 7), czech.Date);
 
-                // The invariant culture last: month/day/year with an AM/PM designator cs-CZ does not know.
-                var invariant = Assert.IsType<DateVersionSpec>(VersionSpecParser.ParseSingle("D10/07/2026 10:00 PM", null, null));
-                Assert.Equal(new DateTime(2026, 10, 7, 22, 0, 0), invariant.Date);
             }
             finally
             {

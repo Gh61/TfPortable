@@ -130,9 +130,9 @@ namespace TfPortable.Cli
                 SwitchSpec? switchSpec = Resolve(table, name);
                 if (switchSpec == null)
                 {
-                    if (spec == null || help)
+                    if (spec == null || help || spec.Status == CommandStatus.OutOfScope)
                     {
-                        // Unknown command (TFP0001 is thrown by the caller) or help: keep the switch, do not judge it.
+                        // Unknown command (TFP0001), out-of-scope command (TFP0003, thrown by the caller) or help: keep the switch, do not judge it.
                         result.Set(name.ToLowerInvariant(), raw.Value);
                         continue;
                     }
@@ -151,6 +151,33 @@ namespace TfPortable.Cli
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// The canonical command name the arguments address (or the raw name when unknown, or "help" when none),
+        /// without parsing or validating anything; lets the dispatcher name the command in an error envelope.
+        /// </summary>
+        public static string PeekCommand(string[] args)
+        {
+            bool skipVc = true;
+            foreach (string arg in args)
+            {
+                if (IsSwitch(arg) || (arg.Length > 1 && arg[0] == '@'))
+                {
+                    continue;
+                }
+
+                if (skipVc && string.Equals(arg, "vc", StringComparison.OrdinalIgnoreCase))
+                {
+                    skipVc = false;
+                    continue;
+                }
+
+                string raw = arg.ToLowerInvariant();
+                return CommandCatalog.Find(raw)?.Name ?? raw;
+            }
+
+            return "help";
         }
 
         private void Set(string name, string? value)

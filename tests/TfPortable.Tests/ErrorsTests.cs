@@ -178,13 +178,13 @@ namespace TfPortable.Tests
             Assert.Equal("https://dev.azure.com/contoso", (string)envelope["collection"]!);
             Assert.Equal("DEV-PC;Jan Novak", (string)envelope["workspace"]!);
             Assert.Equal(1, (int)envelope["data"]!["count"]!);
-            Assert.Equal(JTokenType.Null, envelope["truncated"]!.Type);
+            JsonAssert.Null(envelope["truncated"]!);
             Assert.Equal("TFP0103", (string)envelope["warnings"]![0]!["code"]!);
             var error = envelope["errors"]![0]!;
             Assert.Equal("TFP0301", (string)error["code"]!);
             Assert.Equal("TF14019", (string)error["tfCode"]!);
             Assert.Equal("$/x", (string)error["item"]!);
-            Assert.Equal(JTokenType.Null, error["activityId"]!.Type);
+            JsonAssert.Null(error["activityId"]!);
             Assert.Equal(new[] { "ok", "command", "exitCode", "collection", "workspace", "data", "truncated", "warnings", "errors" },
                 envelope.Properties().Select(p => p.Name).ToArray());
         }
@@ -200,7 +200,7 @@ namespace TfPortable.Tests
             var envelope = JObject.Parse(stdout.ToString());
             Assert.Equal(110, (int)envelope["exitCode"]!);
             Assert.Equal("https://dev.azure.com/contoso", (string)envelope["collection"]!);
-            Assert.Equal(JTokenType.Null, envelope["workspace"]!.Type);
+            JsonAssert.Null(envelope["workspace"]!);
             Assert.Equal(2, envelope["errors"]!.Count());
             Assert.Equal("TFP0102", (string)envelope["errors"]![1]!["code"]!);
             Assert.Equal(JTokenType.Object, envelope["data"]!.Type);

@@ -42,7 +42,7 @@ namespace TfPortable.Tests
             Assert.Equal("private", (string)workspace["permission"]!);
             Assert.Equal(2, workspace["mappings"]!.Count());
             Assert.True((bool)workspace["mappings"]![1]!["cloaked"]!);
-            Assert.Equal(Newtonsoft.Json.Linq.JTokenType.Null, workspace["mappings"]![1]!["localPath"]!.Type);
+            JsonAssert.Null(workspace["mappings"]![1]!["localPath"]!);
             Assert.DoesNotContain("secret", json.ToString());
 
             var none = WhoamiCommand.Render(identity, "https://dev.azure.com/contoso", null, null, @"C:\Temp").ToList();
@@ -113,7 +113,7 @@ namespace TfPortable.Tests
             Assert.Equal(2, (int)json["count"]!);
             Assert.Equal("slot", (string)json["mode"]!);
             Assert.Equal(83, (int)json["changesets"]![0]!["id"]!);
-            Assert.Equal(Newtonsoft.Json.Linq.JTokenType.Null, json["changesets"]![1]!["comment"]!.Type);
+            JsonAssert.Null(json["changesets"]![1]!["comment"]!);
 
             Assert.Equal(new[] { "No history entries were found for the item and version combination." }, HistoryCommand.Render(new List<ChangesetInfo>(), false));
         }

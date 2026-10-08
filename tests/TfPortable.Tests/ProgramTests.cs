@@ -76,7 +76,7 @@ namespace TfPortable.Tests
             var envelope = JObject.Parse(stdout);
             Assert.True((bool)envelope["ok"]!);
             Assert.Equal("help", (string)envelope["command"]!);
-            Assert.Equal(JTokenType.Null, envelope["collection"]!.Type);
+            JsonAssert.Null(envelope["collection"]!);
             var commands = (JArray)envelope["data"]!["commands"]!;
             Assert.Contains(commands, c => (string)c["name"]! == "status" && (bool)c["supported"]!);
             Assert.Contains(commands, c => (string)c["name"]! == "checkin" && !(bool)c["supported"]!);

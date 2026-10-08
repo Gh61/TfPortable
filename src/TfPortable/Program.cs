@@ -46,7 +46,7 @@ namespace TfPortable
             // Decided from the raw arguments so that even a parse error produces the JSON envelope.
             bool json = args.Any(a => IsSwitch(a, "format:json") || IsSwitch(a, "F:json"));
             bool verbose = args.Any(a => IsSwitch(a, "verbose"));
-            var output = new OutputWriter(json, "help", stdout, stderr);
+            var output = new OutputWriter(json, CommandLine.PeekCommand(args), stdout, stderr);
 
             try
             {
