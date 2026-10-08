@@ -81,7 +81,7 @@ namespace TfPortable.IntegrationTests
                 var text = Run($"changeset {changeset} /noprompt");
                 Assert.True(text.ExitCode == 0, text.Stderr);
                 Assert.Contains($"CI checkin: add files ({RunId})", text.Stdout);
-                var shown = Data(Run($"changeset {changeset} /format:json"));
+                var shown = Data(Run($"changeset {changeset} /format:json"))["changeset"]!;
                 Assert.Contains((JArray)shown["changes"]!, c => ((string)c["serverPath"]!).EndsWith("/a.txt", StringComparison.Ordinal));
                 var workItems = shown["workItems"] as JArray;
                 Assert.True(workItems != null && workItems.Any(w => (int)w["id"]! == 1), "The changeset does not list work item 1: " + shown["workItems"]);
@@ -252,12 +252,15 @@ namespace TfPortable.IntegrationTests
                 var server = ((JArray)Data(properties)["items"]!).Single()["server"]!;
                 Assert.Equal("checkin", (string)server["lock"]!);
 
+                var pending = Run("status Main\\data\\counter.txt /nodetect /format:json");
                 var unlock = Run("lock Main\\data\\counter.txt /lock:none /noprompt /format:json");
                 Assert.True(unlock.ExitCode == 0, unlock.Stderr);
                 Assert.Equal("none", (string)Data(unlock)["lock"]!);
+                var afterStatus = Run("status Main\\data\\counter.txt /nodetect /format:json");
                 var after = ((JArray)Data(Run("properties Main\\data\\counter.txt /format:json"))["items"]!).Single()["server"]!;
-                Assert.Equal("none", (string)after["lock"]!);
-                Assert.Empty(Changes(Run("status Main\\data\\counter.txt /nodetect /format:json")));
+                Assert.True("none" == (string)after["lock"]!,
+                    $"The lock stayed. Status while locked: {pending.Stdout} Unlock output: {unlock.Stdout} Status after: {afterStatus.Stdout}");
+                Assert.Empty(Changes(afterStatus));
             }
             finally
             {
