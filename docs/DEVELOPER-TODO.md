@@ -122,3 +122,8 @@ is set up). Kept for history; SPEC.md "Fáze 4" is the current definition.
   texts).
 - Leftover workspaces `tfp-golden-<id>` in the collection after a CI run that died mid-way: delete them
   occasionally (`tf workspaces /owner:*`).
+- The CI user (`Test TfPortable`) has no **AdminProjectRights** on `$/TfsPortableTestRepo`, so
+  `permission /allow` in the phase 4 integration test is refused by the server (TF14098) and the
+  test only checks that the refusal is reported. To exercise a real permission change in CI, grant
+  the test user "Administer" (AdminProjectRights) on `$/TfsPortableTestRepo/CI` (Project settings →
+  Repositories → TFVC → the folder → Security).

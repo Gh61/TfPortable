@@ -50,6 +50,8 @@ before phase 4). The items below are kept for history.
   a delete checkin at the end), the developer cannot easily run tf.exe for new captures (so phase 3
   follows the existing captures and the Microsoft docs; `tools/capture-tf-golden-phase3.ps1` is ready
   for later), and work item #1 (a bug) exists for `checkin /associate`.
+- The CI user has no AdminProjectRights on the test project: the phase 4 permission test can only check
+  that the server's refusal (TF14098) is reported per item. `docs/DEVELOPER-TODO.md` §6 says what to grant.
 - Paste the v0.1.0 and v0.2.0 sections of `CHANGELOG.md` into the two GitHub release pages (the cloud
   session cannot edit releases). Release `v0.3.0` after phase 4 merges; `v1.0` when every phase is done.
 - The permanent shelveset `tfp-golden-shelveset` was created by the developer on 2026-10-08;

@@ -238,17 +238,30 @@ namespace TfPortable.IntegrationTests
                 {
                     var allow = Run($"permission /allow:Lock \"/user:{owner}\" {serverPath} /format:json");
                     allowed = allow.ExitCode == 0;
-                    Assert.True(allow.ExitCode == 0, allow.Stderr + allow.Stdout);
-                    Assert.Empty((JArray)Data(allow)["skipped"]!);
-                    var change = ((JArray)Data(allow)["changes"]!).Single();
-                    Assert.Equal(serverPath, (string)change["serverItem"]!);
-                    Assert.Equal(new[] { "Lock" }, change["allow"]!.Select(t => (string)t!));
-                    var listing = Run($"permission {serverPath} /format:json");
-                    Assert.True(((JArray)Data(listing)["items"]!).Single()["entries"]!.Any(e => e["allow"]!.Any(p => (string?)p == "Lock")), "No explicit Lock allow in the listing: " + listing.Stdout);
-                    var remove = Run($"permission /remove:Lock \"/user:{owner}\" {serverPath}");
-                    Assert.True(remove.ExitCode == 0, remove.Stderr + remove.Stdout);
-                    allowed = false;
-                    Assert.Contains($"{serverPath}: {owner}", remove.Stdout);
+                    var denied = ((JArray)JObject.Parse(allow.Stdout)["errors"]!).FirstOrDefault(e => (string?)e["tfCode"] == "TF14098");
+                    if (denied != null)
+                    {
+                        // The CI user has no AdminProjectRights on the test project (a server setting, docs/DEVELOPER-TODO.md): the refusal must be reported per item.
+                        Assert.Equal(1, allow.ExitCode);
+                        Assert.Equal("TFP0501", (string)denied["code"]!);
+                        Assert.Equal(serverPath, (string)denied["item"]!);
+                        Assert.Single((JArray)Data(allow)["skipped"]!);
+                        Assert.Empty((JArray)Data(allow)["changes"]!);
+                    }
+                    else
+                    {
+                        Assert.True(allow.ExitCode == 0, allow.Stderr + allow.Stdout);
+                        Assert.Empty((JArray)Data(allow)["skipped"]!);
+                        var change = ((JArray)Data(allow)["changes"]!).Single();
+                        Assert.Equal(serverPath, (string)change["serverItem"]!);
+                        Assert.Equal(new[] { "Lock" }, change["allow"]!.Select(t => (string)t!));
+                        var listing = Run($"permission {serverPath} /format:json");
+                        Assert.True(((JArray)Data(listing)["items"]!).Single()["entries"]!.Any(e => e["allow"]!.Any(p => (string?)p == "Lock")), "No explicit Lock allow in the listing: " + listing.Stdout);
+                        var remove = Run($"permission /remove:Lock \"/user:{owner}\" {serverPath}");
+                        Assert.True(remove.ExitCode == 0, remove.Stderr + remove.Stdout);
+                        allowed = false;
+                        Assert.Contains($"{serverPath}: {owner}", remove.Stdout);
+                    }
                 }
             }
             finally
