@@ -14,7 +14,7 @@ Read this first in every session. Update it at the end of every session (see CLA
 | 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | done: [PR #4](https://github.com/Gh61/TfPortable/pull/4) (docs/CLAUDE.md, compatibility tests, embedded-assembly check, THIRD-PARTY-NOTICES) reviewed, CI green and merged into `main` on 2026-10-08; release [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) published the same day (developer approved; `tfp.exe` + SHA-256 from the CI run on 2a1c007) | user approved the release on 2026-10-08 |
 | P2 | Phase 2: `merge`, `branch`, `rollback`, `undelete` as pending changes, `merges`, `folderdiff`, `annotate` | cloud + CI | done: [PR #12](https://github.com/Gh61/TfPortable/pull/12) reviewed by an independent agent (findings under Decisions), CI green (195 unit and 86 integration tests) and merged into `main` on 2026-10-08 with a merge commit | – |
 | P3 | Phase 3: protection levels, `checkin`, `shelve`/`shelvesets`/`unshelve`, `label`/`unlabel`, `lock` | cloud + CI | done: [PR #9](https://github.com/Gh61/TfPortable/pull/9) merged into `main` on 2026-10-08 (merge commit 3c92ea2) after an independent review (findings under Decisions); 187 unit and 82 integration tests green | release `v0.2.0` (developer) |
-| P4 | Phase 4: `destroy` (preview marker), `permission`, `workspace`, `property`, `resolvepath`, `docs`/`msdn`, `workfold` mapping edits, `changeset /comment /notes`, `checkin /shelveset`, `unshelve /move`, `shelve /validate`, `lock`/`undo` on another workspace; `proxy`/`configure`/`certificates` as TFP0005; `docs/errors.md` | cloud + CI | in progress: branch `p4-server`, [PR #17](https://github.com/Gh61/TfPortable/pull/17) | release `v0.3.0`, then `v1.0` when no TFP0003 is left (developer) |
+| P4 | Phase 4: `destroy` (preview marker), `permission`, `workspace`, `property`, `resolvepath`, `docs`/`msdn`, `workfold` mapping edits, `changeset /comment /notes`, `checkin /shelveset`, `unshelve /move`, `shelve /validate`, `lock`/`undo` on another workspace; `proxy`/`configure`/`certificates` as TFP0005; `docs/errors.md` | cloud + CI | done: [PR #17](https://github.com/Gh61/TfPortable/pull/17) reviewed twice by an independent agent (findings under Decisions), CI green (205 unit and 94 integration tests, run 150 on 047d922) and merged into `main` on 2026-10-09 with a merge commit | release `v0.3.0`, then `v1.0` when no TFP0003 is left (developer) |
 | GC | Golden comparison: tfp against the captures of phases 2, 3, 4 and the extra2 gaps (2026-10-09) | cloud + CI | done: [PR #14](https://github.com/Gh61/TfPortable/pull/14) reviewed by an independent agent (findings under Decisions), CI green (197 unit and 90 integration tests) and merged into `main` on 2026-10-09 with a merge commit; fixes and recorded deviations in `docs/compat.md` §20 | – |
 
 Statuses: not started, in progress, blocked, done.
@@ -30,13 +30,16 @@ Statuses: not started, in progress, blocked, done.
 2. Optional follow-ups the comparison surfaced (not started): golden tests that load the phase 2 and extra2
    cases explicitly (the golden runner only runs cases listed by `group/name`); the `get` over a writable
    file case (TFP0402) is still uncaptured.
-3. Phase 4 (branch `p4-server`, [PR #17](https://github.com/Gh61/TfPortable/pull/17)): CI green, independent
-   review, merge with a merge commit; then release `v0.3.0` on the developer's word, and `v1.0` once every
-   phase is done (SPEC.md "Fáze 4": no `TFP0003` from 1.0). The two release pages of v0.1.0 and v0.2.0 still
-   need their notes pasted from `CHANGELOG.md` by hand.
+3. Phase 4 is merged ([PR #17](https://github.com/Gh61/TfPortable/pull/17)). Next: release `v0.3.0` on the
+   developer's word (add the section to `CHANGELOG.md` first, CI copies it into the release notes), and `v1.0`
+   once nothing returns `TFP0003` (SPEC.md "Fáze 4"; every catalog command is now implemented or `TFP0005`,
+   so check `tfp help /format:json` for a remaining `notAvailable` status before the tag). The two release
+   pages of v0.1.0 and v0.2.0 still need their notes pasted from `CHANGELOG.md` by hand. A real permission
+   change in CI needs AdminProjectRights for the CI user (`docs/DEVELOPER-TODO.md` §6).
 4. If a package changes later, update `src/TfPortable/embedded-assemblies.txt` from the output of
    the CI step "Check the embedded assemblies against THIRD-PARTY-NOTICES" and THIRD-PARTY-NOTICES.
-5. Phase 4 is undecided (README "Phases and progress", `docs/DEVELOPER-TODO.md`).
+5. README "Phases and progress" can go once `v1.0` is out (the developer's note of 2026-10-09); keep the
+   protection levels section.
 
 ## Needs the user
 
@@ -249,9 +252,15 @@ Open:
   `changeset /comment /notes`, `lock /workspace` at level 3, TFP0005 for the never-offered commands and
   groups; unit tests (`Phase4CommandTests`) and integration tests (`Phase4Tests`); docs (commands.md with
   anchors for `docs`, json-schema.md, compat.md §21, CLAUDE.md template, README, DEVELOPER-TODO).
-- Next: CI, independent review, merge; release `v0.3.0` on the developer's word; `v1.0` once nothing
-  returns TFP0003.
-- Blockers: none.
+- Done (CI loop, runs 140–150): the parser keeps the switches of never-offered commands, `property` reads
+  through `GetItems`, `destroy` sends a full-recursion item spec (TF203086) without the `AffectedChanges`
+  flag, `permission` reports the library's non-fatal failures per change part with the server message
+  (`skipped[]`), `lock /workspace:<other>` passes server paths, workspace edits re-read the workspace,
+  JSON Messages carry `serverMessage`; two independent reviews (findings under Decisions). CI green on
+  047d922 (205 unit, 94 integration tests); merged with a merge commit.
+- Next: release `v0.3.0` on the developer's word; `v1.0` once nothing returns TFP0003.
+- Blockers: the CI user has no AdminProjectRights on the test project, so the permission change itself is
+  not exercised in CI (the refusal is); see "Needs the user".
 
 ### 2026-10-09 – cloud session, golden comparison (branch `golden-compare`)
 
