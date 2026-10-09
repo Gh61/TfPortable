@@ -56,6 +56,8 @@ namespace TfPortable.Tests
             Assert.StartsWith("ERROR TFP0002: destroy needs at least one itemspec.", Run("destroy", "/preview").Err);
             Assert.StartsWith("ERROR TFP0002: /allow, /deny and /remove need /user: or /group:.", Run("permission", "/allow:Lock", "$/a").Err);
             Assert.StartsWith("ERROR TFP0002: /user and /group need /allow:, /deny: or /remove:.", Run("permission", "/user:x", "$/a").Err);
+            Assert.StartsWith("ERROR TFP0002: /user and /group need /allow:, /deny: or /remove:.", Run("permission", "/inherit:no", "/user:x", "$/a").Err);
+            Assert.StartsWith("ERROR TFP0002: /template and /location apply to workspace /new only.", Run("workspace", "Ws", "/template:Other").Err);
             Assert.StartsWith("ERROR TFP0002: /allow:Bogus is not a permission name.", Run("permission", "/allow:Bogus", "/user:x", "$/a").Err);
             Assert.StartsWith("ERROR TFP0002: /global (collection-level permissions) is not supported.", Run("permission", "/global", "$/a").Err);
             Assert.StartsWith("ERROR TFP0002: workspace /new needs the workspace name.", Run("workspace", "/new").Err);
@@ -89,17 +91,24 @@ namespace TfPortable.Tests
 
             var now = new DateTime(2026, 10, 9, 12, 0, 0, DateTimeKind.Utc);
             DestroyPreviewMarker.Clock = () => now;
-            DestroyPreviewMarker.Write(key, new[] { "$/P/b.txt", "$/P/a.txt;X5" });
+            DestroyPreviewMarker.Write(key, "https://dev.azure.com/org", "me@example.com", new[] { "$/P/b.txt", "$/P/a.txt;X5" }, false, null);
             DestroyPreviewMarker.Clock = () => now.AddMinutes(9);
+            // Checking does not spend the marker; the destroy that reached the server deletes it.
+            Assert.True(DestroyPreviewMarker.IsValid(key));
             Assert.True(DestroyPreviewMarker.Consume(key));
-            // One preview covers one destroy.
             Assert.False(DestroyPreviewMarker.Consume(key));
 
             DestroyPreviewMarker.Clock = () => now;
-            DestroyPreviewMarker.Write(key, new[] { "$/P/b.txt" });
+            DestroyPreviewMarker.Write(key, "https://dev.azure.com/org", "me@example.com", new[] { "$/P/b.txt" }, false, null);
             DestroyPreviewMarker.Clock = () => now.AddMinutes(11);
-            Assert.False(DestroyPreviewMarker.Consume(key));
+            Assert.False(DestroyPreviewMarker.IsValid(key));
             Assert.Empty(Directory.GetFiles(Path.Combine(directory, "destroy")));
+
+            // The version of the item and the spelling of /stopat are part of the key.
+            Assert.Equal(DestroyPreviewMarker.Key("u", "me", new[] { "$/a;C5" }, true, "C5"), DestroyPreviewMarker.Key("u", "me", new[] { "$/a;C5" }, true, "5"));
+            Assert.NotEqual(DestroyPreviewMarker.Key("u", "me", new[] { "$/a;C5" }, true, "C5"), DestroyPreviewMarker.Key("u", "me", new[] { "$/a;C6" }, true, "C5"));
+            Assert.Equal("C5", DestroyPreviewMarker.NormalizeVersion("c05"));
+            Assert.Equal("T", DestroyPreviewMarker.NormalizeVersion("t"));
         }
 
         [Fact]

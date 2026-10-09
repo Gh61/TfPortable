@@ -360,13 +360,17 @@ namespace TfPortable.Context
 
         public DestroyResult Destroy(ItemQuery item, VersionSpec? itemVersion, bool preview, bool keepHistory, VersionSpec? stopAt, bool startCleanup, bool silent)
         {
-            var flags = DestroyFlags.AffectedChanges;
-            if (preview) { flags |= DestroyFlags.Preview; }
+            var flags = DestroyFlags.None;
             if (keepHistory) { flags |= DestroyFlags.KeepHistory; }
             if (startCleanup) { flags |= DestroyFlags.StartCleanup; }
             if (silent) { flags |= DestroyFlags.Silent; }
+            var spec = ToItemSpec(item);
+            var version = itemVersion ?? VersionSpec.Latest;
 
-            var destroyed = VersionControl.Destroy(ToItemSpec(item), itemVersion ?? VersionSpec.Latest, stopAt, flags, out PendingSet[] pending, out PendingSet[] shelved);
+            // The library returns the affected pending and shelved changes only with Preview | AffectedChanges, and then no items:
+            // one preview call for the warnings, then the listing (a preview) or the real destroy without the flag.
+            VersionControl.Destroy(spec, version, stopAt, flags | DestroyFlags.Preview | DestroyFlags.AffectedChanges, out PendingSet[] pending, out PendingSet[] shelved);
+            var destroyed = VersionControl.Destroy(spec, version, stopAt, preview ? flags | DestroyFlags.Preview : flags);
             return new DestroyResult(
                 (destroyed ?? Array.Empty<Item>()).Select(i => new DestroyedItemInfo(i.ServerItem, i.DeletionId, i.ItemType == ItemType.Folder)).ToList(),
                 (pending ?? Array.Empty<PendingSet>()).Select(ToPendingSet).ToList(),

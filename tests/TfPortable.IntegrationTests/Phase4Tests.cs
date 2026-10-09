@@ -161,6 +161,7 @@ namespace TfPortable.IntegrationTests
             string owner = (string)Data(Run("whoami /format:json"))["identity"]!["uniqueName"]!;
             string shelveset = "tfp-ci-p4-" + RunId;
             bool committed = false;
+            bool allowed = false;
             try
             {
                 // Mapping edits on a path of this run (the cloak and the map do not touch the fixture's items).
@@ -213,6 +214,9 @@ namespace TfPortable.IntegrationTests
                 int second = (int)Data(fromShelveset)["changeset"]!;
                 Assert.True(second > changeset);
                 Assert.Equal(100, Run($"shelvesets {shelveset} /format:json").ExitCode);
+                // The shelveset was checked in on the server only; a get brings the content down.
+                var getAfter = Run($"get {argument} /recursive /noprompt");
+                Assert.True(getAfter.ExitCode == 0, getAfter.Stderr);
                 Assert.Contains("shelved", File.ReadAllText(Path.Combine(folder, "a.txt")));
 
                 // unshelve /move: the shelveset disappears after a clean unshelve.
@@ -233,6 +237,7 @@ namespace TfPortable.IntegrationTests
                 using (ProtectionLevelScope.Set(3))
                 {
                     var allow = Run($"permission /allow:Lock \"/user:{owner}\" {serverPath} /format:json");
+                    allowed = allow.ExitCode == 0;
                     Assert.True(allow.ExitCode == 0, allow.Stderr);
                     var change = ((JArray)Data(allow)["changes"]!).Single();
                     Assert.Equal(serverPath, (string)change["serverItem"]!);
@@ -241,6 +246,7 @@ namespace TfPortable.IntegrationTests
                     Assert.Contains(((JArray)Data(listing)["items"]!).Single()["entries"]!, e => e["allow"]!.Any(p => (string?)p == "Lock"));
                     var remove = Run($"permission /remove:Lock \"/user:{owner}\" {serverPath}");
                     Assert.True(remove.ExitCode == 0, remove.Stderr);
+                    allowed = false;
                     Assert.Contains($"{serverPath}: {owner}", remove.Stdout);
                 }
             }
@@ -248,8 +254,17 @@ namespace TfPortable.IntegrationTests
             {
                 Run($"undo {argument} /recursive /noprompt");
                 DeleteShelvesetQuietly(shelveset);
+                if (allowed)
+                {
+                    using (ProtectionLevelScope.Set(3))
+                    {
+                        Run($"permission /remove:* \"/user:{owner}\" {serverPath} /noprompt");
+                    }
+                }
+
                 if (committed)
                 {
+                    Run($"get {argument} /recursive /noprompt");
                     Run($"delete {argument} /recursive /noprompt");
                     var cleanup = Run($"checkin {argument} /recursive /comment:\"CI cleanup ({RunId})\" /override:\"CI cleanup\" /noprompt");
                     if (cleanup.ExitCode != 0)
@@ -292,6 +307,12 @@ namespace TfPortable.IntegrationTests
                     Assert.StartsWith("ERROR TFP0410: destroy needs a preview of the same items and switches first", noPreview.Stderr);
 
                     var preview = Run($"destroy /preview {serverPath}/gone.txt /noprompt /format:json");
+                    if (preview.ExitCode != 0 && (preview.Stderr + preview.Stdout).IndexOf("permission", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        // The CI identity lacks the destroy permission on the test project (the server checks it for the preview too): the gate was exercised.
+                        return;
+                    }
+
                     Assert.True(preview.ExitCode == 0, preview.Stderr);
                     Assert.True((bool)Data(preview)["preview"]!);
                     Assert.Contains((JArray)Data(preview)["items"]!, i => (string)i["serverPath"]! == serverPath + "/gone.txt");

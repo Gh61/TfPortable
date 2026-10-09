@@ -37,9 +37,13 @@ namespace TfPortable.Commands
             var summary = context.Workspace?.Summary;
             VersionSpec? stopAt = stopAtText == null ? null : VersionSpecParser.ParseSingle(stopAtText, summary?.Name, summary?.Owner);
 
-            var serverItems = items.Select(i => context.ServerPathOf(i, toolName) + (i.DeletionId > 0 ? ";X" + i.DeletionId : string.Empty)).ToList();
-            string key = DestroyPreviewMarker.Key(context.CollectionUrl, context.Client.AuthorizedUser, serverItems, keepHistory, stopAtText);
-            if (!preview && !DestroyPreviewMarker.Consume(key))
+            // The items as resolved (server path, deletion id, versionspec): the key covers exactly what the server is asked to destroy.
+            var serverItems = items.Select(i => context.ServerPathOf(i, toolName)
+                + (i.DeletionId > 0 ? ";X" + i.DeletionId : string.Empty)
+                + (i.VersionText == null ? string.Empty : ";" + DestroyPreviewMarker.NormalizeVersion(i.VersionText))).ToList();
+            string user = context.Client.AuthorizedUser;
+            string key = DestroyPreviewMarker.Key(context.CollectionUrl, user, serverItems, keepHistory, stopAtText);
+            if (!preview && !DestroyPreviewMarker.IsValid(key))
             {
                 string previewCommand = $"{toolName} destroy /preview {string.Join(" ", items.Select(i => i.Original))}" + (keepHistory ? " /keephistory" : string.Empty) + (stopAtText == null ? string.Empty : " /stopat:" + stopAtText);
                 throw new TfpException(ErrorCodes.DestroyNeedsPreview, ExitCodes.GeneralError,
@@ -61,7 +65,12 @@ namespace TfPortable.Commands
 
             if (preview)
             {
-                DestroyPreviewMarker.Write(key, serverItems);
+                DestroyPreviewMarker.Write(key, context.CollectionUrl, user, serverItems, keepHistory, stopAtText);
+            }
+            else
+            {
+                // The marker is spent only by a destroy that reached the server; a failed call leaves it for the retry.
+                DestroyPreviewMarker.Delete(key);
             }
 
             if (!commandLine.Has("silent"))
@@ -153,7 +162,7 @@ namespace TfPortable.Commands
                 throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "/allow, /deny and /remove need /user: or /group:.", $"Example: '{toolName} permission /allow:Lock /user:jan.novak@contoso.com $/Project/Main'.");
             }
 
-            if (!changing && identities.Count > 0)
+            if (identities.Count > 0 && allow.Count == 0 && deny.Count == 0 && remove.Count == 0)
             {
                 throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "/user and /group need /allow:, /deny: or /remove:.", $"Example: '{toolName} permission /remove:* /user:jan.novak@contoso.com $/Project/Main'.");
             }
@@ -293,6 +302,11 @@ namespace TfPortable.Commands
             if (location != null && !location.Equals("local", StringComparison.OrdinalIgnoreCase))
             {
                 throw new TfpException(ErrorCodes.ServerWorkspaceNotSupported, ExitCodes.WorkspaceNotFound, $"/location:{location} is not supported; {toolName} works with local workspaces only.", "Omit /location or pass /location:local.");
+            }
+
+            if (!commandLine.Has("new") && (commandLine.Has("template") || commandLine.Has("location")))
+            {
+                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "/template and /location apply to workspace /new only.", $"Example: '{toolName} workspace /new MyWs /template:Other'.");
             }
 
             if (commandLine.Has("newowner"))

@@ -561,6 +561,7 @@ Opens the TfPortable documentation on GitHub in the default browser (the reposit
 anchor) and prints `Opened <url> in the default browser.`; `/url` prints the URL only. A browser that cannot start is a warning
 (exit 0). tf.exe `msdn <command>` opens the Microsoft documentation of the command; TfPortable's `msdn` opens its own.
 
+<a id="cmd-proxy"></a><a id="cmd-configure"></a><a id="cmd-certificates"></a>
 ## Never offered (TFP0005)
 
 `proxy` (configures a TFVC proxy server in the user's registry), `configure` (the Source Control Settings dialog of a project),

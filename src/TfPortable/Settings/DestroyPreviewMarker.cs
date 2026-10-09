@@ -24,8 +24,17 @@ namespace TfPortable.Settings
         /// <summary>Clock; replaceable for tests.</summary>
         public static Func<DateTime> Clock { get; set; } = () => DateTime.UtcNow;
 
-        /// <summary>The key of a destroy: the normalized collection, the user, the sorted `path;X<id>` items and the switches that change what is destroyed.</summary>
+        /// <summary>
+        /// The key of a destroy: the normalized collection, the user, the sorted items (`path;X<id>;<versionspec>` as the
+        /// command resolved them) and the switches that change what is destroyed. `/stopat:5` and `/stopat:C5` are the same.
+        /// </summary>
         public static string Key(string collectionUrl, string user, IEnumerable<string> serverItems, bool keepHistory, string? stopAt)
+        {
+            using var sha = SHA256.Create();
+            return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(Canonical(collectionUrl, user, serverItems, keepHistory, stopAt)))).Replace("-", string.Empty).ToLowerInvariant();
+        }
+
+        private static string Canonical(string collectionUrl, string user, IEnumerable<string> serverItems, bool keepHistory, string? stopAt)
         {
             var canonical = new StringBuilder();
             canonical.Append(collectionUrl.ToLowerInvariant()).Append('\n');
@@ -36,27 +45,37 @@ namespace TfPortable.Settings
             }
 
             canonical.Append(keepHistory ? "keephistory" : "-").Append('\n');
-            canonical.Append(stopAt == null ? "-" : stopAt.ToUpperInvariant()).Append('\n');
-
-            using var sha = SHA256.Create();
-            return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(canonical.ToString()))).Replace("-", string.Empty).ToLowerInvariant();
+            canonical.Append(stopAt == null ? "-" : NormalizeVersion(stopAt)).Append('\n');
+            return canonical.ToString();
         }
 
-        /// <summary>Records that a preview with this key ran now.</summary>
-        public static void Write(string key, IEnumerable<string> serverItems)
+        /// <summary>`5` and `c5` become `C5`; everything else is upper-cased as given.</summary>
+        internal static string NormalizeVersion(string text)
+        {
+            string upper = text.Trim().ToUpperInvariant();
+            string digits = upper.StartsWith("C", StringComparison.Ordinal) ? upper.Substring(1) : upper;
+            return digits.Length > 0 && digits.All(char.IsDigit) ? "C" + digits.TrimStart('0').PadLeft(1, '0') : upper;
+        }
+
+        /// <summary>Records that a preview with this key ran now, with what it covered.</summary>
+        public static void Write(string key, string collectionUrl, string user, IEnumerable<string> serverItems, bool keepHistory, string? stopAt)
         {
             string directory = DirectoryProvider();
             Directory.CreateDirectory(directory);
             var json = new JObject
             {
                 ["previewedAt"] = Clock().ToString("o"),
+                ["collection"] = collectionUrl,
+                ["user"] = user,
                 ["items"] = new JArray(serverItems.Cast<object>().ToArray()),
+                ["keepHistory"] = keepHistory,
+                ["stopAt"] = stopAt,
             };
             File.WriteAllText(Path.Combine(directory, key + ".json"), json.ToString(Newtonsoft.Json.Formatting.Indented), Encoding.UTF8);
         }
 
-        /// <summary>True when a valid marker exists for the key; the marker is deleted either way (one preview covers one destroy).</summary>
-        public static bool Consume(string key)
+        /// <summary>True when a marker younger than <see cref="Validity"/> exists for the key; a stale or unreadable one is deleted.</summary>
+        public static bool IsValid(string key)
         {
             string path = Path.Combine(DirectoryProvider(), key + ".json");
             if (!File.Exists(path))
@@ -80,15 +99,32 @@ namespace TfPortable.Settings
                 valid = false;
             }
 
+            if (!valid)
+            {
+                Delete(key);
+            }
+
+            return valid;
+        }
+
+        /// <summary>Removes the marker: one preview covers one destroy that reached the server.</summary>
+        public static void Delete(string key)
+        {
             try
             {
-                File.Delete(path);
+                File.Delete(Path.Combine(DirectoryProvider(), key + ".json"));
             }
             catch (IOException)
             {
                 // A marker that cannot be deleted still expires by age.
             }
+        }
 
+        /// <summary>Validity check and deletion in one step (tests and callers that do not reach a server).</summary>
+        public static bool Consume(string key)
+        {
+            bool valid = IsValid(key);
+            Delete(key);
             return valid;
         }
     }
