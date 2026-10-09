@@ -61,7 +61,8 @@ namespace TfPortable.Tests
             Assert.StartsWith("ERROR TFP0002: workspace /new needs the workspace name.", Run("workspace", "/new").Err);
             Assert.StartsWith("ERROR TFP0002: workspace /delete needs the workspace name.", Run("workspace", "/delete").Err);
             Assert.StartsWith("ERROR TFP0002: /newowner is not supported.", Run("workspace", "Ws", "/newowner:x").Err);
-            Assert.StartsWith("ERROR TFP0002: /permission:Secret is not Private, PublicLimited or Public.", Run("workspace", "/new", "Ws", "/permission:Secret").Err);
+            // The catalog enumerates /permission, so the parser rejects an unknown value before the command runs.
+            Assert.StartsWith("ERROR TFP0002: 'Secret' is not a valid value", Run("workspace", "/new", "Ws", "/permission:Secret").Err);
             Assert.StartsWith("ERROR TFP0204: /location:server is not supported;", Run("workspace", "/new", "Ws", "/location:server").Err);
             Assert.StartsWith("ERROR TFP0002: property needs at least one itemspec.", Run("property").Err);
             Assert.StartsWith("ERROR TFP0002: resolvepath needs at least one itemspec.", Run("resolvepath").Err);
