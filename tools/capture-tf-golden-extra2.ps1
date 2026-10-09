@@ -285,6 +285,9 @@ $script:Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $script:Index = New-Object System.Collections.Generic.List[object]
 
 $m = Get-Content -LiteralPath $Manifest -Raw -Encoding UTF8 | ConvertFrom-Json
+# A trailing separator in the manifest would double in every path.
+$m.projectLocal = $m.projectLocal.TrimEnd('\', '/')
+$m.localRoot = $m.localRoot.TrimEnd('\', '/')
 $script:WsA = $m.projectLocal
 $script:S = $m.serverRoot
 $script:C = "/collection:$($m.collection)"

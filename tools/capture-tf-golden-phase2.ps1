@@ -271,6 +271,9 @@ $script:Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $script:Index = New-Object System.Collections.Generic.List[object]
 
 $m = Get-Content -LiteralPath $Manifest -Raw -Encoding UTF8 | ConvertFrom-Json
+# A trailing separator in the manifest would double in every path.
+$m.projectLocal = $m.projectLocal.TrimEnd('\', '/')
+$m.localRoot = $m.localRoot.TrimEnd('\', '/')
 $script:WsA = $m.projectLocal
 $script:S = $m.serverRoot
 $script:C = "/collection:$($m.collection)"
@@ -574,9 +577,9 @@ try {
     Invoke-Case 'folderdiff' 'missing-source' @('folderdiff', "$GS/no-such-$run", $RelS, '/recursive', '/noprompt') | Out-Null
     Invoke-Case 'folderdiff' 'missing-local' @('folderdiff', "$WsA\$GL\no-such-$run", $RelS, '/recursive', '/noprompt') | Out-Null
     Invoke-Case 'folderdiff' 'filter-local-paths-only' @('folderdiff', $SrcL, $RelS, '/recursive', '/filter:*.txt', '/filterLocalPathsOnly', '/noprompt') | Out-Null
-    # A local edit not yet checked in: which side wins in a local-against-server comparison.
-    Invoke-Step @('checkout', "$SrcL\sub\c.txt", '/noprompt') | Out-Null
-    Write-File $WsA "$GL\src\sub\c.txt" @('c line 1 edited locally')
+    # A local edit not yet checked in: which side wins in a local-against-server comparison (src\sub was deleted above).
+    Invoke-Step @('checkout', "$SrcL\a.txt", '/noprompt') | Out-Null
+    Write-File $WsA "$GL\src\a.txt" @('a line 1 edited locally, not checked in', 'a line 2', 'a line 3')
     Invoke-Case 'folderdiff' 'local-pending-edit' @('folderdiff', $SrcL, $SrcS, '/recursive', '/noprompt') | Out-Null
     Undo-Run
 }
