@@ -492,8 +492,9 @@ tf vc destroy [/keephistory] itemspec1[;versionspec] [itemspec2...itemspecN] [/s
 | `/startcleanup`, `/silent` | ✓ |
 
 Output: `Destroyed: $/path` per item. A missing item is TFP0301 (exit 100, as tf.exe VS403405). Protection level 3.
-The library's query of the pending and shelved changes a destroy touches (`AffectedChanges`) is not used: the test
-collection refused it (TF203086) and tf.exe prints nothing of the kind either.
+The library's query of the pending and shelved changes a destroy touches (`AffectedChanges`) is not used: it empties
+the item list and tf.exe prints nothing of the kind either. The item spec goes to the library with full recursion
+(a destroy is always recursive; the library rejects anything else with TF203086).
 
 <a id="cmd-permission"></a>
 ### permission

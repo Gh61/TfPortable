@@ -364,11 +364,12 @@ namespace TfPortable.Context
             if (keepHistory) { flags |= DestroyFlags.KeepHistory; }
             if (startCleanup) { flags |= DestroyFlags.StartCleanup; }
             if (silent) { flags |= DestroyFlags.Silent; }
-            var spec = ToItemSpec(item);
+            // Destroy is always recursive: the library rejects any other recursion type with TF203086.
+            var spec = new ItemSpec(item.Path, RecursionType.Full, item.DeletionId);
             var version = itemVersion ?? VersionSpec.Latest;
 
             // The AffectedChanges flag (the pending and shelved changes a destroy touches) is accepted only with Preview and then empties
-            // the item list; the test collection refused it with TF203086, so the destroy asks for the items only, as tf.exe prints them.
+            // the item list, so the destroy asks for the items only, as tf.exe prints them.
             var destroyed = VersionControl.Destroy(spec, version, stopAt, preview ? flags | DestroyFlags.Preview : flags);
             return new DestroyResult((destroyed ?? Array.Empty<Item>()).Select(i => new DestroyedItemInfo(i.ServerItem, i.DeletionId, i.ItemType == ItemType.Folder)).ToList());
         }
