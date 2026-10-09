@@ -14,16 +14,16 @@ Read this first in every session. Update it at the end of every session (see CLA
 | 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | done: [PR #4](https://github.com/Gh61/TfPortable/pull/4) (docs/CLAUDE.md, compatibility tests, embedded-assembly check, THIRD-PARTY-NOTICES) reviewed, CI green and merged into `main` on 2026-10-08; release [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) published the same day (developer approved; `tfp.exe` + SHA-256 from the CI run on 2a1c007) | user approved the release on 2026-10-08 |
 | P2 | Phase 2: `merge`, `branch`, `rollback`, `undelete` as pending changes, `merges`, `folderdiff`, `annotate` | cloud + CI | done: [PR #12](https://github.com/Gh61/TfPortable/pull/12) reviewed by an independent agent (findings under Decisions), CI green (195 unit and 86 integration tests) and merged into `main` on 2026-10-08 with a merge commit | – |
 | P3 | Phase 3: protection levels, `checkin`, `shelve`/`shelvesets`/`unshelve`, `label`/`unlabel`, `lock` | cloud + CI | done: [PR #9](https://github.com/Gh61/TfPortable/pull/9) merged into `main` on 2026-10-08 (merge commit 3c92ea2) after an independent review (findings under Decisions); 187 unit and 82 integration tests green | release `v0.2.0` (developer) |
-| GC | Golden comparison: tfp against the captures of phases 2, 3, 4 and the extra2 gaps (2026-10-09) | cloud + CI | in progress: branch `golden-compare`; fixes and recorded deviations in `docs/compat.md` §20 | – |
+| GC | Golden comparison: tfp against the captures of phases 2, 3, 4 and the extra2 gaps (2026-10-09) | cloud + CI | done: [PR #14](https://github.com/Gh61/TfPortable/pull/14) reviewed by an independent agent (findings under Decisions), CI green (197 unit and 90 integration tests) and merged into `main` on 2026-10-09 with a merge commit; fixes and recorded deviations in `docs/compat.md` §20 | – |
 
 Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
-0. Finish the golden comparison (branch `golden-compare`): CI green, independent review, merge with a merge
-   commit. The code fixes and the recorded deviations are in `docs/compat.md` §20; the captures of all four
-   runs are committed (`index-phase2-2610091535.json`, `index-extra2-2610091539.json`,
-   `index-phase3-2610091137.json`, `index-phase4-2610091138.json`).
+0. The golden comparison is merged ([PR #14](https://github.com/Gh61/TfPortable/pull/14)): the code fixes and
+   the recorded deviations are in `docs/compat.md` §20; the captures of all four runs are committed
+   (`index-phase2-2610091535.json`, `index-extra2-2610091539.json`, `index-phase3-2610091137.json`,
+   `index-phase4-2610091138.json`).
 1. Phase 3 is merged ([PR #9](https://github.com/Gh61/TfPortable/pull/9)). Release `v0.2.0` is the
    developer's gate (step 3).
 2. Optional follow-ups the comparison surfaced (not started): golden tests that load the phase 2 and extra2
@@ -236,7 +236,11 @@ Open:
   `json-schema.md`, `tf-reference/questions.md` (27–33, 3, 25, 26), `DEVELOPER-TODO.md` updated. Unit tests
   for the conflict lines, the merged-items list and the `difference` option semantics; the
   labels-after-delete integration assertion now expects exit 100.
-- Next: CI, independent review, merge; then the developer's checklist (release `v0.2.0`).
+- CI loop (runs 129–132): the new conflict-line unit test exposed a pended-count line for conflict-only merges
+  (fixed) and the stderr form of an item error (no item prefix); the review (3 blocking, 4 should-fix, 5 nits)
+  found the ineffective `checkin` exit code and the stale `merges` integration assertion; all fixed, CI green,
+  merged with a merge commit.
+- Next: the developer's checklist (release `v0.2.0`); phase 4 waits for the scope decision.
 - Blockers: none.
 
 ### 2026-10-08 – cloud session, phase 2 (branch `p2-branching`, PR #12)
