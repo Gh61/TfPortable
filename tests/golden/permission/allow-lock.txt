@@ -1,0 +1,13 @@
+# case: permission/allow-lock
+# command: tf permission /allow:Lock "/user:<OWNER>" $/TfsPortableTestRepo/Main/golden4-2610091138
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 2075
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091138
+==== stdout ====
+$/TfsPortableTestRepo/Main/golden4-2610091138: <OWNER>
+
+==== stderr ====

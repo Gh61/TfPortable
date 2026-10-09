@@ -1,0 +1,13 @@
+# case: status/other-workspace-after-undo
+# command: tf status /workspace:<WORKSPACE_B> $/TfsPortableTestRepo/Main/golden4-2610091138 /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 612
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091138
+==== stdout ====
+Nejsou žádné probíhající změny.
+
+==== stderr ====

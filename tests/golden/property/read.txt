@@ -1,0 +1,16 @@
+# case: property/read
+# command: tf property <WORKSPACE_ROOT>\Main\golden4-2610091138\a.txt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1027
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091138
+==== stdout ====
+-------------------------------------------------------------------------------
+Položka serveru: $/TfsPortableTestRepo/Main/golden4-2610091138/a.txt
+U této položky nejsou žádné vlastnosti.
+
+
+==== stderr ====

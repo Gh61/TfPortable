@@ -1,0 +1,21 @@
+# case: changeset/from-shelveset
+# command: tf changeset 533 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1076
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091138
+==== stdout ====
+Sada změn: 533
+Uživatel: <OWNER>
+Datum: pátek 9. října 2026 11:39:35
+
+Komentář:
+  Golden4 shelveset (2610091138)
+
+Položky:
+  upravit $/TfsPortableTestRepo/Main/golden4-2610091138/c.txt
+
+==== stderr ====

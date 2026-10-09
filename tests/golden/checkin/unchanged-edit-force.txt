@@ -1,0 +1,14 @@
+# case: checkin/unchanged-edit-force
+# command: tf checkin <WORKSPACE_ROOT>\Main\golden3-2610091137\b.txt "/comment:Golden3 unchanged edit (2610091137)" /force /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 100
+# timed-out: false
+# duration-ms: 615
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091137
+==== stdout ====
+
+==== stderr ====
+Zadaným položkám neodpovídají žádné probíhající změny.
+Žádné soubory vrácené se změnami.

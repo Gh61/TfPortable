@@ -1,0 +1,308 @@
+{
+    "capturedAt":  "2026-10-09T11:38:46.8021246+02:00",
+    "run":  "2610091137",
+    "tfVersion":  "18.10.12215.6 built by: releases/dev18/18.10 (760940044d)",
+    "consoleEncoding":  "windows-1250",
+    "culture":  "cs-CZ",
+    "extra":  {
+                  "changesets":  {
+                                     "associate":  529,
+                                     "comment-file":  530,
+                                     "delete-folder":  531
+                                 },
+                  "label":  "golden3-2610091137@$/TfsPortableTestRepo",
+                  "shelveset":  "Golden3-2610091137",
+                  "goldenFolder":  "$/TfsPortableTestRepo/Main/golden3-2610091137",
+                  "workItem":  1
+              },
+    "cases":  [
+                  {
+                      "group":  "checkin",
+                      "name":  "validate",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137 /recursive \"/comment:Golden3 validate (2610091137)\" /validate /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/validate.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-validate",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-validate.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "associate",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137 /recursive \"/comment:Golden3 add files (2610091137)\" /associate:1 /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "checkin/associate.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "with-work-item",
+                      "command":  "tf changeset 529 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "changeset/with-work-item.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "by-work-item",
+                      "command":  "tf history $/TfsPortableTestRepo/Main/golden3-2610091137 /recursive /workitem:1 /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "history/by-work-item.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "comment-file",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137\\a.txt /comment:@C:\\Users\\\u003cUSER\u003e\\AppData\\Local\\Temp\\tfp-golden3-comment-2610091137.txt \"/override:Golden3 capture (2610091137)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/comment-file.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "comment-file",
+                      "command":  "tf changeset 530 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "changeset/comment-file.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "unchanged-edit",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137\\b.txt \"/comment:Golden3 unchanged edit (2610091137)\" /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "checkin/unchanged-edit.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "unchanged-edit-force",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137\\b.txt \"/comment:Golden3 unchanged edit (2610091137)\" /force /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "checkin/unchanged-edit-force.txt"
+                  },
+                  {
+                      "group":  "shelve",
+                      "name":  "create-3",
+                      "command":  "tf shelve Golden3-2610091137 \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137 /recursive \"/comment:Golden3 shelveset (2610091137)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "shelve/create-3.txt"
+                  },
+                  {
+                      "group":  "shelve",
+                      "name":  "exists",
+                      "command":  "tf shelve Golden3-2610091137 \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137 /recursive /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "shelve/exists.txt"
+                  },
+                  {
+                      "group":  "shelve",
+                      "name":  "replace",
+                      "command":  "tf shelve Golden3-2610091137 \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137 /recursive /replace \"/comment:Golden3 replaced (2610091137)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "shelve/replace.txt"
+                  },
+                  {
+                      "group":  "shelvesets",
+                      "name":  "all-owners",
+                      "command":  "tf shelvesets /owner:*",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "shelvesets/all-owners.txt"
+                  },
+                  {
+                      "group":  "shelve",
+                      "name":  "move",
+                      "command":  "tf shelve Golden3-2610091137 \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137 /recursive /replace /move \"/comment:Golden3 moved (2610091137)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "shelve/move.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-shelve-move",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-shelve-move.txt"
+                  },
+                  {
+                      "group":  "unshelve",
+                      "name":  "local-file-in-the-way",
+                      "command":  "tf unshelve Golden3-2610091137 /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "unshelve/local-file-in-the-way.txt"
+                  },
+                  {
+                      "group":  "unshelve",
+                      "name":  "nomerge",
+                      "command":  "tf unshelve Golden3-2610091137 /nomerge /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "unshelve/nomerge.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-unshelve-3",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-unshelve-3.txt"
+                  },
+                  {
+                      "group":  "shelve",
+                      "name":  "delete-3",
+                      "command":  "tf shelve /delete Golden3-2610091137 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "shelve/delete-3.txt"
+                  },
+                  {
+                      "group":  "shelve",
+                      "name":  "delete-missing",
+                      "command":  "tf shelve /delete Golden3-2610091137 /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "shelve/delete-missing.txt"
+                  },
+                  {
+                      "group":  "shelvesets",
+                      "name":  "after-delete",
+                      "command":  "tf shelvesets Golden3-2610091137",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "shelvesets/after-delete.txt"
+                  },
+                  {
+                      "group":  "label",
+                      "name":  "no-scope",
+                      "command":  "tf label golden3-2610091137 \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137 /recursive \"/comment:Golden3 label (2610091137)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "label/no-scope.txt"
+                  },
+                  {
+                      "group":  "labels",
+                      "name":  "no-scope",
+                      "command":  "tf labels golden3-2610091137 /format:detailed",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "labels/no-scope.txt"
+                  },
+                  {
+                      "group":  "label",
+                      "name":  "child-replace",
+                      "command":  "tf label golden3-2610091137@$/TfsPortableTestRepo \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137\\a.txt /child:replace /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "label/child-replace.txt"
+                  },
+                  {
+                      "group":  "label",
+                      "name":  "child-merge",
+                      "command":  "tf label golden3-2610091137@$/TfsPortableTestRepo \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137\\b.txt /child:merge /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "label/child-merge.txt"
+                  },
+                  {
+                      "group":  "label",
+                      "name":  "existing-item-default-child",
+                      "command":  "tf label golden3-2610091137@$/TfsPortableTestRepo \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137\\b.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "label/existing-item-default-child.txt"
+                  },
+                  {
+                      "group":  "labels",
+                      "name":  "after-child",
+                      "command":  "tf labels golden3-2610091137 /format:detailed",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "labels/after-child.txt"
+                  },
+                  {
+                      "group":  "label",
+                      "name":  "delete",
+                      "command":  "tf label /delete golden3-2610091137@$/TfsPortableTestRepo /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "label/delete.txt"
+                  },
+                  {
+                      "group":  "label",
+                      "name":  "delete-missing",
+                      "command":  "tf label /delete golden3-2610091137@$/TfsPortableTestRepo /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "label/delete-missing.txt"
+                  },
+                  {
+                      "group":  "labels",
+                      "name":  "after-delete",
+                      "command":  "tf labels golden3-2610091137",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "labels/after-delete.txt"
+                  },
+                  {
+                      "group":  "lock",
+                      "name":  "unknown-item",
+                      "command":  "tf lock /lock:checkin \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137\\no-such-2610091137.txt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "lock/unknown-item.txt"
+                  },
+                  {
+                      "group":  "lock",
+                      "name":  "no-level",
+                      "command":  "tf lock \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137\\a.txt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "lock/no-level.txt"
+                  },
+                  {
+                      "group":  "lock",
+                      "name":  "folder-recursive",
+                      "command":  "tf lock /lock:checkout \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137 /recursive",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "lock/folder-recursive.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "locked-folder",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/locked-folder.txt"
+                  },
+                  {
+                      "group":  "lock",
+                      "name":  "folder-remove",
+                      "command":  "tf lock /lock:none \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137 /recursive",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "lock/folder-remove.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "delete-folder",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e\\Main\\golden3-2610091137 /recursive \"/comment:Golden3 cleanup (2610091137)\" \"/override:Golden3 cleanup (2610091137)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/delete-folder.txt"
+                  }
+              ]
+}

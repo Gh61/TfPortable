@@ -1,0 +1,315 @@
+{
+    "capturedAt":  "2026-10-09T11:40:10.2837153+02:00",
+    "run":  "2610091138",
+    "tfVersion":  "18.10.12215.6 built by: releases/dev18/18.10 (760940044d)",
+    "consoleEncoding":  "windows-1250",
+    "culture":  "cs-CZ",
+    "extra":  {
+                  "changesets":  {
+                                     "setup":  532,
+                                     "checkin-shelveset":  533
+                                 },
+                  "shelveset":  "Golden4-2610091138",
+                  "goldenFolder":  "$/TfsPortableTestRepo/Main/golden4-2610091138",
+                  "workItem":  1,
+                  "secondWorkspace":  "\u003cWORKSPACE_B\u003e"
+              },
+    "cases":  [
+                  {
+                      "group":  "property",
+                      "name":  "read",
+                      "command":  "tf property \u003cWORKSPACE_ROOT\u003e\\Main\\golden4-2610091138\\a.txt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "property/read.txt"
+                  },
+                  {
+                      "group":  "property",
+                      "name":  "set",
+                      "command":  "tf property /setproperty:tfp-golden=1 \u003cWORKSPACE_ROOT\u003e\\Main\\golden4-2610091138\\a.txt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "property/set.txt"
+                  },
+                  {
+                      "group":  "property",
+                      "name":  "read-after-set",
+                      "command":  "tf property \u003cWORKSPACE_ROOT\u003e\\Main\\golden4-2610091138\\a.txt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "property/read-after-set.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-property",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden4-2610091138 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-property.txt"
+                  },
+                  {
+                      "group":  "permission",
+                      "name":  "folder",
+                      "command":  "tf permission $/TfsPortableTestRepo/Main/golden4-2610091138",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "permission/folder.txt"
+                  },
+                  {
+                      "group":  "permission",
+                      "name":  "allow-lock",
+                      "command":  "tf permission /allow:Lock \"/user:\u003cOWNER\u003e\" $/TfsPortableTestRepo/Main/golden4-2610091138",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "permission/allow-lock.txt"
+                  },
+                  {
+                      "group":  "permission",
+                      "name":  "folder-after-allow",
+                      "command":  "tf permission $/TfsPortableTestRepo/Main/golden4-2610091138",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "permission/folder-after-allow.txt"
+                  },
+                  {
+                      "group":  "permission",
+                      "name":  "folder-recursive",
+                      "command":  "tf permission $/TfsPortableTestRepo/Main/golden4-2610091138 /recursive",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "permission/folder-recursive.txt"
+                  },
+                  {
+                      "group":  "permission",
+                      "name":  "remove",
+                      "command":  "tf permission /remove:Lock \"/user:\u003cOWNER\u003e\" $/TfsPortableTestRepo/Main/golden4-2610091138",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "permission/remove.txt"
+                  },
+                  {
+                      "group":  "permission",
+                      "name":  "folder-after-remove",
+                      "command":  "tf permission $/TfsPortableTestRepo/Main/golden4-2610091138",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "permission/folder-after-remove.txt"
+                  },
+                  {
+                      "group":  "lock",
+                      "name":  "other-workspace",
+                      "command":  "tf lock /lock:checkin /workspace:\u003cWORKSPACE_B\u003e $/TfsPortableTestRepo/Main/golden4-2610091138/a.txt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "lock/other-workspace.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "other-workspace",
+                      "command":  "tf status /workspace:\u003cWORKSPACE_B\u003e $/TfsPortableTestRepo/Main/golden4-2610091138 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/other-workspace.txt"
+                  },
+                  {
+                      "group":  "lock",
+                      "name":  "other-workspace-remove",
+                      "command":  "tf lock /lock:none /workspace:\u003cWORKSPACE_B\u003e $/TfsPortableTestRepo/Main/golden4-2610091138/a.txt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "lock/other-workspace-remove.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "user-all-workspaces",
+                      "command":  "tf status $/TfsPortableTestRepo/Main/golden4-2610091138 /recursive /user:* /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/user-all-workspaces.txt"
+                  },
+                  {
+                      "group":  "undo",
+                      "name":  "other-workspace",
+                      "command":  "tf undo \"/workspace:\u003cWORKSPACE_B\u003e;\u003cOWNER\u003e\" $/TfsPortableTestRepo/Main/golden4-2610091138/a.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "undo/other-workspace.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "other-workspace-after-undo",
+                      "command":  "tf status /workspace:\u003cWORKSPACE_B\u003e $/TfsPortableTestRepo/Main/golden4-2610091138 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/other-workspace-after-undo.txt"
+                  },
+                  {
+                      "group":  "shelve",
+                      "name":  "validate",
+                      "command":  "tf shelve Golden4-2610091138 \u003cWORKSPACE_B_ROOT\u003e\\Main\\golden4-2610091138 /recursive /validate \"/comment:Golden4 shelveset (2610091138)\" /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "shelve/validate.txt"
+                  },
+                  {
+                      "group":  "shelve",
+                      "name":  "move-from-b",
+                      "command":  "tf shelve Golden4-2610091138 \u003cWORKSPACE_B_ROOT\u003e\\Main\\golden4-2610091138 /recursive /move \"/comment:Golden4 shelveset (2610091138)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "shelve/move-from-b.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "shelveset",
+                      "command":  "tf checkin \"/shelveset:Golden4-2610091138;\u003cOWNER\u003e\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/shelveset.txt"
+                  },
+                  {
+                      "group":  "shelvesets",
+                      "name":  "after-checkin-shelveset",
+                      "command":  "tf shelvesets Golden4-2610091138",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "shelvesets/after-checkin-shelveset.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "from-shelveset",
+                      "command":  "tf changeset 533 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "changeset/from-shelveset.txt"
+                  },
+                  {
+                      "group":  "unshelve",
+                      "name":  "move",
+                      "command":  "tf unshelve /move Golden4-2610091138-move /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "unshelve/move.txt"
+                  },
+                  {
+                      "group":  "shelvesets",
+                      "name":  "after-unshelve-move",
+                      "command":  "tf shelvesets Golden4-2610091138-move",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "shelvesets/after-unshelve-move.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-unshelve-move",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden4-2610091138 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-unshelve-move.txt"
+                  },
+                  {
+                      "group":  "destroy",
+                      "name":  "preview-file",
+                      "command":  "tf destroy /preview $/TfsPortableTestRepo/Main/golden4-2610091138/b.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "destroy/preview-file.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "before-destroy",
+                      "command":  "tf history $/TfsPortableTestRepo/Main/golden4-2610091138/b.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/before-destroy.txt"
+                  },
+                  {
+                      "group":  "destroy",
+                      "name":  "keephistory",
+                      "command":  "tf destroy /keephistory $/TfsPortableTestRepo/Main/golden4-2610091138/b.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "destroy/keephistory.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "after-destroy-keephistory",
+                      "command":  "tf history $/TfsPortableTestRepo/Main/golden4-2610091138/b.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/after-destroy-keephistory.txt"
+                  },
+                  {
+                      "group":  "dir",
+                      "name":  "deleted-after-destroy",
+                      "command":  "tf dir $/TfsPortableTestRepo/Main/golden4-2610091138 /deleted",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "dir/deleted-after-destroy.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "after-destroy",
+                      "command":  "tf get \u003cWORKSPACE_ROOT\u003e\\Main\\golden4-2610091138 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "get/after-destroy.txt"
+                  },
+                  {
+                      "group":  "destroy",
+                      "name":  "not-found",
+                      "command":  "tf destroy $/TfsPortableTestRepo/Main/golden4-2610091138/no-such-2610091138.txt /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "destroy/not-found.txt"
+                  },
+                  {
+                      "group":  "destroy",
+                      "name":  "folder",
+                      "command":  "tf destroy $/TfsPortableTestRepo/Main/golden4-2610091138 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "destroy/folder.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "after-destroy-folder",
+                      "command":  "tf history $/TfsPortableTestRepo/Main/golden4-2610091138 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/after-destroy-folder.txt"
+                  },
+                  {
+                      "group":  "dir",
+                      "name":  "after-destroy-folder",
+                      "command":  "tf dir $/TfsPortableTestRepo/Main /deleted",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "dir/after-destroy-folder.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "after-destroy-folder",
+                      "command":  "tf get \u003cWORKSPACE_ROOT\u003e\\Main /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "get/after-destroy-folder.txt"
+                  },
+                  {
+                      "group":  "workspaces",
+                      "name":  "two-of-owner",
+                      "command":  "tf workspaces /collection:\u003cCOLLECTION\u003e \"/owner:\u003cOWNER\u003e\"",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workspaces/two-of-owner.txt"
+                  },
+                  {
+                      "group":  "workspace",
+                      "name":  "delete-local-4",
+                      "command":  "tf workspace /delete \u003cWORKSPACE_B\u003e /collection:\u003cCOLLECTION\u003e /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workspace/delete-local-4.txt"
+                  }
+              ]
+}

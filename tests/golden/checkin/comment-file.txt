@@ -1,0 +1,16 @@
+# case: checkin/comment-file
+# command: tf checkin <WORKSPACE_ROOT>\Main\golden3-2610091137\a.txt /comment:@C:\Users\<USER>\AppData\Local\Temp\tfp-golden3-comment-2610091137.txt "/override:Golden3 capture (2610091137)" /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 3120
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091137
+==== stdout ====
+Main\golden3-2610091137:
+Vrácení se změnami upravit: a.txt
+
+Sada změn #530 se vrátila.
+
+==== stderr ====

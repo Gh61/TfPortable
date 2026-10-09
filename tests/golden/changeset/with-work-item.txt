@@ -1,0 +1,23 @@
+# case: changeset/with-work-item
+# command: tf changeset 529 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1399
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091137
+==== stdout ====
+Sada změn: 529
+Uživatel: <OWNER>
+Datum: pátek 9. října 2026 11:37:48
+
+Komentář:
+  Golden3 add files (2610091137)
+
+Položky:
+  přidat $/TfsPortableTestRepo/Main/golden3-2610091137
+  přidat $/TfsPortableTestRepo/Main/golden3-2610091137/a.txt
+  přidat $/TfsPortableTestRepo/Main/golden3-2610091137/b.txt
+
+==== stderr ====

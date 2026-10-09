@@ -1,0 +1,21 @@
+# case: workspaces/two-of-owner
+# command: tf workspaces /collection:<COLLECTION> "/owner:<OWNER>"
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1309
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091138
+==== stdout ====
+Kolekce: <COLLECTION>
+Pracovní prostor         Vlastník      Počítač Komentář
+------------------------ ------------- ------- --------------------------------
+<OTHER_WORKSPACE_1>               <OWNER> <OTHER_COMPUTER> 
+<OTHER_WORKSPACE_2>               <OWNER> <OTHER_COMPUTER> 
+<WORKSPACE_B> <OWNER> <COMPUTER>  TfPortable golden capture (phase
+tfp-seed-<COMPUTER>          <OWNER> <COMPUTER>  TfPortable test workspace
+<COMPUTER>                   <OWNER> <COMPUTER>  
+<OTHER_WORKSPACE_3>               <OWNER> <OTHER_COMPUTER> 
+
+==== stderr ====

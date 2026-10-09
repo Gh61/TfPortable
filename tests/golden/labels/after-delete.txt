@@ -1,0 +1,13 @@
+# case: labels/after-delete
+# command: tf labels golden3-2610091137
+# cwd: <WORKSPACE_ROOT>
+# exit: 100
+# timed-out: false
+# duration-ms: 814
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091137
+==== stdout ====
+
+==== stderr ====
+Nenašly se žádné popisky.

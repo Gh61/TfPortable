@@ -1,0 +1,13 @@
+# case: shelve/validate
+# command: tf shelve Golden4-2610091138 <WORKSPACE_B_ROOT>\Main\golden4-2610091138 /recursive /validate "/comment:Golden4 shelveset (2610091138)" /noprompt
+# cwd: <WORKSPACE_B_ROOT>
+# exit: 100
+# timed-out: false
+# duration-ms: 495
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091138
+==== stdout ====
+
+==== stderr ====
+Možnost /validate nelze zkombinovat s možností /noprompt.

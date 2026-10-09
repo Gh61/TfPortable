@@ -1,0 +1,24 @@
+# case: labels/no-scope
+# command: tf labels golden3-2610091137 /format:detailed
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1040
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091137
+==== stdout ====
+
+Popisek : golden3-2610091137
+Rozsah  : $/TfsPortableTestRepo
+Vlastník: <OWNER>
+Datum   : pátek 9. října 2026 11:38:24
+Komentář: Golden3 label (2610091137)
+
+Sada změn Položka
+--------- ---------------------------------------------------------------------
+529       $/TfsPortableTestRepo/Main/golden3-2610091137
+530       $/TfsPortableTestRepo/Main/golden3-2610091137/a.txt
+529       $/TfsPortableTestRepo/Main/golden3-2610091137/b.txt
+
+==== stderr ====

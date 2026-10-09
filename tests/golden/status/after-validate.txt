@@ -1,0 +1,22 @@
+# case: status/after-validate
+# command: tf status <WORKSPACE_ROOT>\Main\golden3-2610091137 /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 598
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091137
+==== stdout ====
+Název souboru      Změnit Místní cesta
+------------------ ------ -----------------------------------------------------
+$/TfsPortableTestRepo/Main
+golden3-2610091137 přidat <WORKSPACE_ROOT>Main\golden3-2610091137
+
+$/TfsPortableTestRepo/Main/golden3-2610091137
+a.txt              přidat <WORKSPACE_ROOT>Main\golden3-2610091137\a.txt
+b.txt              přidat <WORKSPACE_ROOT>Main\golden3-2610091137\b.txt
+
+Změny: 3
+
+==== stderr ====

@@ -119,6 +119,8 @@ redaction of step 0. All of them may appear in the header, stdout and stderr.
 | `<LOCAL_ROOT_B>`, `<LOCAL_ROOT_S>` | Parent folders of workspace B and S | script |
 | `<WORKSPACE_B_ROOT>`, `<WORKSPACE_S_ROOT>` | Local roots of workspace B and S | script |
 | `<OTHER_WORKSPACE_ROOT>` | Local root of the developer's unrelated workspace listed by `workspaces` | step 0 redaction |
+| `<OTHER_WORKSPACE_1>`, `<OTHER_WORKSPACE_2>`, `<OTHER_WORKSPACE_3>` | Names of the developer's unrelated workspaces listed by `workspaces/two-of-owner` (phase 4 run) | manual redaction |
+| `<OTHER_COMPUTER>` | Name of the developer's other computer that owns those workspaces | manual redaction |
 | `<REDACTED>` | Anything passed to the scripts' `-Redact` parameter (unused so far) | script |
 
 Not replaced (they are test data, not personal data): the project name `TfsPortableTestRepo`,

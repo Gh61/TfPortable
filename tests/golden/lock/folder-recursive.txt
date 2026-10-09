@@ -1,0 +1,13 @@
+# case: lock/folder-recursive
+# command: tf lock /lock:checkout <WORKSPACE_ROOT>\Main\golden3-2610091137 /recursive
+# cwd: <WORKSPACE_ROOT>
+# exit: 1
+# timed-out: false
+# duration-ms: 1342
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091137
+==== stdout ====
+
+==== stderr ====
+TF400022: The item $/TfsPortableTestRepo/Main/golden3-2610091137 cannot be locked for checkout in workspace <COMPUTER>;<OWNER>. Checkout locks are not supported in local workspaces.

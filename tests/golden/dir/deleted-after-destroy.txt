@@ -1,0 +1,18 @@
+# case: dir/deleted-after-destroy
+# command: tf dir $/TfsPortableTestRepo/Main/golden4-2610091138 /deleted
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 838
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091138
+==== stdout ====
+$/TfsPortableTestRepo/Main/golden4-2610091138:
+a.txt
+b.txt
+c.txt
+
+Počet položek: 3
+
+==== stderr ====

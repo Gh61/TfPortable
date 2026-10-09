@@ -1,0 +1,15 @@
+# case: unshelve/move
+# command: tf unshelve /move Golden4-2610091138-move /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 2586
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091138
+==== stdout ====
+Main\golden4-2610091138:
+Obnovuje se přidat: moved.txt
+Sada odložených změn Golden4-2610091138-move je odstraněná.
+
+==== stderr ====
