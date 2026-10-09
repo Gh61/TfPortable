@@ -3,11 +3,11 @@
 Kept by the agent (CLAUDE.md "When to stop and report"); `docs/PROGRESS.md` "Needs the user" points here.
 Tick an item by deleting it or by writing the date and the result next to it. Each item says when it is done.
 
-## 1. Release `v0.2.0` (phase 3)
+## 1. Release `v0.2.0` (phases 2 and 3)
 
-- Actions → CI → Run workflow on `main`, input `release_tag` = `v0.2.0`. The run builds `tfp.exe`,
-  writes the SHA-256 and publishes the release; the tag is created on the head of `main`.
-- Done when the release page lists `tfp.exe` and `tfp.exe.sha256`.
+Done on 2026-10-09: the developer asked for the release in the session and the agent ran the CI workflow on
+`main` (d94a6a7) with `release_tag` = `v0.2.0`;
+[v0.2.0](https://github.com/Gh61/TfPortable/releases/tag/v0.2.0) lists `tfp.exe` and `tfp.exe.sha256`.
 
 ## 2. Checkin policies on the test project
 
