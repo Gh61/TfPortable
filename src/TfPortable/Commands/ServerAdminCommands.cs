@@ -185,33 +185,52 @@ namespace TfPortable.Commands
             }
 
             var result = context.Client.SetPermissions(changes);
-            var applied = result.Applied;
-            var skipped = new JArray();
-            var notApplied = changes.Where(change => !applied.Any(a => string.Equals(a.ServerItem, change.ServerItem, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(a.Identity, change.Identity, StringComparison.OrdinalIgnoreCase))).ToList();
-            // The library reports a failure per rejected change in the order of the changes, without naming the item;
-            // when the counts differ (a validation failure, a rejected save), every skipped change shows all of them.
-            string allFailures = string.Join(" ", result.Failures.Select(f => f.Message));
+            // The library handles the inheritance and the permission part of a request as two changes, and returns the applied ones
+            // with the identity as given (`.` becomes the display name); a failure is reported without the item, in the order of
+            // the changes. Without a failure everything was applied. When the counts differ (a validation failure, a rejected
+            // save), every skipped part shows all the failure texts.
+            var parts = new List<PermissionChangeRequest>();
             foreach (var change in changes)
             {
-                int index = notApplied.IndexOf(change);
+                if (change.Inherit != null)
+                {
+                    parts.Add(new PermissionChangeRequest(change.ServerItem, null, Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>(), change.Inherit));
+                }
+
+                if (change.Identity != null)
+                {
+                    parts.Add(new PermissionChangeRequest(change.ServerItem, change.Identity, change.Allow, change.Deny, change.Remove, null));
+                }
+            }
+
+            var notApplied = result.Failures.Count == 0
+                ? new List<PermissionChangeRequest>()
+                : parts.Where(part => !result.Applied.Any(a => string.Equals(a.ServerItem, part.ServerItem, StringComparison.OrdinalIgnoreCase)
+                    && (part.Identity == null ? a.Identity == null && a.Inherit == part.Inherit : a.Identity != null && (part.Identity == "." || string.Equals(a.Identity, part.Identity, StringComparison.OrdinalIgnoreCase))))).ToList();
+            string allFailures = string.Join(" ", result.Failures.Select(f => f.Message));
+            var done = new JArray();
+            var skipped = new JArray();
+            foreach (var part in parts)
+            {
+                int index = notApplied.IndexOf(part);
                 if (index >= 0)
                 {
                     string? serverMessage = result.Failures.Count == notApplied.Count ? result.Failures[index].Message : allFailures;
                     output.ItemError(new TfpException(ErrorCodes.ServerError, ExitCodes.PartialSuccess,
-                        $"{change.ServerItem}: the server did not apply the change for {change.Identity ?? "the inheritance"}.",
+                        $"{part.ServerItem}: the server did not apply the change for {part.Identity ?? "the inheritance"}.",
                         "Check the identity as the server shows it (display name, account or e-mail) and your permission to administer the item.",
-                        tfCode: ErrorMapper.ExtractTfCode(serverMessage), serverMessage: string.IsNullOrEmpty(serverMessage) ? null : serverMessage, item: change.ServerItem));
-                    skipped.Add(change.ToJson());
+                        tfCode: ErrorMapper.ExtractTfCode(serverMessage), serverMessage: string.IsNullOrEmpty(serverMessage) ? null : serverMessage, item: part.ServerItem));
+                    skipped.Add(part.ToJson());
                     continue;
                 }
 
-                output.Line(change.Identity == null ? $"{change.ServerItem}: inherit {(change.Inherit == true ? "yes" : "no")}" : $"{change.ServerItem}: {change.Identity}");
+                output.Line(part.Identity == null ? $"{part.ServerItem}: inherit {(part.Inherit == true ? "yes" : "no")}" : $"{part.ServerItem}: {part.Identity}");
+                done.Add(part.ToJson());
             }
 
             output.Success(new JObject
             {
-                ["changes"] = new JArray(changes.Where(c => !skipped.Any(s => (string)s["serverItem"]! == c.ServerItem && (string?)s["identity"] == c.Identity)).Select(c => c.ToJson()).Cast<object>().ToArray()),
+                ["changes"] = done,
                 ["skipped"] = skipped,
             });
             return ExitCodes.Success;

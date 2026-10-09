@@ -116,6 +116,11 @@ namespace TfPortable.IntegrationTests
                     var edit = Run($"workspace {name} /comment:\"CI workspace edited ({RunId})\" /permission:Private /format:json");
                     Assert.True(edit.ExitCode == 0, edit.Stderr + edit.Stdout);
                     Assert.Equal($"CI workspace edited ({RunId})", (string)Data(edit)["workspace"]!["comment"]!);
+                    if ((string)workspace["permission"]! == "publiclimited")
+                    {
+                        // The server applies profiles: the edit must show the new one.
+                        Assert.Equal("private", (string)Data(edit)["workspace"]!["permission"]!);
+                    }
 
                     // A lock and its undo in the other workspace of the same owner (phase 4 captures lock/other-workspace, undo/other-workspace).
                     string item = GoldenWorkspaceFixture.ServerRoot + "/Main/README.md";

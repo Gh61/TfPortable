@@ -135,7 +135,7 @@ Phase 4 commands:
 | --- | --- |
 | `destroy` | `{ "preview": bool, "items": [ { "serverPath", "deletionId", "isFolder" } ] }`; a destroy without a recent preview is a fatal TFP0410 |
 | `permission` (listing) | `{ "items": [ { "serverItem", "inherit": bool, "entries": [ { "identity", "allow": [string], "deny": [string], "allowInherited": [string], "denyInherited": [string] } ] } ] }` |
-| `permission` (change) | `{ "changes": [ { "serverItem", "identity" or null, "allow": [string], "deny": [string], "remove": [string], "inherit": bool or null } ], "skipped": [ the same shape ] }`; a change the server did not apply (an unknown identity) is TFP0501 in `errors` (exit 1) with the library's failure text in `serverMessage` |
+| `permission` (change) | `{ "changes": [ { "serverItem", "identity" or null, "allow": [string], "deny": [string], "remove": [string], "inherit": bool or null } ], "skipped": [ the same shape ] }`; a request with an identity and `/inherit` is two changes (the inheritance one has `identity` null); a change the server did not apply (an unknown identity, no permission to administer) is TFP0501 in `errors` (exit 1) with the library's failure text in `serverMessage` |
 | `workspace` | `{ "workspace": Workspace, "created": true }` (`/new`), `{ "workspace": Workspace, "deleted": true, "droppedPendingChanges": n }` (`/delete`), `{ "workspace": Workspace, "updated": true }` (edit), `{ "workspace": Workspace }` (listing) |
 | `property` | `{ "items": [ { "serverPath", "properties": { "name": "value", ... } } ] }` |
 | `resolvepath` | `{ "items": [ { "localPath", "serverPath" } ] }`; an unmapped path is TFP0203 in `errors` (exit 1) |

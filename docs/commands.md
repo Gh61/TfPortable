@@ -434,7 +434,9 @@ tf vc unlabel [/collection:url] [/recursive] [/login:u,[p]] labelname itemspec
 tf vc lock itemspec /lock:(none|checkout|checkin) [/workspace:workspacename] [/recursive] [/login:u,[p]] [/collection:url]
 ```
 
-`/lock:` ✓ required, `/recursive` ✓, `/workspace:` ✗ (locks of another workspace are phase 4).
+`/lock:` ✓ required, `/recursive` ✓, `/workspace:` ✓ (phase 4, protection level 3: a lock in another workspace of
+the same owner; server paths go to the library as given, so an item that is not mapped in that workspace is the
+server's error, not TFP0203).
 
 <a id="cmd-undelete"></a>
 ### undelete (phase 2)
