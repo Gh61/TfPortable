@@ -17,6 +17,7 @@ simply absent from the catalog (unknown switch), unless its rejection needs a sp
 
 Legend: **✓** implemented as in tf.exe · **~** accepted, limited or no-op (see note) ·
 **✗** rejected with TFP0002 (not needed, or would write to the server) · **+** TfPortable extension.
+The error codes a command can return are described in [errors.md](errors.md).
 
 ## Phase 1
 

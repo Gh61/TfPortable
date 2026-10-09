@@ -36,7 +36,7 @@ scripts work, and fixes the problems above:
   for every command; it never prompts unless a person runs `tfp login` in a terminal, and when
   the token expires the error says so and tells you to run `tfp login` again;
 - a single `tfp.exe` that runs on any Windows with .NET Framework 4.8;
-- every error with a stable `TFPxxxx` code, the original `TFxxxxx` code when there is one, and the
+- every error with a stable `TFPxxxx` code ([docs/errors.md](docs/errors.md)), the original `TFxxxxx` code when there is one, and the
   next step to take; `/format:json` returns one JSON document per command; dates are ISO 8601;
   nothing is truncated.
 
@@ -161,7 +161,7 @@ The full table with the per-switch levels is in `docs/SPEC.md` ("Úrovně ochran
 ## For AI agents
 
 TfPortable works with any agent that runs shell commands: every command has a stable exit code,
-a `TFPxxxx` error code with a next step, and `-format:json`. For Claude Code,
+a `TFPxxxx` error code with a next step ([docs/errors.md](docs/errors.md)), and `-format:json`. For Claude Code,
 [docs/CLAUDE.md](docs/CLAUDE.md) is a ready-made section for the `CLAUDE.md` of a TFVC project
 plus a permissions snippet for `.claude/settings.json`: which commands to use, dash switches,
 `-format:json`, what exit codes 110 and 120 mean, and that the agent never asks for or enters a

@@ -59,7 +59,8 @@ Message:
 ```
 
 `tfCode`, `hint`, `item`, `activityId` are null when not applicable. `item` is the local path when
-the command worked with a local item, otherwise the server path.
+the command worked with a local item, otherwise the server path. Every `code` with its meaning, cause
+and next step is listed in [errors.md](errors.md).
 
 ## 2. Shared object types
 

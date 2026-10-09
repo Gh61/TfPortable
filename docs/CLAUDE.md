@@ -107,4 +107,5 @@ if that matters in your project.
 | Update the workspace | `tfp get -recursive -preview`, then `tfp get -recursive` |
 
 Every error has a `TFPxxxx` code, the original `TFxxxxx` code when the server produced one, the
-server message verbatim and a one-sentence next step (`docs/SPEC.md`, "Chybové hlášky").
+server message verbatim and a one-sentence next step. The codes, their causes and the next steps are
+listed in [docs/errors.md](errors.md) (the source is `docs/SPEC.md`, "Chybové hlášky").

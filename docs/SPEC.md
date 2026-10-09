@@ -34,9 +34,25 @@ TfPortable nahrazuje originální tf.exe pro práci s TFVC v Azure DevOps Servic
 
 **Checkin policies**: TFVC vyhodnocuje policy na klientovi a implementace žije ve Visual Studiu, takže tfp je vyhodnocuje sám: policy „Work Items“ (povinná vazba na work item) splní `/associate:<id>`, policy „Changeset Comments“ splní `/comment` (je povinný vždy). Každá jiná policy (Builds, Code Analysis, vlastní) je pro tfp neznámá: `TFP0409` s vysvětlením, že běží jen ve Visual Studiu. Nesplněná vyhodnocená policy je `TFP0407`. Obojí lze obejít přepínačem `/override:<důvod>` na úrovni 2; důvod se zapíše k changesetu jako ve Visual Studiu, které policy zobrazuje jako varování a po zadání důvodu checkin pustí.
 
-**Fáze 4 (hypotetická): zbytek tf.exe** – všechny zbývající příkazy a přepínače včetně těch, které mění server nevratně (`destroy`, `permission`, `workspace /new` a `/delete`, `proxy`, `configure`). Zda je má nástroj umožnit, zatím není rozhodnuto; smysl by to mělo jen jako úplná náhrada tf.exe.
+**Fáze 4: zbytek tf.exe, který má v přenosném nástroji s PAT smysl** (rozhodnuto 2026-10-09). Po fázi 4 nástroj nevrací `TFP0003` u žádného příkazu ani přepínače tf.exe: každý je buď implementovaný, nebo trvale odmítnutý s vysvětlením (`TFP0005`). Rozsah:
 
-Příkazy pozdějších fází nástroj rozpozná a vrátí jasnou chybu `TFP0003 NotSupported` s číslem fáze a doporučením použít Visual Studio nebo originální tf.exe. Důvod: zapisují na server okamžitě a nevratně, kdežto pending changes ve fázi 1 jdou kdykoli vzít zpět přes `undo`.
+| Příkaz | Rozsah a chování | Úroveň |
+| --- | --- | --- |
+| `destroy` | `destroy itemspec[;versionspec\|;X<id>] ... [/keephistory] [/stopat:<verze>] [/preview] [/startcleanup] [/silent]`: trvale odstraní položky i jejich historii ze serveru (s `/keephistory` jen obsah verzí starších než `/stopat`, výchozí T; `/stopat` bez `/keephistory` je `TFP0002`). `/preview` vypíše `Would destroy: $/cesta` po položkách a nic nezmění; ostrý běh vypíše `Destroyed: $/cesta`. Dotčené pending a shelvované změny v jiných workspace se vypíší jako varování (knihovna je vrací). **Povinný náhled**: `/preview` zapíše značku do `%LOCALAPPDATA%\TfPortable\destroy\<hash>.json` (SHA‑256 z normalizované URL kolekce, přihlášeného uživatele, seřazených serverových cest s deletion id a přepínačů `/keephistory`, `/stopat`; obsah: čas a stejné údaje). Ostrý `destroy` vyžaduje značku se stejným hashem ne starší než 10 minut, použitím ji smaže; bez ní skončí `TFP0410` s nápovědou spustit nejdřív `/preview` se stejnými argumenty. Důvod: agent nemůže zničit nic, co si předtím nevypsal. Neexistující položka `TFP0301` (exit 100, jako originál VS403405). JSON: `preview`, `items[]` (`serverPath`, `deletionId`), `affectedPendingChanges[]`, `affectedShelvedChanges[]` | 3 |
+| `permission` | `permission itemspec ... [/recursive]` vypíše ACL položek ve tvaru originálu (`====` blok, `Server item: $/cesta (Inherit: Yes)`, pro každou identitu `Allow`, `Deny`, `Allow (inherited)`, `Deny (inherited)`); `/allow:`, `/deny:`, `/remove:` (`*` nebo čárkami oddělené názvy oprávnění tf.exe: Read, PendChange, Checkin, Label, Lock, ReviseOther, UnlockOther, UndoOther, LabelOther, AdminProjectRights, CheckinOther, Merge, ManageBranch; neznámý název `TFP0002`) s `/user:` a/nebo `/group:` (alespoň jedna identita) a `/inherit:yes\|no` mění ACL; identita se serveru předává tak, jak byla zadána (zobrazované jméno, účet, e‑mail, `[Projekt]\Skupina`), neznámou vrátí server (`TFP0301`). Zápis vypíše `$/cesta: identita` jako originál. `/global` se nepodporuje (`TFP0002`). JSON: výpis `items[]` (`serverItem`, `inherit`, `entries[]` s `identity`, `allow`, `deny`, `allowInherited`, `denyInherited`), zápis `changes[]` | výpis 1, změny 3 |
+| `workspace` | `/new <jméno>[;vlastník] [/comment:] [/computer:] [/template:<ws>[;vlastník]] [/permission:Private\|PublicLimited\|Public] [/location:local] [/filetime:current\|checkin]`: vytvoří lokální workspace; jméno je povinné (tf.exe bere jméno počítače, pro nástroj bez dialogu je explicitní jméno bezpečnější, viz `docs/compat.md`), výchozí mapování `$/` na aktuální složku jako tf.exe, `/template` zkopíruje mapování jiného workspace, `/location:server` je `TFP0204`, jiný vlastník než přihlášený uživatel `TFP0002`. `/delete <jméno>[;vlastník]`: smaže workspace na serveru i z lokální cache; pending changes workspace se tím ztratí, jejich počet se vypíše jako varování. Úprava (`workspace <jméno> [/newname:] [/comment:] [/computer:] [/permission:] [/filetime:]`): `Workspace.Update`; `/newowner` a `/location` se neupravují (`TFP0002`). Výpis `workspace <jméno>` bez přepínačů = `workspaces <jméno> /format:detailed`. JSON: `workspace` (Workspace) | `/new`, `/delete`, úprava 3; výpis 1 |
+| `property` | `property itemspec ... [/version:] [/recursive]`: vypíše vlastnosti položek (`Server item: $/cesta`, pak `name = value` nebo `No properties.`); tf.exe 18.10 `/setproperty` nezná (golden `property/set` exit 100), tfp také ne (`TFP0002`). JSON: `items[]` (`serverPath`, `properties{}`) | 1 |
+| `resolvepath` | `resolvepath itemspec ...`: lokální cesta → serverová a naopak podle mapování workspace; řádek `<zadáno> -> <protějšek>`; nenamapovaná cesta `TFP0203`. JSON: `items[]` (`localPath`, `serverPath`) | 1 |
+| `docs` (rozšíření), `msdn` | `docs [<příkaz>] [/url]`: otevře dokumentaci TfPortable na GitHubu ve výchozím prohlížeči (bez příkazu repozitář, s příkazem `docs/commands.md` na kotvě příkazu) a vypíše `Opened <url> in the default browser.`; `/url` jen vypíše URL (pro agenty); když prohlížeč nejde spustit, vypíše URL s varováním `TFP0103`-stylu (bez kódu) a exit 0. `msdn` je alias `docs` (tf.exe `msdn <příkaz>` otevírá dokumentaci příkazu v prohlížeči, tfp otevře svoji). JSON: `url`, `opened` | 1 |
+| `workfold /map /unmap /cloak /decloak` | `workfold /map <server> <local>`, `/unmap <server\|local>`, `/cloak <server>`, `/decloak <server>` mění mapování aktuálního (nebo `/workspace:`) workspace přes knihovnu; výpis po změně jako `workfold` | 2 |
+| `changeset /comment /notes` | `changeset <n> /comment:<text\|@soubor>` a `/notes:"Jméno=Hodnota;Jméno2=Hodnota2"` (nebo `@soubor`) upraví changeset (`Changeset.Update`); vypíše detail po úpravě | 2 |
+| `lock /workspace:<jiný>`, `undo /workspace:<jiný>`, `status /workspace:<jiný>` | práce s jiným workspace (i cizím, pokud to server dovolí) přes globální `/workspace:<jméno>;<vlastník>`; `undo` a `lock` na cizím workspace jsou úroveň 3 (přepínač zvyšuje úroveň vždy) | 3 |
+| `checkin /shelveset:<jméno>[;vlastník]` | zapíše shelveset jako changeset (`CheckInShelveset`), server shelveset smaže; `/comment` se nepoužije (komentář má shelveset), `/author`, `/force`, `/noautoresolve` platí; bez itemspec; vypíše `Changeset #n checked in.` | 2 |
+| `unshelve /move` | po obnovení shelveset na serveru smaže; vypíše `Shelveset X deleted.`; JSON `deleted: true` | 2 |
+| `shelve /validate` | před odložením vyhodnotí checkin policies a poznámky jako `checkin /validate`; selhání jsou položkové chyby (exit 1), shelveset se přesto vytvoří (odložení nic nekazí); tf.exe `/validate` s `/noprompt` odmítá (golden `shelve/validate`), tfp ho přijímá | 2 |
+| `proxy`, `configure`, `certificates` | trvale mimo nástroj: `TFP0005` s vysvětlením (nastavení TFVC proxy v registru, dialog nastavení projektu, klientské certifikáty; nástroj se přihlašuje jen PATem a nic v registru nenastavuje). Totéž skupiny `tf git` a `tf settings` | – |
+
+Příkazy a přepínače tf.exe, které tfp neumí, vrací do vydání 1.0 chybu `TFP0003 NotSupported` s číslem fáze. **Verze 1.0 je hotová, když jsou hotové všechny fáze: od 1.0 nástroj `TFP0003` nikdy nevrací.** Trvale odmítnuté příkazy mají vlastní kód `TFP0005`, aby bylo poznat „nikdy" od „ještě ne".
 
 ## Architektura a build
 
@@ -279,7 +295,7 @@ Fáze 1 pokrývá 21 příkazů tf.exe a 3 příkazy pro správu PAT: vše pro p
 | `reconcile` | `/promote` `/adds` `/deletes` `/diff` `/clean` `/preview` `/recursive` `/noignore` | `/clean` maže soubory mimo správu verzí; bez `/preview` vyžaduje i `/noprompt`, aby AI nesmazala soubory omylem | 1 |
 | `localversions` (`lv`) | `/recursive` `/format:` `/workspace:` | Verze souborů ve workspace | 1 |
 | `workfold` | `/workspace:` (jen výpis) | Mapování aktuálního workspace | 1 |
-| `workfold /map /unmap /cloak /decloak` | dle tf.exe | Mění mapování na serveru, vratné | 2 |
+| `workfold /map /unmap /cloak /decloak` | dle tf.exe | Mění mapování workspace, vratné (implementováno ve fázi 4) | 4 |
 | `workspaces` | `/owner:` `/computer:` `/format:` `/collection:` | Seznam workspace včetně serverových (umístění ve výpisu); bez shody exit 1 a hláška na stdout jako originál; `/remove:` jen pro lokální cache | 1 |
 
 **Historie, verze a obsah**
@@ -287,7 +303,7 @@ Fáze 1 pokrývá 21 příkazů tf.exe a 3 příkazy pro správu PAT: vše pro p
 | Příkaz (aliasy) | Přepínače | Chování | Fáze |
 | --- | --- | --- | --- |
 | `history` (`hist`) | `/version:` `/stopafter:` `/recursive` `/user:` `/format:brief\|detailed` `/sort:` `/slotmode` `/itemmode` + rozšíření (viz Rozšíření pro AI) | Výchozí limit 256 položek; výchozí slot mód; u jednoho souboru má tabulka navíc sloupec Change; neznámá cesta = prázdný výsledek, exit 0; neznámý `/user:` exit 100 (TF14045); `/format:xml` odmítnuto | 1 |
-| `changeset` | `<číslo>` `/latest` | Detail checkinu: autor, datum, komentář, změněné položky s typem změny, přidružené work items. `/comment:` (úprava komentáře) vrací TFP0003; neexistující číslo exit 100 (TF14019) | 1 |
+| `changeset` | `<číslo>` `/latest` | Detail checkinu: autor, datum, komentář, změněné položky s typem změny, přidružené work items. `/comment:` a `/notes:` upraví changeset (fáze 4, úroveň 2); neexistující číslo exit 100 (TF14019) | 1 |
 | `view` | `/version:` `/output:<soubor>` `/shelveset:` `/recursive` `/console` (přijato, bez účinku) | Obsah souboru v dané verzi na stdout, překódovaný do UTF-8 podle kódování položky; binární soubory jen do `/output` (jinak TFP0303); nenalezeno exit 1. S `/format:json` je obsah textového souboru řetězec v `data.content`, binární soubor i tady vyžaduje `/output` | 1 |
 | `difference` (`diff`) | `/version:` `/recursive` `/format:unified\|brief` `/ignorespace` `/ignoreeol` `/ignorecase` `/shelveset:` | Vždy textový unified diff; porovnání workspace × server, dvou verzí, dvou serverových cest, nebo shelvesetu; exit 0 i když se soubory liší (jako originál); binární soubory jen „files differ“ | 1 |
 | `dir` | `/version:` `/recursive` `/folders` `/deleted` | Výpis serverové struktury | 1 |
@@ -299,13 +315,24 @@ Fáze 1 pokrývá 21 příkazů tf.exe a 3 příkazy pro správu PAT: vše pro p
 | `annotate` | `/version:` | Kdo a ve kterém changesetu změnil každý řádek (rozšíření; tf.exe příkaz nezná, golden `annotate/attempt` exit 2); sloupce Changeset, Owner, Date, Line; složka TFP0002, binární soubor TFP0303, neexistující TFP0301 (exit 1) | 2 |
 | `folderdiff` | `/recursive` `/filter:` `/view:same,different,sourceOnly,targetOnly` | Rozdíl dvou složek (server nebo lokální) nebo jedné složky a jejího protějšku ve workspace, podle obsahu (hash); sekce jako originál a řádek `Summary:`; jen text, bez dialogu | 2 |
 | `shelvesets` | `/owner:` `/format:` | Seznam shelvesetů | 3 |
-| `unshelve` | `<shelveset>[;<owner>]` `/recursive` | Jen bez `/move` (nemaže shelveset na serveru) | 3 |
+| `unshelve` | `<shelveset>[;<owner>]` `/recursive` `/nomerge` `/noautoresolve` `/move` | `/move` (fáze 4) po obnovení shelveset na serveru smaže | 3 |
 | `merge` | `/recursive` `/version:` `/preview` `/force` `/baseless` `/discard` `/noimplicitbaseless` `/conservative` `/noautoresolve` `/lock:none` `/format:` | Pending merge ze zdroje do cíle; řádky `merge, <změna>: <zdroj>;C<n> -> <cíl>`; konflikt je položková chyba TFP0403 (exit 1) a pending merge zůstává jako v originálu; `/preview` je náhled serveru | 2 |
 | `branch` | `/version:` `/noget` `/silent` `/lock:none` | Pending branch; vypíše cílovou cestu a strom ve skupinách jako `add`; `/checkin` a spol. TFP0002 | 2 |
 | `undelete` | `/noget` `/recursive` `/lock:none` | Pending undelete; `itemspec;X<deletionId>`; neexistující položka exit 1 jako originál | 2 |
 | `rollback` | `/changeset:<c>[~<c>]` nebo `/toversion:<verze>` `/recursive` `/version:` `/keepmergehistory` `/noautoresolve` `/lock:none` | Pending rollback; `/changeset` bez itemspec vrátí celý changeset; bez změn `There is nothing to roll back.`; konflikty TFP0403 (exit 1) | 2 |
 
-**Správa nástroje** (rozšíření): `login`, `logout`, `whoami` (viz Autentizace), `help [<příkaz>]`, `version`, `protection [set <1|2|3>]` (viz Úrovně ochrany).
+**Správa nástroje** (rozšíření): `login`, `logout`, `whoami` (viz Autentizace), `help [<příkaz>]`, `version`, `protection [set <1|2|3>]` (viz Úrovně ochrany), `docs [<příkaz>] [/url]` (dokumentace v prohlížeči, alias `msdn`).
+
+**Správa serveru a workspace (fáze 4)**
+
+| Příkaz (aliasy) | Přepínače | Chování | Fáze |
+| --- | --- | --- | --- |
+| `destroy` | `/keephistory` `/stopat:` `/preview` `/startcleanup` `/silent` | Trvalé zničení položek; ostrý běh vyžaduje `/preview` se stejnými argumenty v posledních 10 minutách (`TFP0410`); viz Fáze 4 | 4 |
+| `permission` | `/allow:` `/deny:` `/remove:` `/inherit:yes\|no` `/user:` `/group:` `/recursive` | Výpis ACL (úroveň 1) a jejich změna (úroveň 3); `/global` TFP0002 | 4 |
+| `workspace` | `/new` `/delete` `/comment:` `/computer:` `/template:` `/permission:` `/location:local` `/filetime:` `/newname:` | Vytvoření, smazání a úprava workspace (úroveň 3), výpis (úroveň 1) | 4 |
+| `property` | `/version:` `/recursive` | Výpis vlastností položek; zápis tf.exe 18.10 nemá | 4 |
+| `resolvepath` | – | Lokální cesta ↔ serverová cesta | 4 |
+| `proxy`, `configure`, `certificates` | – | `TFP0005`, trvale mimo nástroj | – |
 
 ## Úrovně ochrany
 
@@ -313,9 +340,9 @@ Nástroj pracuje v jedné ze tří úrovní ochrany. Každý příkaz a každý 
 
 | Úroveň | Co dovolí | Příkazy |
 | --- | --- | --- |
-| L1 | jen čtení (jediný zápis na disk je `view /output`) | `status`, `history`, `changeset`, `view`, `difference`, `dir`, `properties`, `localversions`, `workfold`, `workspaces`, `labels`, `branches`, `merge /candidate`, `shelvesets`, `annotate`, `merges`, `folderdiff`, `help`, `version`, `whoami`, `login`, `logout`, `protection` (zobrazení) |
-| L2 (výchozí) | běžná práce: pending changes, aktualizace workspace a běžný zápis na server | L1 + `add`, `checkout`, `delete`, `rename`, `undo`, `get`, `resolve`, `reconcile`, `undelete`, `merge`, `branch`, `rollback`, `unshelve`, `checkin`, `shelve`, `label`, `unlabel`, `lock` |
-| L3 | vše, včetně nevratných a cizích změn | L2 + `shelve /delete`, `label /delete`, `undo /workspace:<jméno>` (přepínač zvyšuje úroveň vždy, nástroj nerozlišuje vlastní a cizí workspace před připojením), `destroy`, `permission`, `workspace /new` a `/delete`, `proxy`, `configure`, `property` |
+| L1 | jen čtení (jediný zápis na disk je `view /output`) | `status`, `history`, `changeset`, `view`, `difference`, `dir`, `properties`, `localversions`, `workfold`, `workspaces`, `labels`, `branches`, `merge /candidate`, `shelvesets`, `annotate`, `merges`, `folderdiff`, `permission` (výpis), `workspace` (výpis), `property`, `resolvepath`, `docs`/`msdn`, `help`, `version`, `whoami`, `login`, `logout`, `protection` (zobrazení) |
+| L2 (výchozí) | běžná práce: pending changes, aktualizace workspace a běžný zápis na server | L1 + `add`, `checkout`, `delete`, `rename`, `undo`, `get`, `resolve`, `reconcile`, `undelete`, `merge`, `branch`, `rollback`, `unshelve` (i `/move`), `checkin` (i `/shelveset`), `shelve` (i `/validate`), `label`, `unlabel`, `lock`, `workfold /map /unmap /cloak /decloak`, `changeset /comment /notes` |
+| L3 | vše, včetně nevratných a cizích změn | L2 + `shelve /delete`, `label /delete`, `undo /workspace:<jméno>` a `lock /workspace:<jméno>` (přepínač zvyšuje úroveň vždy, nástroj nerozlišuje vlastní a cizí workspace před připojením), `destroy`, `permission /allow /deny /remove /inherit`, `workspace /new`, `/delete` a úprava |
 
 **Uložení**: `%APPDATA%\TfPortable\settings.json` (klíč `protectionLevel`, hodnoty 1–3). Chybí-li soubor, platí L2. CI, které potřebuje jinou úroveň, soubor nastaví v kroku pipeline; proměnná prostředí se nepoužívá.
 
@@ -410,6 +437,7 @@ tabulka v `docs/compat.md` §1.1 (např. TFP0301 je 1 u `add`, `delete`, `view`,
 | TFP0002 | Neplatný přepínač nebo hodnota | – | Platné přepínače příkazu | 100 |
 | TFP0003 | Příkaz mimo rozsah nástroje | – | Použít VS nebo originální tf.exe | 100 |
 | TFP0004 | Příkaz nebo přepínač nad nastavenou úrovní ochrany | – | `tfp protection set <n>` v interaktivním terminálu | 100 |
+| TFP0005 | Příkaz tf.exe, který nástroj trvale nenabízí (`proxy`, `configure`, `certificates`, skupiny `git` a `settings`) | – | Vysvětlení, co příkaz dělá a proč ho nástroj nemá; Visual Studio nebo tf.exe | 100 |
 | TFP0101 | Chybí PAT | – | Spustit `tfp login /collection:<url>` ve vlastním terminálu | 110 |
 | TFP0102 | PAT odmítnut | TF30063, TF400813, HTTP 401 | Vypršel nebo byl zrušen; vytvořit nový, `tfp login` | 110 |
 | TFP0103 | PAT bez potřebného scope (REST token přijal, TFVC SOAP API ne) | TF30063 po úspěšném REST ověření, HTTP 403 | Vytvořit PAT se Scopes: Full access, `tfp login` | 110 |
@@ -430,10 +458,11 @@ tabulka v `docs/compat.md` §1.1 (např. TFP0301 je 1 u `add`, `delete`, `view`,
 | TFP0407 | Checkin zastavily nesplněné checkin policies (vyhodnocené tfp) nebo povinné poznámky, nebo je checkin gated | – | Opravit, nebo `/override:<důvod>` | 100 |
 | TFP0408 | Shelveset stejného jména už existuje | – | Jiné jméno, nebo `/replace` | 100 |
 | TFP0409 | Checkin policy, kterou tfp neumí vyhodnotit (běží jen ve Visual Studiu) | – | Ověřit ve Visual Studiu, nebo `/override:<důvod>` | 100 |
+| TFP0410 | `destroy` bez předchozího `/preview` se stejnými argumenty (do 10 minut) | – | Spustit `tfp destroy /preview ...`, zkontrolovat výpis, pak stejný příkaz bez `/preview` | 100 |
 | TFP0501 | Chyba serveru | HTTP 5xx | ActivityId, zkusit znovu | 100 |
 | TFP0900 | Neočekávaná chyba | jakákoli | Cesta k `last-error.txt`, `tfp version` | 100 |
 
-Exit kódy v tabulce jsou výchozí hodnoty. Kde golden výstupy originálu ukazují jiný kód pro stejnou situaci, platí golden výstup; rozdíly jsou zapsané v `docs/compat.md` §1.1.
+Exit kódy v tabulce jsou výchozí hodnoty. Kde golden výstupy originálu ukazují jiný kód pro stejnou situaci, platí golden výstup; rozdíly jsou zapsané v `docs/compat.md` §1.1. Popis každého kódu pro uživatele a agenty (situace, příčiny, co dělat dál) je v `docs/errors.md`.
 
 Konkrétní TF kódy v tabulce a příkladech jsou ilustrační. Skutečné mapování se sestaví během implementace z reálných odpovědí serveru a uloží jako testovací data.
 
