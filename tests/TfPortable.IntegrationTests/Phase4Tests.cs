@@ -243,7 +243,7 @@ namespace TfPortable.IntegrationTests
                     Assert.Equal(serverPath, (string)change["serverItem"]!);
                     Assert.Equal(new[] { "Lock" }, change["allow"]!.Select(t => (string)t!));
                     var listing = Run($"permission {serverPath} /format:json");
-                    Assert.Contains(((JArray)Data(listing)["items"]!).Single()["entries"]!, e => e["allow"]!.Any(p => (string?)p == "Lock"));
+                    Assert.True(((JArray)Data(listing)["items"]!).Single()["entries"]!.Any(e => e["allow"]!.Any(p => (string?)p == "Lock")), "No explicit Lock allow in the listing: " + listing.Stdout);
                     var remove = Run($"permission /remove:Lock \"/user:{owner}\" {serverPath}");
                     Assert.True(remove.ExitCode == 0, remove.Stderr + remove.Stdout);
                     allowed = false;
