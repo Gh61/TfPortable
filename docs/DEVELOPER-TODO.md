@@ -91,6 +91,10 @@ then keep it.
 
 ## 5. Decisions before phase 4
 
+Decided on 2026-10-09 (phase 2 first: done; the scope table below with `resolvepath` added, `property` read-only,
+`docs`/`msdn`, `proxy`/`configure`/`certificates` as `TFP0005`; `destroy` with the preview marker; the `main` ruleset
+is set up). Kept for history; SPEC.md "Fáze 4" is the current definition.
+
 1. **Phase 2 first?** `merge`, `branch`, `rollback`, `undelete`, `merges`, `annotate`, `folderdiff` are
    captured (`tests/golden/`) and specified (SPEC.md "Fáze 2") but not implemented; the catalog answers
    TFP0003. They are everyday work in branching teams and fit protection level 2. Say whether they come

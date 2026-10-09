@@ -127,8 +127,22 @@ Enumerations:
 | `label`, `unlabel` | `{ "label": { "name", "scope" }, "results": [ { "name", "scope", "status": "created"\|"updated"\|"deleted" } ], "skipped": [ { "localPath", "reason" } ] }`; a skipped item is TFP0301 in `errors` (exit 1) |
 | `lock` | `{ "lock": "none"\|"checkout"\|"checkin", "changes": [PendingChange], "count", "skipped": [...] }` |
 
-Phase 2 commands (`merges`, `annotate`, `folderdiff`, `undelete`, `rollback`, `branch`, `merge`)
-add their sections when implemented.
+Phase 4 commands:
+
+| Command | `data` |
+| --- | --- |
+| `destroy` | `{ "preview": bool, "items": [ { "serverPath", "deletionId", "isFolder" } ], "affectedPendingChanges": [ { "name", "owner", "shelveset": false, "changes": [PendingChange] } ], "affectedShelvedChanges": [ ...the same with "shelveset": true ] }`; a destroy without a recent preview is a fatal TFP0410 |
+| `permission` (listing) | `{ "items": [ { "serverItem", "inherit": bool, "entries": [ { "identity", "allow": [string], "deny": [string], "allowInherited": [string], "denyInherited": [string] } ] } ] }` |
+| `permission` (change) | `{ "changes": [ { "serverItem", "identity" or null, "allow": [string], "deny": [string], "remove": [string], "inherit": bool or null } ] }` |
+| `workspace` | `{ "workspace": Workspace, "created": true }` (`/new`), `{ "workspace": Workspace, "deleted": true, "droppedPendingChanges": n }` (`/delete`), `{ "workspace": Workspace, "updated": true }` (edit), `{ "workspace": Workspace }` (listing) |
+| `property` | `{ "items": [ { "serverPath", "properties": { "name": "value", ... } } ] }` |
+| `resolvepath` | `{ "items": [ { "localPath", "serverPath" } ] }`; an unmapped path is TFP0203 in `errors` (exit 1) |
+| `docs`, `msdn` | `{ "url", "opened": bool }` |
+| `workfold /map /unmap /cloak /decloak` | `{ "workspace": Workspace, "edit": "map"\|"unmap"\|"cloak"\|"decloak" }` (the mappings after the change) |
+| `changeset /comment /notes` | the `changeset` data after the update |
+| `checkin /shelveset:` | `{ "changeset": n, "shelveset": { "name", "owner" }, "workItems": [ { "id", "linked" } ] }` |
+| `shelve /validate` | the `shelve` data plus `"validated": true, "validationFailures": [string]` (conflicts, failed and unknown policies, also in `errors` with exit 1) |
+| `unshelve /move` | the `unshelve` data plus `"deleted": bool` (true when the shelveset was deleted after a clean unshelve) |
 
 ## 4. Open points for Gate A
 

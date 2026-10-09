@@ -52,7 +52,13 @@ Setup (once, by a person):
 - `tfp merge`, `tfp branch`, `tfp rollback` and `tfp undelete` only pend changes in the workspace
   (`tfp undo` takes them back); `tfp merge -candidate` and `tfp merge ... -preview` show what a merge
   would bring first. Nothing reaches the server until a checkin.
-- `tfp help <command>` lists the switches of a command; `tfp help -format:json` the whole catalog.
+- `tfp help <command>` lists the switches of a command; `tfp help -format:json` the whole catalog;
+  `tfp docs <command> -url` gives the link to its documentation.
+- `tfp resolvepath <path>` translates a local path to its server path and back; `tfp permission '$/...'`
+  and `tfp property <path>` read permissions and properties.
+- Never run `tfp destroy`, `tfp permission` with `-allow`/`-deny`/`-remove`, or `tfp workspace -new`/`-delete`
+  on your own: they need protection level 3 and a person's decision. `destroy` refuses to run without a
+  `-preview` of the same arguments in the last 10 minutes (`TFP0410`).
 ```
 
 ## Permissions for `.claude/settings.json`
@@ -72,23 +78,28 @@ if that matters in your project.
       "Bash(tfp workfold:*)", "Bash(tfp workspaces:*)", "Bash(tfp whoami:*)",
       "Bash(tfp labels:*)", "Bash(tfp branches:*)", "Bash(tfp merge -candidate:*)",
       "Bash(tfp merges:*)", "Bash(tfp folderdiff:*)", "Bash(tfp annotate:*)",
-      "Bash(tfp shelvesets:*)", "Bash(tfp help:*)", "Bash(tfp version:*)", "Bash(tfp protection)"
+      "Bash(tfp shelvesets:*)", "Bash(tfp help:*)", "Bash(tfp version:*)", "Bash(tfp protection)",
+      "Bash(tfp docs:*)", "Bash(tfp resolvepath:*)", "Bash(tfp property:*)"
     ],
     "deny": [
-      "Bash(tfp protection set:*)"
+      "Bash(tfp protection set:*)", "Bash(tfp destroy:*)"
     ],
     "ask": [
       "Bash(tfp get:*)", "Bash(tfp undo:*)", "Bash(tfp reconcile:*)",
       "Bash(tfp resolve:*)", "Bash(tfp delete:*)", "Bash(tfp checkin:*)", "Bash(tfp shelve:*)",
       "Bash(tfp unshelve:*)", "Bash(tfp label:*)", "Bash(tfp unlabel:*)", "Bash(tfp lock:*)",
-      "Bash(tfp merge:*)", "Bash(tfp branch:*)", "Bash(tfp rollback:*)", "Bash(tfp undelete:*)"
+      "Bash(tfp merge:*)", "Bash(tfp branch:*)", "Bash(tfp rollback:*)", "Bash(tfp undelete:*)",
+      "Bash(tfp permission:*)", "Bash(tfp workspace:*)", "Bash(tfp workfold -map:*)", "Bash(tfp workfold -unmap:*)",
+      "Bash(tfp workfold -cloak:*)", "Bash(tfp workfold -decloak:*)"
     ]
   }
 }
 ```
 
 `add`, `checkout` and `rename` are reversible with `undo`, so a team may move them to `allow`.
-`login` and `logout` stay with the person: the agent has no reason to run them.
+`login` and `logout` stay with the person: the agent has no reason to run them. `permission` is in `ask`
+because the same command lists (level 1) and changes (level 3) permissions; a team that only reads them
+may move `tfp permission` to `allow`. `destroy` is denied outright: a person runs it in their own terminal.
 
 ## What the agent gets
 
