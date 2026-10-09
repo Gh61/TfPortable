@@ -522,8 +522,21 @@ namespace TfPortable.Context
                 return null;
             }
 
-            return WorkspacePermissionProfile.BuiltInProfiles.FirstOrDefault(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase))
-                ?? throw new ArgumentException($"Unknown workspace permission profile '{name}'.");
+            var profiles = WorkspacePermissionProfile.BuiltInProfiles;
+            var byName = profiles.FirstOrDefault(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
+            if (byName != null)
+            {
+                return byName;
+            }
+
+            // The built-in profiles are Private, PublicLimited, Public in this order (tf.exe `/permission:`); their display names may be localized.
+            int index = Array.FindIndex(new[] { "Private", "PublicLimited", "Public" }, n => string.Equals(n, name, StringComparison.OrdinalIgnoreCase));
+            if (index >= 0 && index < profiles.Length)
+            {
+                return profiles[index];
+            }
+
+            throw new ArgumentException($"Unknown workspace permission profile '{name}'.");
         }
 
         public void Dispose() => connection.Dispose();

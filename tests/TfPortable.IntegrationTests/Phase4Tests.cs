@@ -41,12 +41,12 @@ namespace TfPortable.IntegrationTests
             fixture.EnsureReady();
 
             var docs = Run("docs checkin /url /format:json");
-            Assert.True(docs.ExitCode == 0, docs.Stderr);
+            Assert.True(docs.ExitCode == 0, docs.Stderr + docs.Stdout);
             Assert.Equal("https://github.com/Gh61/TfPortable/blob/main/docs/commands.md#cmd-checkin", (string)Data(docs)["url"]!);
             Assert.False((bool)Data(docs)["opened"]!);
 
             var resolve = Run($"resolvepath Main {GoldenWorkspaceFixture.ServerRoot}/Main/README.md /format:json");
-            Assert.True(resolve.ExitCode == 0, resolve.Stderr);
+            Assert.True(resolve.ExitCode == 0, resolve.Stderr + resolve.Stdout);
             var items = (JArray)Data(resolve)["items"]!;
             Assert.Equal(2, items.Count);
             Assert.Equal(GoldenWorkspaceFixture.ServerRoot + "/Main", (string)items[0]["serverPath"]!);
@@ -57,7 +57,7 @@ namespace TfPortable.IntegrationTests
             Assert.Contains("TFP0203", unmapped.Stderr);
 
             var property = Run("property Main\\README.md /format:json");
-            Assert.True(property.ExitCode == 0, property.Stderr);
+            Assert.True(property.ExitCode == 0, property.Stderr + property.Stdout);
             var propertyItems = (JArray)Data(property)["items"]!;
             Assert.Single(propertyItems);
             Assert.Equal(GoldenWorkspaceFixture.ServerRoot + "/Main/README.md", (string)propertyItems[0]["serverPath"]!);
@@ -65,7 +65,7 @@ namespace TfPortable.IntegrationTests
             Assert.Contains("Server item: " + GoldenWorkspaceFixture.ServerRoot + "/Main/README.md", text.Stdout);
 
             var permission = Run($"permission {GoldenWorkspaceFixture.ServerRoot}/Main /format:json");
-            Assert.True(permission.ExitCode == 0, permission.Stderr);
+            Assert.True(permission.ExitCode == 0, permission.Stderr + permission.Stdout);
             var acl = ((JArray)Data(permission)["items"]!).Single();
             Assert.Equal(GoldenWorkspaceFixture.ServerRoot + "/Main", (string)acl["serverItem"]!);
             Assert.NotEmpty((JArray)acl["entries"]!);
@@ -97,7 +97,7 @@ namespace TfPortable.IntegrationTests
                 {
                     var create = TfpRunner.Run($"workspace /new {name} /comment:\"CI workspace ({RunId})\" /permission:PublicLimited /filetime:checkin /collection:{fixture.Collection} /noprompt /format:json", root);
                     created = create.ExitCode == 0;
-                    Assert.True(created, create.Stderr);
+                    Assert.True(created, create.Stderr + create.Stdout);
                     var workspace = Data(create)["workspace"]!;
                     Assert.Equal(name, (string)workspace["name"]!);
                     Assert.Equal("local", (string)workspace["location"]!);
@@ -107,30 +107,30 @@ namespace TfPortable.IntegrationTests
                     Assert.Equal(root.TrimEnd(Path.DirectorySeparatorChar), ((string)mapping["localPath"]!).TrimEnd(Path.DirectorySeparatorChar), StringComparer.OrdinalIgnoreCase);
 
                     var show = Run($"workspace {name} /format:json");
-                    Assert.True(show.ExitCode == 0, show.Stderr);
+                    Assert.True(show.ExitCode == 0, show.Stderr + show.Stdout);
                     Assert.Equal($"CI workspace ({RunId})", (string)Data(show)["workspace"]!["comment"]!);
                     var listed = Run($"workspaces {name} /format:json");
-                    Assert.True(listed.ExitCode == 0, listed.Stderr);
+                    Assert.True(listed.ExitCode == 0, listed.Stderr + listed.Stdout);
 
                     var edit = Run($"workspace {name} /comment:\"CI workspace edited ({RunId})\" /permission:Private /format:json");
-                    Assert.True(edit.ExitCode == 0, edit.Stderr);
+                    Assert.True(edit.ExitCode == 0, edit.Stderr + edit.Stdout);
                     Assert.Equal($"CI workspace edited ({RunId})", (string)Data(edit)["workspace"]!["comment"]!);
                     Assert.Equal("private", (string)Data(edit)["workspace"]!["permission"]!);
 
                     // A lock and its undo in the other workspace of the same owner (phase 4 captures lock/other-workspace, undo/other-workspace).
                     string item = GoldenWorkspaceFixture.ServerRoot + "/Main/README.md";
                     var lockOther = Run($"lock /lock:checkin /workspace:{name} {item} /noprompt /format:json");
-                    Assert.True(lockOther.ExitCode == 0, lockOther.Stderr);
+                    Assert.True(lockOther.ExitCode == 0, lockOther.Stderr + lockOther.Stdout);
                     var statusOther = Run($"status /workspace:{name} {item} /nodetect /format:json");
-                    Assert.True(statusOther.ExitCode == 0, statusOther.Stderr);
+                    Assert.True(statusOther.ExitCode == 0, statusOther.Stderr + statusOther.Stdout);
                     Assert.Contains((JArray)Data(statusOther)["changes"]!, c => c["changeTypes"]!.Any(t => (string?)t == "lock"));
                     var undoOther = Run($"undo \"/workspace:{name};{owner}\" {item} /noprompt /format:json");
-                    Assert.True(undoOther.ExitCode == 0, undoOther.Stderr);
+                    Assert.True(undoOther.ExitCode == 0, undoOther.Stderr + undoOther.Stdout);
                     Assert.NotEmpty((JArray)Data(undoOther)["undone"]!);
                     Assert.Empty((JArray)Data(Run($"status /workspace:{name} {item} /nodetect /format:json"))["changes"]!);
 
                     var delete = Run($"workspace /delete {name} /format:json");
-                    Assert.True(delete.ExitCode == 0, delete.Stderr);
+                    Assert.True(delete.ExitCode == 0, delete.Stderr + delete.Stdout);
                     created = false;
                     Assert.True((bool)Data(delete)["deleted"]!);
                     var gone = Run($"workspaces {name} /format:json");
@@ -167,17 +167,17 @@ namespace TfPortable.IntegrationTests
                 // Mapping edits on a path of this run (the cloak and the map do not touch the fixture's items).
                 string cloakPath = serverPath + "-cloak";
                 var cloak = Run($"workfold /cloak {cloakPath} /format:json");
-                Assert.True(cloak.ExitCode == 0, cloak.Stderr);
+                Assert.True(cloak.ExitCode == 0, cloak.Stderr + cloak.Stdout);
                 Assert.Contains((JArray)Data(cloak)["workspace"]!["mappings"]!, m => (string)m["serverPath"]! == cloakPath && (bool)m["cloaked"]!);
                 var decloak = Run($"workfold /decloak {cloakPath} /format:json");
-                Assert.True(decloak.ExitCode == 0, decloak.Stderr);
+                Assert.True(decloak.ExitCode == 0, decloak.Stderr + decloak.Stdout);
                 Assert.DoesNotContain((JArray)Data(decloak)["workspace"]!["mappings"]!, m => (string)m["serverPath"]! == cloakPath);
                 string mapLocal = Path.Combine(fixture.WorkspaceRoot, "CI", RunId + "-mapped");
                 var map = Run($"workfold /map {serverPath}-map \"{mapLocal}\" /format:json");
-                Assert.True(map.ExitCode == 0, map.Stderr);
+                Assert.True(map.ExitCode == 0, map.Stderr + map.Stdout);
                 Assert.Contains((JArray)Data(map)["workspace"]!["mappings"]!, m => (string)m["serverPath"]! == serverPath + "-map");
                 var unmap = Run($"workfold /unmap {serverPath}-map /format:json");
-                Assert.True(unmap.ExitCode == 0, unmap.Stderr);
+                Assert.True(unmap.ExitCode == 0, unmap.Stderr + unmap.Stdout);
                 Assert.DoesNotContain((JArray)Data(unmap)["workspace"]!["mappings"]!, m => (string)m["serverPath"]! == serverPath + "-map");
                 var notMapped = Run($"workfold /unmap {serverPath}-nope");
                 Assert.Equal(120, notMapped.ExitCode);
@@ -186,66 +186,66 @@ namespace TfPortable.IntegrationTests
                 Directory.CreateDirectory(folder);
                 File.WriteAllText(Path.Combine(folder, "a.txt"), "a\r\n");
                 var add = Run($"add {argument} /recursive /noprompt");
-                Assert.True(add.ExitCode == 0, add.Stderr);
+                Assert.True(add.ExitCode == 0, add.Stderr + add.Stdout);
                 var checkin = Run($"checkin {argument} /recursive /comment:\"CI phase 4 ({RunId})\" /associate:1 /override:\"CI phase 4\" /noprompt /format:json");
                 committed = true;
-                Assert.True(checkin.ExitCode == 0, checkin.Stderr);
+                Assert.True(checkin.ExitCode == 0, checkin.Stderr + checkin.Stdout);
                 int changeset = (int)Data(checkin)["changeset"]!;
 
                 var edited = Run($"changeset {changeset} /comment:\"CI phase 4 edited ({RunId})\" /format:json");
-                Assert.True(edited.ExitCode == 0, edited.Stderr);
+                Assert.True(edited.ExitCode == 0, edited.Stderr + edited.Stdout);
                 Assert.Equal($"CI phase 4 edited ({RunId})", (string)Data(edited)["changeset"]!["comment"]!);
                 Assert.Equal($"CI phase 4 edited ({RunId})", (string)Data(Run($"changeset {changeset} /format:json"))["changeset"]!["comment"]!);
 
                 // shelve /validate reports the policies; shelve /move parks the edit; checkin /shelveset commits it.
                 var checkout = Run($"checkout {argument}\\a.txt /noprompt");
-                Assert.True(checkout.ExitCode == 0, checkout.Stderr);
+                Assert.True(checkout.ExitCode == 0, checkout.Stderr + checkout.Stdout);
                 File.AppendAllText(Path.Combine(folder, "a.txt"), "shelved\r\n");
                 var validated = Run($"shelve {shelveset} {argument} /recursive /validate /comment:\"CI shelveset ({RunId})\" /noprompt /format:json");
-                Assert.True(validated.ExitCode == 0 || validated.ExitCode == 1, validated.Stderr);
+                Assert.True(validated.ExitCode == 0 || validated.ExitCode == 1, validated.Stderr + validated.Stdout);
                 Assert.True((bool)Data(validated)["validated"]!);
                 var moved = Run($"shelve {shelveset} {argument} /recursive /replace /move /comment:\"CI shelveset ({RunId})\" /noprompt /format:json");
-                Assert.True(moved.ExitCode == 0, moved.Stderr);
+                Assert.True(moved.ExitCode == 0, moved.Stderr + moved.Stdout);
                 Assert.True((bool)Data(moved)["moved"]!);
                 Assert.Empty((JArray)Data(Run($"status {argument} /recursive /nodetect /format:json"))["changes"]!);
 
                 var fromShelveset = Run($"checkin /shelveset:{shelveset} /noprompt /format:json");
-                Assert.True(fromShelveset.ExitCode == 0, fromShelveset.Stderr);
+                Assert.True(fromShelveset.ExitCode == 0, fromShelveset.Stderr + fromShelveset.Stdout);
                 int second = (int)Data(fromShelveset)["changeset"]!;
                 Assert.True(second > changeset);
                 Assert.Equal(100, Run($"shelvesets {shelveset} /format:json").ExitCode);
                 // The shelveset was checked in on the server only; a get brings the content down.
                 var getAfter = Run($"get {argument} /recursive /noprompt");
-                Assert.True(getAfter.ExitCode == 0, getAfter.Stderr);
+                Assert.True(getAfter.ExitCode == 0, getAfter.Stderr + getAfter.Stdout);
                 Assert.Contains("shelved", File.ReadAllText(Path.Combine(folder, "a.txt")));
 
                 // unshelve /move: the shelveset disappears after a clean unshelve.
                 var checkout2 = Run($"checkout {argument}\\a.txt /noprompt");
-                Assert.True(checkout2.ExitCode == 0, checkout2.Stderr);
+                Assert.True(checkout2.ExitCode == 0, checkout2.Stderr + checkout2.Stdout);
                 File.AppendAllText(Path.Combine(folder, "a.txt"), "again\r\n");
                 var shelved = Run($"shelve {shelveset} {argument} /recursive /move /comment:\"CI shelveset 2 ({RunId})\" /noprompt");
-                Assert.True(shelved.ExitCode == 0, shelved.Stderr);
+                Assert.True(shelved.ExitCode == 0, shelved.Stderr + shelved.Stdout);
                 var unshelved = Run($"unshelve {shelveset} /move /noprompt /format:json");
-                Assert.True(unshelved.ExitCode == 0, unshelved.Stderr);
+                Assert.True(unshelved.ExitCode == 0, unshelved.Stderr + unshelved.Stdout);
                 Assert.True((bool)Data(unshelved)["deleted"]!);
                 Assert.Equal(100, Run($"shelvesets {shelveset} /format:json").ExitCode);
                 Assert.NotEmpty((JArray)Data(Run($"status {argument} /recursive /nodetect /format:json"))["changes"]!);
                 var undo = Run($"undo {argument} /recursive /noprompt");
-                Assert.True(undo.ExitCode == 0, undo.Stderr);
+                Assert.True(undo.ExitCode == 0, undo.Stderr + undo.Stdout);
 
                 // A permission change on the run folder for the CI user, then its removal (phase 4 captures permission/allow-lock, remove).
                 using (ProtectionLevelScope.Set(3))
                 {
                     var allow = Run($"permission /allow:Lock \"/user:{owner}\" {serverPath} /format:json");
                     allowed = allow.ExitCode == 0;
-                    Assert.True(allow.ExitCode == 0, allow.Stderr);
+                    Assert.True(allow.ExitCode == 0, allow.Stderr + allow.Stdout);
                     var change = ((JArray)Data(allow)["changes"]!).Single();
                     Assert.Equal(serverPath, (string)change["serverItem"]!);
                     Assert.Equal(new[] { "Lock" }, change["allow"]!.Select(t => (string)t!));
                     var listing = Run($"permission {serverPath} /format:json");
                     Assert.Contains(((JArray)Data(listing)["items"]!).Single()["entries"]!, e => e["allow"]!.Any(p => (string?)p == "Lock"));
                     var remove = Run($"permission /remove:Lock \"/user:{owner}\" {serverPath}");
-                    Assert.True(remove.ExitCode == 0, remove.Stderr);
+                    Assert.True(remove.ExitCode == 0, remove.Stderr + remove.Stdout);
                     allowed = false;
                     Assert.Contains($"{serverPath}: {owner}", remove.Stdout);
                 }
@@ -291,10 +291,10 @@ namespace TfPortable.IntegrationTests
                 Directory.CreateDirectory(folder);
                 File.WriteAllText(Path.Combine(folder, "gone.txt"), "gone\r\n");
                 var add = Run($"add {argument} /recursive /noprompt");
-                Assert.True(add.ExitCode == 0, add.Stderr);
+                Assert.True(add.ExitCode == 0, add.Stderr + add.Stdout);
                 var checkin = Run($"checkin {argument} /recursive /comment:\"CI destroy ({RunId})\" /associate:1 /override:\"CI destroy\" /noprompt /format:json");
                 committed = true;
-                Assert.True(checkin.ExitCode == 0, checkin.Stderr);
+                Assert.True(checkin.ExitCode == 0, checkin.Stderr + checkin.Stdout);
 
                 var blocked = Run($"destroy /preview {serverPath}/gone.txt");
                 Assert.Equal(100, blocked.ExitCode);
@@ -313,7 +313,7 @@ namespace TfPortable.IntegrationTests
                         return;
                     }
 
-                    Assert.True(preview.ExitCode == 0, preview.Stderr);
+                    Assert.True(preview.ExitCode == 0, preview.Stderr + preview.Stdout);
                     Assert.True((bool)Data(preview)["preview"]!);
                     Assert.Contains((JArray)Data(preview)["items"]!, i => (string)i["serverPath"]! == serverPath + "/gone.txt");
 
@@ -329,16 +329,16 @@ namespace TfPortable.IntegrationTests
                         return;
                     }
 
-                    Assert.True(real.ExitCode == 0, real.Stderr);
+                    Assert.True(real.ExitCode == 0, real.Stderr + real.Stdout);
                     destroyed = true;
                     Assert.Contains((JArray)Data(real)["items"]!, i => (string)i["serverPath"]! == serverPath + "/gone.txt");
                     Assert.Equal(100, Run($"destroy {serverPath}/gone.txt /noprompt").ExitCode);
 
                     var history = Run($"history {serverPath}/gone.txt /format:json");
-                    Assert.True(history.ExitCode == 0, history.Stderr);
+                    Assert.True(history.ExitCode == 0, history.Stderr + history.Stdout);
                     Assert.Empty((JArray)Data(history)["changesets"]!);
                     var get = Run($"get {argument} /recursive /noprompt");
-                    Assert.True(get.ExitCode == 0, get.Stderr);
+                    Assert.True(get.ExitCode == 0, get.Stderr + get.Stdout);
                     Assert.False(File.Exists(Path.Combine(folder, "gone.txt")));
                 }
             }
