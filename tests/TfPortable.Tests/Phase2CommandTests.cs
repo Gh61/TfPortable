@@ -115,7 +115,7 @@ namespace TfPortable.Tests
             var output = new OutputWriter(false, "merge", stdout, stderr);
             BranchingCommands.ReportMergeResult(output, result, "There are no changes to merge.", "tfp");
             Assert.Equal("", stdout.ToString());
-            Assert.StartsWith("ERROR TFP0403: $/P/dst/a.txt: Conflict (merge, edit): $/P/src/a.txt;C92~C92 -> $/P/dst/a.txt;C93", stderr.ToString());
+            Assert.StartsWith("ERROR TFP0403: Conflict (merge, edit): $/P/src/a.txt;C92~C92 -> $/P/dst/a.txt;C93", stderr.ToString());
             Assert.DoesNotContain("conflict(s) were created", stderr.ToString());
 
             // Without event lines the conflict query and the count still report.
