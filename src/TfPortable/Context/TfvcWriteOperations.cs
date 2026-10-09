@@ -212,7 +212,8 @@ namespace TfPortable.Context
     /// <summary>Result of a merge or a rollback: the pended changes, the conflicts the server left open and the per-item failures.</summary>
     internal sealed class MergeResult
     {
-        public MergeResult(IReadOnlyList<PendingChangeInfo> changes, IReadOnlyList<ConflictInfo> conflicts, IReadOnlyList<FailureInfo> failures, int numOperations, int numConflicts, bool noActionNeeded)
+        public MergeResult(IReadOnlyList<PendingChangeInfo> changes, IReadOnlyList<ConflictInfo> conflicts, IReadOnlyList<FailureInfo> failures, int numOperations, int numConflicts, bool noActionNeeded,
+            IReadOnlyList<PendingChangeInfo>? conflictLines = null)
         {
             Changes = changes;
             Conflicts = conflicts;
@@ -220,9 +221,13 @@ namespace TfPortable.Context
             NumOperations = numOperations;
             NumConflicts = numConflicts;
             NoActionNeeded = noActionNeeded;
+            ConflictLines = conflictLines ?? Array.Empty<PendingChangeInfo>();
         }
 
         public IReadOnlyList<PendingChangeInfo> Changes { get; }
+
+        /// <summary>The conflicting operations as the library's Merging event describes them (source, versions, target), for the `Conflict (...)` lines.</summary>
+        public IReadOnlyList<PendingChangeInfo> ConflictLines { get; }
 
         public IReadOnlyList<ConflictInfo> Conflicts { get; }
 
@@ -250,6 +255,36 @@ namespace TfPortable.Context
     }
 
     /// <summary>One row of `merges`: a source changeset merged into a target changeset.</summary>
+    /// <summary>One item of the merge history (`merges /format:detailed`): the source item and version merged into the target item and version.</summary>
+    internal sealed class MergedItemInfo
+    {
+        public MergedItemInfo(string sourcePath, int sourceVersion, string targetPath, int targetVersion)
+        {
+            SourcePath = sourcePath;
+            SourceVersion = sourceVersion;
+            TargetPath = targetPath;
+            TargetVersion = targetVersion;
+        }
+
+        public string SourcePath { get; }
+
+        public int SourceVersion { get; }
+
+        public string TargetPath { get; }
+
+        public int TargetVersion { get; }
+
+        public string Line => $"{SourcePath};C{SourceVersion} -> {TargetPath};C{TargetVersion}";
+
+        public JObject ToJson() => new JObject
+        {
+            ["sourcePath"] = SourcePath,
+            ["sourceVersion"] = SourceVersion,
+            ["targetPath"] = TargetPath,
+            ["targetVersion"] = TargetVersion,
+        };
+    }
+
     internal sealed class MergeHistoryInfo
     {
         public MergeHistoryInfo(int sourceChangeset, ChangesetInfo targetChangeset, bool partial)

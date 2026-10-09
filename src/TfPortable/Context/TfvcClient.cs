@@ -258,6 +258,14 @@ namespace TfPortable.Context
                 .ToList();
         }
 
+        public IReadOnlyList<MergedItemInfo> QueryMergedItems(string? sourcePath, string targetPath, RecursionType recursion, bool showAll)
+        {
+            var details = VersionControl.QueryMergesWithDetails(sourcePath, sourcePath == null ? null : VersionSpec.Latest, 0, targetPath, VersionSpec.Latest, 0, null, null, recursion, showAll);
+            return (details?.MergedItems ?? Array.Empty<ItemMerge>())
+                .Select(m => new MergedItemInfo(m.SourceServerItem, m.SourceVersionFrom, m.TargetServerItem, m.TargetVersionFrom))
+                .ToList();
+        }
+
         public IReadOnlyList<ShelvesetInfo> QueryShelvesets(string? name, string? owner)
         {
             return VersionControl.QueryShelvesets(string.IsNullOrEmpty(name) ? null : name, string.IsNullOrEmpty(owner) ? null : owner)
@@ -800,7 +808,14 @@ namespace TfPortable.Context
                 }
 
                 var open = (conflicts ?? Array.Empty<Conflict>()).Where(c => !c.IsResolved).Select(ToConflict).ToList();
-                return new UnshelveResult(restored, open, collector.Failures);
+                var failures = new List<FailureInfo>(collector.Failures);
+                foreach (var op in collector.Operations.Where(o => o.Operation == "writable"))
+                {
+                    // A writable local file in the way of the unshelved item (golden `unshelve/local-file-in-the-way`, exit 1).
+                    failures.Add(new FailureInfo(op.LocalPath, op.ServerPath, $"{op.LocalPath ?? op.ServerPath} was not written: a writable file with the same name exists locally.", "TargetWritable", false));
+                }
+
+                return new UnshelveResult(restored, open, failures);
             }
 
             public PendResult SetLock(IReadOnlyList<string> paths, LockLevel level, RecursionType recursion)
@@ -832,7 +847,7 @@ namespace TfPortable.Context
                         .Where(p => (p.ChangeType & ChangeType.Merge) != 0)
                         .Select(p => ToPendingChange(p, false))
                         .ToList();
-                    return new MergeResult(pended, result.Conflicts, result.Failures, Math.Max(result.NumOperations, pended.Count), result.NumConflicts, result.NoActionNeeded && pended.Count == 0);
+                    return new MergeResult(pended, result.Conflicts, result.Failures, Math.Max(result.NumOperations, pended.Count), result.NumConflicts, result.NoActionNeeded && pended.Count == 0, result.ConflictLines);
                 }
 
                 return result;
@@ -842,6 +857,16 @@ namespace TfPortable.Context
             {
                 using var collector = new EventCollector(Vcs);
                 int count = workspace.PendBranch(sourcePath, targetPath, version, LockLevel.None, updateDisk, true, silent);
+                if (silent && collector.Changes.Count == 0 && count > 0)
+                {
+                    // The silent form raises no events; the pending branch exists all the same (golden `branch/silent`).
+                    var pended = workspace.GetPendingChanges(new[] { new ItemSpec(targetPath, RecursionType.Full) })
+                        .Where(p => (p.ChangeType & ChangeType.Branch) != 0)
+                        .Select(p => ToPendingChange(p, false))
+                        .ToList();
+                    return new PendResult(pended, collector.Failures, count);
+                }
+
                 return collector.ToPendResult(count);
             }
 
@@ -862,6 +887,7 @@ namespace TfPortable.Context
                 // The library needs both versions in both modes.
                 versionFrom ??= VersionSpec.Latest;
                 using var collector = new EventCollector(Vcs);
+                collector.ConflictChangeText = "rollback";
                 GetStatus status;
                 if (items == null || items.Count == 0)
                 {
@@ -904,7 +930,7 @@ namespace TfPortable.Context
                     }
                 }
 
-                return new MergeResult(collector.Changes, conflicts, failures, status.NumOperations, status.NumConflicts, status.NoActionNeeded);
+                return new MergeResult(collector.Changes, conflicts, failures, status.NumOperations, status.NumConflicts, status.NoActionNeeded, collector.ConflictLines);
             }
 
             /// <summary>The library's pending changes behind the infos (from a query of this workspace).</summary>
@@ -940,6 +966,12 @@ namespace TfPortable.Context
             public List<PendingChangeInfo> Undone { get; } = new List<PendingChangeInfo>();
 
             public List<FailureInfo> Failures { get; } = new List<FailureInfo>();
+
+            /// <summary>The conflicting merge or rollback operations (the Merging event with a conflict status), for the `Conflict (...)` lines.</summary>
+            public List<PendingChangeInfo> ConflictLines { get; } = new List<PendingChangeInfo>();
+
+            /// <summary>Change text for a conflict whose event carries no change type ("merge" or "rollback").</summary>
+            public string ConflictChangeText { get; set; } = "merge";
 
             public List<GetOperationInfo> Operations { get; } = new List<GetOperationInfo>();
 
@@ -987,6 +1019,16 @@ namespace TfPortable.Context
             {
                 if (e.IsConflict || e.Status == OperationStatus.Conflict)
                 {
+                    if (!string.IsNullOrEmpty(e.TargetServerItem))
+                    {
+                        var conflictSources = string.IsNullOrEmpty(e.SourceServerItem)
+                            ? new List<MergeSourceInfo>()
+                            : new List<MergeSourceInfo> { new MergeSourceInfo(e.SourceServerItem, e.SourceVersionFrom?.ChangesetId ?? 0, e.SourceVersionTo?.ChangesetId ?? 0, false) };
+                        string changeText = e.ChangeType == ChangeType.None ? ConflictChangeText : ChangeText(e.ChangeType);
+                        ConflictLines.Add(new PendingChangeInfo(changeText, e.TargetServerItem, e.TargetLocalItem, false, e.TargetVersionPended?.ChangesetId ?? 0,
+                            conflictSources.Count > 0 ? e.SourceServerItem : null, "none", null, DateTime.UtcNow, string.Empty, string.Empty, false, null, conflictSources));
+                    }
+
                     return;
                 }
 

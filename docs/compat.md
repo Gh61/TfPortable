@@ -301,7 +301,7 @@ Milestone 4 (2026-10-08) notes on §9–§14, found while implementing against t
 | `view /recursive` | each file preceded by its path | `$/path;C<n>:` before each file |
 | `difference` labels | `--- Server: Program.cs;75` / `+++ Server: Program.cs;81` for two versions, `--- Server: $/path;C81` / `+++ Local: <path>` for a local edit, `Local:` for two server paths | the same shapes; two server paths are labelled `Server:` (compat §12); the `File:` line names the mapped local path when the workspace knows it, else the server path; the diff is TfPortable's own Myers line diff with three lines of context (hunk boundaries may differ from the original in rare cases); an added file is `@@ -0,0 +1,N @@` where the original prints `@@ -1,0 +1,N @@` |
 | `difference` with no pending change | `Comparing local with latest: <path>` | the same, after comparing the file with the latest server version |
-| `difference` line endings | CRLF and LF differ unless `/ignoreeol` | the same; a missing final newline is an end-of-line difference and is marked `\ No newline at end of file` as GNU diff does; the local side is decoded with the item's server encoding (a BOM wins) |
+| `difference` line endings | CRLF and LF differ unless `/ignoreeol`; a missing final newline differs even with `/ignoreeol`; `/ignorespace` keeps line-ending differences (section 20) | the same; a missing final newline is marked `\ No newline at end of file` as GNU diff does; the local side is decoded with the item's server encoding (a BOM wins) |
 | `difference` algorithm | – | linear-space Myers (no size limit); within a block of changes the deletes come before the inserts; a single `/version:C<n>` with two itemspecs applies to both sides |
 | `difference /shelveset` | `<change>: $/path;C<n>` then `Soubor: <name>` per file | the same lines (`File:`); JSON `files[].path` is the server path |
 | `dir` sorting | ordinal-ignore-case, folders first | the same; the queried folder heads the listing and is not counted; a file itemspec lists the file |
@@ -315,7 +315,7 @@ Milestone 4 (2026-10-08) notes on §9–§14, found while implementing against t
 | `history /workitem:<id>` | – | the linking service answers for a PAT on Azure DevOps Services (`OpenQuestionTests`); one call per search |
 | `properties` outside a workspace | needs a workspace | works with a server path: only the `Server information:` section |
 | `labels` with extra labels on the server | – | the golden brief listing compares shape only (later golden runs added labels) |
-| `branches` of a path that is not branched | error | TFP0301 (exit 100) |
+| `branches` of a path that is not branched | TF10101 message on stdout, exit 0 (golden `branches/not-branched`, 2026-10-09) | one message line, exit 0, JSON `branches: []` (section 20; was TFP0301 exit 100 before the capture) |
 | `merge /candidate /format:detailed` | blocks | the `changeset` block per candidate, `*` after the number of a partial one |
 
 ## 15. Phase 2 commands: `merge`, `branch`, `undelete`, `rollback`, `merges`, `folderdiff`, `annotate`
@@ -343,16 +343,16 @@ Phase 2 implementation (2026-10-08) notes, found against the client library:
 | --- | --- | --- |
 | `merge /preview` | lists what the merge would pend without pending it | the server's own preview (the library's `NoMerge` merge option, honoring `/version` and the other switches): the reported operations are printed in the merge line shape (`merge, edit: $/src;C83~C83 -> $/dst;C80`, from the library's Merging event); conflicts the server predicts are a summary TFP0403 (exit 1); the JSON has `preview: true` and the same `changes` shape as a real merge |
 | `merge` lines | `merge, edit: $/src;C83~C83 -> $/dst;C80` | the same shape from the merge sources of the pending change (`;C<n>` on the target only when the target existed) |
-| `merge` conflict | exit 1, `Conflict (merge, edit): ...` on stderr, the pending merge is created | the same: TFP0403 item error with the server path, hint to `resolve`; the pending merge stays |
+| `merge` conflict | exit 1, `Conflict (merge, edit): $/src/a.txt;C601~C601 -> $/rel/a.txt;C600` on stderr, the pending merge is created; the same line for `/preview`, `/noautoresolve`, `/baseless` and for `rollback` (`Conflict (edit, rollback): ...`, golden `rollback/range`, `rollback/merge-changeset`) | the same line as a TFP0403 item error (`ERROR TFP0403: Conflict (merge, edit): $/src/a.txt;C601~C601 -> $/rel/a.txt;C600`; the target is the `item` of the JSON error), built from the library's Merging event; exit 1; the pending merge stays |
 | `merge` with nothing to merge | message | `There are no changes to merge.` (exit 0) |
 | `branch` | target name, blank line, grouped tree with relative names | the same, the target name as given and absolute local paths in the groups (Gate A) |
 | `branch /silent` | less output | the library's silent branch: the server returns no get operations, so nothing is downloaded and no items are listed (the JSON `changes` is empty); without `/silent` the tree is listed and downloaded unless `/noget` |
 | `merge /discard` | marks the changes as merged, takes no content | the library's AlwaysAcceptMine merge option; the pending merge changes are listed as usual |
-| `rollback` without changes | message | `There is nothing to roll back.` (exit 0); `/toversion` without an itemspec and both or neither of `/changeset` and `/toversion` are TFP0002 |
+| `rollback` without changes | `TF204003` message, exit 0 (also for `/changeset:T`, `/changeset:D2020-01-01` and `/toversion:T`, golden `rollback/changeset-latest-spec`, `changeset-date-spec`, `toversion-latest`) | `There is nothing to roll back.` (exit 0); any version spec is accepted for `/changeset` as in the original; `/toversion` without an itemspec (TF203065, exit 100 in the original) and both or neither of `/changeset` and `/toversion` are TFP0002 (exit 100) |
 | `rollback /changeset:<c>` without an itemspec | the whole workspace (golden `rollback/changeset`) | the same: the mapped folders of the workspace, recursively (the library's workspace-wide overload pends nothing on a local workspace) |
 | `rollback /toversion:<v>` | rolls the items back to version `v` | the same through the library's ToVersion option with the range `v` to Latest (the library refuses a null version, and `v` as the upper bound pends nothing; question 33 of `docs/tf-reference/questions.md`) |
 | `undelete/not-found` | exit 1, TF14022 | TFP0301 item error, exit 1 |
-| `merges` | table Changeset, Merged in changeset, Author, Date; `*` after a partial source changeset | the same columns (`Merged in Changeset`), ISO date, sorted by source then target changeset; `/format:detailed` prints the target changesets in the `history /format:detailed` shape (one call per changeset) |
+| `merges` | table Changeset, Merged in changeset, Author, Date; `*` after a partial source changeset; `/format:detailed` is a list `Merged items:` + `$/src/a.txt;C596 -> $/rel/a.txt;C599` (golden `merges/detailed`) | the same columns (`Merged in Changeset`), ISO date, sorted by source then target changeset; `/format:detailed` prints the merged-items list in the same shape (JSON `items`) |
 | `folderdiff` | compares a server folder with a server folder or a local folder, section titles in the VS language | compares by content hash (the server's MD5 for server items, computed for local files; `$tf` is skipped), sections `Items that exist only in <path>`, `Items with different content`, `Items with the same content` (only with `/view:same`), each `=====` 79 wide as the golden shows, and `Summary: folders: n, files: n, source only: n, target only: n, different: n, errors: 0`; the local side of a single-path call is its workspace counterpart; `/filterLocalPathsOnly` is not supported |
 | `annotate` | – | columns Changeset, Owner, Date, Line; each line is attributed through tfp's Myers line diff from the oldest version of the item (renames followed by item id) up to the requested version; the Date column is the local date only (`yyyy-MM-dd`) so that the line text stays readable, the JSON carries the full ISO stamp; folder TFP0002, binary TFP0303, missing TFP0301 (exit 1) |
 
@@ -419,13 +419,107 @@ Help (`<command> /?`, `tfp help <command>`) is never gated.
 
 ## 19. Open questions raised by this analysis
 
-Recorded in `docs/PROGRESS.md`:
+Recorded in `docs/PROGRESS.md`; all but the PAT failure were settled by the captures of 2026-10-09 (section 20):
 
-1. `add <folder> /recursive` with items skipped by `.tfignore`: the seed script observed exit 1,
-   but there is no golden file. Follow the original (exit 1, skipped items listed) until captured.
-2. `reconcile /promote <folder> /recursive` promoted nothing in the golden run. Check whether
-   `/adds` and `/deletes` are required, in the integration test of milestone 3.
+1. `add <folder> /recursive` with items skipped by `.tfignore`: captured as `add/recursive-with-tfignore`:
+   exit 1, the ignored items are listed on stderr one by one. TfPortable keeps exit 0 and lists nothing
+   (section 20, deliberate deviation).
+2. `reconcile /promote <folder> /recursive` without `/adds` or `/deletes` promotes nothing
+   (`reconcile/promote-run`, exit 0): confirmed, the switches are required. TfPortable keeps its
+   section 7 behavior (promotes both without the switches).
 3. Gate A (2026-10-07): the two output deviations proposed here – no truncation of the last table
    column, and absolute local paths in grouped listings – were approved by the developer.
-4. No golden case exists for TFP0402 (writable file not overwritten by `get`) and for a PAT
-   failure; both stay as specified.
+4. TFP0402 (writable file not overwritten): captured for `unshelve/single-item` over a writable local
+   file (exit 1, section 20); `get` over a writable file is still uncaptured. No golden case exists for
+   a PAT failure; it stays as specified.
+
+## 20. Golden comparison of 2026-10-09 (`index-phase2-2610091535.json`, `index-extra2-2610091539.json`)
+
+The developer captured the phase 2 cases and the remaining gaps of the earlier phases with tf.exe 18.10
+(`tools/capture-tf-golden-phase2.ps1`, `tools/capture-tf-golden-extra2.ps1`). Every case was compared
+with TfPortable; "fixed" means TfPortable was changed to the original in the same commit, "deviate"
+is a recorded difference. Cases not listed match (exit code, items, order).
+
+### Phase 2 (`branch`, `merge`, `merges`, `rollback`, `undelete`, `folderdiff`)
+
+| Case | Original | TfPortable | Decision |
+| --- | --- | --- | --- |
+| `merge/preview-*`, `version-range`, `all-run`, `force`, `detailed`, `nosummary` | exit 0; merge lines; `/format:detailed` and `/nosummary` change nothing | the same lines; the two switches are accepted and change nothing | follow |
+| `merge/discard` | exit 0; the merge line plus `<local path> is resolved as KeepYours` | the merge lines; no resolve line | deviate: wording only; the JSON carries the pending merge |
+| `merge/preview-conflict`, `conflict-run`, `conflict-noautoresolve`, `baseless`, `rollback/range`, `keepmergehistory`, `merge-changeset` | exit 1; `Conflict (merge, edit): $/src;C601~C601 -> $/dst;C600` on stderr (`Conflict (edit, rollback): ...` for rollback), nothing on stdout | the same line as a TFP0403 item error with the target as the item; exit 1 | fixed (the conflict lines come from the library's Merging event; the earlier summary count is printed only for conflicts no event described) |
+| `merge/unrelated-without-baseless`, `merge/candidate-unrelated` | exit 100; "The item $/other is not a branch of $/src." | TFP0501 with the server message, exit 100 | follow |
+| `merge/nothing-to-merge`, `preview-nothing` | exit 0; one message line | `There are no changes to merge.` | follow |
+| `merges/detailed` | `Merged items:` then `$/src/a.txt;C594 -> $/rel/a.txt;C595` per merged item, sorted by source path and version | the same list (JSON `items`), instead of the earlier changeset blocks | fixed |
+| `merges/no-source`, `showall-run`, `single-file` | the table; `/showall` adds nothing here | the same | follow |
+| `merges/no-history` | exit 0; one message line | `No merge history was found.` | follow |
+| `rollback/changeset-latest-spec`, `changeset-date-spec`, `toversion-latest` | exit 0; `TF204003` nothing to roll back (`T` and a date are accepted as the changeset spec) | the spec is passed to the server; `There is nothing to roll back.` | fixed (TfPortable no longer refuses non-`C` specs with TFP0302) |
+| `rollback/toversion-no-item` | exit 100; TF203065 | TFP0002 "rollback /toversion needs at least one itemspec.", exit 100 | follow |
+| `rollback/both-switches` | exit 100 | TFP0002, exit 100 | follow |
+| `rollback/changeset-no-item` | exit 0; the whole workspace | the mapped folders of the workspace | follow |
+| `undelete/not-deleted`, `missing-run` | exit 1; TF14022 | TFP0301 item error, exit 1 | follow |
+| `undelete/wrong-deletion-id` (`;X1127` for deletion 127) | exit 0; the item is restored anyway | the deletion id is passed to the server; a wrong id is TF14022 (TFP0301, exit 1) in the library | deviate: tf.exe ignores a wrong deletion id; TfPortable reports it |
+| `undelete/folder-not-recursive` | exit 0; the folder and its children are restored (the deletion is one unit) | the same through the library | follow |
+| `undelete/deleted-twice`, `deleted-twice-first-id` | exit 0; without an id the latest deletion, with `;X<first>` the first | the same | follow |
+| `folderdiff/view-same` | exit 0; the compared folders themselves and the folders that exist on both sides are listed as pairs with the same content | sub-folder pairs were missing; the pair of the two root folders is still not listed | fixed for sub-folders; deviate: no root pair |
+| `folderdiff/view-invalid` | exit 100; TF10120 | TFP0002, exit 100 | follow |
+| `folderdiff/filter-exclude` (`/filter:*.txt;!b.txt`) | the `!` exclusion is ignored, `b.txt` is still compared | `!` excludes (Microsoft docs) | deviate: TfPortable honors the documented exclusion; `b.txt` is left out |
+| `folderdiff/filter-local-paths-only` | exit 0; the filter applies to the local side only | the switch is unsupported (TFP0002) | deviate (unchanged) |
+| `folderdiff/local-server`, `server-local`, `local-local`, `version` | section titles name the paths as given, `;T` or the version after a server path | the same | follow |
+| `folderdiff/one-path-local` | exit 0; the server folder of the local path is the source, the local folder the target | the same order (source server, target local) | fixed (the sides were swapped) |
+| `folderdiff/one-path-server` | exit 100; TF206007 "no source path and the local path is not mapped" | compares the server folder with its local counterpart, exit 0 | deviate: TfPortable accepts one server path (the counterpart is unambiguous in a mapped workspace) |
+| `folderdiff/missing-source`, `missing-local` | exit 100 | TFP0301, exit 100 | follow |
+| `folderdiff/local-pending-edit` | a locally edited file is listed under different content | the same (content hash of the local file) | follow |
+| `branch/silent`, `noget`, `version`, `branches/run-folder` | exit 0 | the same shapes | follow |
+
+### Earlier phases (`index-extra2-2610091539.json`)
+
+| Case | Original | TfPortable | Decision |
+| --- | --- | --- | --- |
+| `add/recursive-with-tfignore` | exit 1; the added items on stdout, one stderr line "Items matching the following exclusions were ignored: <path>" | exit 0; the added items only | deviate: an ignored item is not an error for an agent; `add /noignore` adds it on purpose (section 19, question 1) |
+| `add/ignored-noignore`, `already-pending`, `wildcard`, `single-file-run` | exit 0 | the same | follow |
+| `checkin/no-comment` | exit 0; checked in (the test collection has no comment policy) | the same unless a "Changeset Comments" policy is configured (TFP0407) | follow |
+| `checkin/validate-nothing-pending` | exit 100 | TFP0301, exit 100 | follow |
+| `checkin/unchanged-edit` (phase 3 capture) | exit 1; the server commits nothing and drops the unchanged pending edit; stderr names the item | TFP0301 "The server committed nothing" as an item error, exit 1 (a thrown TFP0301 of `checkin` stays exit 100 for `nothing-pending`) | fixed (was exit 100) |
+| `checkin /associate`, `history /workitem` | not switches of tf.exe 18.10 (unrecognized) | TfPortable extensions (`+` in `docs/commands.md`) | deviate: extensions |
+| `checkout/already-checked-out`, `own-lock`, `folder-recursive` | exit 0 | the same | follow |
+| `delete/with-pending-edit` | exit 1; TF203069 (an item with a pending edit cannot be deleted) | TFP0405 item error, exit 1 | follow |
+| `delete/folder-not-recursive` | exit 0; a folder delete is always the whole tree | the same (the server deletes the tree) | follow |
+| `rename/target-exists` | exit 100 | TFP0405, exit 100 | follow |
+| `rename/case-only`, `into-folder`, `folder` | exit 0 | the same | follow |
+| `difference/ignorespace` (`a b` vs `ab`) | equal | equal | follow |
+| `difference/eol-change-ignorespace` | `/ignorespace` does **not** hide a CRLF/LF change | the same (it hid it before) | fixed |
+| `difference/no-final-newline-ignoreeol` | `/ignoreeol` does **not** hide a missing final newline | the same (it hid it before) | fixed |
+| `difference/eol-change-ignoreeol` | equal | equal | follow |
+| `difference/binary` | exit 0; one `Binary files differ` style line | one line per SPEC.md (`binary files differ`) | follow |
+| `difference/folder-recursive`, `folder-recursive-brief`, `two-server-folders` | per-file diffs; two server folders print `Diff folder $/a against folder $/b` headers | per-file diffs with the file headers, no folder header | deviate: shape only |
+| `view/folder` | exit 1; "no matching files" | TFP0301 item error, exit 1 | follow |
+| `view/wildcard`, `folder-recursive` | exit 0; the raw content of every matched file concatenated, no header | one `$/path;C<n>:` header per file before its content | deviate: the header keeps the files apart for an agent (section 11) |
+| `view/binary-console`, `binary-to-output` | the binary content is dumped to the console or written to the file | TFP0303 on the console; `/output` writes the bytes | deviate (section 11) |
+| `view/lf-file`, `deleted-item-id` | exit 0 | the same | follow |
+| `dir/wildcard`, `wildcard-recursive`, `deleted-x` | exit 0 | the same | follow |
+| `properties/folder`, `folder-recursive`, `version`, `deleted-item`, `deleted-item-id` | exit 0 | the same | follow |
+| `branches/not-branched` | exit 0; a TF10101 message on stdout | `<path> has no branch relationships.`, exit 0, JSON `branches: []` | fixed (was TFP0301, exit 100) |
+| `label/*`, `labels/*` with a version, an owner, a wildcard | exit 0 | the same | follow |
+| `labels/after-unlabel-folder`, `labels/after-delete` (named label without a match) | exit 100 | TFP0301 `No label matches <name>.`, exit 100 (also for a wildcard name without a match, which no capture covers) | fixed (was an empty list, exit 0) |
+| `label/delete-run` of a missing label | exit 100 | TFP0301, exit 100 | follow |
+| `lock/none-on-unlocked` | exit 1; TF14090 "Cannot unlock <path>. It is not currently locked in your workspace." | TFP0301 item error `<path> has no lock to remove.`, exit 1 | fixed (was exit 0) |
+| `lock/already-locked`, `checkin-run`, `none-run` | exit 0 | the same | follow |
+| `lock/change-level` (`/lock:checkout` on a checkin-locked item) | exit 1; TF400022 | TFP0501 with the server message, exit 1 | follow |
+| `shelve/no-comment`, `delete-run`, `shelvesets/own-detailed` | exit 0 | the same | follow |
+| `shelve /replace` (phase 3 capture) | "Shelveset X created." | "Shelveset X replaced." | deviate: wording |
+| `unshelve/single-item`, `with-owner`, `local-itemspec` | exit 0; one item unshelved | the same | follow |
+| `unshelve/local-file-in-the-way` (phase 3 capture; a writable local file where the shelved item goes) | exit 1; the item is skipped, the file stays | TFP0402 item error "a writable file with the same name exists locally", exit 1 (an `errors` entry in JSON) | fixed (the library reports the file through a Getting event, not a failure) |
+| `shelve /validate` (phase 4) | cannot be combined with `/noprompt` in tf.exe 18.10 | TfPortable accepts both | deviate: extension |
+| `reconcile/promote-run` (no `/adds`, `/deletes`) | exit 0; promotes nothing | promotes adds and deletes | deviate (section 7, question 2) |
+| `reconcile/promote-adds`, `promote-deletes`, `promote-preview-run` | exit 0 | the same | follow |
+| `get/older-over-modified` | exit 1; the local modification becomes a pending edit and a version conflict is created | TFP0403 item error, exit 1; the same pending edit and conflict | follow |
+| `get/older-over-modified-overwrite` | exit 1 | the same | follow |
+| `get/remap`, `deleted-item-old-version` | exit 0 | the same | follow |
+| `resolve/list-after-get`, `list-overlapping`, `automerge-overlapping` | exit 1 (conflicts remain) | the same | follow |
+| `resolve/automerge-nonoverlapping`, `automerge-forced`, `overwritelocal-on-merge`, `deleteconflict-on-merge`, `keepyours-rename-theirs`, `alias-acceptmerge`, `keepyours-run` | exit 0 | the same (non-overlapping merge conflicts are resolved by the library's AutoMerge) | follow |
+| `history/deleted-item`, `deleted-item-id` | exit 0 | the same | follow |
+| `workfold/folder-argument`, `server-path` | exit 0 | the same | follow |
+
+Phase 4 captures (`index-phase4-2610091138.json`, reference only): `property /setproperty` is not a
+switch of tf.exe 18.10; `destroy /keephistory` reported nothing to destroy; `undo /workspace:<other>`
+and `lock /workspace:<other>` work against another workspace of the same owner.

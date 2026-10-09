@@ -72,7 +72,7 @@ namespace TfPortable.Commands
                 output.Line(change.MergeLine);
             }
 
-            if (result.Changes.Count == 0 && result.NumOperations > 0)
+            if (result.Changes.Count == 0 && result.ConflictLines.Count == 0 && result.NumOperations > 0)
             {
                 // The server reported operations the events did not describe (a preview of an older server).
                 output.Line($"{result.NumOperations} change(s) {(preview ? "would be" : "were")} pended.");
@@ -82,18 +82,35 @@ namespace TfPortable.Commands
                 output.Line(nothingText);
             }
 
-            if (result.NumConflicts > result.Conflicts.Count)
+            // The conflict lines come from the library's Merging event, in the shape of the original
+            // (`Conflict (merge, edit): $/src;C92~C92 -> $/dst;C93`, golden merge/conflict, rollback/range).
+            foreach (var conflict in result.ConflictLines)
             {
-                // Conflicts the conflict query did not return (a preview, or a query that failed): the count still counts.
+                string line = conflict.MergeLine;
+                int split = line.IndexOf(": ", StringComparison.Ordinal);
+                string operation = split < 0 ? line : line.Substring(split + 2);
                 output.ItemError(new TfpException(ErrorCodes.GetConflicts, ExitCodes.PartialSuccess,
-                    $"{result.NumConflicts - result.Conflicts.Count} conflict(s) {(preview ? "would be" : "were")} created.", $"'{toolName} resolve' lists them."));
+                    $"Conflict ({conflict.ChangeText}): {operation}",
+                    preview ? "The merge would leave this conflict to resolve." : $"Resolve it with '{toolName} resolve {conflict.LocalPath ?? conflict.ServerPath} /auto:TakeTheirs|KeepYours|AutoMerge'.",
+                    item: conflict.ServerPath));
             }
 
-            foreach (var conflict in result.Conflicts)
+            if (result.ConflictLines.Count == 0)
             {
+                foreach (var conflict in result.Conflicts)
+                {
+                    output.ItemError(new TfpException(ErrorCodes.GetConflicts, ExitCodes.PartialSuccess,
+                        $"Conflict ({conflict.Type}): {conflict.Message}",
+                        $"Resolve it with '{toolName} resolve {conflict.Path} /auto:TakeTheirs|KeepYours|AutoMerge'.", item: conflict.Path));
+                }
+            }
+
+            int reported = result.ConflictLines.Count > 0 ? result.ConflictLines.Count : result.Conflicts.Count;
+            if (result.NumConflicts > reported)
+            {
+                // Conflicts no event or query described: the count still counts.
                 output.ItemError(new TfpException(ErrorCodes.GetConflicts, ExitCodes.PartialSuccess,
-                    $"Conflict ({conflict.Type}): {conflict.Message}",
-                    $"Resolve it with '{toolName} resolve {conflict.Path} /auto:TakeTheirs|KeepYours|AutoMerge'.", item: conflict.Path));
+                    $"{result.NumConflicts - reported} conflict(s) {(preview ? "would be" : "were")} created.", $"'{toolName} resolve' lists them."));
             }
 
             foreach (var failure in result.Failures)
@@ -178,17 +195,6 @@ namespace TfPortable.Commands
             }
 
             var items = WorkspaceCommandSupport.Items(commandLine, toolName, true, "rollback /changeset:C85");
-            if (changesetText != null)
-            {
-                // Changeset numbers only (checked before the connection); a date, a label or a workspace version is TFP0302.
-                var check = VersionSpecParser.ParseRange(changesetText, null, null);
-                if (!(check.To is ChangesetVersionSpec) || (check.IsRange && !(check.From is ChangesetVersionSpec)))
-                {
-                    throw new TfpException(ErrorCodes.InvalidVersionSpec, ExitCodes.GeneralError, "rollback /changeset needs changeset numbers.",
-                        $"Write '/changeset:C<n>' or '/changeset:C<from>~C<to>', for example '{toolName} rollback /changeset:C85'.");
-                }
-            }
-
             if (toVersionText != null && items.Count == 0)
             {
                 throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "rollback /toversion needs at least one itemspec.", $"Example: '{toolName} rollback /toversion:C84 Main\\\\src /recursive'.");
@@ -253,35 +259,41 @@ namespace TfPortable.Commands
             string target = context.ServerPathOf(items[items.Count - 1], toolName);
             var merges = context.Client.QueryMerges(source, target, commandLine.Has("recursive") ? RecursionType.Full : RecursionType.None, commandLine.Has("showall"));
 
-            output.Lines(RenderTable(merges));
-            if (detailed && merges.Count > 0)
-            {
-                // The detailed form adds the block of every target changeset with its items (one call per distinct changeset).
-                var detailedMerges = new List<MergeHistoryInfo>();
-                var fetched = new Dictionary<int, ChangesetInfo>();
-                foreach (var merge in merges)
-                {
-                    if (!fetched.TryGetValue(merge.TargetChangeset.Id, out var changeset))
-                    {
-                        changeset = context.Client.GetChangeset(merge.TargetChangeset.Id);
-                        fetched[changeset.Id] = changeset;
-                    }
-
-                    detailedMerges.Add(new MergeHistoryInfo(merge.SourceChangeset, changeset, merge.Partial));
-                }
-
-                merges = detailedMerges;
-                output.Line();
-                output.Lines(HistoryCommand.RenderDetailed(fetched.Values.OrderBy(c => c.Id).ToList(), false));
-            }
-
-            output.Success(new JObject
+            var json = new JObject
             {
                 ["source"] = source,
                 ["target"] = target,
-                ["merges"] = new JArray(merges.Select(m => m.ToJson(detailed)).Cast<object>().ToArray()),
-            });
+                ["merges"] = new JArray(merges.Select(m => m.ToJson(false)).Cast<object>().ToArray()),
+            };
+            if (detailed)
+            {
+                // The detailed form lists the merged items instead of the table (golden merges/detailed).
+                var items2 = context.Client.QueryMergedItems(source, target, commandLine.Has("recursive") ? RecursionType.Full : RecursionType.None, commandLine.Has("showall"));
+                output.Lines(RenderItems(items2));
+                json["items"] = new JArray(items2.Select(i => i.ToJson()).Cast<object>().ToArray());
+            }
+            else
+            {
+                output.Lines(RenderTable(merges));
+            }
+
+            output.Success(json);
             return ExitCodes.Success;
+        }
+
+        internal static IEnumerable<string> RenderItems(IReadOnlyList<MergedItemInfo> items)
+        {
+            if (items.Count == 0)
+            {
+                yield return "No merge history was found.";
+                yield break;
+            }
+
+            yield return "Merged items:";
+            foreach (var item in items.OrderBy(i => i.SourcePath, StringComparer.OrdinalIgnoreCase).ThenBy(i => i.SourceVersion).ThenBy(i => i.TargetVersion))
+            {
+                yield return item.Line;
+            }
         }
 
         internal static IEnumerable<string> RenderTable(IReadOnlyList<MergeHistoryInfo> merges)

@@ -14,22 +14,21 @@ Read this first in every session. Update it at the end of every session (see CLA
 | 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | done: [PR #4](https://github.com/Gh61/TfPortable/pull/4) (docs/CLAUDE.md, compatibility tests, embedded-assembly check, THIRD-PARTY-NOTICES) reviewed, CI green and merged into `main` on 2026-10-08; release [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) published the same day (developer approved; `tfp.exe` + SHA-256 from the CI run on 2a1c007) | user approved the release on 2026-10-08 |
 | P2 | Phase 2: `merge`, `branch`, `rollback`, `undelete` as pending changes, `merges`, `folderdiff`, `annotate` | cloud + CI | done: [PR #12](https://github.com/Gh61/TfPortable/pull/12) reviewed by an independent agent (findings under Decisions), CI green (195 unit and 86 integration tests) and merged into `main` on 2026-10-08 with a merge commit | – |
 | P3 | Phase 3: protection levels, `checkin`, `shelve`/`shelvesets`/`unshelve`, `label`/`unlabel`, `lock` | cloud + CI | done: [PR #9](https://github.com/Gh61/TfPortable/pull/9) merged into `main` on 2026-10-08 (merge commit 3c92ea2) after an independent review (findings under Decisions); 187 unit and 82 integration tests green | release `v0.2.0` (developer) |
+| GC | Golden comparison: tfp against the captures of phases 2, 3, 4 and the extra2 gaps (2026-10-09) | cloud + CI | done: [PR #14](https://github.com/Gh61/TfPortable/pull/14) reviewed by an independent agent (findings under Decisions), CI green (197 unit and 90 integration tests) and merged into `main` on 2026-10-09 with a merge commit; fixes and recorded deviations in `docs/compat.md` §20 | – |
 
 Statuses: not started, in progress, blocked, done.
 
 ## Next steps
 
-0. Phase 2 is merged ([PR #12](https://github.com/Gh61/TfPortable/pull/12)). When tf.exe is at hand, the
-   developer runs `tools/capture-tf-golden-all.ps1` (phase 2, 3 and 4 in one sitting;
-   `tools/capture-tf-golden-phase2.ps1` covers the phase 2 behaviors found by trial, questions 27–33 of
-   `docs/tf-reference/questions.md`) and the agent compares tfp against the captures.
+0. The golden comparison is merged ([PR #14](https://github.com/Gh61/TfPortable/pull/14)): the code fixes and
+   the recorded deviations are in `docs/compat.md` §20; the captures of all four runs are committed
+   (`index-phase2-2610091535.json`, `index-extra2-2610091539.json`, `index-phase3-2610091137.json`,
+   `index-phase4-2610091138.json`).
 1. Phase 3 is merged ([PR #9](https://github.com/Gh61/TfPortable/pull/9)). Release `v0.2.0` is the
    developer's gate (step 3).
-2. Ask the developer to run `tools/capture-tf-golden-phase3.ps1` (the cases without
-   a golden file: `checkin /validate`, `/associate`, a comment file, an unchanged edit, `shelve /replace`,
-   `/move`, an existing name, `unshelve` with a local file in the way, `/nomerge`, `label` without a
-   scope, `/child:*`, `label /delete`, `lock` edge cases) and compare tfp against the captures
-   (`docs/compat.md` §16 lists the assumed shapes).
+2. Optional follow-ups the comparison surfaced (not started): golden tests that load the phase 2 and extra2
+   cases explicitly (the golden runner only runs cases listed by `group/name`); the `get` over a writable
+   file case (TFP0402) is still uncaptured.
 3. Release `v0.2.0` (developer gate): run the CI workflow manually on `main` with `release_tag`.
 4. If a package changes later, update `src/TfPortable/embedded-assemblies.txt` from the output of
    the CI step "Check the embedded assemblies against THIRD-PARTY-NOTICES" and THIRD-PARTY-NOTICES.
@@ -47,8 +46,7 @@ before phase 4). The items below are kept for history.
   a delete checkin at the end), the developer cannot easily run tf.exe for new captures (so phase 3
   follows the existing captures and the Microsoft docs; `tools/capture-tf-golden-phase3.ps1` is ready
   for later), and work item #1 (a bug) exists for `checkin /associate`.
-- After PR #9 merges: run `tools/capture-tf-golden-phase3.ps1` when tf.exe is at hand (see "Next
-  steps" 2), and release `v0.2.0` (see "Next steps" 3).
+- Release `v0.2.0` (see "Next steps" 3). The golden captures of 2026-10-09 are done and compared.
 - The permanent shelveset `tfp-golden-shelveset` was created by the developer on 2026-10-08;
   `ShelvesetTests` finds it by name (any owner) and fails with the visible shelveset names when it
   does not.
@@ -171,6 +169,8 @@ before phase 4). The items below are kept for history.
 | 2026-10-08 | Review of PR #9 (independent agent, no blocking findings, 8 should-fix, 4 nits) and the fixes: (1) help of a command (`/?`, `-h`, `help <cmd>`) is never gated by the protection level; (2) `checkin` reports every conflict (TFP0406) and policy failure (TFP0407) as an item error, so JSON `errors[]` carries the server paths and messages, and `/validate` returns the evaluation with exit 100 instead of throwing; (3) `checkin /force` sets `AllowUnchangedContent`; (4) `undo /workspace:<name>` raises the level for every value, recorded in SPEC.md and compat.md §18 (the gate runs before the connection); (5) SPEC.md and README now say `shelve /delete` and `label /delete` are phase 3 at level 3; (6) `lock /lock:checkout` in a local workspace maps TF400022 to a TFP0501 item error with exit 1 as the golden capture; (7) a non-integer `protectionLevel` in the settings file is TFP0004, not TFP0900; (8) the "blocked at level 2" assertions of the integration tests run inside a level-2 settings scope; nits: `overridden` is consistent, the nothing-pending message no longer mirrors the golden text, hints lost their semicolons | Review findings |
 | 2026-10-09 | Golden redaction of the phase 3 and 4 captures (runs 2610091137 and 2610091138, 75 files + 2 indexes) before commit: the organization name in identities of `permission/folder*` → `[<ORG>]\...` and `Build Service (<ORG>)` (4 files, 16 occurrences); in `workspaces/two-of-owner` the names of the developer's three unrelated workspaces → `<OTHER_WORKSPACE_1..3>` and their computer → `<OTHER_COMPUTER>` (6 occurrences). Nothing else changed; UTF-8 without BOM and CRLF preserved. Checked and clean: owner's name (already `<OWNER>` from the script), e-mails, `C:\Users\<USER>`, collection URL, GUIDs, token-like strings | Same reason as the step 0 redaction of 2026-10-07: the capture scripts replace only the collection URL, the owner, the computer and the user name, so bare identities and other workspaces of the owner slip through. The developer asked that the full name and computer names never appear |
 | 2026-10-08 | Review of PR #4 (independent agent, one should-fix: PROGRESS.md was stale): status table, next steps and "Needs the user" rewritten for the hand-over; `docs/CLAUDE.md` keeps only the `-candidate` permission rule (the `/candidate` form never arrives from Git Bash) and says the switch must follow `merge`, names the three meanings of exit 120 (no workspace, path not mapped, server workspace), notes that `view -output:` writes a file and that aliases (`hist`, `stat`, ...) are not in the allow list; the compatibility test checks the `undo` and that no detected change is left; the CI step trims the list lines before the `#` check; SPEC.md points to `docs/CLAUDE.md` as the maintained template | Review findings |
+| 2026-10-09 | Golden comparison (`docs/compat.md` §20) – fixes: merge and rollback conflicts are printed as the original's `Conflict (merge, edit): $/src;C601~C601 -> $/dst;C600` line (TFP0403 item error per conflict, built from the library's Merging event; the summary count only for conflicts no event described); `merges /format:detailed` lists the merged items (`Merged items:` + `source;Cn -> target;Cm`, `QueryMergesWithDetails`, JSON `items`) instead of changeset blocks; `rollback /changeset:` accepts any version spec (`T`, a date) as tf.exe does (TFP0302 check removed, the server answers "nothing to roll back"); `folderdiff` with one local path takes the server folder as the source and lists folder pairs under `/view:same`; `difference /ignorespace` no longer hides a CRLF/LF change and `/ignoreeol` no longer hides a missing final newline; `branches` of an unbranched item exits 0 with a message and `branches: []`; `labels <name>` without a match exits 100 (TFP0301); `lock /lock:none` of an unlocked item exits 1 (TFP0301 per item); the three messages are tfp's own wording, not the golden texts; `unshelve` over a writable local file reports TFP0402 (exit 1; the library signals it as a Getting event with the TargetWritable status, mapped to a failure); `checkin` of an unchanged edit exits 1 instead of 100 (as an item error: a thrown TFP0301 of `checkin` is exit 100 by the per-command table). Independent review of the branch: 3 blocking (the new unit test, the ineffective `checkin` exit code, the `merges` integration assertion), 4 should-fix (a stale §14 row, golden texts reworded, the `folderdiff` root pair recorded as a deviation, `/discard` keeps the conflict lines), 5 nits; all fixed except the root pair | tf.exe 18.10 captures of 2026-10-09 (phase 2 run 2610091535, extra2 run 2610091539, phase 3 run 2610091137) |
+| 2026-10-09 | Golden comparison – recorded deviations (kept on purpose): `add /recursive` with `.tfignore` matches exits 0 and lists nothing (tf.exe: exit 1 and one stderr line); `folderdiff /filter` honors a `!` exclusion (tf.exe 18.10 ignores it) and accepts one server path (tf.exe: TF206007); `undelete ;X<wrong id>` is TFP0301 (tf.exe restores the item anyway); `view` of a wildcard or `/recursive` keeps the `$/path;C<n>:` header per file and refuses binaries on the console (tf.exe dumps raw content); two server folders in `difference` get per-file headers only; `reconcile /promote` without `/adds`/`/deletes` promotes both (tf.exe promotes nothing); `shelve /replace` says "replaced"; `shelve /validate` combines with `/noprompt`; `checkin /associate` and `history /workitem` are extensions (not switches of tf.exe 18.10); `merge /discard` prints no "resolved as KeepYours" line | Agent-friendly output and documented Microsoft behavior win over the quirks of one tf.exe version; every deviation is in `docs/compat.md` §20 |
 
 ## Open questions
 
@@ -187,13 +187,19 @@ golden loader and `index-extra*.json` (every `index*.json` is searched), `histor
 (the linking service answers), `/encoding` values (the library parses names, code pages and `binary`), and the review
 nits of PR #3 (`view` downloads, shelved content, `branches` tree, `merge /version`, `difference /encoding`).
 
+Closed on 2026-10-09 by the captures of phases 2, 3, 4 and extra2 (`docs/compat.md` §20, questions 27–33 of
+`docs/tf-reference/questions.md`): the phase 2 shapes (merge previews, conflicts, `merges /format:detailed`,
+rollback specs, undelete ids, folderdiff sides and views), the phase 3 shapes (`checkin /validate`, unchanged
+edit, `shelve /replace`, `unshelve` with a local file in the way, `label` without a scope, `label /delete`, `lock`
+edge cases), `add /recursive` with `.tfignore` (tf.exe exits 1; tfp keeps 0), `reconcile /promote` without
+switches (promotes nothing in tf.exe; tfp keeps promoting), TFP0402 for `unshelve`.
+
 Open:
 
-- No golden case exists for TFP0402 (the library's "writable" status of `get`): tfp maps it as SPEC.md says, but no
-  capture or integration test has produced it (local workspaces report a conflict instead).
-- Phase 3 shapes assumed without a capture (docs/compat.md §16): `checkin /validate`, `/associate`, a policy
-  failure, `shelve /replace` and `/move` wording, `label` without a scope, `label /delete`, `lock` of an unknown
-  item. `tools/capture-tf-golden-phase3.ps1` captures them when the developer has tf.exe at hand.
+- No golden case exists for TFP0402 from `get` (the library's "writable" status): local workspaces report a
+  conflict instead; `unshelve/local-file-in-the-way` is the only capture of a writable file in the way.
+- A checkin policy failure is still uncaptured (the test project has no policy); `checkin /associate` is a
+  tfp extension, so the "Work Items" policy shape stays assumed.
 - Checkin policies: tfp evaluates "Work Items" and "Changeset Comments" itself and reports the rest as unknown
   (TFP0409); `/override` is level 2 (decided 2026-10-08). The test project has no policy yet, so the policy
   assertions of `Phase3Tests` are skipped until the developer configures one (see `docs/DEVELOPER-TODO.md`).
@@ -208,6 +214,9 @@ Open:
   `docs/golden-format.md` §5).
 - Phase 3 and 4 captures on 2026-10-09 (same tf.exe): `index-phase3-2610091137.json` and
   `index-phase4-2610091138.json`, 75 case files, redacted before commit (see Decisions 2026-10-09).
+- Phase 2 and extra2 captures on 2026-10-09 (same tf.exe): `index-phase2-2610091535.json` (102 cases under
+  `$/<Project>/Main/golden2-2610091535`) and `index-extra2-2610091539.json` (115 cases under
+  `$/<Project>/Main/goldenx-2610091539`), committed in bcb807a; compared with tfp in `docs/compat.md` §20.
 - `index.json` (read-only and pending-change cases) and `index-extra-<run>.json` (server-writing cases)
   list every case with its command and exit code. Two extra runs exist: `index-extra.json` (run
   2610071920, 76 cases, no run suffix in the file name) and `index-extra-2610071925.json` (41 cases).
@@ -216,6 +225,23 @@ Open:
   `tools/capture-tf-golden-extra.ps1` (from C84, including history padding).
 
 ## Session log
+
+### 2026-10-09 – cloud session, golden comparison (branch `golden-compare`)
+
+- Done (earlier in the session): PR #13 merged (ac08eaf): `tools/capture-tf-golden-phase2.ps1`,
+  `tools/capture-tf-golden-extra2.ps1`, the all-in-one runner order, the phase 2 script fix after the
+  developer's first run. The developer then captured all four runs and committed them (bcb807a).
+- Done: every case of the phase 2 and extra2 runs (and the phase 3 and 4 runs) compared with tfp. Code fixes
+  and recorded deviations under Decisions 2026-10-09 and in `docs/compat.md` §20; `commands.md`,
+  `json-schema.md`, `tf-reference/questions.md` (27–33, 3, 25, 26), `DEVELOPER-TODO.md` updated. Unit tests
+  for the conflict lines, the merged-items list and the `difference` option semantics; the
+  labels-after-delete integration assertion now expects exit 100.
+- CI loop (runs 129–132): the new conflict-line unit test exposed a pended-count line for conflict-only merges
+  (fixed) and the stderr form of an item error (no item prefix); the review (3 blocking, 4 should-fix, 5 nits)
+  found the ineffective `checkin` exit code and the stale `merges` integration assertion; all fixed, CI green,
+  merged with a merge commit.
+- Next: the developer's checklist (release `v0.2.0`); phase 4 waits for the scope decision.
+- Blockers: none.
 
 ### 2026-10-08 – cloud session, phase 2 (branch `p2-branching`, PR #12)
 

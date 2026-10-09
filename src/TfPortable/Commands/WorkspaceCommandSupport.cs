@@ -143,6 +143,12 @@ namespace TfPortable.Commands
                     $"Check it with '{toolName} status'; use '{toolName} undo' to drop the pending change.", tfCode, message, item);
             }
 
+            if (code.IndexOf("Writable", StringComparison.OrdinalIgnoreCase) >= 0 || message.IndexOf("writable file", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return new TfpException(ErrorCodes.WritableFileSkipped, ExitCodes.PartialSuccess, $"{prefix}a writable file with the same name exists locally and was not overwritten.",
+                    "Move or delete the local file, then run the command again.", tfCode, message, item);
+            }
+
             if (code.IndexOf("Lock", StringComparison.OrdinalIgnoreCase) >= 0 || message.IndexOf("locked", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 return new TfpException(ErrorCodes.ItemLocked, ExitCodes.PartialSuccess, $"{prefix}the item is locked.",
@@ -160,6 +166,7 @@ namespace TfPortable.Commands
                 case ErrorCodes.ItemNotFound: return "notFound";
                 case ErrorCodes.PendingChangeConflict: return "alreadyVersioned";
                 case ErrorCodes.ItemLocked: return "locked";
+                case ErrorCodes.WritableFileSkipped: return "writable";
                 default: return "error";
             }
         }

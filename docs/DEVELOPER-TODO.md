@@ -67,7 +67,11 @@ Before the run, if it is still open: configure the checkin policies "Work Items"
 test project (section 2). The `checkin/no-comment` and `checkin/no-work-item` cases of extra2 then capture the
 policy failure shape tfp only assumes (`docs/compat.md` §16).
 
-Done when the two index files are committed.
+Done: all four index files were captured on 2026-10-09 (`index-phase2-2610091535.json`, 102 cases;
+`index-extra2-2610091539.json`, 115 cases; `index-phase3-2610091137.json`; `index-phase4-2610091138.json`)
+and compared with tfp (`docs/compat.md` §20, PR "golden-compare"). Still uncaptured: `get` over a writable
+local file (TFP0402; local workspaces report a conflict instead), a checkin policy failure (section 2 is still
+open), `undo /workspace:<other>` without permission.
 
 ## 3b. Decompile tf.exe for the reference notes (agreed on 2026-10-08)
 

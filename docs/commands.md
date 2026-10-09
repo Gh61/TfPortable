@@ -172,7 +172,7 @@ tf vc history itemspec [/version:versionspec] [/stopafter:number] [/recursive] [
 | Switch | TfPortable |
 | --- | --- |
 | all of the above | ✓ (default slot mode, docs/compat.md §9; without `/stopafter` at most 256 entries) |
-| `/comment:`, `/changetype:`, `/workitem:`, `/files`, `/contains:` | + extensions (SPEC.md "Vyhledávání v historii") |
+| `/comment:`, `/changetype:`, `/workitem:`, `/files`, `/contains:` | + extensions (SPEC.md "Vyhledávání v historii"); tf.exe 18.10 rejects `/workitem` (golden `history/by-work-item`, exit 100) |
 
 ### changeset
 
@@ -265,10 +265,10 @@ tf vc merge [/recursive] [/force] [/candidate] [/discard] [/version:versionspec]
 | --- | --- |
 | `/candidate` with `/recursive`, `/version:`, `/format:` | ✓ phase 1 |
 | `/force`, `/baseless`, `/discard`, `/noimplicitbaseless`, `/conservative`, `/noautoresolve`, `/recursive`, `/version:from~to` | ✓ phase 2, as pending changes (mapped to the merge options of the client library; a single `/version:C<n>` is the upper bound) |
-| `/preview` | ✓ phase 2 through the server's preview (the `NoMerge` merge option): the operations a merge would pend, in the merge line shape; predicted conflicts are a summary TFP0403 (exit 1) |
+| `/preview` | ✓ phase 2 through the server's preview (the `NoMerge` merge option): the operations a merge would pend, in the merge line shape; predicted conflicts are `Conflict (...)` lines as in the original (TFP0403, exit 1) |
 | `/lock:none` | ✓; `/lock:checkin\|checkout` ✗ (server locks) |
-| `/nosummary` | ✗ (tfp prints no summary) |
-| `/format:brief\|detailed` | ~ accepted; the pending merge listing has one shape |
+| `/nosummary` | ~ accepted; tf.exe 18.10 prints no summary either (golden `merge/nosummary` equals `merge/all-run`) |
+| `/format:brief\|detailed` | ~ accepted; the pending merge listing has one shape in tf.exe 18.10 too (golden `merge/detailed`) |
 
 ## Phase 2 (branching as pending changes; `merge`, `branch`, `undelete`, `rollback` at protection level 2)
 
@@ -281,8 +281,8 @@ tf vc merges [source] destination [/recursive] [/extended] [/format:(brief|detai
 `/extended` is listed by the help but rejected at run time by tf.exe 18.10 ("option not allowed",
 golden `merges/extended`); TfPortable does not implement it (✗). `/recursive`, `/showall` ✓;
 `/format:brief` is the table Changeset, Merged in Changeset, Author, Date (`*` after a partial merge),
-`/format:detailed` adds the target changesets in the `history /format:detailed` shape. Without a
-source every merge into the destination is listed.
+`/format:detailed` is the list of merged items (`Merged items:`, then `$/src/a.txt;C596 -> $/rel/a.txt;C599`
+per item, golden `merges/detailed`). Without a source every merge into the destination is listed.
 
 ### annotate (+ extension; tf.exe has no such command, golden `help/annotate` exit 2)
 
@@ -304,8 +304,8 @@ tf vc folderdiff [sourcePath] targetPath [/recursive] [/noprompt] [/collection:u
 | Switch | TfPortable |
 | --- | --- |
 | `sourcePath targetPath` (server or local, `;version` on a server path) | ✓ compared by content hash (the server's MD5, computed for local files); the relative path decides which items are compared |
-| `targetPath` alone | ✓ the folder against its counterpart in the workspace (a local folder against its server path, a server path against its local folder); TFP0201 outside a workspace |
-| `/recursive`, `/filter:` (`;`-separated patterns, `!` excludes), `/view:` | ✓ (default view: sourceOnly, targetOnly, different) |
+| `targetPath` alone | ✓ the folder against its counterpart in the workspace: the server folder is the source and the local folder the target (golden `folderdiff/one-path-local`); a server path alone is accepted too (tf.exe 18.10 refuses it with TF206007, `docs/compat.md` §20); TFP0201 outside a workspace |
+| `/recursive`, `/filter:` (`;`-separated patterns, `!` excludes), `/view:` | ✓ (default view: sourceOnly, targetOnly, different); tf.exe 18.10 ignores a `!` exclusion (golden `folderdiff/filter-exclude`), tfp honors it as the Microsoft docs describe |
 | `/filterLocalPathsOnly` | ✗ |
 | `/noprompt` | ~ accepted (tfp never opens the dialog) |
 
@@ -326,8 +326,8 @@ tf vc checkin /shelveset:shelvesetname[;shelvesetowner] [/bypass] [/noprompt] [/
 | `/comment:` | ✓ required (tfp never opens the checkin dialog); `@file` reads it from a file |
 | `/recursive`, `/validate`, `/author:`, `/noautoresolve` | ✓ (`/validate` evaluates conflicts, policies and notes and checks nothing in) |
 | `/override:` | ✓ bypasses failed (TFP0407) and unknown (TFP0409) checkin policies and missing notes; the reason is recorded in the changeset |
-| `/associate:id[,id]` | **+** links the work items to the changeset over the REST work item API after the checkin (the "Fixed in Changeset" link) |
-| `/force` | ✓ checks in an edit whose content did not change (`AllowUnchangedContent`); without it the server commits nothing and tfp reports TFP0301 |
+| `/associate:id[,id]` | **+** links the work items to the changeset over the REST work item API after the checkin (the "Fixed in Changeset" link); not a switch of tf.exe 18.10 (golden `checkin/associate`, exit 100) |
+| `/force` | ✓ checks in an edit whose content did not change (`AllowUnchangedContent`); without it the server commits nothing, drops the pending edit and tfp reports TFP0301 with exit 1 (golden `checkin/unchanged-edit`) |
 | `/notes:`, `/saved`, `/bypass`, `/new`, `/shelveset:` | ✗ |
 
 Output: `Checking in <change>: <name>` grouped by folder, then `Changeset #<n> checked in.` Nothing pending is TFP0301 (exit 100).

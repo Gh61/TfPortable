@@ -158,6 +158,9 @@ namespace TfPortable.Context
         /// <summary>Merge history into the target (`merges`); null source = from anywhere; `showAll` includes merges of deleted items.</summary>
         IReadOnlyList<MergeHistoryInfo> QueryMerges(string? sourcePath, string targetPath, RecursionType recursion, bool showAll);
 
+        /// <summary>The merged items behind the merge history (`merges /format:detailed`).</summary>
+        IReadOnlyList<MergedItemInfo> QueryMergedItems(string? sourcePath, string targetPath, RecursionType recursion, bool showAll);
+
         /// <summary>Shelvesets by name and owner (null = any); the owner may be a unique or a display name.</summary>
         IReadOnlyList<ShelvesetInfo> QueryShelvesets(string? name, string? owner);
 
