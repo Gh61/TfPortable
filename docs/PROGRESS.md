@@ -24,12 +24,13 @@ Statuses: not started, in progress, blocked, done.
    the recorded deviations are in `docs/compat.md` §20; the captures of all four runs are committed
    (`index-phase2-2610091535.json`, `index-extra2-2610091539.json`, `index-phase3-2610091137.json`,
    `index-phase4-2610091138.json`).
-1. Phase 3 is merged ([PR #9](https://github.com/Gh61/TfPortable/pull/9)). Release `v0.2.0` is the
-   developer's gate (step 3).
+1. Phases 2 and 3 are released as [v0.2.0](https://github.com/Gh61/TfPortable/releases/tag/v0.2.0)
+   (2026-10-09, CI run 37970558255 on d94a6a7, at the developer's request in the session).
 2. Optional follow-ups the comparison surfaced (not started): golden tests that load the phase 2 and extra2
    cases explicitly (the golden runner only runs cases listed by `group/name`); the `get` over a writable
    file case (TFP0402) is still uncaptured.
-3. Release `v0.2.0` (developer gate): run the CI workflow manually on `main` with `release_tag`.
+3. Phase 4: the developer answers the scope questions (`docs/DEVELOPER-TODO.md` section 5), then SPEC.md
+   "Fáze 4" is written from the answers and the work starts on a branch `p4-server`.
 4. If a package changes later, update `src/TfPortable/embedded-assemblies.txt` from the output of
    the CI step "Check the embedded assemblies against THIRD-PARTY-NOTICES" and THIRD-PARTY-NOTICES.
 5. Phase 4 is undecided (README "Phases and progress", `docs/DEVELOPER-TODO.md`).
@@ -46,7 +47,8 @@ before phase 4). The items below are kept for history.
   a delete checkin at the end), the developer cannot easily run tf.exe for new captures (so phase 3
   follows the existing captures and the Microsoft docs; `tools/capture-tf-golden-phase3.ps1` is ready
   for later), and work item #1 (a bug) exists for `checkin /associate`.
-- Release `v0.2.0` (see "Next steps" 3). The golden captures of 2026-10-09 are done and compared.
+- Phase 4 scope (`docs/DEVELOPER-TODO.md` section 5). The golden captures of 2026-10-09 are done and
+  compared; `v0.2.0` is released.
 - The permanent shelveset `tfp-golden-shelveset` was created by the developer on 2026-10-08;
   `ShelvesetTests` finds it by name (any owner) and fails with the visible shelveset names when it
   does not.
@@ -240,7 +242,9 @@ Open:
   (fixed) and the stderr form of an item error (no item prefix); the review (3 blocking, 4 should-fix, 5 nits)
   found the ineffective `checkin` exit code and the stale `merges` integration assertion; all fixed, CI green,
   merged with a merge commit.
-- Next: the developer's checklist (release `v0.2.0`); phase 4 waits for the scope decision.
+- Release `v0.2.0` published from `main` (d94a6a7) on the developer's request: `tfp.exe` 4,000,256 bytes
+  and its SHA-256.
+- Next: phase 4 waits for the scope decision (questions put to the developer in the session).
 - Blockers: none.
 
 ### 2026-10-08 – cloud session, phase 2 (branch `p2-branching`, PR #12)

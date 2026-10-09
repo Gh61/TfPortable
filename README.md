@@ -4,9 +4,8 @@
 one file, no Visual Studio, no dialogs, sign-in with a Personal Access Token, and output that is
 easy to read for people and easy to parse for scripts and AI coding agents.
 
-> Status: phase 1 (reading and workspace work) is released as
-> [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0); phases 2 and 3 (branching as pending
-> changes, the everyday write path) are merged on `main` and wait for the next release. Later phases (see
+> Status: phases 1 to 3 (reading and workspace work, branching as pending changes, the everyday write
+> path) are released as [v0.2.0](https://github.com/Gh61/TfPortable/releases/tag/v0.2.0). Later phases (see
 > "Phases and progress") answer `TFP0003` until they are implemented. Day-to-day state: `docs/PROGRESS.md`.
 
 ## Why this project exists
@@ -135,8 +134,8 @@ answers `TFP0003` with the phase it is planned for.
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 1 | Reading and workspace work: the commands in the table above (PAT sign-in, status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces, history, changeset, view, difference, dir, properties, labels, branches, merge /candidate). Everything it changes is local and reversible with `undo` | **done**, released as [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) (2026-10-08) |
-| 2 | Branching as pending changes: `merge`, `branch`, `rollback` and `undelete` (reversible with `undo`, protection level 2); `merges`, `folderdiff` and the `annotate` extension read only. Content search in history came with phase 1 | done ([PR #12](https://github.com/Gh61/TfPortable/pull/12)) |
-| 3 | The everyday write path: `checkin`, `label`/`unlabel`, `shelve` with `shelvesets` and `unshelve` (`shelve /delete` and `label /delete` at protection level 3), `lock`/`unlock`, so that work can be checked in, labelled, parked on the server and taken up again. Comes with the protection levels (`docs/SPEC.md`, "Úrovně ochrany") | done ([PR #9](https://github.com/Gh61/TfPortable/pull/9), release `v0.2.0` pending) |
+| 2 | Branching as pending changes: `merge`, `branch`, `rollback` and `undelete` (reversible with `undo`, protection level 2); `merges`, `folderdiff` and the `annotate` extension read only. Content search in history came with phase 1 | done ([PR #12](https://github.com/Gh61/TfPortable/pull/12)), released as [v0.2.0](https://github.com/Gh61/TfPortable/releases/tag/v0.2.0) (2026-10-09) |
+| 3 | The everyday write path: `checkin`, `label`/`unlabel`, `shelve` with `shelvesets` and `unshelve` (`shelve /delete` and `label /delete` at protection level 3), `lock`/`unlock`, so that work can be checked in, labelled, parked on the server and taken up again. Comes with the protection levels (`docs/SPEC.md`, "Úrovně ochrany") | done ([PR #9](https://github.com/Gh61/TfPortable/pull/9)), released as [v0.2.0](https://github.com/Gh61/TfPortable/releases/tag/v0.2.0) (2026-10-09) |
 | 4 | The rest of `tf.exe`, including commands that change the server irreversibly (`destroy`, `permission`, `workspace /new` and `/delete`, `proxy`, `configure`). Whether the tool should offer them is undecided | hypothetical |
 
 ## For AI agents
