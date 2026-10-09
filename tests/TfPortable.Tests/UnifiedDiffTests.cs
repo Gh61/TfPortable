@@ -22,7 +22,8 @@ namespace TfPortable.Tests
         public void Missing_final_newline_is_a_difference_with_a_marker()
         {
             Assert.False(UnifiedDiff.AreEqual("a\nb\n", "a\nb", DiffOptions.None));
-            Assert.True(UnifiedDiff.AreEqual("a\nb\n", "a\nb", DiffOptions.IgnoreEol));
+            // Golden difference/no-final-newline-ignoreeol: /ignoreeol does not hide a missing final newline.
+            Assert.False(UnifiedDiff.AreEqual("a\nb\n", "a\nb", DiffOptions.IgnoreEol));
             var lines = UnifiedDiff.Render("a\nb\n", "a\nb", "L", "R").ToList();
             Assert.Equal(new[] { "--- L", "+++ R", "@@ -1,2 +1,2 @@", " a", "-b", "+b", "\\ No newline at end of file" }, lines);
         }
@@ -100,6 +101,9 @@ namespace TfPortable.Tests
             Assert.False(UnifiedDiff.AreEqual("a b\n", "ab\n", DiffOptions.None));
             Assert.True(UnifiedDiff.AreEqual("A\n", "a\n", DiffOptions.IgnoreCase));
             Assert.True(UnifiedDiff.AreEqual("a\r\n", "a\n", DiffOptions.IgnoreEol));
+            // Golden difference/eol-change-ignorespace: /ignorespace ignores spaces and tabs, not the line ending.
+            Assert.False(UnifiedDiff.AreEqual("a\r\n", "a\n", DiffOptions.IgnoreSpace));
+            Assert.True(UnifiedDiff.AreEqual("a \r\n", "a\n", DiffOptions.IgnoreSpace | DiffOptions.IgnoreEol));
         }
 
         [Fact]

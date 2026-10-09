@@ -11,6 +11,8 @@ agent; it adjusts the code and `docs/compat.md`.
 2. Which messages go to stderr and which to stdout: is it "errors and warnings to stderr, listings to stdout" or
    does each command decide? (§1.2)
 3. Does tf.exe read `.tfignore` itself for `add /recursive`, or only through the library's `PendAdd(... applyIgnore)`?
+   (Capture 2026-10-09, `add/recursive-with-tfignore`: exit 1 and one stderr line naming the ignored items, so
+   tf.exe reports them itself; tfp keeps exit 0, `docs/compat.md` §20. Still open: where the list comes from.)
 
 ## checkin
 
@@ -49,20 +51,33 @@ agent; it adjusts the code and `docs/compat.md`.
 
 ## merge, branch, rollback, undelete (phase 2)
 
-`tools/capture-tf-golden-phase2.ps1` captures the cases behind questions 27–33 (`index-phase2-<run>.json`).
+`tools/capture-tf-golden-phase2.ps1` captured the cases behind questions 27–33 on 2026-10-09
+(`index-phase2-2610091535.json`). What the captures settled is noted under each question; only the
+library-level "how" remains for the decompiled tf.exe.
 
 27. `merge /preview`: does tf.exe use the `NoMerge` merge option (the server's preview) and the Merging event of
-    the library for the lines, as tfp does (`docs/compat.md` §15)?
+    the library for the lines, as tfp does (`docs/compat.md` §15)? (Settled in effect: the preview lines and the
+    preview conflict line of `merge/preview-*` equal tfp's output; which option tf.exe passes is still unknown.)
 28. `merge` summary lines (the count of merged items and conflicts, suppressed by `/nosummary`): exact text and
-    whether they go to stdout.
-29. `branch /version:` default: latest, or the workspace version of a local source path?
+    whether they go to stdout. (Settled: tf.exe 18.10 prints no summary line at all; `merge/nosummary` and
+    `merge/all-run` are identical.)
+29. `branch /version:` default: latest, or the workspace version of a local source path? (`branch/version` with
+    `/version:C<n>` matches tfp; the default is still unverified.)
 30. `rollback` with a range `/changeset:C85~C90` and no itemspec: does tf.exe pass the whole workspace, or the
-    items of the changesets? (tfp: the whole workspace through the library's workspace-wide overload.)
+    items of the changesets? (tfp: the whole workspace through the library's workspace-wide overload.) (Settled for
+    a single changeset: `rollback/changeset-no-item` rolls back the whole workspace; the range form was captured
+    with an itemspec only.)
 31. `undelete` of an item deleted several times without `;X<n>`: which deletion is restored (the latest)?
+    (Settled: the latest; `;X<first>` restores the first; a wrong `;X<n>` is ignored by tf.exe and the item is
+    restored anyway, `undelete/wrong-deletion-id`, where tfp reports TFP0301.)
 32. `folderdiff`: compared by hash, by size and date, or by content? Which items does `/filterLocalPathsOnly`
-    exclude? (tfp: by the MD5 hash of the item, local files computed.)
+    exclude? (tfp: by the MD5 hash of the item, local files computed.) (Partly settled: a pending local edit is
+    listed as different content, so the comparison is by content; `/filterLocalPathsOnly` applied the filter to the
+    local side only in `folderdiff/filter-local-paths-only`; a `!` exclusion in `/filter` is ignored by tf.exe 18.10.)
 33. `rollback /toversion:<v>`: which `versionFrom` and `versionTo` does tf.exe pass to the library with the
-    ToVersion option (it refuses null)? (tfp: `v` as from and Latest as to, found by trial in CI.)
+    ToVersion option (it refuses null)? (tfp: `v` as from and Latest as to, found by trial in CI.) (Settled in
+    effect: `rollback/toversion-run` and `toversion-latest` match tfp's results; the versions tf.exe passes are
+    still unknown.)
 
 ## protection-relevant commands (phase 4 candidates)
 
@@ -75,5 +90,8 @@ agent; it adjusts the code and `docs/compat.md`.
 24. `workspace /new` defaults: location (local or server) when `/location` is missing, permission profile, the
     default mapping (`$/` to the current folder or none).
 25. `undo /workspace:<other>`: which permission the server checks and which message comes back when it is missing.
+    (`undo/other-workspace` of the phase 4 capture: works for another workspace of the same owner; the missing
+    permission case is uncaptured.)
 26. `property`: the exact switch forms of tf.exe 18.10 (`/setproperty`, `/deleteproperty`, reading) and whether
-    the command exists at all in this version (the help capture is empty).
+    the command exists at all in this version (the help capture is empty). (Phase 4 capture: `property <item>`
+    reads, `/setproperty` is unrecognized, exit 100.)

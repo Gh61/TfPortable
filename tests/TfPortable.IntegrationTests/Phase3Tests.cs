@@ -259,7 +259,10 @@ namespace TfPortable.IntegrationTests
                     Assert.Contains($"Deleted label {spec}", deleted.Stdout);
                 }
 
-                Assert.DoesNotContain((JArray)Data(Run($"labels {name} /format:json"))["labels"]!, l => (string)l["name"]! == name);
+                // Golden labels/after-delete: a named label that does not exist is TFP0301, exit 100.
+                var gone = Run($"labels {name} /format:json");
+                Assert.Equal(100, gone.ExitCode);
+                Assert.Contains("TFP0301", gone.Stdout);
             }
             finally
             {

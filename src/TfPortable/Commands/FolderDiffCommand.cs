@@ -83,7 +83,8 @@ namespace TfPortable.Commands
             }
             else
             {
-                // One path: the folder against its counterpart in the workspace (local ↔ server).
+                // One path: the folder against its counterpart in the workspace. tf.exe takes a local path as the target and its
+                // server folder as the source (golden folderdiff/one-path-local) and refuses a server path; tfp compares both ways.
                 var given = specs[0];
                 if (context.Workspace == null)
                 {
@@ -94,8 +95,8 @@ namespace TfPortable.Commands
                 var counterpart = given.IsServerPath
                     ? new ParsedItemSpec(given.Original, context.Workspace.GetLocalItemForServerItem(given.Path) ?? throw NotMapped(given.Path, context, toolName), false, null, null, 0)
                     : new ParsedItemSpec(given.Original, context.ServerPathOf(given, toolName), true, null, null, 0);
-                source = Load(given.IsServerPath ? counterpart : given, context, recursive, filters, toolName);
-                target = Load(given.IsServerPath ? given : counterpart, context, recursive, filters, toolName);
+                source = Load(given.IsServerPath ? given : counterpart, context, recursive, filters, toolName);
+                target = Load(given.IsServerPath ? counterpart : given, context, recursive, filters, toolName);
             }
 
             var sourceOnly = new List<Entry>();
@@ -111,6 +112,7 @@ namespace TfPortable.Commands
                 else if (entry.IsFolder || other.IsFolder)
                 {
                     if (entry.IsFolder != other.IsFolder) { different.Add(new KeyValuePair<Entry, Entry>(entry, other)); }
+                    else { same.Add(new KeyValuePair<Entry, Entry>(entry, other)); }
                 }
                 else if (string.Equals(entry.Hash, other.Hash, StringComparison.OrdinalIgnoreCase) && entry.Hash != null)
                 {

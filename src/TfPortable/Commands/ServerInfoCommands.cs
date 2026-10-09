@@ -273,6 +273,11 @@ namespace TfPortable.Commands
             string? owner = commandLine.Value("owner");
             using var context = ContextResolver.Resolve(commandLine, output, toolName, requireWorkspace: false);
             var labels = context.Client.QueryLabels(name, scope, owner == "*" ? null : owner, detailed);
+            if (labels.Count == 0 && !string.IsNullOrEmpty(name))
+            {
+                // tf.exe exits 100 when a named label does not exist (golden labels/after-delete).
+                throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError, "No labels found.", $"'{toolName} labels' lists every label; '{toolName} labels <name>@<scope>' narrows by scope.", item: name);
+            }
 
             output.Lines(detailed ? RenderDetailed(labels) : RenderBrief(labels));
             output.Success(new JObject { ["labels"] = new JArray(labels.Select(l => l.ToJson(detailed)).Cast<object>().ToArray()) });
@@ -369,7 +374,10 @@ namespace TfPortable.Commands
             var roots = context.Client.GetBranchHistory(path, version);
             if (roots.Count == 0)
             {
-                throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError, $"{path}: no branch history.", $"Check the path with '{toolName} dir'.", item: path);
+                // Not an error in tf.exe (golden branches/not-branched): the message and exit 0.
+                output.Line($"{path} is not used in any branch tree.");
+                output.Success(new JObject { ["root"] = path, ["branches"] = new JArray() });
+                return ExitCodes.Success;
             }
 
             output.Lines(Render(path, roots));

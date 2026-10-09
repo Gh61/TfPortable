@@ -295,7 +295,7 @@ Fáze 1 pokrývá 21 příkazů tf.exe a 3 příkazy pro správu PAT: vše pro p
 | `labels` | `/owner:` `/format:` | Seznam labelů | 1 |
 | `branches` | `/version:` | Strom větví pro položku | 1 |
 | `merge /candidate` | `/recursive` `/version:` | Jen výpis changesetů, které ještě nejsou sloučené (čtecí operace); hvězdička za číslem označuje částečně sloučený changeset jako v originálu | 1 |
-| `merges` | `/recursive` `/showall` `/format:brief\|detailed` | Historie sloučení mezi větvemi: tabulka Changeset, Merged in Changeset, Author, Date, hvězdička za částečným sloučením; `/format:detailed` vypíše cílové changesety jako `history /format:detailed` (`/extended` tf.exe 18.10 odmítá, nepodporuje se) | 2 |
+| `merges` | `/recursive` `/showall` `/format:brief\|detailed` | Historie sloučení mezi větvemi: tabulka Changeset, Merged in Changeset, Author, Date, hvězdička za částečným sloučením; `/format:detailed` vypíše seznam sloučených položek (`Merged items:` a řádky `zdroj;C<n> -> cíl;C<m>`, jako tf.exe 18.10) (`/extended` tf.exe 18.10 odmítá, nepodporuje se) | 2 |
 | `annotate` | `/version:` | Kdo a ve kterém changesetu změnil každý řádek (rozšíření; tf.exe příkaz nezná, golden `annotate/attempt` exit 2); sloupce Changeset, Owner, Date, Line; složka TFP0002, binární soubor TFP0303, neexistující TFP0301 (exit 1) | 2 |
 | `folderdiff` | `/recursive` `/filter:` `/view:same,different,sourceOnly,targetOnly` | Rozdíl dvou složek (server nebo lokální) nebo jedné složky a jejího protějšku ve workspace, podle obsahu (hash); sekce jako originál a řádek `Summary:`; jen text, bez dialogu | 2 |
 | `shelvesets` | `/owner:` `/format:` | Seznam shelvesetů | 3 |

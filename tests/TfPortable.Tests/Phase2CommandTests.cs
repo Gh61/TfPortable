@@ -102,8 +102,41 @@ namespace TfPortable.Tests
             Assert.StartsWith("ERROR TFP0002: folderdiff needs a target path", Run("folderdiff").Err);
             Assert.StartsWith("ERROR TFP0002: annotate needs exactly one file.", Run("annotate").Err);
             Assert.StartsWith("ERROR TFP0002: /view:bogus is not one of", Run("folderdiff", "$/a", "$/b", "/view:bogus").Err);
-            Assert.StartsWith("ERROR TFP0302: rollback /changeset needs changeset numbers.", Run("rollback", "/changeset:T").Err);
-            Assert.StartsWith("ERROR TFP0302: rollback /changeset needs changeset numbers.", Run("rollback", "/changeset:D2026-01-01~C5", "a").Err);
+        }
+
+        [Fact]
+        public void Conflicts_are_reported_as_lines_of_the_original_shape()
+        {
+            // Golden merge/conflict and rollback/range: one `Conflict (<change>): <source> -> <target>` line per conflict, exit 1.
+            var conflict = Change("merge, edit", "$/P/dst/a.txt", 93, new MergeSourceInfo("$/P/src/a.txt", 92, 92, false));
+            var result = new MergeResult(Array.Empty<PendingChangeInfo>(), Array.Empty<ConflictInfo>(), Array.Empty<FailureInfo>(), 1, 1, false, new[] { conflict });
+            var stdout = new StringWriter();
+            var stderr = new StringWriter();
+            var output = new OutputWriter(false, "merge", stdout, stderr);
+            BranchingCommands.ReportMergeResult(output, result, "There are no changes to merge.", "tfp");
+            Assert.Equal("", stdout.ToString());
+            Assert.StartsWith("ERROR TFP0403: $/P/dst/a.txt: Conflict (merge, edit): $/P/src/a.txt;C92~C92 -> $/P/dst/a.txt;C93", stderr.ToString());
+            Assert.DoesNotContain("conflict(s) were created", stderr.ToString());
+
+            // Without event lines the conflict query and the count still report.
+            var counted = new MergeResult(Array.Empty<PendingChangeInfo>(), Array.Empty<ConflictInfo>(), Array.Empty<FailureInfo>(), 0, 2, false);
+            stderr = new StringWriter();
+            BranchingCommands.ReportMergeResult(new OutputWriter(false, "merge", new StringWriter(), stderr), counted, "There are no changes to merge.", "tfp", preview: true);
+            Assert.StartsWith("ERROR TFP0403: 2 conflict(s) would be created.", stderr.ToString());
+        }
+
+        [Fact]
+        public void Merges_detailed_lists_the_merged_items()
+        {
+            // Golden merges/detailed: the detailed form is a list of `source;Cn -> target;Cm` items, not the table.
+            var items = new[]
+            {
+                new MergedItemInfo("$/P/src/b.txt", 90, "$/P/dst/b.txt", 91),
+                new MergedItemInfo("$/P/src/a.txt", 88, "$/P/dst/a.txt", 89),
+            };
+            Assert.Equal(new[] { "Merged items:", "$/P/src/a.txt;C88 -> $/P/dst/a.txt;C89", "$/P/src/b.txt;C90 -> $/P/dst/b.txt;C91" }, MergesCommand.RenderItems(items));
+            Assert.Equal(new[] { "No merge history was found." }, MergesCommand.RenderItems(Array.Empty<MergedItemInfo>()));
+            Assert.Equal("$/P/src/a.txt", items[1].ToJson()["sourcePath"]!.ToString());
         }
 
         [Fact]

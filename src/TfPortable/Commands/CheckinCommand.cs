@@ -114,7 +114,8 @@ namespace TfPortable.Commands
             int changeset = workspace.CheckIn(changes, comment, commandLine.Value("author"), overridden ? overrideReason : null, failures, commandLine.Has("noautoresolve"), commandLine.Has("force"));
             if (changeset <= 0)
             {
-                throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError, "The server committed nothing: the content of the changes is unchanged.",
+                // tf.exe exits 1 here and the server drops the unchanged edit (golden checkin/unchanged-edit).
+                throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.PartialSuccess, "The server committed nothing: the content of the changes is unchanged.",
                     $"Pass /force to check in unchanged content, or '{toolName} undo' the changes.");
             }
 

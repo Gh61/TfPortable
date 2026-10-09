@@ -133,17 +133,20 @@ namespace TfPortable.Output
                 lines = lines.Take(lines.Length - 1).ToArray();
             }
 
-            bool ignoreEol = options.HasFlag(DiffOptions.IgnoreEol) || options.HasFlag(DiffOptions.IgnoreSpace);
+            // tf.exe: /ignorespace ignores spaces and tabs but not the line ending, /ignoreeol ignores CRLF against LF but not a
+            // missing final newline (golden difference/eol-change-ignorespace, no-final-newline-ignoreeol).
+            bool ignoreEol = options.HasFlag(DiffOptions.IgnoreEol);
             var keys = lines.Select((l, i) =>
             {
                 string k = l;
-                if (options.HasFlag(DiffOptions.IgnoreSpace))
-                {
-                    k = new string(k.Where(c => !char.IsWhiteSpace(c)).ToArray());
-                }
-                else if (ignoreEol)
+                if (ignoreEol)
                 {
                     k = k.TrimEnd('\r');
+                }
+
+                if (options.HasFlag(DiffOptions.IgnoreSpace))
+                {
+                    k = new string(k.Where(c => c == '\r' || !char.IsWhiteSpace(c)).ToArray());
                 }
 
                 if (options.HasFlag(DiffOptions.IgnoreCase))
@@ -151,8 +154,8 @@ namespace TfPortable.Output
                     k = k.ToUpperInvariant();
                 }
 
-                // A missing final newline is an end-of-line difference of the last line.
-                if (missingFinalNewline && i == lines.Length - 1 && !ignoreEol)
+                // A missing final newline is a difference of the last line, even with /ignoreeol.
+                if (missingFinalNewline && i == lines.Length - 1)
                 {
                     k += "\0";
                 }

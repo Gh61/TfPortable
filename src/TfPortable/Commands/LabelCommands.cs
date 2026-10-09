@@ -207,7 +207,16 @@ namespace TfPortable.Commands
             }
 
             result = new PendResult(result.Changes, result.Failures.Where(f => !IsCheckoutLockRefusal(f.Message)).ToList(), result.Count);
-            if (result.Changes.Count == 0 && result.Failures.Count == 0 && result.Count > 0)
+            if (lockLevel == LockLevel.None && result.Count == 0 && result.Failures.Count == 0)
+            {
+                // Nothing was unlocked: the item is not locked in this workspace (golden lock/none-on-unlocked, exit 1).
+                foreach (string path in paths)
+                {
+                    output.ItemError(new TfpException(ErrorCodes.ItemNotFound, ExitCodes.PartialSuccess, $"{path} is not locked in your workspace.",
+                        $"'{toolName} properties {path}' shows the lock state.", item: path));
+                }
+            }
+            else if (result.Changes.Count == 0 && result.Failures.Count == 0 && result.Count > 0)
             {
                 // The library reported no pending change event (an unlock); list what was asked for.
                 foreach (string path in paths)
