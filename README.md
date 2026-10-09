@@ -136,7 +136,27 @@ answers `TFP0003` with the phase it is planned for.
 | 1 | Reading and workspace work: the commands in the table above (PAT sign-in, status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces, history, changeset, view, difference, dir, properties, labels, branches, merge /candidate). Everything it changes is local and reversible with `undo` | **done**, released as [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) (2026-10-08) |
 | 2 | Branching as pending changes: `merge`, `branch`, `rollback` and `undelete` (reversible with `undo`, protection level 2); `merges`, `folderdiff` and the `annotate` extension read only. Content search in history came with phase 1 | done ([PR #12](https://github.com/Gh61/TfPortable/pull/12)), released as [v0.2.0](https://github.com/Gh61/TfPortable/releases/tag/v0.2.0) (2026-10-09) |
 | 3 | The everyday write path: `checkin`, `label`/`unlabel`, `shelve` with `shelvesets` and `unshelve` (`shelve /delete` and `label /delete` at protection level 3), `lock`/`unlock`, so that work can be checked in, labelled, parked on the server and taken up again. Comes with the protection levels (`docs/SPEC.md`, "Úrovně ochrany") | done ([PR #9](https://github.com/Gh61/TfPortable/pull/9)), released as [v0.2.0](https://github.com/Gh61/TfPortable/releases/tag/v0.2.0) (2026-10-09) |
-| 4 | The rest of `tf.exe`, including commands that change the server irreversibly (`destroy`, `permission`, `workspace /new` and `/delete`, `proxy`, `configure`). Whether the tool should offer them is undecided | hypothetical |
+| 4 | The rest of `tf.exe` that still makes sense for a portable, PAT-only tool: `destroy` (level 3, a `/preview` run first), `permission` (listing at level 1, changes at level 3), `workspace /new` and `/delete` (level 3), `property` (read), `lock` and `undo` on another workspace (level 3), `checkin /shelveset`, `unshelve /move`, `shelve /validate`, `resolvePath`. `proxy`, `configure`, `certificates` and `msdn` stay out (client configuration and dialogs) | planned |
+
+## Protection levels
+
+TfPortable runs at one of three protection levels. Every command and switch has the level it
+needs; a command above the configured level ends with `TFP0004` (exit 100) before the tool
+connects, and the hint says how to raise the level. The level is stored in
+`%APPDATA%\TfPortable\settings.json` and changed only by `tfp protection set <1|2|3>` in an
+interactive terminal (raising it asks for a typed confirmation). `tfp protection` and
+`tfp whoami` show it. It is a guard rail and a clear contract for scripts and agents, not a
+security boundary: the agent's own permission rules (for Claude Code, [docs/CLAUDE.md](docs/CLAUDE.md))
+remain the real enforcement.
+
+| Level | Allows | Commands |
+| --- | --- | --- |
+| 1 | Reading only; the only write to disk is `view /output` | `status`, `history`, `changeset`, `view`, `difference`, `dir`, `properties`, `localversions`, `workfold`, `workspaces`, `labels`, `branches`, `merge /candidate`, `merges`, `folderdiff`, `annotate`, `shelvesets`, `help`, `version`, `whoami`, `login`, `logout`, `protection` |
+| 2 (default) | Everyday work: pending changes, workspace updates and the everyday writes to the server | level 1 plus `add`, `checkout`, `delete`, `rename`, `undo`, `get`, `resolve`, `reconcile`, `merge`, `branch`, `rollback`, `undelete`, `checkin`, `shelve`, `unshelve`, `label`, `unlabel`, `lock` |
+| 3 | Everything, including irreversible changes and other people's workspaces | level 2 plus `shelve /delete`, `label /delete`, `undo /workspace:<name>` and the phase 4 commands that change the server (`destroy`, `permission` changes, `workspace /new` and `/delete`) |
+
+The full table with the per-switch levels is in `docs/SPEC.md` ("Úrovně ochrany") and
+`docs/commands.md`.
 
 ## For AI agents
 
