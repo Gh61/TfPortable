@@ -78,7 +78,7 @@ namespace TfPortable.Output
         /// </summary>
         public void ItemError(TfpException error)
         {
-            itemErrors.Add(Message(error.Code, error.TfCode, error.Message, error.Hint, error.Item, error.ActivityId));
+            itemErrors.Add(Message(error.Code, error.TfCode, error.Message, error.Hint, error.Item, error.ActivityId, error.ServerMessage));
             if (!Json)
             {
                 WriteErrorText(error);
@@ -106,7 +106,7 @@ namespace TfPortable.Output
             {
                 var errors = new JArray(itemErrors.Cast<object>().ToArray())
                 {
-                    Message(error.Code, error.TfCode, error.Message, error.Hint, error.Item, error.ActivityId),
+                    Message(error.Code, error.TfCode, error.Message, error.Hint, error.Item, error.ActivityId, error.ServerMessage),
                 };
                 stdout.WriteLine(Envelope(error.ExitCode, new JObject(), errors).ToString(Formatting.Indented));
                 return;
@@ -182,7 +182,7 @@ namespace TfPortable.Output
             }
         }
 
-        private static JObject Message(string? code, string? tfCode, string message, string? hint, string? item, string? activityId)
+        private static JObject Message(string? code, string? tfCode, string message, string? hint, string? item, string? activityId, string? serverMessage = null)
         {
             return new JObject
             {
@@ -192,6 +192,7 @@ namespace TfPortable.Output
                 ["hint"] = hint,
                 ["item"] = item,
                 ["activityId"] = activityId,
+                ["serverMessage"] = serverMessage,
             };
         }
     }

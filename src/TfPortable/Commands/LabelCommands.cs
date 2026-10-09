@@ -185,7 +185,9 @@ namespace TfPortable.Commands
             var items = WorkspaceCommandSupport.Items(commandLine, toolName, false, "lock Main\\src\\App.cs /lock:checkin");
             using var context = ContextResolver.Resolve(commandLine, output, toolName, requireWorkspace: true);
             var workspace = context.RequireWorkspace(toolName);
-            var paths = WorkspaceCommandSupport.LocalPaths(items, context, toolName);
+            // The library locks server paths as well as local ones: a server path stays as given, so that a lock in another workspace
+            // (`/workspace:<other>`, phase 4 capture lock/other-workspace) needs no local copy of the item.
+            var paths = items.Select(i => i.Path).ToList();
             var recursion = commandLine.Has("recursive") ? RecursionType.Full : RecursionType.None;
 
             PendResult result;

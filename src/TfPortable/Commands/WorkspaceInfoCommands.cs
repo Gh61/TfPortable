@@ -68,19 +68,25 @@ namespace TfPortable.Commands
         }
     }
 
-    /// <summary>`tfp workfold [localfolder | serverfolder] [/workspace:name]`: the mappings of the workspace (docs/compat.md §3). /map etc. are phase 2.</summary>
+    /// <summary>
+    /// `tfp workfold [localfolder | serverfolder] [/workspace:name]`: the mappings of the workspace (docs/compat.md §3);
+    /// `/map serverfolder localfolder`, `/unmap folder`, `/cloak serverfolder`, `/decloak serverfolder` change them (phase 4, level 2).
+    /// </summary>
     internal sealed class WorkfoldCommand : ICommand
     {
         public string Name => "workfold";
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            foreach (string edit in new[] { "map", "unmap", "cloak", "decloak" })
+            var edits = new[] { "map", "unmap", "cloak", "decloak" }.Where(commandLine.Has).ToList();
+            if (edits.Count > 1)
             {
-                if (commandLine.Has(edit))
-                {
-                    throw new TfpException(ErrorCodes.NotSupported, ExitCodes.GeneralError, $"workfold /{edit} is not available in this build (phase 2).", "Change the mappings in Visual Studio or with the original tf.exe for now.");
-                }
+                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "workfold takes one of /map, /unmap, /cloak and /decloak.", $"Example: '{toolName} workfold /map $/Project/Main C:\\Src\\Main'.");
+            }
+
+            if (edits.Count == 1)
+            {
+                return Edit(edits[0], commandLine, output, toolName);
             }
 
             if (commandLine.Positionals.Count > 1)
@@ -104,6 +110,64 @@ namespace TfPortable.Commands
 
             output.Lines(Render(summary, mappings));
             output.Success(new JObject { ["workspace"] = summary.ToJson() });
+            return ExitCodes.Success;
+        }
+
+        /// <summary>The mapping change, then the listing of the workspace as `workfold` prints it.</summary>
+        private static int Edit(string edit, CommandLine commandLine, OutputWriter output, string toolName)
+        {
+            int expected = edit == "map" ? 2 : 1;
+            if (commandLine.Positionals.Count != expected)
+            {
+                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError,
+                    edit == "map" ? "workfold /map needs the server folder and the local folder." : $"workfold /{edit} needs one folder.",
+                    edit == "map" ? $"Example: '{toolName} workfold /map $/Project/Main C:\\Src\\Main'." : $"Example: '{toolName} workfold /{edit} $/Project/Main/Docs'.");
+            }
+
+            using var context = ContextResolver.Resolve(commandLine, output, toolName, requireWorkspace: true);
+            var workspace = context.RequireWorkspace(toolName);
+            var first = ItemSpecParser.Parse(commandLine.Positionals[0]);
+            string serverPath = first.Path;
+            if (edit == "map" || edit == "cloak" || edit == "decloak")
+            {
+                if (!first.IsServerPath)
+                {
+                    throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, $"workfold /{edit} needs a server folder ($/...) first.", $"Example: '{toolName} workfold /{edit} $/Project/Main{(edit == "map" ? " C:\\Src\\Main" : string.Empty)}'.");
+                }
+            }
+
+            switch (edit)
+            {
+                case "map":
+                    workspace.Map(serverPath, ItemSpecParser.NormalizeLocalPath(commandLine.Positionals[1]));
+                    output.Line($"Mapped {serverPath} to {ItemSpecParser.NormalizeLocalPath(commandLine.Positionals[1])}.");
+                    break;
+                case "cloak":
+                    workspace.Cloak(serverPath);
+                    output.Line($"Cloaked {serverPath}.");
+                    break;
+                default:
+                    if (!workspace.Unmap(first.Path))
+                    {
+                        throw new TfpException(ErrorCodes.PathNotMapped, ExitCodes.WorkspaceNotFound, $"{first.Path} is not a mapping of workspace {context.WorkspaceSpec}.", $"'{toolName} workfold' lists the mappings.", item: first.Path);
+                    }
+
+                    output.Line($"{(edit == "unmap" ? "Unmapped" : "Decloaked")} {first.Path}.");
+                    break;
+            }
+
+            try
+            {
+                context.Client.UpdateWorkspaceCache();
+            }
+            catch (Exception)
+            {
+                // Cache refresh is an optimization only.
+            }
+
+            var summary = workspace.Summary;
+            output.Lines(Render(summary, summary.Mappings));
+            output.Success(new JObject { ["workspace"] = summary.ToJson(), ["edit"] = edit });
             return ExitCodes.Success;
         }
 

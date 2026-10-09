@@ -21,6 +21,7 @@ namespace TfPortable.Errors
         public const string InvalidSwitch = "TFP0002";
         public const string NotSupported = "TFP0003";
         public const string ProtectionLevel = "TFP0004";
+        public const string NotOffered = "TFP0005";
 
         public const string PatMissing = "TFP0101";
         public const string PatRejected = "TFP0102";
@@ -45,6 +46,7 @@ namespace TfPortable.Errors
         public const string CheckinPolicy = "TFP0407";
         public const string ShelvesetExists = "TFP0408";
         public const string CheckinPolicyUnknown = "TFP0409";
+        public const string DestroyNeedsPreview = "TFP0410";
 
         public const string ServerError = "TFP0501";
         public const string Unexpected = "TFP0900";
@@ -56,6 +58,7 @@ namespace TfPortable.Errors
             [InvalidSwitch] = ExitCodes.GeneralError,
             [NotSupported] = ExitCodes.GeneralError,
             [ProtectionLevel] = ExitCodes.GeneralError,
+            [NotOffered] = ExitCodes.GeneralError,
             [PatMissing] = ExitCodes.Authentication,
             [PatRejected] = ExitCodes.Authentication,
             [PatScope] = ExitCodes.Authentication,
@@ -76,6 +79,7 @@ namespace TfPortable.Errors
             [ShelvesetExists] = ExitCodes.GeneralError,
             [CheckinPolicyUnknown] = ExitCodes.GeneralError,
             [CleanNeedsConfirmation] = ExitCodes.GeneralError,
+            [DestroyNeedsPreview] = ExitCodes.GeneralError,
             [ServerError] = ExitCodes.GeneralError,
             [Unexpected] = ExitCodes.GeneralError,
         };

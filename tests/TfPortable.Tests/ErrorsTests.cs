@@ -16,12 +16,12 @@ namespace TfPortable.Tests
         {
             var expected = new Dictionary<string, int>
             {
-                ["TFP0001"] = 2, ["TFP0002"] = 100, ["TFP0003"] = 100, ["TFP0004"] = 100,
+                ["TFP0001"] = 2, ["TFP0002"] = 100, ["TFP0003"] = 100, ["TFP0004"] = 100, ["TFP0005"] = 100,
                 ["TFP0101"] = 110, ["TFP0102"] = 110, ["TFP0103"] = 110, ["TFP0104"] = 110,
                 ["TFP0201"] = 120, ["TFP0202"] = 100, ["TFP0203"] = 120, ["TFP0204"] = 120,
                 ["TFP0301"] = 100, ["TFP0302"] = 100, ["TFP0303"] = 100,
                 ["TFP0401"] = 1, ["TFP0402"] = 1, ["TFP0403"] = 1, ["TFP0404"] = 1, ["TFP0405"] = 100,
-                ["TFP0406"] = 100, ["TFP0407"] = 100, ["TFP0408"] = 100, ["TFP0409"] = 100,
+                ["TFP0406"] = 100, ["TFP0407"] = 100, ["TFP0408"] = 100, ["TFP0409"] = 100, ["TFP0410"] = 100,
                 ["TFP0501"] = 100, ["TFP0900"] = 100,
             };
             Assert.Equal(expected.OrderBy(p => p.Key), ErrorCodes.DefaultExitCodes.OrderBy(p => p.Key));

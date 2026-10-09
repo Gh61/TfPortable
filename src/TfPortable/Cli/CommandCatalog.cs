@@ -23,6 +23,9 @@ namespace TfPortable.Cli
 
         /// <summary>Recognized tf.exe command that TfPortable refuses (TFP0003).</summary>
         OutOfScope,
+
+        /// <summary>A tf.exe command the tool never offers (TFP0005): the summary says what it does and why not.</summary>
+        NotOffered,
     }
 
     /// <summary>One switch of a command: name, short form, value rule and the values it accepts.</summary>
@@ -161,6 +164,9 @@ namespace TfPortable.Cli
                 "Print the TfPortable and client library versions.", ""),
             new CommandSpec("protection", Array.Empty<string>(), null, CommandStatus.Implemented,
                 "Show the protection level (1 read-only, 2 everyday work, 3 everything), or set it in an interactive terminal.", "[set <1|2|3>]"),
+            new CommandSpec("docs", new[] { "msdn" }, null, CommandStatus.Implemented,
+                "Open the TfPortable documentation (or the page of a command) in the default browser.", "[command]",
+                new SwitchSpec("url", null, SwitchValue.None, "Print the URL only; do not open the browser.", extension: true)),
 
             // Phase 1: workspace commands (milestone 3).
             new CommandSpec("status", new[] { "stat" }, 1, CommandStatus.Implemented,
@@ -216,11 +222,11 @@ namespace TfPortable.Cli
                 "Versions of the items in the workspace.", "itemspec ...",
                 Recursive, Format("brief", "detailed")),
             new CommandSpec("workfold", Array.Empty<string>(), 1, CommandStatus.Implemented,
-                "Mappings of the workspace (listing only; /map, /unmap, /cloak, /decloak are phase 2).", "[localfolder | serverfolder]",
-                new SwitchSpec("map", null, SwitchValue.None, "Map serverfolder to localfolder (phase 2, TFP0003 in this build)."),
-                new SwitchSpec("unmap", null, SwitchValue.None, "Remove a mapping (phase 2, TFP0003 in this build)."),
-                new SwitchSpec("cloak", null, SwitchValue.None, "Cloak a server folder (phase 2, TFP0003 in this build)."),
-                new SwitchSpec("decloak", null, SwitchValue.None, "Remove a cloak (phase 2, TFP0003 in this build).")),
+                "Mappings of the workspace; /map, /unmap, /cloak and /decloak change them.", "[localfolder | serverfolder] | /map serverfolder localfolder | /unmap folder | /cloak serverfolder | /decloak serverfolder",
+                new SwitchSpec("map", null, SwitchValue.None, "Map serverfolder to localfolder."),
+                new SwitchSpec("unmap", null, SwitchValue.None, "Remove the mapping of the server or local folder."),
+                new SwitchSpec("cloak", null, SwitchValue.None, "Cloak a server folder (exclude it from the workspace)."),
+                new SwitchSpec("decloak", null, SwitchValue.None, "Remove a cloak.")),
             new CommandSpec("workspaces", Array.Empty<string>(), 1, CommandStatus.Implemented,
                 "List workspaces of the collection.", "[workspacename]",
                 Owner,
@@ -247,8 +253,8 @@ namespace TfPortable.Cli
                 "Details of a changeset: owner, date, comment, items, work items.", "[changesetnumber]",
                 new SwitchSpec("latest", null, SwitchValue.None, "The newest changeset."),
                 new SwitchSpec("diff", null, SwitchValue.None, "Unified diff of the whole changeset.", extension: true),
-                new SwitchSpec("comment", null, SwitchValue.Required, "Not supported: edits the changeset on the server (TFP0003)."),
-                new SwitchSpec("notes", null, SwitchValue.Required, "Not supported: edits the changeset on the server (TFP0003).")),
+                new SwitchSpec("comment", "C", SwitchValue.Required, "New comment of the changeset (protection level 2); @file reads it from a file."),
+                new SwitchSpec("notes", null, SwitchValue.Required, "New checkin notes: \"Name=Value;Name2=Value2\" or @file (protection level 2).")),
             new CommandSpec("view", Array.Empty<string>(), 1, CommandStatus.Implemented,
                 "Print the content of a file at a version (UTF-8); binary files need /output.", "itemspec",
                 Version,
@@ -312,6 +318,7 @@ namespace TfPortable.Cli
                 new SwitchSpec("override", null, SwitchValue.Required, "Reason recorded in the changeset for bypassing failed or unknown checkin policies."),
                 new SwitchSpec("author", null, SwitchValue.Required, "Author of the changeset when it is not the authenticated user."),
                 new SwitchSpec("force", null, SwitchValue.None, "Check in edits whose content did not change."),
+                new SwitchSpec("shelveset", null, SwitchValue.Required, "Check a shelveset in as a changeset (name[;owner]); the shelveset is deleted; no itemspec or /comment."),
                 Recursive, NoAutoResolve),
             new CommandSpec("shelve", Array.Empty<string>(), 3, CommandStatus.Implemented,
                 "Store pending changes on the server as a shelveset.", "shelvesetname[;owner] [itemspec ...] [/comment:text|@file] [/replace] [/move] [/recursive]",
@@ -319,6 +326,7 @@ namespace TfPortable.Cli
                 new SwitchSpec("replace", null, SwitchValue.None, "Overwrite an existing shelveset of the same name."),
                 new SwitchSpec("move", null, SwitchValue.None, "Undo the local pending changes after shelving them."),
                 new SwitchSpec("delete", null, SwitchValue.None, "Delete the shelveset instead of creating one (protection level 3)."),
+                new SwitchSpec("validate", null, SwitchValue.None, "Evaluate the checkin policies and notes before shelving; failures are item errors (exit 1), the shelveset is still created."),
                 Recursive),
             new CommandSpec("shelvesets", Array.Empty<string>(), 3, CommandStatus.Implemented,
                 "List shelvesets.", "[shelvesetname[;owner]]",
@@ -327,6 +335,7 @@ namespace TfPortable.Cli
                 "Restore a shelveset into the workspace.", "shelvesetname[;owner] [itemspec ...] [/recursive] [/nomerge]",
                 Recursive,
                 new SwitchSpec("nomerge", null, SwitchValue.None, "Fail instead of merging with local pending changes."),
+                new SwitchSpec("move", null, SwitchValue.None, "Delete the shelveset on the server after it was restored without conflicts."),
                 NoAutoResolve),
             new CommandSpec("label", Array.Empty<string>(), 3, CommandStatus.Implemented,
                 "Create or update a label on items.", "labelname[@scope] itemspec ... [/version:versionspec] [/comment:text|@file] [/child:replace|merge] [/recursive]",
@@ -359,21 +368,50 @@ namespace TfPortable.Cli
                 Lock,
                 new SwitchSpec("silent", null, SwitchValue.None, "Less output.")),
 
-            // Recognized but refused in this build (SPEC.md): phase 3 is the everyday write path (checkin, label, shelve, lock),
-            // phase 4 the rest of tf.exe including what changes the server irreversibly; msdn opens a browser and never fits.
-            OutOfScope("destroy", "Permanently deletes items on the server.", 4),
-            OutOfScope("permission", "Edits permissions on the server.", 4),
-            OutOfScope("workspace", "Creates, edits or deletes workspaces.", 4),
-            OutOfScope("configure", "Opens the source control settings dialog.", 4),
-            OutOfScope("proxy", "Configures a version control proxy.", 4),
-            OutOfScope("certificates", "Configures client certificates.", 4),
-            OutOfScope("msdn", "Opens the documentation.", null),
-            OutOfScope("property", "Edits item properties on the server.", 4),
-            OutOfScope("resolvepath", "Translates a server path to a local path.", 4),
+            // Phase 4: the rest of tf.exe that makes sense for a portable, PAT-only tool (SPEC.md "Fáze 4").
+            new CommandSpec("destroy", Array.Empty<string>(), 4, CommandStatus.Implemented,
+                "Permanently delete items and their history on the server (protection level 3; a /preview with the same arguments must run first).", "itemspec[;versionspec|;Xdeletionid] ...",
+                new SwitchSpec("keephistory", null, SwitchValue.None, "Keep the history; destroy only the content of versions older than /stopat."),
+                new SwitchSpec("stopat", null, SwitchValue.Required, "With /keephistory: the version whose content and newer stays (default: latest)."),
+                new SwitchSpec("preview", null, SwitchValue.None, "List what would be destroyed and record it; required before the real destroy."),
+                new SwitchSpec("startcleanup", null, SwitchValue.None, "Ask the server to free the destroyed content now."),
+                new SwitchSpec("silent", null, SwitchValue.None, "Do not list the destroyed items.")),
+            new CommandSpec("permission", Array.Empty<string>(), 4, CommandStatus.Implemented,
+                "List the permissions of items (level 1), or change them with /allow, /deny, /remove, /inherit (level 3).", "itemspec ...",
+                new SwitchSpec("allow", null, SwitchValue.Required, "Permissions to allow (* or a comma-separated list)."),
+                new SwitchSpec("deny", null, SwitchValue.Required, "Permissions to deny (* or a comma-separated list)."),
+                new SwitchSpec("remove", null, SwitchValue.Required, "Permission entries to remove (* or a comma-separated list)."),
+                new SwitchSpec("inherit", null, SwitchValue.Required, "Whether the item inherits permissions from its parent.", new[] { "yes", "no" }),
+                new SwitchSpec("user", null, SwitchValue.Required, "User identities (comma-separated; display name, account or e-mail as the server shows it)."),
+                new SwitchSpec("group", null, SwitchValue.Required, "Group identities (comma-separated, e.g. [Project]\\Contributors)."),
+                Recursive,
+                new SwitchSpec("global", null, SwitchValue.None, "Collection-level permissions (not supported).")),
+            new CommandSpec("workspace", Array.Empty<string>(), 4, CommandStatus.Implemented,
+                "Create (/new), delete (/delete), edit or show a workspace.", "[workspacename[;owner]]",
+                new SwitchSpec("new", null, SwitchValue.None, "Create a local workspace for the authenticated user; $/ is mapped to the current folder unless /template is given (protection level 3)."),
+                new SwitchSpec("delete", null, SwitchValue.None, "Delete the workspace on the server and from the local cache (protection level 3)."),
+                new SwitchSpec("comment", "C", SwitchValue.Required, "Comment of the workspace; @file reads it from a file."),
+                new SwitchSpec("computer", "M", SwitchValue.Required, "Computer of the workspace (default: this computer)."),
+                new SwitchSpec("template", null, SwitchValue.Required, "With /new: copy the mappings of this workspace (name[;owner])."),
+                new SwitchSpec("permission", null, SwitchValue.Required, "Who may use the workspace.", new[] { "Private", "PublicLimited", "Public" }),
+                new SwitchSpec("location", null, SwitchValue.Required, "Only 'local' is accepted.", new[] { "local", "server" }),
+                new SwitchSpec("filetime", null, SwitchValue.Required, "File timestamps on get: the time of the get, or the checkin time of the version.", new[] { "current", "checkin" }),
+                new SwitchSpec("newname", null, SwitchValue.Required, "Rename the workspace (protection level 3)."),
+                new SwitchSpec("newowner", null, SwitchValue.Required, "Not supported.")),
+            new CommandSpec("property", Array.Empty<string>(), 4, CommandStatus.Implemented,
+                "List the versioned-item properties of items (tf.exe 18.10 has no write form).", "itemspec ...",
+                Version, Recursive),
+            new CommandSpec("resolvepath", Array.Empty<string>(), 4, CommandStatus.Implemented,
+                "Translate a local path to its server path and a server path to its local path.", "itemspec ..."),
+
+            // Never offered (SPEC.md "Fáze 4", TFP0005): client configuration, dialogs and certificate sign-in have no place in a portable, PAT-only tool.
+            NotOffered("proxy", "configures a TFVC proxy server (a content cache for remote offices of an on-premises TFS) in the user's registry; tfp writes nothing to the registry and Azure DevOps Services has no proxy"),
+            NotOffered("configure", "opens the Source Control Settings dialog of a team project (checkin policies, file types); it has no switches and tfp never shows a dialog; use Visual Studio or the web portal"),
+            NotOffered("certificates", "manages client certificates for HTTPS certificate sign-in to an on-premises TFS; tfp signs in with a Personal Access Token only"),
         };
 
-        private static CommandSpec OutOfScope(string name, string summary, int? phase) =>
-            new CommandSpec(name, Array.Empty<string>(), phase, CommandStatus.OutOfScope, summary, "");
+        private static CommandSpec NotOffered(string name, string summary) =>
+            new CommandSpec(name, Array.Empty<string>(), null, CommandStatus.NotOffered, summary, "");
 
         /// <summary>Command groups of tf.exe other than version control (`tf git ...`, `tf settings ...`).</summary>
         public static readonly string[] OtherGroups = { "git", "settings" };

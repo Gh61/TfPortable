@@ -54,12 +54,15 @@ Message:
   "message": "File C:\\Src\\App\\Config.xml is writable and has no pending change; get did not overwrite it.",
   "hint": "Review local changes with 'tfp diff'. Use 'tfp get /overwrite' to overwrite it.",
   "item": "C:\\Src\\App\\Config.xml",
-  "activityId": null
+  "activityId": null,
+  "serverMessage": null
 }
 ```
 
-`tfCode`, `hint`, `item`, `activityId` are null when not applicable. `item` is the local path when
-the command worked with a local item, otherwise the server path.
+`tfCode`, `hint`, `item`, `activityId`, `serverMessage` (the server's or the library's text, verbatim, as the
+text mode prints it after `Server message:`) are null when not applicable. `item` is the local path when
+the command worked with a local item, otherwise the server path. Every `code` with its meaning, cause
+and next step is listed in [errors.md](errors.md).
 
 ## 2. Shared object types
 
@@ -126,8 +129,22 @@ Enumerations:
 | `label`, `unlabel` | `{ "label": { "name", "scope" }, "results": [ { "name", "scope", "status": "created"\|"updated"\|"deleted" } ], "skipped": [ { "localPath", "reason" } ] }`; a skipped item is TFP0301 in `errors` (exit 1) |
 | `lock` | `{ "lock": "none"\|"checkout"\|"checkin", "changes": [PendingChange], "count", "skipped": [...] }` |
 
-Phase 2 commands (`merges`, `annotate`, `folderdiff`, `undelete`, `rollback`, `branch`, `merge`)
-add their sections when implemented.
+Phase 4 commands:
+
+| Command | `data` |
+| --- | --- |
+| `destroy` | `{ "preview": bool, "items": [ { "serverPath", "deletionId", "isFolder" } ] }`; a destroy without a recent preview is a fatal TFP0410 |
+| `permission` (listing) | `{ "items": [ { "serverItem", "inherit": bool, "entries": [ { "identity", "allow": [string], "deny": [string], "allowInherited": [string], "denyInherited": [string] } ] } ] }` |
+| `permission` (change) | `{ "changes": [ { "serverItem", "identity" or null, "allow": [string], "deny": [string], "remove": [string], "inherit": bool or null } ], "skipped": [ the same shape ] }`; a request with an identity and `/inherit` is two changes (the inheritance one has `identity` null); a change the server did not apply (an unknown identity, no permission to administer) is TFP0501 in `errors` (exit 1) with the library's failure text in `serverMessage` |
+| `workspace` | `{ "workspace": Workspace, "created": true }` (`/new`), `{ "workspace": Workspace, "deleted": true, "droppedPendingChanges": n }` (`/delete`), `{ "workspace": Workspace, "updated": true }` (edit), `{ "workspace": Workspace }` (listing) |
+| `property` | `{ "items": [ { "serverPath", "properties": { "name": "value", ... } } ] }` |
+| `resolvepath` | `{ "items": [ { "localPath", "serverPath" } ] }`; an unmapped path is TFP0203 in `errors` (exit 1) |
+| `docs`, `msdn` | `{ "url", "opened": bool }` |
+| `workfold /map /unmap /cloak /decloak` | `{ "workspace": Workspace, "edit": "map"\|"unmap"\|"cloak"\|"decloak" }` (the mappings after the change) |
+| `changeset /comment /notes` | the `changeset` data after the update |
+| `checkin /shelveset:` | `{ "changeset": n, "shelveset": { "name", "owner" }, "workItems": [ { "id", "linked" } ] }` |
+| `shelve /validate` | the `shelve` data plus `"validated": true, "validationFailures": [string]` (conflicts, failed and unknown policies, also in `errors` with exit 1) |
+| `unshelve /move` | the `unshelve` data plus `"deleted": bool` (true when the shelveset was deleted after a clean unshelve) |
 
 ## 4. Open points for Gate A
 

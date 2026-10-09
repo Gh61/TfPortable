@@ -91,6 +91,10 @@ then keep it.
 
 ## 5. Decisions before phase 4
 
+Decided on 2026-10-09 (phase 2 first: done; the scope table below with `resolvepath` added, `property` read-only,
+`docs`/`msdn`, `proxy`/`configure`/`certificates` as `TFP0005`; `destroy` with the preview marker; the `main` ruleset
+is set up). Kept for history; SPEC.md "Fáze 4" is the current definition.
+
 1. **Phase 2 first?** `merge`, `branch`, `rollback`, `undelete`, `merges`, `annotate`, `folderdiff` are
    captured (`tests/golden/`) and specified (SPEC.md "Fáze 2") but not implemented; the catalog answers
    TFP0003. They are everyday work in branching teams and fit protection level 2. Say whether they come
@@ -118,3 +122,8 @@ then keep it.
   texts).
 - Leftover workspaces `tfp-golden-<id>` in the collection after a CI run that died mid-way: delete them
   occasionally (`tf workspaces /owner:*`).
+- The CI user (`Test TfPortable`) has no **AdminProjectRights** on `$/TfsPortableTestRepo`, so
+  `permission /allow` in the phase 4 integration test is refused by the server (TF14098) and the
+  test only checks that the refusal is reported. To exercise a real permission change in CI, grant
+  the test user "Administer" (AdminProjectRights) on `$/TfsPortableTestRepo/CI` (Project settings →
+  Repositories → TFVC → the folder → Security).

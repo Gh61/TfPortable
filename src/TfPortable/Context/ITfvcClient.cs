@@ -81,6 +81,17 @@ namespace TfPortable.Context
         /// brings the items back to `versionTo`. `itemVersion` is the version the item paths refer to (null = the library's default).
         /// </summary>
         MergeResult Rollback(IReadOnlyList<ItemQuery>? items, VersionSpec? itemVersion, VersionSpec? versionFrom, VersionSpec versionTo, bool toVersion, bool keepMergeHistory, bool noAutoResolve);
+
+        /// <summary>Changes the mappings (phase 4 `workfold /map /unmap /cloak /decloak`); the summary is refreshed afterwards.</summary>
+        void Map(string serverPath, string localPath);
+
+        /// <summary>Removes the mapping or cloak whose server or local path is given; false when none matched.</summary>
+        bool Unmap(string path);
+
+        void Cloak(string serverPath);
+
+        /// <summary>Server path ↔ local path of the workspace mappings (`resolvepath`); null when not mapped.</summary>
+        string? ResolvePath(string path, bool isServerPath);
     }
 
     /// <summary>
@@ -180,5 +191,35 @@ namespace TfPortable.Context
 
         /// <summary>Links a work item to a changeset (the "Fixed in Changeset" artifact link, REST). Exceptions propagate.</summary>
         void LinkWorkItemToChangeset(int workItemId, int changesetId);
+
+        /// <summary>
+        /// Destroys an item (phase 4): `preview` lists without destroying; `keepHistory` keeps the history and destroys the content
+        /// older than `stopAt` (null = latest); `startCleanup` asks the server to free the content now.
+        /// </summary>
+        DestroyResult Destroy(ItemQuery item, VersionSpec? itemVersion, bool preview, bool keepHistory, VersionSpec? stopAt, bool startCleanup, bool silent);
+
+        /// <summary>ACLs of the items (`permission` listing).</summary>
+        IReadOnlyList<ItemPermissionInfo> GetPermissions(IReadOnlyList<string> serverPaths, RecursionType recursion);
+
+        /// <summary>Applies the ACL changes (identities as given) and returns the ones the server applied; the rest come back as failures (the library reports them as non-fatal errors, without the item).</summary>
+        PermissionChangeResult SetPermissions(IReadOnlyList<PermissionChangeRequest> changes);
+
+        /// <summary>Creates a local workspace for the authenticated user; `mappings` null = `$/` mapped to the current folder is decided by the command.</summary>
+        WorkspaceSummary CreateWorkspace(WorkspaceDefinition definition);
+
+        /// <summary>Updates name, comment, computer, permission profile or file time option of a workspace; null fields stay.</summary>
+        WorkspaceSummary UpdateWorkspace(string name, string? owner, string? newName, WorkspaceDefinition changes);
+
+        /// <summary>Deletes a workspace on the server and from the local cache; false when the server reported nothing deleted.</summary>
+        bool DeleteWorkspace(string name, string? owner);
+
+        /// <summary>Versioned-item properties of the items at a version (`property`).</summary>
+        IReadOnlyList<ItemPropertiesInfo> GetItemProperties(IReadOnlyList<ItemQuery> items, VersionSpec version);
+
+        /// <summary>Checks a shelveset in as a changeset (`checkin /shelveset`); the server deletes the shelveset. Returns the changeset number.</summary>
+        int CheckInShelveset(string name, string? owner, string? author, bool noAutoResolve, bool allowUnchangedContent);
+
+        /// <summary>Edits the comment and/or the checkin notes of a changeset (`changeset /comment /notes`).</summary>
+        ChangesetInfo UpdateChangeset(int id, string? comment, IReadOnlyList<KeyValuePair<string, string>>? notes);
     }
 }

@@ -523,3 +523,31 @@ is a recorded difference. Cases not listed match (exit code, items, order).
 Phase 4 captures (`index-phase4-2610091138.json`, reference only): `property /setproperty` is not a
 switch of tf.exe 18.10; `destroy /keephistory` reported nothing to destroy; `undo /workspace:<other>`
 and `lock /workspace:<other>` work against another workspace of the same owner.
+
+## 21. Phase 4 (`destroy`, `permission`, `workspace`, `property`, `resolvepath`, `docs`; phase 3 completions)
+
+Implemented on 2026-10-09 from the phase 4 captures (`index-phase4-2610091138.json`), the tf.exe help and the Microsoft docs.
+
+| Topic | Original | TfPortable | Decision |
+| --- | --- | --- | --- |
+| `destroy /preview` | prints `Destroyed: $/path` even in the preview (`destroy/preview-file`) | `Would destroy: $/path` in the preview, `Destroyed:` for the real run | deviate: the preview must not read like a destroy |
+| `destroy` without a preview | destroys at once (`/noprompt`) | TFP0410 unless a `/preview` with the same collection, user, items and switches ran in the last 10 minutes; the preview marker is consumed by the destroy | deviate: an agent cannot destroy what it did not list first (SPEC.md "Fáze 4") |
+| `destroy /keephistory` without `/stopat` | "nothing to destroy" for an item with one version (`destroy/keephistory`: the latest content is kept) | the same through the library | follow |
+| `destroy` of a missing item | exit 100, VS403405 | TFP0301, exit 100 | follow |
+| `permission` listing | `====` block per item, `Server item: $/path (Inherit: Yes)`, per identity Allow, Deny, Allow (inherited), Deny (inherited) (`permission/folder`) | the same shape, identities sorted by name | follow |
+| `permission /allow /remove` | `$/path: identity` per change (`permission/allow-lock`, `remove`) | the same; `/inherit` prints `$/path: inherit yes\|no` | follow |
+| `permission /global` | collection-level permissions | TFP0002 | deviate: not offered |
+| `workspace /new` without a name | the computer name becomes the workspace name | TFP0002: the name is required | deviate: explicit for a tool without a dialog |
+| `workspace /new` mapping | `$/` to the current folder | the same (or the mappings of `/template:`) | follow |
+| `workspace /delete` | silent (`workspace/delete-local-4`), asks about pending changes without `/noprompt` | `Workspace <name>;<owner> deleted.`; pending changes are dropped with a warning naming their count | deviate: one line of confirmation, no question |
+| `workspace /newowner`, `/location:server` | supported | TFP0002, TFP0204 | deviate: local workspaces of the authenticated user only |
+| `property` | dashed line, `Server item:`, `No properties` note (`property/read`); `/setproperty` unrecognized (`property/set`) | the same shape; no write form | follow |
+| `resolvepath` | not captured (no help text in tf.exe 18.10) | `<given> -> <counterpart>` per item, TFP0203 per unmapped item | TfPortable's own shape |
+| `msdn` | opens the Microsoft documentation of a command in the browser | alias of `docs`: opens the TfPortable documentation (GitHub) and prints the URL; `/url` prints only | deviate: own documentation |
+| `proxy`, `configure`, `certificates`, `tf git`, `tf settings` | client configuration, dialogs, certificate sign-in | TFP0005 with the explanation | deviate: never offered |
+| `workfold /map /unmap /cloak /decloak` | changes the mappings (golden `workfold/unmap`: `/collection` rejected at run time) | the same through the library, then the listing; `/collection` accepted | follow |
+| `changeset /comment /notes` | edits the changeset | the same (`Changeset <n> updated.` then the block); notes as `Name=Value;...` or `@file` | follow |
+| `checkin /shelveset` | `Changeset #533 checked in.`, the shelveset disappears (`checkin/shelveset`, `shelvesets/after-checkin-shelveset`) | the same plus `Shelveset <name>;<owner> deleted.` | follow |
+| `unshelve /move` | `Unshelving ...` then `Shelveset X deleted.` (`unshelve/move`) | the same; with conflicts or failures the shelveset is kept and a warning says so | follow |
+| `shelve /validate` | refused with `/noprompt` (`shelve/validate`, exit 100) | evaluates the policies and notes as `checkin /validate`, reports failures as item errors (exit 1) and shelves anyway | deviate: usable without a prompt |
+| `lock /workspace:<other>`, `undo /workspace:<other>` | work against another workspace of the owner (`lock/other-workspace`, `undo/other-workspace`) | the same through the global `/workspace:`; protection level 3 | follow |

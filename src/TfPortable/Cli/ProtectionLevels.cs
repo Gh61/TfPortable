@@ -23,26 +23,40 @@ namespace TfPortable.Cli
             ["dir"] = ReadOnly, ["properties"] = ReadOnly, ["localversions"] = ReadOnly, ["workfold"] = ReadOnly, ["workspaces"] = ReadOnly,
             ["labels"] = ReadOnly, ["branches"] = ReadOnly, ["merges"] = ReadOnly, ["annotate"] = ReadOnly, ["folderdiff"] = ReadOnly,
             ["shelvesets"] = ReadOnly, ["help"] = ReadOnly, ["version"] = ReadOnly, ["whoami"] = ReadOnly, ["login"] = ReadOnly,
-            ["logout"] = ReadOnly, ["protection"] = ReadOnly, ["msdn"] = ReadOnly, ["resolvepath"] = ReadOnly,
+            ["logout"] = ReadOnly, ["protection"] = ReadOnly, ["docs"] = ReadOnly, ["resolvepath"] = ReadOnly, ["property"] = ReadOnly,
+            ["permission"] = ReadOnly, ["workspace"] = ReadOnly,
             // Level 2: pending changes, the workspace on disk and the everyday writes to the server.
             ["add"] = Work, ["checkout"] = Work, ["delete"] = Work, ["rename"] = Work, ["undo"] = Work, ["get"] = Work,
             ["resolve"] = Work, ["reconcile"] = Work, ["undelete"] = Work, ["merge"] = Work, ["branch"] = Work, ["rollback"] = Work,
             ["unshelve"] = Work, ["checkin"] = Work, ["shelve"] = Work, ["label"] = Work, ["unlabel"] = Work, ["lock"] = Work,
-            // Level 3: irreversible or administrative.
-            ["destroy"] = Everything, ["permission"] = Everything, ["workspace"] = Everything, ["proxy"] = Everything,
-            ["configure"] = Everything, ["property"] = Everything, ["certificates"] = Everything,
+            // Level 3: irreversible or administrative (permission and workspace list at level 1; their write switches raise the level).
+            ["destroy"] = Everything, ["proxy"] = Everything, ["configure"] = Everything, ["certificates"] = Everything,
         };
 
         /// <summary>Switches that need more than their command: `command/switch` → level.</summary>
         private static readonly Dictionary<string, int> Switches = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
         {
             ["undo/workspace"] = Everything,
+            ["lock/workspace"] = Everything,
             ["label/delete"] = Everything,
             ["shelve/delete"] = Everything,
             ["workfold/map"] = Work,
             ["workfold/unmap"] = Work,
             ["workfold/cloak"] = Work,
             ["workfold/decloak"] = Work,
+            ["changeset/comment"] = Work,
+            ["changeset/notes"] = Work,
+            ["permission/allow"] = Everything,
+            ["permission/deny"] = Everything,
+            ["permission/remove"] = Everything,
+            ["permission/inherit"] = Everything,
+            ["workspace/new"] = Everything,
+            ["workspace/delete"] = Everything,
+            ["workspace/newname"] = Everything,
+            ["workspace/comment"] = Everything,
+            ["workspace/computer"] = Everything,
+            ["workspace/permission"] = Everything,
+            ["workspace/filetime"] = Everything,
         };
 
         public static string Name(int level) => level == ReadOnly ? "read-only" : level == Work ? "everyday work" : "everything";

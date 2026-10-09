@@ -358,6 +358,210 @@ namespace TfPortable.Context
 
         private static LabelResultInfo ToLabelResult(LabelResult r) => new LabelResultInfo(r.Label, r.Scope, r.Status.ToString().ToLowerInvariant());
 
+        public DestroyResult Destroy(ItemQuery item, VersionSpec? itemVersion, bool preview, bool keepHistory, VersionSpec? stopAt, bool startCleanup, bool silent)
+        {
+            var flags = DestroyFlags.None;
+            if (keepHistory) { flags |= DestroyFlags.KeepHistory; }
+            if (startCleanup) { flags |= DestroyFlags.StartCleanup; }
+            if (silent) { flags |= DestroyFlags.Silent; }
+            // Destroy is always recursive: the library rejects any other recursion type with TF203086.
+            var spec = new ItemSpec(item.Path, RecursionType.Full, item.DeletionId);
+            var version = itemVersion ?? VersionSpec.Latest;
+
+            // The AffectedChanges flag (the pending and shelved changes a destroy touches) is accepted only with Preview and then empties
+            // the item list, so the destroy asks for the items only, as tf.exe prints them.
+            var destroyed = VersionControl.Destroy(spec, version, stopAt, preview ? flags | DestroyFlags.Preview : flags);
+            return new DestroyResult((destroyed ?? Array.Empty<Item>()).Select(i => new DestroyedItemInfo(i.ServerItem, i.DeletionId, i.ItemType == ItemType.Folder)).ToList());
+        }
+
+        public IReadOnlyList<ItemPermissionInfo> GetPermissions(IReadOnlyList<string> serverPaths, RecursionType recursion)
+        {
+            var securities = VersionControl.GetPermissions(serverPaths.ToArray(), recursion) ?? Array.Empty<ItemSecurity>();
+            return securities.Select(s => new ItemPermissionInfo(s.ServerItem, s.Inherit,
+                (s.Entries ?? Array.Empty<AccessEntry>()).Select(e => new PermissionEntryInfo(e.IdentityName,
+                    e.Allow ?? Array.Empty<string>(), e.Deny ?? Array.Empty<string>(), e.AllowInherited ?? Array.Empty<string>(), e.DenyInherited ?? Array.Empty<string>())).ToList())).ToList();
+        }
+
+        public PermissionChangeResult SetPermissions(IReadOnlyList<PermissionChangeRequest> changes)
+        {
+            var securityChanges = new List<SecurityChange>();
+            foreach (var change in changes)
+            {
+                if (change.Inherit != null)
+                {
+                    securityChanges.Add(new InheritanceChange(change.ServerItem, change.Inherit.Value));
+                }
+
+                if (change.Identity != null && (change.Allow.Count > 0 || change.Deny.Count > 0 || change.Remove.Count > 0))
+                {
+                    securityChanges.Add(new PermissionChange(change.ServerItem, change.Identity, change.Allow.ToArray(), change.Deny.ToArray(), change.Remove.ToArray()));
+                }
+            }
+
+            if (securityChanges.Count == 0)
+            {
+                return new PermissionChangeResult(Array.Empty<PermissionChangeRequest>(), Array.Empty<FailureInfo>());
+            }
+
+            SecurityChange[] applied;
+            List<FailureInfo> failures;
+            using (var collector = new EventCollector(VersionControl))
+            {
+                // The library catches the error of each change (an unknown identity, a root inheritance change) and reports it only through NonFatalError.
+                applied = VersionControl.SetPermissions(securityChanges.ToArray()) ?? Array.Empty<SecurityChange>();
+                failures = collector.Failures;
+            }
+
+            var result = new List<PermissionChangeRequest>();
+            foreach (var change in applied)
+            {
+                if (change is PermissionChange permission)
+                {
+                    result.Add(new PermissionChangeRequest(permission.Item, permission.IdentityName, permission.Allow ?? Array.Empty<string>(), permission.Deny ?? Array.Empty<string>(), permission.Remove ?? Array.Empty<string>(), null));
+                }
+                else if (change is InheritanceChange inheritance)
+                {
+                    result.Add(new PermissionChangeRequest(inheritance.Item, null, Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>(), inheritance.Inherit));
+                }
+            }
+
+            return new PermissionChangeResult(result, failures);
+        }
+
+        public WorkspaceSummary CreateWorkspace(WorkspaceDefinition definition)
+        {
+            var vcs = VersionControl;
+            var parameters = new CreateWorkspaceParameters(definition.Name)
+            {
+                OwnerName = vcs.AuthorizedUser,
+                Comment = definition.Comment ?? string.Empty,
+                Computer = definition.Computer ?? Environment.MachineName,
+                Location = WorkspaceLocation.Local,
+                Folders = (definition.Mappings ?? Array.Empty<MappingInfo>()).Select(ToWorkingFolder).ToArray(),
+                PermissionProfile = PermissionProfile(definition.Permission ?? "Private"),
+                WorkspaceOptions = definition.FileTimeCheckin == true ? WorkspaceOptions.SetFileTimeToCheckin : WorkspaceOptions.None,
+            };
+            var workspace = vcs.CreateWorkspace(parameters);
+            return ToSummary(workspace);
+        }
+
+        public WorkspaceSummary UpdateWorkspace(string name, string? owner, string? newName, WorkspaceDefinition changes)
+        {
+            var vcs = VersionControl;
+            var workspace = vcs.GetWorkspace(name, string.IsNullOrEmpty(owner) ? vcs.AuthorizedUser : owner);
+            var parameters = new UpdateWorkspaceParameters
+            {
+                WorkspaceName = newName,
+                Comment = changes.Comment,
+                Computer = changes.Computer,
+                PermissionProfile = PermissionProfile(changes.Permission),
+                WorkspaceOptions = changes.FileTimeCheckin == null ? (WorkspaceOptions?)null : changes.FileTimeCheckin.Value ? WorkspaceOptions.SetFileTimeToCheckin : WorkspaceOptions.None,
+            };
+            workspace.Update(parameters);
+            // Ask the server again: the runtime cache keeps the old permission profile of the updated workspace.
+            var updated = vcs.QueryWorkspaces(newName ?? name, workspace.OwnerName, null).FirstOrDefault();
+            return ToSummary(updated ?? vcs.GetWorkspace(newName ?? name, workspace.OwnerName));
+        }
+
+        public bool DeleteWorkspace(string name, string? owner)
+        {
+            var vcs = VersionControl;
+            string ownerName = string.IsNullOrEmpty(owner) ? vcs.AuthorizedUser : owner!;
+            bool deleted = vcs.DeleteWorkspace(name, ownerName);
+            try
+            {
+                Workstation.Current.RemoveCachedWorkspaceInfo(connection.Uri, name, ownerName);
+            }
+            catch (Exception)
+            {
+                // The cache entry is an optimization; the server is the truth.
+            }
+
+            return deleted;
+        }
+
+        public IReadOnlyList<ItemPropertiesInfo> GetItemProperties(IReadOnlyList<ItemQuery> items, VersionSpec version)
+        {
+            // GetItems with a property filter returns the versioned-item properties on every item (the dedicated property query is obsolete).
+            var sets = VersionControl.GetItems(items.Select(ToItemSpec).ToArray(), version, DeletedState.Any, ItemType.Any, GetItemsOptions.None, new[] { "*" }, null)
+                ?? Array.Empty<ItemSet>();
+            var result = new List<ItemPropertiesInfo>();
+            foreach (var item in sets.Where(s => s?.Items != null).SelectMany(s => s.Items))
+            {
+                var properties = (item.PropertyValues ?? (IList<Microsoft.TeamFoundation.Framework.Client.PropertyValue>)new List<Microsoft.TeamFoundation.Framework.Client.PropertyValue>())
+                    .Select(p => new KeyValuePair<string, string?>(p.PropertyName, p.Value?.ToString()))
+                    .ToList();
+                result.Add(new ItemPropertiesInfo(item.ServerItem, properties));
+            }
+
+            return result;
+        }
+
+        public int CheckInShelveset(string name, string? owner, string? author, bool noAutoResolve, bool allowUnchangedContent)
+        {
+            var vcs = VersionControl;
+            var parameters = new ShelvesetCheckInParameters(name, string.IsNullOrEmpty(owner) ? vcs.AuthorizedUser : owner!)
+            {
+                NoAutoResolve = noAutoResolve,
+                AllowUnchangedContent = allowUnchangedContent,
+                DeleteShelveset = true,
+            };
+            if (!string.IsNullOrEmpty(author))
+            {
+                parameters.Author = author;
+            }
+
+            return vcs.CheckInShelveset(parameters);
+        }
+
+        public ChangesetInfo UpdateChangeset(int id, string? comment, IReadOnlyList<KeyValuePair<string, string>>? notes)
+        {
+            var vcs = VersionControl;
+            var changeset = vcs.GetChangeset(id, false, false);
+            if (comment != null)
+            {
+                changeset.Comment = comment;
+            }
+
+            if (notes != null)
+            {
+                changeset.CheckinNote = new CheckinNote(notes.Select(n => new CheckinNoteFieldValue(n.Key, n.Value)).ToArray());
+            }
+
+            changeset.Update();
+            return GetChangeset(id);
+        }
+
+        private static WorkingFolder ToWorkingFolder(MappingInfo mapping) =>
+            mapping.Cloaked
+                ? new WorkingFolder(mapping.ServerPath, null, WorkingFolderType.Cloak)
+                : new WorkingFolder(mapping.ServerPath, mapping.LocalPath, WorkingFolderType.Map, mapping.OneLevel ? RecursionType.OneLevel : RecursionType.Full);
+
+        /// <summary>The built-in profile by its tf.exe name (`Private`, `PublicLimited`, `Public`), or null.</summary>
+        private static WorkspacePermissionProfile? PermissionProfile(string? name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+
+            var profiles = WorkspacePermissionProfile.BuiltInProfiles;
+            var byName = profiles.FirstOrDefault(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
+            if (byName != null)
+            {
+                return byName;
+            }
+
+            // The built-in profiles are Private, PublicLimited, Public in this order (tf.exe `/permission:`); their display names may be localized.
+            int index = Array.FindIndex(new[] { "Private", "PublicLimited", "Public" }, n => string.Equals(n, name, StringComparison.OrdinalIgnoreCase));
+            if (index >= 0 && index < profiles.Length)
+            {
+                return profiles[index];
+            }
+
+            throw new ArgumentException($"Unknown workspace permission profile '{name}'.");
+        }
+
         public void Dispose() => connection.Dispose();
 
         internal static ItemSpec ToItemSpec(ItemQuery i) => new ItemSpec(i.Path, i.Recursion, i.DeletionId);
@@ -571,6 +775,49 @@ namespace TfPortable.Context
                 try
                 {
                     return workspace.IsServerPathMapped(serverPath) ? workspace.GetLocalItemForServerItem(serverPath) : null;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            }
+
+            public void Map(string serverPath, string localPath)
+            {
+                workspace.Map(serverPath, localPath);
+                summary = null;
+            }
+
+            public bool Unmap(string path)
+            {
+                var folder = workspace.Folders.FirstOrDefault(f => string.Equals(f.ServerItem, path, StringComparison.OrdinalIgnoreCase)
+                    || (!f.IsCloaked && f.LocalItem != null && string.Equals(f.LocalItem.TrimEnd(Path.DirectorySeparatorChar), path.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase)));
+                if (folder == null)
+                {
+                    return false;
+                }
+
+                workspace.DeleteMapping(folder);
+                summary = null;
+                return true;
+            }
+
+            public void Cloak(string serverPath)
+            {
+                workspace.Cloak(serverPath);
+                summary = null;
+            }
+
+            public string? ResolvePath(string path, bool isServerPath)
+            {
+                try
+                {
+                    if (isServerPath)
+                    {
+                        return workspace.IsServerPathMapped(path) ? workspace.GetLocalItemForServerItem(path) : null;
+                    }
+
+                    return workspace.IsLocalPathMapped(path) ? workspace.GetServerItemForLocalItem(path) : null;
                 }
                 catch (Exception)
                 {

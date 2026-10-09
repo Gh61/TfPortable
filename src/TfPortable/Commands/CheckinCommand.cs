@@ -22,6 +22,11 @@ namespace TfPortable.Commands
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
+            if (commandLine.Has("shelveset"))
+            {
+                return CheckInShelveset(commandLine, output, toolName);
+            }
+
             string comment = CommentText.Required(commandLine, toolName, "checkin Main\\src /recursive /comment:\"Fix the parser\"");
             var workItems = WorkItemIds(commandLine, toolName);
             bool validate = commandLine.Has("validate");
@@ -144,6 +149,51 @@ namespace TfPortable.Commands
             }
 
             output.Success(ToJson(changeset, changes, evaluation, links, false, overridden));
+            return ExitCodes.Success;
+        }
+
+        /// <summary>`checkin /shelveset:name[;owner]`: the shelveset becomes a changeset with the shelveset's comment; the server deletes it (phase 4).</summary>
+        private static int CheckInShelveset(CommandLine commandLine, OutputWriter output, string toolName)
+        {
+            if (commandLine.Positionals.Count > 0 || commandLine.Has("comment") || commandLine.Has("validate") || commandLine.Has("override"))
+            {
+                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "checkin /shelveset takes no itemspec, /comment, /validate or /override: the shelveset is checked in as it is.",
+                    $"Example: '{toolName} checkin /shelveset:MyWork'.");
+            }
+
+            var (name, owner) = ShelvesetSpec.Parse(commandLine.Value("shelveset")!, toolName);
+            var workItems = WorkItemIds(commandLine, toolName);
+            using var context = ContextResolver.Resolve(commandLine, output, toolName, requireWorkspace: false);
+            string ownerName = owner ?? context.Client.AuthorizedUser;
+            int changeset = context.Client.CheckInShelveset(name, ownerName, commandLine.Value("author"), commandLine.Has("noautoresolve"), commandLine.Has("force"));
+            output.Line($"Changeset #{changeset} checked in.");
+            output.Line($"Shelveset {name};{ownerName} deleted.");
+
+            var links = new List<JObject>();
+            foreach (int id in workItems)
+            {
+                try
+                {
+                    context.Client.LinkWorkItemToChangeset(id, changeset);
+                    output.Line($"Work item {id} linked to changeset {changeset}.");
+                    links.Add(new JObject { ["id"] = id, ["linked"] = true });
+                }
+                catch (Exception ex) when (!(ex is TfpException))
+                {
+                    var mapped = ErrorMapper.Map(ex, toolName, context.CollectionUrl);
+                    output.ItemError(new TfpException(ErrorCodes.ServerError, ExitCodes.PartialSuccess,
+                        $"Changeset {changeset} was checked in, but work item {id} could not be linked: {mapped.Message}",
+                        "Link it in the web portal, or check the work item id.", mapped.TfCode, ex.Message, item: id.ToString()));
+                    links.Add(new JObject { ["id"] = id, ["linked"] = false });
+                }
+            }
+
+            output.Success(new JObject
+            {
+                ["changeset"] = changeset,
+                ["shelveset"] = ShelvesetSpec.ToJson(name, ownerName),
+                ["workItems"] = new JArray(links.Cast<object>().ToArray()),
+            });
             return ExitCodes.Success;
         }
 

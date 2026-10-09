@@ -71,6 +71,12 @@ namespace TfPortable
             new LabelsCommand(),
             new BranchesCommand(),
             new MergeCommand(),
+            new DestroyCommand(),
+            new PermissionCommand(),
+            new WorkspaceCommand(),
+            new PropertyCommand(),
+            new ResolvePathCommand(),
+            new DocsCommand(),
         };
 
         /// <summary>Parses, dispatches and maps errors; returns the exit code. Testable with any writers.</summary>
@@ -133,9 +139,16 @@ namespace TfPortable
             }
         }
 
-        /// <summary>TFP0003 for a recognized command this build does not run: out of scope, or planned for a later milestone.</summary>
+        /// <summary>TFP0005 for a command the tool never offers; TFP0003 for one that is out of scope or planned for a later milestone.</summary>
         internal static TfpException NotAvailable(CommandSpec spec, string toolName)
         {
+            if (spec.Status == CommandStatus.NotOffered)
+            {
+                return new TfpException(ErrorCodes.NotOffered, ExitCodes.GeneralError,
+                    $"Command '{spec.Name}' is not part of {toolName}: it {spec.Summary}.",
+                    "Use Visual Studio or the original tf.exe for it.");
+            }
+
             if (spec.Status == CommandStatus.OutOfScope)
             {
                 string planned = spec.Phase == null ? string.Empty : $" Planned for phase {spec.Phase}.";
