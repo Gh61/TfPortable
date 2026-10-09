@@ -381,7 +381,7 @@ namespace TfPortable.Context
                     e.Allow ?? Array.Empty<string>(), e.Deny ?? Array.Empty<string>(), e.AllowInherited ?? Array.Empty<string>(), e.DenyInherited ?? Array.Empty<string>())).ToList())).ToList();
         }
 
-        public IReadOnlyList<PermissionChangeRequest> SetPermissions(IReadOnlyList<PermissionChangeRequest> changes)
+        public PermissionChangeResult SetPermissions(IReadOnlyList<PermissionChangeRequest> changes)
         {
             var securityChanges = new List<SecurityChange>();
             foreach (var change in changes)
@@ -399,10 +399,18 @@ namespace TfPortable.Context
 
             if (securityChanges.Count == 0)
             {
-                return Array.Empty<PermissionChangeRequest>();
+                return new PermissionChangeResult(Array.Empty<PermissionChangeRequest>(), Array.Empty<FailureInfo>());
             }
 
-            var applied = VersionControl.SetPermissions(securityChanges.ToArray()) ?? Array.Empty<SecurityChange>();
+            SecurityChange[] applied;
+            List<FailureInfo> failures;
+            using (var collector = new EventCollector(VersionControl))
+            {
+                // The library catches the error of each change (an unknown identity, a root inheritance change) and reports it only through NonFatalError.
+                applied = VersionControl.SetPermissions(securityChanges.ToArray()) ?? Array.Empty<SecurityChange>();
+                failures = collector.Failures;
+            }
+
             var result = new List<PermissionChangeRequest>();
             foreach (var change in applied)
             {
@@ -416,7 +424,7 @@ namespace TfPortable.Context
                 }
             }
 
-            return result;
+            return new PermissionChangeResult(result, failures);
         }
 
         public WorkspaceSummary CreateWorkspace(WorkspaceDefinition definition)
@@ -449,7 +457,9 @@ namespace TfPortable.Context
                 WorkspaceOptions = changes.FileTimeCheckin == null ? (WorkspaceOptions?)null : changes.FileTimeCheckin.Value ? WorkspaceOptions.SetFileTimeToCheckin : WorkspaceOptions.None,
             };
             workspace.Update(parameters);
-            return ToSummary(vcs.GetWorkspace(newName ?? name, workspace.OwnerName));
+            // Ask the server again: the runtime cache keeps the old permission profile of the updated workspace.
+            var updated = vcs.QueryWorkspaces(newName ?? name, workspace.OwnerName, null).FirstOrDefault();
+            return ToSummary(updated ?? vcs.GetWorkspace(newName ?? name, workspace.OwnerName));
         }
 
         public bool DeleteWorkspace(string name, string? owner)

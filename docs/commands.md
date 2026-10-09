@@ -506,7 +506,7 @@ tf vc permission [/allow:(* |perm1[,perm2,...]] [/deny:(* |perm1[,perm2,...])] [
 | Switch | TfPortable |
 | --- | --- |
 | `itemspec ...`, `/recursive` (listing) | ✓ protection level 1; the `====` block per item with `Server item: $/path (Inherit: Yes)` and, per identity, `Allow`, `Deny`, `Allow (inherited)`, `Deny (inherited)` |
-| `/allow:`, `/deny:`, `/remove:` with `/user:` and/or `/group:` | ✓ protection level 3; the permission names of tf.exe (Read, PendChange, Checkin, Label, Lock, ReviseOther, UnlockOther, UndoOther, LabelOther, AdminProjectRights, CheckinOther, Merge, ManageBranch; `*` = all; an unknown name is TFP0002); the identities go to the server as given (display name, account, e-mail, `[Project]\Group`); prints `$/path: identity` per applied change as tf.exe; a change the server did not apply (the library returns only the applied ones and raises nothing for an unknown identity) is TFP0501 per item (exit 1) |
+| `/allow:`, `/deny:`, `/remove:` with `/user:` and/or `/group:` | ✓ protection level 3; the permission names of tf.exe (Read, PendChange, Checkin, Label, Lock, ReviseOther, UnlockOther, UndoOther, LabelOther, AdminProjectRights, CheckinOther, Merge, ManageBranch; `*` = all; an unknown name is TFP0002); the identities go to the server as given (display name, account, e-mail, `[Project]\Group`); prints `$/path: identity` per applied change as tf.exe; a change the server did not apply (an unknown identity, an inheritance change on `$/`) is TFP0501 per item (exit 1) with the library's failure text as the server message |
 | `/inherit:yes\|no` | ✓ protection level 3 (`$/path: inherit no`) |
 | `/recursive` with a change | ✓ the change is applied to every item below (the server stores ACLs per item) |
 | `/global` | ✗ |

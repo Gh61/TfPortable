@@ -67,6 +67,20 @@ namespace TfPortable.Context
         };
     }
 
+    /// <summary>The changes the server applied and the failures the library reported for the rest (no item: the library's failure text only).</summary>
+    internal sealed class PermissionChangeResult
+    {
+        public PermissionChangeResult(IReadOnlyList<PermissionChangeRequest> applied, IReadOnlyList<FailureInfo> failures)
+        {
+            Applied = applied;
+            Failures = failures;
+        }
+
+        public IReadOnlyList<PermissionChangeRequest> Applied { get; }
+
+        public IReadOnlyList<FailureInfo> Failures { get; }
+    }
+
     /// <summary>The ACL of one server item.</summary>
     internal sealed class ItemPermissionInfo
     {

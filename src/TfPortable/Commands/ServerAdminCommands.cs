@@ -184,18 +184,24 @@ namespace TfPortable.Commands
                 }
             }
 
-            var applied = context.Client.SetPermissions(changes);
+            var result = context.Client.SetPermissions(changes);
+            var applied = result.Applied;
             var skipped = new JArray();
+            var notApplied = changes.Where(change => !applied.Any(a => string.Equals(a.ServerItem, change.ServerItem, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(a.Identity, change.Identity, StringComparison.OrdinalIgnoreCase))).ToList();
+            // The library reports a failure per rejected change in the order of the changes, without naming the item;
+            // when the counts differ (a validation failure, a rejected save), every skipped change shows all of them.
+            string allFailures = string.Join(" ", result.Failures.Select(f => f.Message));
             foreach (var change in changes)
             {
-                bool done = applied.Any(a => string.Equals(a.ServerItem, change.ServerItem, StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(a.Identity, change.Identity, StringComparison.OrdinalIgnoreCase));
-                if (!done)
+                int index = notApplied.IndexOf(change);
+                if (index >= 0)
                 {
-                    // The library returns the changes the server applied and raises no error for the rest (an unknown identity, a missing permission).
+                    string? serverMessage = result.Failures.Count == notApplied.Count ? result.Failures[index].Message : allFailures;
                     output.ItemError(new TfpException(ErrorCodes.ServerError, ExitCodes.PartialSuccess,
                         $"{change.ServerItem}: the server did not apply the change for {change.Identity ?? "the inheritance"}.",
-                        "Check the identity as the server shows it (display name, account or e-mail) and your permission to administer the item.", item: change.ServerItem));
+                        "Check the identity as the server shows it (display name, account or e-mail) and your permission to administer the item.",
+                        tfCode: ErrorMapper.ExtractTfCode(serverMessage), serverMessage: string.IsNullOrEmpty(serverMessage) ? null : serverMessage, item: change.ServerItem));
                     skipped.Add(change.ToJson());
                     continue;
                 }

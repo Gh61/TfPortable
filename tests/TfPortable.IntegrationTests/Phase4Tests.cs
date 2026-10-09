@@ -158,7 +158,7 @@ namespace TfPortable.IntegrationTests
             string folder = CiFolder("p4");
             string argument = CiArgument("p4");
             string serverPath = CiServerPath("p4");
-            string owner = (string)Data(Run("whoami /format:json"))["identity"]!["uniqueName"]!;
+            string owner = (string)Data(Run("whoami /format:json"))["identity"]!["displayName"]!;
             string shelveset = "tfp-ci-p4-" + RunId;
             bool committed = false;
             bool allowed = false;
