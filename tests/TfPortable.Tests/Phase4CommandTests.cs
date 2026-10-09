@@ -17,6 +17,7 @@ namespace TfPortable.Tests
     public sealed class Phase4CommandTests : IDisposable
     {
         private readonly string directory = Path.Combine(Path.GetTempPath(), "tfp-tests-" + Guid.NewGuid().ToString("N"));
+        private readonly Func<string> previousSettingsPath = ToolSettings.PathProvider;
         private readonly Func<string> previousMarkerDirectory = DestroyPreviewMarker.DirectoryProvider;
         private readonly Func<DateTime> previousClock = DestroyPreviewMarker.Clock;
         private readonly Action<string> previousOpener = DocsCommand.Opener;
@@ -24,11 +25,14 @@ namespace TfPortable.Tests
         public Phase4CommandTests()
         {
             Directory.CreateDirectory(directory);
+            string settings = Path.Combine(directory, "settings.json");
+            ToolSettings.PathProvider = () => settings;
             DestroyPreviewMarker.DirectoryProvider = () => Path.Combine(directory, "destroy");
         }
 
         public void Dispose()
         {
+            ToolSettings.PathProvider = previousSettingsPath;
             DestroyPreviewMarker.DirectoryProvider = previousMarkerDirectory;
             DestroyPreviewMarker.Clock = previousClock;
             DocsCommand.Opener = previousOpener;
@@ -46,6 +50,8 @@ namespace TfPortable.Tests
         [Fact]
         public void Argument_errors_of_the_phase_4_commands_are_TFP0002()
         {
+            // The protection gate runs before the command, so the level 3 commands are checked at level 3.
+            new ToolSettings { ProtectionLevel = 3 }.Save();
             Assert.StartsWith("ERROR TFP0002: /stopat needs /keephistory.", Run("destroy", "$/a", "/stopat:C5").Err);
             Assert.StartsWith("ERROR TFP0002: destroy needs at least one itemspec.", Run("destroy", "/preview").Err);
             Assert.StartsWith("ERROR TFP0002: /allow, /deny and /remove need /user: or /group:.", Run("permission", "/allow:Lock", "$/a").Err);
@@ -61,6 +67,7 @@ namespace TfPortable.Tests
             Assert.StartsWith("ERROR TFP0002: resolvepath needs at least one itemspec.", Run("resolvepath").Err);
             Assert.StartsWith("ERROR TFP0002: docs takes at most one command name.", Run("docs", "a", "b").Err);
             Assert.StartsWith("ERROR TFP0002: workfold /map needs the server folder and the local folder.", Run("workfold", "/map", "$/a").Err);
+            Assert.StartsWith("ERROR TFP0005: Command 'proxy' is not part of tfp", Run("proxy", "/configure", "/enabled:true").Err);
             Assert.StartsWith("ERROR TFP0002: workfold takes one of /map, /unmap, /cloak and /decloak.", Run("workfold", "/map", "/cloak", "$/a", "x").Err);
             Assert.StartsWith("ERROR TFP0002: checkin /shelveset takes no itemspec, /comment, /validate or /override", Run("checkin", "/shelveset:x", "/comment:c").Err);
             Assert.StartsWith("ERROR TFP0002: /notes entry 'bogus' is not Name=Value.", Run("changeset", "5", "/notes:bogus").Err);

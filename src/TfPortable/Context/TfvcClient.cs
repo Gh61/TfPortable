@@ -455,17 +455,16 @@ namespace TfPortable.Context
 
         public IReadOnlyList<ItemPropertiesInfo> GetItemProperties(IReadOnlyList<ItemQuery> items, VersionSpec version)
         {
-            var values = VersionControl.GetVersionedItemProperty(items.Select(ToItemSpec).ToArray(), version, DeletedState.Any, ItemType.Any, new[] { "*" })
-                ?? Array.Empty<Microsoft.TeamFoundation.Framework.Client.ArtifactPropertyValue>();
+            // GetItems with a property filter returns the versioned-item properties on every item (the dedicated property query is obsolete).
+            var sets = VersionControl.GetItems(items.Select(ToItemSpec).ToArray(), version, DeletedState.Any, ItemType.Any, GetItemsOptions.None, new[] { "*" }, null)
+                ?? Array.Empty<ItemSet>();
             var result = new List<ItemPropertiesInfo>();
-            foreach (var value in values)
+            foreach (var item in sets.Where(s => s?.Items != null).SelectMany(s => s.Items))
             {
-                // The moniker of a versioned-item artifact is its server path; a single non-recursive query falls back to the item asked for.
-                string path = value.Spec?.Moniker ?? (items.Count == 1 && items[0].Recursion == RecursionType.None ? items[0].Path : string.Empty);
-                var properties = (value.PropertyValues ?? new List<Microsoft.TeamFoundation.Framework.Client.PropertyValue>())
+                var properties = (item.PropertyValues ?? (IList<Microsoft.TeamFoundation.Framework.Client.PropertyValue>)new List<Microsoft.TeamFoundation.Framework.Client.PropertyValue>())
                     .Select(p => new KeyValuePair<string, string?>(p.PropertyName, p.Value?.ToString()))
                     .ToList();
-                result.Add(new ItemPropertiesInfo(path, properties));
+                result.Add(new ItemPropertiesInfo(item.ServerItem, properties));
             }
 
             return result;

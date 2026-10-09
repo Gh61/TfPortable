@@ -130,9 +130,9 @@ namespace TfPortable.Cli
                 SwitchSpec? switchSpec = Resolve(table, name);
                 if (switchSpec == null)
                 {
-                    if (spec == null || help || spec.Status == CommandStatus.OutOfScope)
+                    if (spec == null || help || spec.Status == CommandStatus.OutOfScope || spec.Status == CommandStatus.NotOffered)
                     {
-                        // Unknown command (TFP0001), out-of-scope command (TFP0003, thrown by the caller) or help: keep the switch, do not judge it.
+                        // Unknown command (TFP0001), out-of-scope or never-offered command (TFP0003/TFP0005, thrown by the caller) or help: keep the switch, do not judge it.
                         result.Set(name.ToLowerInvariant(), raw.Value);
                         continue;
                     }
