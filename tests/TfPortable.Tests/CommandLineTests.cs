@@ -174,10 +174,10 @@ namespace TfPortable.Tests
         }
 
         [Fact]
-        public void Other_command_groups_are_TFP0003()
+        public void Other_command_groups_are_TFP0005()
         {
             var error = Assert.Throws<TfpException>(() => CommandLine.Parse(new[] { "git", "permission" }));
-            Assert.Equal(ErrorCodes.NotSupported, error.Code);
+            Assert.Equal(ErrorCodes.NotOffered, error.Code);
             Assert.Equal(ExitCodes.GeneralError, error.ExitCode);
         }
 

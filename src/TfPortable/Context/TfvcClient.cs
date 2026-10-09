@@ -358,6 +358,171 @@ namespace TfPortable.Context
 
         private static LabelResultInfo ToLabelResult(LabelResult r) => new LabelResultInfo(r.Label, r.Scope, r.Status.ToString().ToLowerInvariant());
 
+        public DestroyResult Destroy(ItemQuery item, VersionSpec? itemVersion, bool preview, bool keepHistory, VersionSpec? stopAt, bool startCleanup, bool silent)
+        {
+            var flags = DestroyFlags.AffectedChanges;
+            if (preview) { flags |= DestroyFlags.Preview; }
+            if (keepHistory) { flags |= DestroyFlags.KeepHistory; }
+            if (startCleanup) { flags |= DestroyFlags.StartCleanup; }
+            if (silent) { flags |= DestroyFlags.Silent; }
+
+            var destroyed = VersionControl.Destroy(ToItemSpec(item), itemVersion ?? VersionSpec.Latest, stopAt, flags, out PendingSet[] pending, out PendingSet[] shelved);
+            return new DestroyResult(
+                (destroyed ?? Array.Empty<Item>()).Select(i => new DestroyedItemInfo(i.ServerItem, i.DeletionId, i.ItemType == ItemType.Folder)).ToList(),
+                (pending ?? Array.Empty<PendingSet>()).Select(ToPendingSet).ToList(),
+                (shelved ?? Array.Empty<PendingSet>()).Select(ToPendingSet).ToList());
+        }
+
+        public IReadOnlyList<ItemPermissionInfo> GetPermissions(IReadOnlyList<string> serverPaths, RecursionType recursion)
+        {
+            var securities = VersionControl.GetPermissions(serverPaths.ToArray(), recursion) ?? Array.Empty<ItemSecurity>();
+            return securities.Select(s => new ItemPermissionInfo(s.ServerItem, s.Inherit,
+                (s.Entries ?? Array.Empty<AccessEntry>()).Select(e => new PermissionEntryInfo(e.IdentityName,
+                    e.Allow ?? Array.Empty<string>(), e.Deny ?? Array.Empty<string>(), e.AllowInherited ?? Array.Empty<string>(), e.DenyInherited ?? Array.Empty<string>())).ToList())).ToList();
+        }
+
+        public void SetPermissions(IReadOnlyList<PermissionChangeRequest> changes)
+        {
+            var securityChanges = new List<SecurityChange>();
+            foreach (var change in changes)
+            {
+                if (change.Inherit != null)
+                {
+                    securityChanges.Add(new InheritanceChange(change.ServerItem, change.Inherit.Value));
+                }
+
+                if (change.Identity != null && (change.Allow.Count > 0 || change.Deny.Count > 0 || change.Remove.Count > 0))
+                {
+                    securityChanges.Add(new PermissionChange(change.ServerItem, change.Identity, change.Allow.ToArray(), change.Deny.ToArray(), change.Remove.ToArray()));
+                }
+            }
+
+            if (securityChanges.Count > 0)
+            {
+                VersionControl.SetPermissions(securityChanges.ToArray());
+            }
+        }
+
+        public WorkspaceSummary CreateWorkspace(WorkspaceDefinition definition)
+        {
+            var vcs = VersionControl;
+            var parameters = new CreateWorkspaceParameters(definition.Name)
+            {
+                OwnerName = vcs.AuthorizedUser,
+                Comment = definition.Comment ?? string.Empty,
+                Computer = definition.Computer ?? Environment.MachineName,
+                Location = WorkspaceLocation.Local,
+                Folders = (definition.Mappings ?? Array.Empty<MappingInfo>()).Select(ToWorkingFolder).ToArray(),
+                PermissionProfile = PermissionProfile(definition.Permission ?? "Private"),
+                WorkspaceOptions = definition.FileTimeCheckin == true ? WorkspaceOptions.SetFileTimeToCheckin : WorkspaceOptions.None,
+            };
+            var workspace = vcs.CreateWorkspace(parameters);
+            return ToSummary(workspace);
+        }
+
+        public WorkspaceSummary UpdateWorkspace(string name, string? owner, string? newName, WorkspaceDefinition changes)
+        {
+            var vcs = VersionControl;
+            var workspace = vcs.GetWorkspace(name, string.IsNullOrEmpty(owner) ? vcs.AuthorizedUser : owner);
+            var parameters = new UpdateWorkspaceParameters
+            {
+                WorkspaceName = newName,
+                Comment = changes.Comment,
+                Computer = changes.Computer,
+                PermissionProfile = PermissionProfile(changes.Permission),
+                WorkspaceOptions = changes.FileTimeCheckin == null ? (WorkspaceOptions?)null : changes.FileTimeCheckin.Value ? WorkspaceOptions.SetFileTimeToCheckin : WorkspaceOptions.None,
+            };
+            workspace.Update(parameters);
+            return ToSummary(vcs.GetWorkspace(newName ?? name, workspace.OwnerName));
+        }
+
+        public bool DeleteWorkspace(string name, string? owner)
+        {
+            var vcs = VersionControl;
+            string ownerName = string.IsNullOrEmpty(owner) ? vcs.AuthorizedUser : owner!;
+            bool deleted = vcs.DeleteWorkspace(name, ownerName);
+            try
+            {
+                Workstation.Current.RemoveCachedWorkspaceInfo(connection.Uri, name, ownerName);
+            }
+            catch (Exception)
+            {
+                // The cache entry is an optimization; the server is the truth.
+            }
+
+            return deleted;
+        }
+
+        public IReadOnlyList<ItemPropertiesInfo> GetItemProperties(IReadOnlyList<ItemQuery> items, VersionSpec version)
+        {
+            var values = VersionControl.GetVersionedItemProperty(items.Select(ToItemSpec).ToArray(), version, DeletedState.Any, ItemType.Any, new[] { "*" })
+                ?? Array.Empty<Microsoft.TeamFoundation.Framework.Client.ArtifactPropertyValue>();
+            var result = new List<ItemPropertiesInfo>();
+            foreach (var value in values)
+            {
+                // The moniker of a versioned-item artifact is its server path; a single non-recursive query falls back to the item asked for.
+                string path = value.Spec?.Moniker ?? (items.Count == 1 && items[0].Recursion == RecursionType.None ? items[0].Path : string.Empty);
+                var properties = (value.PropertyValues ?? new List<Microsoft.TeamFoundation.Framework.Client.PropertyValue>())
+                    .Select(p => new KeyValuePair<string, string?>(p.PropertyName, p.Value?.ToString()))
+                    .ToList();
+                result.Add(new ItemPropertiesInfo(path, properties));
+            }
+
+            return result;
+        }
+
+        public int CheckInShelveset(string name, string? owner, string? author, bool noAutoResolve, bool allowUnchangedContent)
+        {
+            var vcs = VersionControl;
+            var parameters = new ShelvesetCheckInParameters(name, string.IsNullOrEmpty(owner) ? vcs.AuthorizedUser : owner!)
+            {
+                NoAutoResolve = noAutoResolve,
+                AllowUnchangedContent = allowUnchangedContent,
+                DeleteShelveset = true,
+            };
+            if (!string.IsNullOrEmpty(author))
+            {
+                parameters.Author = author;
+            }
+
+            return vcs.CheckInShelveset(parameters);
+        }
+
+        public ChangesetInfo UpdateChangeset(int id, string? comment, IReadOnlyList<KeyValuePair<string, string>>? notes)
+        {
+            var vcs = VersionControl;
+            var changeset = vcs.GetChangeset(id, false, false);
+            if (comment != null)
+            {
+                changeset.Comment = comment;
+            }
+
+            if (notes != null)
+            {
+                changeset.CheckinNote = new CheckinNote(notes.Select(n => new CheckinNoteFieldValue(n.Key, n.Value)).ToArray());
+            }
+
+            changeset.Update();
+            return GetChangeset(id);
+        }
+
+        private static WorkingFolder ToWorkingFolder(MappingInfo mapping) =>
+            mapping.Cloaked
+                ? new WorkingFolder(mapping.ServerPath, null, WorkingFolderType.Cloak)
+                : new WorkingFolder(mapping.ServerPath, mapping.LocalPath, WorkingFolderType.Map, mapping.OneLevel ? RecursionType.OneLevel : RecursionType.Full);
+
+        /// <summary>The built-in profile by its tf.exe name (`Private`, `PublicLimited`, `Public`), or null.</summary>
+        private static WorkspacePermissionProfile? PermissionProfile(string? name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+
+            return WorkspacePermissionProfile.BuiltInProfiles.FirstOrDefault(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase))
+                ?? throw new ArgumentException($"Unknown workspace permission profile '{name}'.");
+        }
+
         public void Dispose() => connection.Dispose();
 
         internal static ItemSpec ToItemSpec(ItemQuery i) => new ItemSpec(i.Path, i.Recursion, i.DeletionId);
@@ -571,6 +736,49 @@ namespace TfPortable.Context
                 try
                 {
                     return workspace.IsServerPathMapped(serverPath) ? workspace.GetLocalItemForServerItem(serverPath) : null;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            }
+
+            public void Map(string serverPath, string localPath)
+            {
+                workspace.Map(serverPath, localPath);
+                summary = null;
+            }
+
+            public bool Unmap(string path)
+            {
+                var folder = workspace.Folders.FirstOrDefault(f => string.Equals(f.ServerItem, path, StringComparison.OrdinalIgnoreCase)
+                    || (!f.IsCloaked && f.LocalItem != null && string.Equals(f.LocalItem.TrimEnd(Path.DirectorySeparatorChar), path.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase)));
+                if (folder == null)
+                {
+                    return false;
+                }
+
+                workspace.DeleteMapping(folder);
+                summary = null;
+                return true;
+            }
+
+            public void Cloak(string serverPath)
+            {
+                workspace.Cloak(serverPath);
+                summary = null;
+            }
+
+            public string? ResolvePath(string path, bool isServerPath)
+            {
+                try
+                {
+                    if (isServerPath)
+                    {
+                        return workspace.IsServerPathMapped(path) ? workspace.GetLocalItemForServerItem(path) : null;
+                    }
+
+                    return workspace.IsLocalPathMapped(path) ? workspace.GetServerItemForLocalItem(path) : null;
                 }
                 catch (Exception)
                 {

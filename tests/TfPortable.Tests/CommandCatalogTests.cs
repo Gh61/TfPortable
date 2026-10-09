@@ -66,10 +66,21 @@ namespace TfPortable.Tests
                 Assert.Equal(3, spec.Phase);
             }
 
-            foreach (string name in new[] { "destroy", "permission", "workspace" })
+            foreach (string name in new[] { "destroy", "permission", "workspace", "property", "resolvepath" })
             {
-                Assert.Equal(CommandStatus.OutOfScope, CommandCatalog.Find(name)!.Status);
+                var spec = CommandCatalog.Find(name)!;
+                Assert.Equal(CommandStatus.Implemented, spec.Status);
+                Assert.Equal(4, spec.Phase);
             }
+
+            foreach (string name in new[] { "proxy", "configure", "certificates" })
+            {
+                Assert.Equal(CommandStatus.NotOffered, CommandCatalog.Find(name)!.Status);
+            }
+
+            // Version 1.0 rule (SPEC.md "Fáze 4"): no command is left out of scope or planned.
+            Assert.DoesNotContain(CommandCatalog.Commands, c => c.Status == CommandStatus.OutOfScope || c.Status == CommandStatus.Planned);
+            Assert.Equal("docs", CommandCatalog.Find("msdn")!.Name);
         }
 
         [Fact]

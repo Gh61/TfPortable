@@ -44,7 +44,7 @@ namespace TfPortable.Commands
         /// <summary>TFP0001 (exit 2) with the list of commands, shared with the dispatcher.</summary>
         public static TfpException UnknownCommand(string name, string toolName)
         {
-            string commands = string.Join(", ", CommandCatalog.Commands.Where(c => c.Status != CommandStatus.OutOfScope).Select(c => c.Name).OrderBy(n => n, StringComparer.Ordinal));
+            string commands = string.Join(", ", CommandCatalog.Commands.Where(c => c.Status != CommandStatus.OutOfScope && c.Status != CommandStatus.NotOffered).Select(c => c.Name).OrderBy(n => n, StringComparer.Ordinal));
             return new TfpException(ErrorCodes.UnknownCommand, ExitCodes.UnknownCommand,
                 $"Unknown command '{name}'.",
                 $"Commands: {commands}. Run '{toolName} help' for details.");
@@ -61,7 +61,7 @@ namespace TfPortable.Commands
                 yield return line;
             }
 
-            foreach (var line in Section("Tool commands:", CommandCatalog.Commands.Where(c => c.Phase == null && c.Status != CommandStatus.OutOfScope)))
+            foreach (var line in Section("Tool commands:", CommandCatalog.Commands.Where(c => c.Phase == null && c.Status == CommandStatus.Implemented)))
             {
                 yield return line;
             }
@@ -76,8 +76,21 @@ namespace TfPortable.Commands
                 yield return line;
             }
 
-            yield return "Not available in this build (planned for a later phase or never offered; use Visual Studio or tf.exe):";
-            yield return "  " + string.Join(", ", CommandCatalog.Commands.Where(c => c.Status == CommandStatus.OutOfScope).Select(c => c.Name));
+            foreach (var line in Section("Phase 4 (server administration; destroy, permission changes and workspace changes need protection level 3):", CommandCatalog.Commands.Where(c => c.Phase == 4)))
+            {
+                yield return line;
+            }
+
+            var outOfScope = CommandCatalog.Commands.Where(c => c.Status == CommandStatus.OutOfScope).ToList();
+            if (outOfScope.Count > 0)
+            {
+                yield return "Not available in this build (planned for a later phase; use Visual Studio or tf.exe):";
+                yield return "  " + string.Join(", ", outOfScope.Select(c => c.Name));
+                yield return string.Empty;
+            }
+
+            yield return "Never offered (client configuration and dialogs; TFP0005 explains each):";
+            yield return "  " + string.Join(", ", CommandCatalog.Commands.Where(c => c.Status == CommandStatus.NotOffered).Select(c => c.Name));
             yield return string.Empty;
             yield return "Global switches: " + string.Join(" ", CommandCatalog.GlobalSwitches.Select(s => s.Usage));
             yield return "Switches accept '/' or '-' (use '-' in Git Bash) and are case-insensitive; values follow ':' (e.g. -format:json).";
@@ -113,6 +126,12 @@ namespace TfPortable.Commands
             if (spec.Status == CommandStatus.OutOfScope)
             {
                 yield return $"Not supported by {toolName} (TFP0003); use Visual Studio or the original tf.exe.";
+                yield break;
+            }
+
+            if (spec.Status == CommandStatus.NotOffered)
+            {
+                yield return $"Never offered by {toolName} (TFP0005): the command {spec.Summary}.";
                 yield break;
             }
 

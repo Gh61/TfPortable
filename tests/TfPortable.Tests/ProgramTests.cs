@@ -80,7 +80,8 @@ namespace TfPortable.Tests
             var commands = (JArray)envelope["data"]!["commands"]!;
             Assert.Contains(commands, c => (string)c["name"]! == "status" && (bool)c["supported"]!);
             Assert.Contains(commands, c => (string)c["name"]! == "checkin" && (bool)c["supported"]!);
-            Assert.Contains(commands, c => (string)c["name"]! == "destroy" && !(bool)c["supported"]!);
+            Assert.Contains(commands, c => (string)c["name"]! == "destroy" && (bool)c["supported"]!);
+            Assert.Contains(commands, c => (string)c["name"]! == "proxy" && !(bool)c["supported"]!);
 
             var (_, single, _) = Run("help", "history", "/format:json");
             Assert.Single((JArray)JObject.Parse(single)["data"]!["commands"]!);
@@ -106,15 +107,19 @@ namespace TfPortable.Tests
         }
 
         [Fact]
-        public void Out_of_scope_and_planned_commands_are_TFP0003_with_exit_100()
+        public void Never_offered_commands_and_groups_are_TFP0005_with_exit_100()
         {
-            var (exit, _, stderr) = Run("destroy", "$/a");
+            var (exit, _, stderr) = Run("proxy", "/configure");
             Assert.Equal(100, exit);
-            Assert.StartsWith("ERROR TFP0003: Command 'destroy' is not supported by tfp", stderr);
+            Assert.StartsWith("ERROR TFP0005: Command 'proxy' is not part of tfp: it configures a TFVC proxy server", stderr);
+
+            var (exit2, _, stderr2) = Run("configure", "$/a");
+            Assert.Equal(100, exit2);
+            Assert.Contains("never shows a dialog", stderr2);
 
             var (exit3, _, stderr3) = Run("git", "permission");
             Assert.Equal(100, exit3);
-            Assert.StartsWith("ERROR TFP0003:", stderr3);
+            Assert.StartsWith("ERROR TFP0005:", stderr3);
         }
 
         [Fact]

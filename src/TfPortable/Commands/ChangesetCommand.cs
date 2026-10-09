@@ -21,12 +21,8 @@ namespace TfPortable.Commands
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            if (commandLine.Has("comment") || commandLine.Has("notes"))
-            {
-                throw new TfpException(ErrorCodes.NotSupported, ExitCodes.GeneralError, "/comment and /notes edit the changeset on the server; TfPortable does not write to the server.",
-                    "Edit the changeset in Visual Studio or with the original tf.exe.");
-            }
-
+            string? newComment = CommentText.Optional(commandLine, toolName);
+            var newNotes = Notes(commandLine, toolName);
             bool latest = commandLine.Has("latest");
             if (commandLine.Positionals.Count != (latest ? 0 : 1))
             {
@@ -49,7 +45,14 @@ namespace TfPortable.Commands
                 id = context.Client.GetLatestChangesetId();
             }
 
-            var changeset = context.Client.GetChangeset(id);
+            var changeset = newComment != null || newNotes != null
+                ? context.Client.UpdateChangeset(id, newComment, newNotes)
+                : context.Client.GetChangeset(id);
+            if (newComment != null || newNotes != null)
+            {
+                output.Line($"Changeset {id} updated.");
+            }
+
             output.Lines(RenderBlock(changeset));
 
             string? diff = null;
@@ -62,6 +65,45 @@ namespace TfPortable.Commands
 
             output.Success(new JObject { ["changeset"] = changeset.ToJson(true), ["diff"] = diff });
             return ExitCodes.Success;
+        }
+
+        /// <summary>`/notes:"Name=Value;Name2=Value2"` or `@file` with one `Name=Value` per line; null when the switch is absent.</summary>
+        internal static List<KeyValuePair<string, string>>? Notes(CommandLine commandLine, string toolName)
+        {
+            string? text = commandLine.Value("notes");
+            if (text == null)
+            {
+                return null;
+            }
+
+            if (text.StartsWith("@", StringComparison.Ordinal))
+            {
+                text = CommentText.FromFile(text, "notes", toolName).Replace("\r\n", ";").Replace("\n", ";");
+            }
+
+            var notes = new List<KeyValuePair<string, string>>();
+            foreach (string part in text.Split(';'))
+            {
+                if (part.Trim().Length == 0)
+                {
+                    continue;
+                }
+
+                int equals = part.IndexOf('=');
+                if (equals <= 0)
+                {
+                    throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, $"/notes entry '{part.Trim()}' is not Name=Value.", $"Example: '{toolName} changeset 1234 /notes:\"Code Reviewer=Jan Novak;Security Reviewer=none\"'.");
+                }
+
+                notes.Add(new KeyValuePair<string, string>(part.Substring(0, equals).Trim(), part.Substring(equals + 1).Trim()));
+            }
+
+            if (notes.Count == 0)
+            {
+                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "/notes needs at least one Name=Value.", $"Example: '{toolName} changeset 1234 /notes:\"Code Reviewer=Jan Novak\"'.");
+            }
+
+            return notes;
         }
 
         /// <summary>`Changeset: N`, `User:`, `Date:`, blank, `Comment:` + indented text, blank, `Items:` + aligned change types, `Work items:` when present.</summary>

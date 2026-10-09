@@ -65,7 +65,19 @@ namespace TfPortable.Tests
             Assert.Equal(2, ProtectionLevels.Of("checkin"));
             Assert.Equal(2, ProtectionLevels.Of("lock"));
             Assert.Equal(3, ProtectionLevels.Of("destroy"));
-            Assert.Equal(3, ProtectionLevels.Of("workspace"));
+            Assert.Equal(1, ProtectionLevels.Of("workspace"));
+            Assert.Equal(1, ProtectionLevels.Of("permission"));
+            Assert.Equal(1, ProtectionLevels.Of("docs"));
+            var create = CommandLine.Parse(new[] { "workspace", "/new", "Build" });
+            Assert.Equal((3, "new"), ProtectionLevels.Required(create.Spec!, create));
+            var allow = CommandLine.Parse(new[] { "permission", "/allow:Lock", "/user:x", "$/a" });
+            Assert.Equal((3, "allow"), ProtectionLevels.Required(allow.Spec!, allow));
+            var listing = CommandLine.Parse(new[] { "permission", "$/a" });
+            Assert.Equal((1, (string?)null), ProtectionLevels.Required(listing.Spec!, listing));
+            var lockForeign = CommandLine.Parse(new[] { "lock", "/lock:checkin", "/workspace:other", "$/a" });
+            Assert.Equal((3, "workspace"), ProtectionLevels.Required(lockForeign.Spec!, lockForeign));
+            var comment = CommandLine.Parse(new[] { "changeset", "5", "/comment:x" });
+            Assert.Equal((2, "comment"), ProtectionLevels.Required(comment.Spec!, comment));
         }
 
         [Fact]

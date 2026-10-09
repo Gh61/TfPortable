@@ -80,6 +80,31 @@ namespace TfPortable.Commands
                     $"'{toolName} status' lists the pending changes. Pass /recursive for a folder.");
             }
 
+            var validation = new JArray();
+            if (commandLine.Has("validate"))
+            {
+                // The checkin policies and notes as `checkin /validate` sees them; a failure is reported, the shelveset is still created.
+                var policies = CheckinPolicies.Evaluate(context.Client.GetCheckinPolicies(changes.Select(c => c.ServerPath).Distinct().ToList()), comment ?? string.Empty, new List<int>());
+                var evaluation = workspace.EvaluateCheckin(changes, comment ?? string.Empty, policies);
+                foreach (var conflict in evaluation.Conflicts)
+                {
+                    output.ItemError(new TfpException(ErrorCodes.CheckinConflict, ExitCodes.PartialSuccess, $"Conflict: {conflict.Message}", $"Run '{toolName} get' and '{toolName} resolve' for the item before the checkin.", item: conflict.ServerPath));
+                    validation.Add(conflict.Message);
+                }
+
+                foreach (string failure in evaluation.PolicyFailures)
+                {
+                    output.ItemError(new TfpException(ErrorCodes.CheckinPolicy, ExitCodes.PartialSuccess, $"Policy: {failure}", "The checkin of this work will need the policy satisfied or an /override reason."));
+                    validation.Add(failure);
+                }
+
+                foreach (string unknown in evaluation.UnknownPolicies)
+                {
+                    output.ItemError(new TfpException(ErrorCodes.CheckinPolicyUnknown, ExitCodes.PartialSuccess, $"Policy: {unknown}", "Check it in Visual Studio before the checkin."));
+                    validation.Add(unknown);
+                }
+            }
+
             bool replace = commandLine.Has("replace");
             bool existed = replace && context.Client.QueryShelvesets(name, me).Count > 0;
             workspace.Shelve(name, comment, changes, replace, commandLine.Has("move"));
@@ -98,6 +123,8 @@ namespace TfPortable.Commands
                 ["changes"] = new JArray(changes.Select(c => c.ToJson()).Cast<object>().ToArray()),
                 ["replaced"] = existed,
                 ["moved"] = commandLine.Has("move"),
+                ["validated"] = commandLine.Has("validate"),
+                ["validationFailures"] = validation,
             });
             return ExitCodes.Success;
         }
@@ -220,6 +247,23 @@ namespace TfPortable.Commands
                 output.ItemError(WorkspaceCommandSupport.ToError(failure, toolName));
             }
 
+            bool deleted = false;
+            if (commandLine.Has("move"))
+            {
+                // tf.exe deletes the shelveset after a clean unshelve (phase 4 capture `unshelve/move`); with conflicts or failures it stays.
+                if (result.Conflicts.Count == 0 && result.Failures.Count == 0 && queries == null)
+                {
+                    string deleteOwner = owner ?? context.Client.AuthorizedUser;
+                    context.Client.DeleteShelveset(name, deleteOwner);
+                    deleted = true;
+                    output.Line($"Shelveset {name};{deleteOwner} deleted.");
+                }
+                else
+                {
+                    output.Warning($"Shelveset {name} was kept: /move deletes it only after a complete unshelve without conflicts or failures.");
+                }
+            }
+
             foreach (var conflict in result.Conflicts)
             {
                 output.ItemError(new TfpException(ErrorCodes.GetConflicts, ExitCodes.PartialSuccess,
@@ -232,6 +276,7 @@ namespace TfPortable.Commands
                 ["shelveset"] = ShelvesetSpec.ToJson(name, owner ?? context.Client.AuthorizedUser),
                 ["changes"] = new JArray(result.Changes.Select(c => c.ToJson()).Cast<object>().ToArray()),
                 ["conflicts"] = new JArray(result.Conflicts.Select(c => c.ToJson()).Cast<object>().ToArray()),
+                ["deleted"] = deleted,
             });
             return ExitCodes.Success;
         }

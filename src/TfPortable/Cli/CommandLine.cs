@@ -101,8 +101,8 @@ namespace TfPortable.Cli
                     rawCommand = arg.ToLowerInvariant();
                     if (CommandCatalog.OtherGroups.Contains(rawCommand))
                     {
-                        throw new TfpException(ErrorCodes.NotSupported, ExitCodes.GeneralError,
-                            $"The command group '{rawCommand}' of tf.exe is not supported; {toolName} covers version control (tf vc) only.",
+                        throw new TfpException(ErrorCodes.NotOffered, ExitCodes.GeneralError,
+                            $"The command group '{rawCommand}' of tf.exe is not part of {toolName}; it covers version control (tf vc) only.",
                             $"Run '{toolName} help' for the commands.");
                     }
 
