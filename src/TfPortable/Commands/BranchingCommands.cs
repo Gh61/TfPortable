@@ -72,7 +72,7 @@ namespace TfPortable.Commands
                 output.Line(change.MergeLine);
             }
 
-            if (result.Changes.Count == 0 && result.NumOperations > 0)
+            if (result.Changes.Count == 0 && result.ConflictLines.Count == 0 && result.NumOperations > 0)
             {
                 // The server reported operations the events did not describe (a preview of an older server).
                 output.Line($"{result.NumOperations} change(s) {(preview ? "would be" : "were")} pended.");
