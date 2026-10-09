@@ -43,10 +43,11 @@ The runner calls, in this order and stops at the first failure:
 
 | Script | Cases | Writes to the server |
 | --- | --- | --- |
+| `capture-tf-golden-phase2.ps1` | `branch` (pending, `/silent`, `/noget`, `/version`), `merge /candidate`, `/preview` (all, a range, a single version, with a conflict, `/nosummary`, `/format:detailed`), `merge` with a range, `/discard`, `/force`, `/baseless`, a conflict and its `resolve`, nothing to merge, `merges` (brief, detailed, no source, `/showall`, one file), `rollback` (`/changeset` with and without items, a range, `/toversion` with and without items, `T` and date specs, both switches, `/keepmergehistory`, of a merge changeset, nothing to roll back), `undelete` (file, `;X<id>`, wrong id, deleted twice, `/noget`, local path, folder with and without `/recursive`, not deleted, missing), `folderdiff` (sections, `/view:*`, `/filter`, local against server, one path, a version, missing folders, `/filterLocalPathsOnly`, same size and different content, a pending local edit) | folder `$/<Project>/Main/golden2-<run>` with a source folder, a branch of it and a sibling (deleted by a checkin at the end); every merge, rollback and undelete is undone after its capture |
 | `capture-tf-golden-phase3.ps1` | `checkin /validate`, `/associate`, comment file, unchanged edit, `shelve /replace`, `/move`, existing name, `unshelve` with a local file in the way, `/nomerge`, `label` without scope, `/child:*`, `label /delete`, `lock` edge cases | folder `$/<Project>/Main/golden3-<run>` (deleted by a checkin at the end), a shelveset and a label named `Golden3-<run>` / `golden3-<run>` (deleted) |
 | `capture-tf-golden-phase4.ps1` | `property`, `permission` on the run folder, `lock /workspace`, `undo /workspace:<other>`, `status /workspace`, `checkin /shelveset`, `unshelve /move`, `shelve /validate`, `destroy /preview`, `destroy /keephistory`, `destroy`, history and `dir /deleted` of a destroyed item, `workspace /delete` | folder `$/<Project>/Main/golden4-<run>` (destroyed at the end), a second temporary workspace (deleted), a permission entry for the signed-in user on the run folder only (removed, then destroyed with the folder) |
 
-Both scripts are limited to their own run folder and their own temporary objects: nothing outside
+The scripts are limited to their own run folder and their own temporary objects: nothing outside
 `$/<Project>/Main/golden<phase>-<run>` is changed, no permission of an existing item is touched, nothing is
 destroyed outside the run folder. `-WhatIf` is not available; read the "Scenarios" section of a script before
 the first run if in doubt.
@@ -55,9 +56,10 @@ Afterwards:
 
 1. Look through the new files under `tests/golden/<command>/` for personal data (the scripts replace the
    owner, user, computer, collection and paths by placeholders; e-mail addresses become `<EMAIL>`).
-2. Commit `tests/golden/**` and the new `index-phase3-<run>.json`, `index-phase4-<run>.json`.
-3. Tell the agent: it compares tfp against the captures and corrects `docs/compat.md` §16 where the assumed
-   shapes differ.
+2. Commit `tests/golden/**` and the new `index-phase2-<run>.json`, `index-phase3-<run>.json`,
+   `index-phase4-<run>.json`.
+3. Tell the agent: it compares tfp against the captures and corrects `docs/compat.md` §15 and §16 where the
+   assumed shapes differ, and answers questions 27–33 of `docs/tf-reference/questions.md`.
 
 Done when the two index files are committed.
 

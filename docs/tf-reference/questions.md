@@ -49,6 +49,8 @@ agent; it adjusts the code and `docs/compat.md`.
 
 ## merge, branch, rollback, undelete (phase 2)
 
+`tools/capture-tf-golden-phase2.ps1` captures the cases behind questions 27–33 (`index-phase2-<run>.json`).
+
 27. `merge /preview`: does tf.exe use the `NoMerge` merge option (the server's preview) and the Merging event of
     the library for the lines, as tfp does (`docs/compat.md` §15)?
 28. `merge` summary lines (the count of merged items and conflicts, suppressed by `/nosummary`): exact text and
