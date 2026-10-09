@@ -1,0 +1,13 @@
+# case: rollback/changeset-date-spec
+# command: tf rollback /changeset:D2020-01-01 <WORKSPACE_ROOT>\Main\golden2-2610091535\src /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1385
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+TF204003: Žádné změny k vrácení zpět.
+
+==== stderr ====

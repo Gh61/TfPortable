@@ -1,0 +1,945 @@
+{
+    "capturedAt":  "2026-10-09T15:43:01.5222598+02:00",
+    "run":  "2610091539",
+    "tfVersion":  "18.10.12215.6 built by: releases/dev18/18.10 (760940044d)",
+    "consoleEncoding":  "windows-1250",
+    "culture":  "cs-CZ",
+    "extra":  {
+                  "changesets":  {
+                                     "add":  609,
+                                     "editA":  610,
+                                     "deleteB":  611,
+                                     "branch":  612,
+                                     "editXA":  613,
+                                     "editYA":  614,
+                                     "editYA2":  615,
+                                     "delete-folder":  616
+                                 },
+                  "goldenFolder":  "$/TfsPortableTestRepo/Main/goldenx-2610091539",
+                  "label":  "goldenx-2610091539@$/TfsPortableTestRepo",
+                  "shelveset":  "Goldenx-2610091539",
+                  "deletionIdOfB":  131
+              },
+    "cases":  [
+                  {
+                      "group":  "add",
+                      "name":  "single-file-run",
+                      "command":  "tf add \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "add/single-file-run.txt"
+                  },
+                  {
+                      "group":  "add",
+                      "name":  "wildcard",
+                      "command":  "tf add \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\*.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "add/wildcard.txt"
+                  },
+                  {
+                      "group":  "add",
+                      "name":  "recursive-with-tfignore",
+                      "command":  "tf add \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x /recursive /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "add/recursive-with-tfignore.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-add-recursive",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-add-recursive.txt"
+                  },
+                  {
+                      "group":  "add",
+                      "name":  "ignored-noignore",
+                      "command":  "tf add \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\bin\\ignored.txt /noignore /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "add/ignored-noignore.txt"
+                  },
+                  {
+                      "group":  "add",
+                      "name":  "already-pending",
+                      "command":  "tf add \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "add/already-pending.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "no-comment",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/no-comment.txt"
+                  },
+                  {
+                      "group":  "changeset",
+                      "name":  "add-run",
+                      "command":  "tf changeset 609 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "changeset/add-run.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "validate-nothing-pending",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive \"/comment:Goldenx nothing (2610091539)\" /validate /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "checkin/validate-nothing-pending.txt"
+                  },
+                  {
+                      "group":  "checkout",
+                      "name":  "file-run",
+                      "command":  "tf checkout \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkout/file-run.txt"
+                  },
+                  {
+                      "group":  "checkout",
+                      "name":  "already-checked-out",
+                      "command":  "tf checkout \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkout/already-checked-out.txt"
+                  },
+                  {
+                      "group":  "delete",
+                      "name":  "with-pending-edit",
+                      "command":  "tf delete \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "delete/with-pending-edit.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-delete-with-pending-edit",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-delete-with-pending-edit.txt"
+                  },
+                  {
+                      "group":  "undo",
+                      "name":  "single-file",
+                      "command":  "tf undo \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "undo/single-file.txt"
+                  },
+                  {
+                      "group":  "checkout",
+                      "name":  "folder-recursive",
+                      "command":  "tf checkout \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkout/folder-recursive.txt"
+                  },
+                  {
+                      "group":  "delete",
+                      "name":  "folder-recursive",
+                      "command":  "tf delete \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\sub /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "delete/folder-recursive.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-delete-folder",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-delete-folder.txt"
+                  },
+                  {
+                      "group":  "delete",
+                      "name":  "folder-not-recursive",
+                      "command":  "tf delete \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\sub /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "delete/folder-not-recursive.txt"
+                  },
+                  {
+                      "group":  "rename",
+                      "name":  "folder",
+                      "command":  "tf rename \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\sub \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\sub2 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "rename/folder.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-rename-folder",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-rename-folder.txt"
+                  },
+                  {
+                      "group":  "rename",
+                      "name":  "target-exists",
+                      "command":  "tf rename \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\b.txt /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "rename/target-exists.txt"
+                  },
+                  {
+                      "group":  "rename",
+                      "name":  "into-folder",
+                      "command":  "tf rename \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\sub\\a.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "rename/into-folder.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-rename-into-folder",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-rename-into-folder.txt"
+                  },
+                  {
+                      "group":  "rename",
+                      "name":  "case-only",
+                      "command":  "tf rename \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\b.txt \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\B.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "rename/case-only.txt"
+                  },
+                  {
+                      "group":  "workfold",
+                      "name":  "folder-argument",
+                      "command":  "tf workfold \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workfold/folder-argument.txt"
+                  },
+                  {
+                      "group":  "workfold",
+                      "name":  "server-path",
+                      "command":  "tf workfold $/TfsPortableTestRepo/Main/goldenx-2610091539/x",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "workfold/server-path.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "space-and-case",
+                      "command":  "tf difference \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/space-and-case.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "ignorespace",
+                      "command":  "tf difference \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /ignorespace /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/ignorespace.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "ignorecase",
+                      "command":  "tf difference \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /ignorecase /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/ignorecase.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "ignorespace-ignorecase",
+                      "command":  "tf difference \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /ignorespace /ignorecase /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/ignorespace-ignorecase.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "brief-local",
+                      "command":  "tf difference \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /format:brief /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/brief-local.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "no-final-newline",
+                      "command":  "tf difference \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/no-final-newline.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "no-final-newline-ignoreeol",
+                      "command":  "tf difference \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /ignoreeol /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/no-final-newline-ignoreeol.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "eol-change",
+                      "command":  "tf difference \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\lf.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/eol-change.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "eol-change-ignoreeol",
+                      "command":  "tf difference \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\lf.txt /ignoreeol /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/eol-change-ignoreeol.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "eol-change-ignorespace",
+                      "command":  "tf difference \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\lf.txt /ignorespace /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/eol-change-ignorespace.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "binary",
+                      "command":  "tf difference \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\blob.bin /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/binary.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "folder-recursive",
+                      "command":  "tf difference \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/folder-recursive.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "folder-recursive-brief",
+                      "command":  "tf difference \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x /recursive /format:brief /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/folder-recursive-brief.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "two-server-folders",
+                      "command":  "tf difference $/TfsPortableTestRepo/Main/goldenx-2610091539/x;C609 $/TfsPortableTestRepo/Main/goldenx-2610091539/x;C610 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/two-server-folders.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "folder",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/goldenx-2610091539/x /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "view/folder.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "wildcard",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/goldenx-2610091539/x/*.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/wildcard.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "folder-recursive",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/goldenx-2610091539/x /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/folder-recursive.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "binary-to-output",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/goldenx-2610091539/x/blob.bin /output:C:\\Users\\\u003cUSER\u003e\\AppData\\Local\\Temp\\tfp-goldenx-blob-2610091539.bin /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/binary-to-output.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "binary-console",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/goldenx-2610091539/x/blob.bin /console /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/binary-console.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "lf-file",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/goldenx-2610091539/x/lf.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/lf-file.txt"
+                  },
+                  {
+                      "group":  "dir",
+                      "name":  "wildcard",
+                      "command":  "tf dir $/TfsPortableTestRepo/Main/goldenx-2610091539/x/*.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "dir/wildcard.txt"
+                  },
+                  {
+                      "group":  "dir",
+                      "name":  "wildcard-recursive",
+                      "command":  "tf dir $/TfsPortableTestRepo/Main/goldenx-2610091539/x/*.txt /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "dir/wildcard-recursive.txt"
+                  },
+                  {
+                      "group":  "properties",
+                      "name":  "folder",
+                      "command":  "tf properties $/TfsPortableTestRepo/Main/goldenx-2610091539/x /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "properties/folder.txt"
+                  },
+                  {
+                      "group":  "properties",
+                      "name":  "folder-recursive",
+                      "command":  "tf properties $/TfsPortableTestRepo/Main/goldenx-2610091539/x /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "properties/folder-recursive.txt"
+                  },
+                  {
+                      "group":  "properties",
+                      "name":  "version",
+                      "command":  "tf properties $/TfsPortableTestRepo/Main/goldenx-2610091539/x/a.txt /version:C609 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "properties/version.txt"
+                  },
+                  {
+                      "group":  "branches",
+                      "name":  "not-branched",
+                      "command":  "tf branches $/TfsPortableTestRepo/Main/goldenx-2610091539/x/b.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "branches/not-branched.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "candidate-unrelated",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/goldenx-2610091539/x $/TfsPortableTestRepo/Main/goldenx-2610091539/x/sub /recursive /candidate /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "merge/candidate-unrelated.txt"
+                  },
+                  {
+                      "group":  "label",
+                      "name":  "server-path-no-version",
+                      "command":  "tf label goldenx-2610091539@$/TfsPortableTestRepo $/TfsPortableTestRepo/Main/goldenx-2610091539/x /recursive \"/comment:Goldenx label (2610091539)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "label/server-path-no-version.txt"
+                  },
+                  {
+                      "group":  "labels",
+                      "name":  "server-path-version",
+                      "command":  "tf labels goldenx-2610091539 /format:detailed",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "labels/server-path-version.txt"
+                  },
+                  {
+                      "group":  "label",
+                      "name":  "explicit-version",
+                      "command":  "tf label goldenx-2610091539@$/TfsPortableTestRepo $/TfsPortableTestRepo/Main/goldenx-2610091539/x/a.txt /version:C609 /child:replace /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "label/explicit-version.txt"
+                  },
+                  {
+                      "group":  "labels",
+                      "name":  "after-explicit-version",
+                      "command":  "tf labels goldenx-2610091539 /format:detailed",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "labels/after-explicit-version.txt"
+                  },
+                  {
+                      "group":  "label",
+                      "name":  "local-path-version",
+                      "command":  "tf label goldenx-2610091539@$/TfsPortableTestRepo \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\b.txt /version:C609 /child:replace /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "label/local-path-version.txt"
+                  },
+                  {
+                      "group":  "labels",
+                      "name":  "all-owners",
+                      "command":  "tf labels /owner:*",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "labels/all-owners.txt"
+                  },
+                  {
+                      "group":  "labels",
+                      "name":  "wildcard",
+                      "command":  "tf labels goldenx*",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "labels/wildcard.txt"
+                  },
+                  {
+                      "group":  "labels",
+                      "name":  "owner-run",
+                      "command":  "tf labels goldenx-2610091539 /owner:* /format:detailed",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "labels/owner-run.txt"
+                  },
+                  {
+                      "group":  "unlabel",
+                      "name":  "folder-recursive",
+                      "command":  "tf unlabel goldenx-2610091539@$/TfsPortableTestRepo $/TfsPortableTestRepo/Main/goldenx-2610091539/x /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "unlabel/folder-recursive.txt"
+                  },
+                  {
+                      "group":  "labels",
+                      "name":  "after-unlabel-folder",
+                      "command":  "tf labels goldenx-2610091539 /format:detailed",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "labels/after-unlabel-folder.txt"
+                  },
+                  {
+                      "group":  "label",
+                      "name":  "delete-run",
+                      "command":  "tf label /delete goldenx-2610091539@$/TfsPortableTestRepo /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "label/delete-run.txt"
+                  },
+                  {
+                      "group":  "lock",
+                      "name":  "none-on-unlocked",
+                      "command":  "tf lock /lock:none \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\b.txt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "lock/none-on-unlocked.txt"
+                  },
+                  {
+                      "group":  "lock",
+                      "name":  "checkin-run",
+                      "command":  "tf lock /lock:checkin \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\b.txt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "lock/checkin-run.txt"
+                  },
+                  {
+                      "group":  "lock",
+                      "name":  "already-locked",
+                      "command":  "tf lock /lock:checkin \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\b.txt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "lock/already-locked.txt"
+                  },
+                  {
+                      "group":  "lock",
+                      "name":  "change-level",
+                      "command":  "tf lock /lock:checkout \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\b.txt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "lock/change-level.txt"
+                  },
+                  {
+                      "group":  "checkout",
+                      "name":  "own-lock",
+                      "command":  "tf checkout \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\b.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkout/own-lock.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "locked-and-checked-out",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/locked-and-checked-out.txt"
+                  },
+                  {
+                      "group":  "lock",
+                      "name":  "none-run",
+                      "command":  "tf lock /lock:none \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\b.txt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "lock/none-run.txt"
+                  },
+                  {
+                      "group":  "shelve",
+                      "name":  "no-comment",
+                      "command":  "tf shelve Goldenx-2610091539 \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "shelve/no-comment.txt"
+                  },
+                  {
+                      "group":  "shelvesets",
+                      "name":  "own-detailed",
+                      "command":  "tf shelvesets Goldenx-2610091539 /format:detailed",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "shelvesets/own-detailed.txt"
+                  },
+                  {
+                      "group":  "unshelve",
+                      "name":  "single-item",
+                      "command":  "tf unshelve Goldenx-2610091539 $/TfsPortableTestRepo/Main/goldenx-2610091539/x/a.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "unshelve/single-item.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-unshelve-single",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-unshelve-single.txt"
+                  },
+                  {
+                      "group":  "unshelve",
+                      "name":  "with-owner",
+                      "command":  "tf unshelve \"Goldenx-2610091539;\u003cOWNER\u003e\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "unshelve/with-owner.txt"
+                  },
+                  {
+                      "group":  "unshelve",
+                      "name":  "local-itemspec",
+                      "command":  "tf unshelve Goldenx-2610091539 \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\b.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "unshelve/local-itemspec.txt"
+                  },
+                  {
+                      "group":  "shelve",
+                      "name":  "delete-run",
+                      "command":  "tf shelve /delete Goldenx-2610091539 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "shelve/delete-run.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "candidates-run",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/candidates-run.txt"
+                  },
+                  {
+                      "group":  "reconcile",
+                      "name":  "promote-preview-run",
+                      "command":  "tf reconcile /promote \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x /recursive /preview /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "reconcile/promote-preview-run.txt"
+                  },
+                  {
+                      "group":  "reconcile",
+                      "name":  "promote-adds",
+                      "command":  "tf reconcile /promote /adds \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "reconcile/promote-adds.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-promote-adds",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-promote-adds.txt"
+                  },
+                  {
+                      "group":  "reconcile",
+                      "name":  "promote-deletes",
+                      "command":  "tf reconcile /promote /deletes \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "reconcile/promote-deletes.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-promote-deletes",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-promote-deletes.txt"
+                  },
+                  {
+                      "group":  "reconcile",
+                      "name":  "promote-run",
+                      "command":  "tf reconcile /promote \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "reconcile/promote-run.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-promote-run",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-promote-run.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "older-over-modified",
+                      "command":  "tf get \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /version:C609 /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "get/older-over-modified.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-get-older-over-modified",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-get-older-over-modified.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "list-after-get",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "resolve/list-after-get.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "overwritelocal",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /auto:OverwriteLocal /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "resolve/overwritelocal.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-overwritelocal",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-overwritelocal.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "older-over-modified-overwrite",
+                      "command":  "tf get \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x\\a.txt /version:C609 /overwrite /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "get/older-over-modified-overwrite.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "remap",
+                      "command":  "tf get \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\x /recursive /remap /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "get/remap.txt"
+                  },
+                  {
+                      "group":  "dir",
+                      "name":  "deleted-x",
+                      "command":  "tf dir $/TfsPortableTestRepo/Main/goldenx-2610091539/x /deleted /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "dir/deleted-x.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "deleted-item",
+                      "command":  "tf history $/TfsPortableTestRepo/Main/goldenx-2610091539/x/b.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/deleted-item.txt"
+                  },
+                  {
+                      "group":  "history",
+                      "name":  "deleted-item-id",
+                      "command":  "tf history $/TfsPortableTestRepo/Main/goldenx-2610091539/x/b.txt;X131 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "history/deleted-item-id.txt"
+                  },
+                  {
+                      "group":  "properties",
+                      "name":  "deleted-item-id",
+                      "command":  "tf properties $/TfsPortableTestRepo/Main/goldenx-2610091539/x/b.txt;X131 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "properties/deleted-item-id.txt"
+                  },
+                  {
+                      "group":  "view",
+                      "name":  "deleted-item-id",
+                      "command":  "tf view $/TfsPortableTestRepo/Main/goldenx-2610091539/x/b.txt;X131 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "view/deleted-item-id.txt"
+                  },
+                  {
+                      "group":  "properties",
+                      "name":  "deleted-item",
+                      "command":  "tf properties $/TfsPortableTestRepo/Main/goldenx-2610091539/x/b.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "properties/deleted-item.txt"
+                  },
+                  {
+                      "group":  "get",
+                      "name":  "deleted-item-old-version",
+                      "command":  "tf get $/TfsPortableTestRepo/Main/goldenx-2610091539/x/b.txt /version:C609 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "get/deleted-item-old-version.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "automerge-preview",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /auto:AutoMerge /preview /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "resolve/automerge-preview.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "automerge-nonoverlapping",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /auto:AutoMerge /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "resolve/automerge-nonoverlapping.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-automerge",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-automerge.txt"
+                  },
+                  {
+                      "group":  "difference",
+                      "name":  "after-automerge",
+                      "command":  "tf difference \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\y\\a.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "difference/after-automerge.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "automerge-forced",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /auto:AutoMergeForced /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "resolve/automerge-forced.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "overwritelocal-on-merge",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /auto:OverwriteLocal /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "resolve/overwritelocal-on-merge.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "deleteconflict-on-merge",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /auto:DeleteConflict /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "resolve/deleteconflict-on-merge.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "keepyours-rename-theirs",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\y\\a.txt /auto:KeepYoursRenameTheirs /newname:\u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539\\y\\a-theirs.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "resolve/keepyours-rename-theirs.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-keepyours-rename-theirs",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-keepyours-rename-theirs.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "alias-acceptmerge",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /auto:AcceptMerge /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "resolve/alias-acceptmerge.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "automerge-overlapping",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /auto:AutoMerge /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "resolve/automerge-overlapping.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "list-overlapping",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "resolve/list-overlapping.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "keepyours-run",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /auto:KeepYours /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "resolve/keepyours-run.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-keepyours",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-keepyours.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "delete-folder-x",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e\\Main\\goldenx-2610091539 /recursive \"/comment:Goldenx cleanup (2610091539)\" \"/override:Goldenx cleanup (2610091539)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/delete-folder-x.txt"
+                  }
+              ]
+}

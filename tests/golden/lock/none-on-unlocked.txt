@@ -1,0 +1,13 @@
+# case: lock/none-on-unlocked
+# command: tf lock /lock:none <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\b.txt
+# cwd: <WORKSPACE_ROOT>
+# exit: 1
+# timed-out: false
+# duration-ms: 1611
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+
+==== stderr ====
+TF14090: Cannot unlock $/TfsPortableTestRepo/Main/goldenx-2610091539/x/b.txt. It is not currently locked in your workspace.

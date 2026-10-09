@@ -1,0 +1,14 @@
+# case: rename/into-folder
+# command: tf rename <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\a.txt <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\sub\a.txt /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 692
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+Main\goldenx-2610091539\x\sub:
+a.txt
+
+==== stderr ====

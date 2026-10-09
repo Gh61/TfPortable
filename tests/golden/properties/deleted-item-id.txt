@@ -1,0 +1,29 @@
+# case: properties/deleted-item-id
+# command: tf properties $/TfsPortableTestRepo/Main/goldenx-2610091539/x/b.txt;X131 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1611
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+Místní informace:
+  Místní cesta   : 
+  Cesta na server: 
+  Sada změn      : 0
+  Změnit         : žádný
+  Typ            : 
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/goldenx-2610091539/x/b.txt
+  Sada změn        : 611
+  ID odstranění    : 131
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: pátek 9. října 2026 15:41:56
+  Typ              : soubor
+  Typ souboru      : windows-1250
+  Velikost         : 10
+
+==== stderr ====
+Příkaz properties je zastaralý. Namísto něj použijte prosím příkaz tf info.

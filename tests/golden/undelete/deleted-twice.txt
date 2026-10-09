@@ -1,0 +1,14 @@
+# case: undelete/deleted-twice
+# command: tf undelete $/TfsPortableTestRepo/Main/golden2-2610091535/src/b.txt /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1826
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+Main\golden2-2610091535\src:
+b.txt
+
+==== stderr ====

@@ -1,0 +1,21 @@
+# case: status/after-promote-run
+# command: tf status <WORKSPACE_ROOT>\Main\goldenx-2610091539 /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 625
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+-------------------------------------------------------------------------------
+Zjištěné změny:
+-------------------------------------------------------------------------------
+Název souboru Změnit Místní cesta
+------------- ------ ----------------------------------------------------------
+$/TfsPortableTestRepo/Main/goldenx-2610091539/x
+detected.txt  přidat <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\detected.txt
+
+Změny: 0, zjištěné změny: 1
+
+==== stderr ====

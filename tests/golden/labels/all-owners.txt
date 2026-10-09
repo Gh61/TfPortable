@@ -1,0 +1,17 @@
+# case: labels/all-owners
+# command: tf labels /owner:*
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 911
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+Popisek            Vlastník      Datum       
+------------------ ------------- ------------ 
+golden-2610071920  <OWNER> 7. 10. 2026 
+goldenx-2610091539 <OWNER> 9. 10. 2026 
+v1.0               <OWNER> 7. 10. 2026 
+
+==== stderr ====

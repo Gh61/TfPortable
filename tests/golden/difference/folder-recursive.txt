@@ -1,0 +1,38 @@
+# case: difference/folder-recursive
+# command: tf difference <WORKSPACE_ROOT>\Main\goldenx-2610091539\x /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 657
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+upravit: <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\a.txt
+Soubor: Main\goldenx-2610091539\x\a.txt
+===================================================================
+--- Server: $/TfsPortableTestRepo/Main/goldenx-2610091539/x/a.txt;C610
++++ Místní: Main\goldenx-2610091539\x\a.txt
+@@ -1,4 +1,4 @@
+ Line one
+ line two
+ Line three
+-line four
++line four
+\ No newline at end of file
+===================================================================
+upravit: <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\blob.bin
+Main\goldenx-2610091539\x\blob.bin: soubory jsou rozdílné
+upravit: <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\lf.txt
+Soubor: Main\goldenx-2610091539\x\lf.txt
+===================================================================
+--- Server: $/TfsPortableTestRepo/Main/goldenx-2610091539/x/lf.txt;C609
++++ Místní: Main\goldenx-2610091539\x\lf.txt
+@@ -1,2 +1,2 @@
+-lf line 1
+-lf line 2
++lf line 1
++lf line 2
+===================================================================
+
+==== stderr ====

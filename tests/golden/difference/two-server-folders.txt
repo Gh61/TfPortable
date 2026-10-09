@@ -1,0 +1,33 @@
+# case: difference/two-server-folders
+# command: tf difference $/TfsPortableTestRepo/Main/goldenx-2610091539/x;C609 $/TfsPortableTestRepo/Main/goldenx-2610091539/x;C610 /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 3582
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+Složka nástroje Diff   : $/TfsPortableTestRepo/Main/goldenx-2610091539/x;C609
+oproti složce: $/TfsPortableTestRepo/Main/goldenx-2610091539/x;C610
+===================================================================
+Soubor: Main\goldenx-2610091539\x\a.txt
+===================================================================
+--- Server: a.txt;609
++++ Server: a.txt;610
+@@ -1,3 +1,4 @@
+ Line one
+ line two
+ Line three
++line four
+===================================================================
+
+Složka nástroje Diff   : $/TfsPortableTestRepo/Main/goldenx-2610091539/x/bin;C609
+oproti složce: $/TfsPortableTestRepo/Main/goldenx-2610091539/x/bin;C610
+===================================================================
+
+Složka nástroje Diff   : $/TfsPortableTestRepo/Main/goldenx-2610091539/x/sub;C609
+oproti složce: $/TfsPortableTestRepo/Main/goldenx-2610091539/x/sub;C610
+===================================================================
+
+==== stderr ====

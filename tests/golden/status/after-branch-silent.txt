@@ -1,0 +1,28 @@
+# case: status/after-branch-silent
+# command: tf status <WORKSPACE_ROOT>\Main\golden2-2610091535 /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 632
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+Název souboru Změnit Místní cesta
+------------- ------ ----------------------------------------------------------
+$/TfsPortableTestRepo/Main/golden2-2610091535
+rel-silent    větev  <WORKSPACE_ROOT>\Main\golden2-2610091535\rel-silent
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/rel-silent
+a.txt         větev  <WORKSPACE_ROOT>\Main\golden2-2610091535\rel-silent\a.txt
+b.txt         větev  <WORKSPACE_ROOT>\Main\golden2-2610091535\rel-silent\b.txt
+same.txt      větev  <WORKSPACE_ROOT>\Main\golden2-2610091535\rel-silent\same.txt
+size.txt      větev  <WORKSPACE_ROOT>\Main\golden2-2610091535\rel-silent\size.txt
+sub           větev  <WORKSPACE_ROOT>\Main\golden2-2610091535\rel-silent\sub
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/rel-silent/sub
+c.txt         větev  <WORKSPACE_ROOT>\Main\golden2-2610091535\rel-silent\sub\c.txt
+
+Změny: 7
+
+==== stderr ====

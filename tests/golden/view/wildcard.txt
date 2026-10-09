@@ -1,0 +1,19 @@
+# case: view/wildcard
+# command: tf view $/TfsPortableTestRepo/Main/goldenx-2610091539/x/*.txt /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1590
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+Line one
+line two
+Line three
+line four
+b line 1
+lf line 1
+lf line 2
+
+==== stderr ====

@@ -1,0 +1,13 @@
+# case: label/explicit-version
+# command: tf label goldenx-2610091539@$/TfsPortableTestRepo $/TfsPortableTestRepo/Main/goldenx-2610091539/x/a.txt /version:C609 /child:replace /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 933
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+Aktualizovaný popisek goldenx-2610091539@$/TfsPortableTestRepo
+
+==== stderr ====

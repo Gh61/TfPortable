@@ -1,0 +1,29 @@
+# case: folderdiff/view-same
+# command: tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /view:same /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1599
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+===============================================================================
+Zobrazit položky se shodným obsahem
+===============================================================================
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/src - 
+	$/TfsPortableTestRepo/Main/golden2-2610091535/rel
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/src/d.txt - 
+	$/TfsPortableTestRepo/Main/golden2-2610091535/rel/d.txt
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/src/same.txt - 
+	$/TfsPortableTestRepo/Main/golden2-2610091535/rel/same.txt
+
+===============================================================================
+Shrnutí: Složky: 2, soubory: 7, zdrojové: 0, cílové 3, rozdílné: 2, s chybami: 0
+===============================================================================
+
+
+==== stderr ====

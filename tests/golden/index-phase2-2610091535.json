@@ -1,0 +1,849 @@
+{
+    "capturedAt":  "2026-10-09T15:39:50.6583895+02:00",
+    "run":  "2610091535",
+    "tfVersion":  "18.10.12215.6 built by: releases/dev18/18.10 (760940044d)",
+    "consoleEncoding":  "windows-1250",
+    "culture":  "cs-CZ",
+    "extra":  {
+                  "changesets":  {
+                                     "add":  594,
+                                     "branch":  595,
+                                     "editA":  596,
+                                     "editB":  597,
+                                     "addD":  598,
+                                     "mergeAll":  599,
+                                     "editRelA":  600,
+                                     "editSrcA2":  601,
+                                     "addOther":  602,
+                                     "deleteB":  603,
+                                     "undeleteB":  604,
+                                     "deleteB2":  605,
+                                     "deleteSub":  606,
+                                     "relDiff":  607,
+                                     "delete-folder":  608
+                                 },
+                  "goldenFolder":  "$/TfsPortableTestRepo/Main/golden2-2610091535",
+                  "deletionIdOfB":  127,
+                  "undeleteNoget":  {
+                                        "fileExists":  false
+                                    }
+              },
+    "cases":  [
+                  {
+                      "group":  "branch",
+                      "name":  "pending",
+                      "command":  "tf branch $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "branch/pending.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-branch",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-branch.txt"
+                  },
+                  {
+                      "group":  "branches",
+                      "name":  "run-folder",
+                      "command":  "tf branches $/TfsPortableTestRepo/Main/golden2-2610091535/src /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "branches/run-folder.txt"
+                  },
+                  {
+                      "group":  "branch",
+                      "name":  "silent",
+                      "command":  "tf branch $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel-silent /silent /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "branch/silent.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-branch-silent",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-branch-silent.txt"
+                  },
+                  {
+                      "group":  "dir",
+                      "name":  "after-branch-silent",
+                      "command":  "tf dir \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "dir/after-branch-silent.txt"
+                  },
+                  {
+                      "group":  "branch",
+                      "name":  "noget",
+                      "command":  "tf branch $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel-noget /noget /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "branch/noget.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-branch-noget",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-branch-noget.txt"
+                  },
+                  {
+                      "group":  "branch",
+                      "name":  "version",
+                      "command":  "tf branch $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel-version /version:C594 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "branch/version.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "candidate-run",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /candidate /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/candidate-run.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "candidate-detailed",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /candidate /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/candidate-detailed.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "preview-run",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /preview /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/preview-run.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-preview",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-preview.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "preview-version-range",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /preview /version:C596~C597 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/preview-version-range.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "preview-single-version",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /preview /version:C597 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/preview-single-version.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "preview-detailed",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /preview /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/preview-detailed.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "preview-nosummary",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /preview /nosummary /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/preview-nosummary.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "version-range",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /version:C596~C596 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/version-range.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-merge-range",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-merge-range.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-merge-range-detailed",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-merge-range-detailed.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "discard",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /version:C597~C597 /discard /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/discard.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-merge-discard",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-merge-discard.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "candidate-after-discard",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /candidate /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/candidate-after-discard.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "all-run",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/all-run.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-merge-all",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-merge-all.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "nosummary",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /nosummary /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/nosummary.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "detailed",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/detailed.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "nothing-to-merge",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/nothing-to-merge.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "preview-nothing",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /preview /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/preview-nothing.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "force",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /force /version:C596~C596 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merge/force.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-merge-force",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-merge-force.txt"
+                  },
+                  {
+                      "group":  "merges",
+                      "name":  "run-folder",
+                      "command":  "tf merges $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merges/run-folder.txt"
+                  },
+                  {
+                      "group":  "merges",
+                      "name":  "detailed",
+                      "command":  "tf merges $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merges/detailed.txt"
+                  },
+                  {
+                      "group":  "merges",
+                      "name":  "no-source",
+                      "command":  "tf merges $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merges/no-source.txt"
+                  },
+                  {
+                      "group":  "merges",
+                      "name":  "showall-run",
+                      "command":  "tf merges $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /showall /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merges/showall-run.txt"
+                  },
+                  {
+                      "group":  "merges",
+                      "name":  "single-file",
+                      "command":  "tf merges $/TfsPortableTestRepo/Main/golden2-2610091535/src/a.txt $/TfsPortableTestRepo/Main/golden2-2610091535/rel/a.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merges/single-file.txt"
+                  },
+                  {
+                      "group":  "merges",
+                      "name":  "no-history",
+                      "command":  "tf merges $/TfsPortableTestRepo/Main/golden2-2610091535/rel $/TfsPortableTestRepo/Main/golden2-2610091535/src /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "merges/no-history.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "preview-conflict",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /preview /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "merge/preview-conflict.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "conflict-run",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "merge/conflict-run.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "merge-conflict-list-2",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "resolve/merge-conflict-list-2.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-merge-conflict",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-merge-conflict.txt"
+                  },
+                  {
+                      "group":  "resolve",
+                      "name":  "merge-conflict-keepyours-2",
+                      "command":  "tf resolve \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /auto:KeepYours /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "resolve/merge-conflict-keepyours-2.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "conflict-noautoresolve",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /noautoresolve /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "merge/conflict-noautoresolve.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "unrelated-without-baseless",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/other /recursive /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "merge/unrelated-without-baseless.txt"
+                  },
+                  {
+                      "group":  "merge",
+                      "name":  "baseless",
+                      "command":  "tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/other /recursive /baseless /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "merge/baseless.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-merge-baseless",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-merge-baseless.txt"
+                  },
+                  {
+                      "group":  "rollback",
+                      "name":  "changeset-item",
+                      "command":  "tf rollback /changeset:C597 \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\src /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "rollback/changeset-item.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-rollback-changeset",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-rollback-changeset.txt"
+                  },
+                  {
+                      "group":  "rollback",
+                      "name":  "range",
+                      "command":  "tf rollback /changeset:C596~C598 \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\src /recursive /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "rollback/range.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-rollback-range",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-rollback-range.txt"
+                  },
+                  {
+                      "group":  "rollback",
+                      "name":  "changeset-no-item",
+                      "command":  "tf rollback /changeset:C597 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "rollback/changeset-no-item.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-rollback-no-item",
+                      "command":  "tf status /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-rollback-no-item.txt"
+                  },
+                  {
+                      "group":  "rollback",
+                      "name":  "toversion-run",
+                      "command":  "tf rollback /toversion:C594 \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\src /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "rollback/toversion-run.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-rollback-toversion",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-rollback-toversion.txt"
+                  },
+                  {
+                      "group":  "rollback",
+                      "name":  "toversion-no-item",
+                      "command":  "tf rollback /toversion:C594 /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "rollback/toversion-no-item.txt"
+                  },
+                  {
+                      "group":  "rollback",
+                      "name":  "toversion-latest",
+                      "command":  "tf rollback /toversion:T \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\src /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "rollback/toversion-latest.txt"
+                  },
+                  {
+                      "group":  "rollback",
+                      "name":  "changeset-latest-spec",
+                      "command":  "tf rollback /changeset:T \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\src /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "rollback/changeset-latest-spec.txt"
+                  },
+                  {
+                      "group":  "rollback",
+                      "name":  "changeset-date-spec",
+                      "command":  "tf rollback /changeset:D2020-01-01 \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\src /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "rollback/changeset-date-spec.txt"
+                  },
+                  {
+                      "group":  "rollback",
+                      "name":  "both-switches",
+                      "command":  "tf rollback /changeset:C597 /toversion:C596 \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\src /recursive /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "rollback/both-switches.txt"
+                  },
+                  {
+                      "group":  "rollback",
+                      "name":  "keepmergehistory",
+                      "command":  "tf rollback /changeset:C599 \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\rel /recursive /keepmergehistory /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "rollback/keepmergehistory.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-rollback-keepmergehistory",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-rollback-keepmergehistory.txt"
+                  },
+                  {
+                      "group":  "rollback",
+                      "name":  "merge-changeset",
+                      "command":  "tf rollback /changeset:C599 \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\rel /recursive /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "rollback/merge-changeset.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-rollback-merge-changeset",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-rollback-merge-changeset.txt"
+                  },
+                  {
+                      "group":  "rollback",
+                      "name":  "nothing",
+                      "command":  "tf rollback /changeset:C597 \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\other /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "rollback/nothing.txt"
+                  },
+                  {
+                      "group":  "undelete",
+                      "name":  "not-deleted",
+                      "command":  "tf undelete $/TfsPortableTestRepo/Main/golden2-2610091535/src/b.txt /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "undelete/not-deleted.txt"
+                  },
+                  {
+                      "group":  "dir",
+                      "name":  "deleted-run",
+                      "command":  "tf dir $/TfsPortableTestRepo/Main/golden2-2610091535/src /deleted /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "dir/deleted-run.txt"
+                  },
+                  {
+                      "group":  "undelete",
+                      "name":  "file-run",
+                      "command":  "tf undelete $/TfsPortableTestRepo/Main/golden2-2610091535/src/b.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "undelete/file-run.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-undelete",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-undelete.txt"
+                  },
+                  {
+                      "group":  "undelete",
+                      "name":  "deletion-id",
+                      "command":  "tf undelete $/TfsPortableTestRepo/Main/golden2-2610091535/src/b.txt;X127 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "undelete/deletion-id.txt"
+                  },
+                  {
+                      "group":  "undelete",
+                      "name":  "wrong-deletion-id",
+                      "command":  "tf undelete $/TfsPortableTestRepo/Main/golden2-2610091535/src/b.txt;X1127 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "undelete/wrong-deletion-id.txt"
+                  },
+                  {
+                      "group":  "undelete",
+                      "name":  "noget",
+                      "command":  "tf undelete $/TfsPortableTestRepo/Main/golden2-2610091535/src/b.txt /noget /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "undelete/noget.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-undelete-noget",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-undelete-noget.txt"
+                  },
+                  {
+                      "group":  "undelete",
+                      "name":  "local-path",
+                      "command":  "tf undelete \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\src\\b.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "undelete/local-path.txt"
+                  },
+                  {
+                      "group":  "dir",
+                      "name":  "deleted-twice",
+                      "command":  "tf dir $/TfsPortableTestRepo/Main/golden2-2610091535/src /deleted /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "dir/deleted-twice.txt"
+                  },
+                  {
+                      "group":  "undelete",
+                      "name":  "deleted-twice",
+                      "command":  "tf undelete $/TfsPortableTestRepo/Main/golden2-2610091535/src/b.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "undelete/deleted-twice.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-undelete-twice",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-undelete-twice.txt"
+                  },
+                  {
+                      "group":  "undelete",
+                      "name":  "deleted-twice-first-id",
+                      "command":  "tf undelete $/TfsPortableTestRepo/Main/golden2-2610091535/src/b.txt;X127 /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "undelete/deleted-twice-first-id.txt"
+                  },
+                  {
+                      "group":  "undelete",
+                      "name":  "folder-recursive",
+                      "command":  "tf undelete $/TfsPortableTestRepo/Main/golden2-2610091535/src/sub /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "undelete/folder-recursive.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-undelete-folder",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-undelete-folder.txt"
+                  },
+                  {
+                      "group":  "undelete",
+                      "name":  "folder-not-recursive",
+                      "command":  "tf undelete $/TfsPortableTestRepo/Main/golden2-2610091535/src/sub /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "undelete/folder-not-recursive.txt"
+                  },
+                  {
+                      "group":  "status",
+                      "name":  "after-undelete-folder-flat",
+                      "command":  "tf status \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive /format:detailed /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "status/after-undelete-folder-flat.txt"
+                  },
+                  {
+                      "group":  "undelete",
+                      "name":  "missing-run",
+                      "command":  "tf undelete $/TfsPortableTestRepo/Main/golden2-2610091535/src/no-such-2610091535.txt /noprompt",
+                      "exitCode":  1,
+                      "timedOut":  false,
+                      "file":  "undelete/missing-run.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "run-folder",
+                      "command":  "tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/run-folder.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "not-recursive",
+                      "command":  "tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/not-recursive.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "view-same",
+                      "command":  "tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /view:same /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/view-same.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "view-list",
+                      "command":  "tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /view:sourceOnly,targetOnly /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/view-list.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "view-different",
+                      "command":  "tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /view:different /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/view-different.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "view-invalid",
+                      "command":  "tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /view:bogus /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "folderdiff/view-invalid.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "filter",
+                      "command":  "tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /filter:*.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/filter.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "filter-exclude",
+                      "command":  "tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /filter:*.txt;!b.txt /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/filter-exclude.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "filter-none-match",
+                      "command":  "tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /filter:*.cs /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/filter-none-match.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "local-server",
+                      "command":  "tf folderdiff \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/local-server.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "server-local",
+                      "command":  "tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/src \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\rel /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/server-local.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "local-local",
+                      "command":  "tf folderdiff \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\src \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\rel /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/local-local.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "one-path-server",
+                      "command":  "tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/src /recursive /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "folderdiff/one-path-server.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "one-path-local",
+                      "command":  "tf folderdiff \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\src /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/one-path-local.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "version",
+                      "command":  "tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/src;C594 $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/version.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "missing-source",
+                      "command":  "tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/no-such-2610091535 $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "folderdiff/missing-source.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "missing-local",
+                      "command":  "tf folderdiff \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\no-such-2610091535 $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /noprompt",
+                      "exitCode":  100,
+                      "timedOut":  false,
+                      "file":  "folderdiff/missing-local.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "filter-local-paths-only",
+                      "command":  "tf folderdiff \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /filter:*.txt /filterLocalPathsOnly /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/filter-local-paths-only.txt"
+                  },
+                  {
+                      "group":  "folderdiff",
+                      "name":  "local-pending-edit",
+                      "command":  "tf folderdiff \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535\\src $/TfsPortableTestRepo/Main/golden2-2610091535/src /recursive /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "folderdiff/local-pending-edit.txt"
+                  },
+                  {
+                      "group":  "checkin",
+                      "name":  "delete-folder-2",
+                      "command":  "tf checkin \u003cWORKSPACE_ROOT\u003e\\Main\\golden2-2610091535 /recursive \"/comment:Golden2 cleanup (2610091535)\" \"/override:Golden2 cleanup (2610091535)\" /noprompt",
+                      "exitCode":  0,
+                      "timedOut":  false,
+                      "file":  "checkin/delete-folder-2.txt"
+                  }
+              ]
+}

@@ -1,0 +1,31 @@
+# case: folderdiff/filter-none-match
+# command: tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /filter:*.cs /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1456
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+===============================================================================
+Položky, které existují pouze v cestě $/TfsPortableTestRepo/Main/golden2-2610091535/src;T
+===============================================================================
+
+
+===============================================================================
+Položky, které existují pouze v cestě $/TfsPortableTestRepo/Main/golden2-2610091535/rel;T
+===============================================================================
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/rel/sub
+
+===============================================================================
+Zobrazit položky s rozdílným obsahem
+===============================================================================
+
+===============================================================================
+Shrnutí: Složky: 2, soubory: 0, zdrojové: 0, cílové 0, rozdílné: 0, s chybami: 0
+===============================================================================
+
+
+==== stderr ====

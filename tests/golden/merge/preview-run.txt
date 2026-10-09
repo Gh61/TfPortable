@@ -1,0 +1,15 @@
+# case: merge/preview-run
+# command: tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /preview /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1425
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+sloučit, upravit: $/TfsPortableTestRepo/Main/golden2-2610091535/src/a.txt;C596~C596 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel/a.txt;C595
+sloučit, upravit: $/TfsPortableTestRepo/Main/golden2-2610091535/src/b.txt;C597~C597 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel/b.txt;C595
+sloučit, větev: $/TfsPortableTestRepo/Main/golden2-2610091535/src/d.txt;C598 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel/d.txt
+
+==== stderr ====

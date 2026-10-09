@@ -1,0 +1,17 @@
+# case: dir/after-branch-silent
+# command: tf dir <WORKSPACE_ROOT>\Main\golden2-2610091535 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1307
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+$/TfsPortableTestRepo/Main/golden2-2610091535:
+$rel
+$src
+
+Počet položek: 2
+
+==== stderr ====

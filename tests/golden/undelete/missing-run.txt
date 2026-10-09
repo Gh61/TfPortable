@@ -1,0 +1,13 @@
+# case: undelete/missing-run
+# command: tf undelete $/TfsPortableTestRepo/Main/golden2-2610091535/src/no-such-2610091535.txt /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 1
+# timed-out: false
+# duration-ms: 1380
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+
+==== stderr ====
+TF14022: The deleted item $/TfsPortableTestRepo/Main/golden2-2610091535/src/no-such-2610091535.txt does not exist, or you do not have permission to access it.

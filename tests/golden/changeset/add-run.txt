@@ -1,0 +1,30 @@
+# case: changeset/add-run
+# command: tf changeset 609 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1569
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+Sada změn: 609
+Uživatel: <OWNER>
+Datum: pátek 9. října 2026 15:40:00
+
+Komentář:
+
+Položky:
+  přidat $/TfsPortableTestRepo/Main/goldenx-2610091539
+  přidat $/TfsPortableTestRepo/Main/goldenx-2610091539/x
+  přidat $/TfsPortableTestRepo/Main/goldenx-2610091539/x/.tfignore
+  přidat $/TfsPortableTestRepo/Main/goldenx-2610091539/x/a.txt
+  přidat $/TfsPortableTestRepo/Main/goldenx-2610091539/x/b.txt
+  přidat $/TfsPortableTestRepo/Main/goldenx-2610091539/x/bin
+  přidat $/TfsPortableTestRepo/Main/goldenx-2610091539/x/blob.bin
+  přidat $/TfsPortableTestRepo/Main/goldenx-2610091539/x/lf.txt
+  přidat $/TfsPortableTestRepo/Main/goldenx-2610091539/x/sub
+  přidat $/TfsPortableTestRepo/Main/goldenx-2610091539/x/bin/ignored.txt
+  přidat $/TfsPortableTestRepo/Main/goldenx-2610091539/x/sub/c.txt
+
+==== stderr ====

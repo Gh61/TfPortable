@@ -1,0 +1,13 @@
+# case: view/deleted-item-id
+# command: tf view $/TfsPortableTestRepo/Main/goldenx-2610091539/x/b.txt;X131 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1005
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+b line 1
+
+==== stderr ====

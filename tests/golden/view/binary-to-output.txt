@@ -1,0 +1,12 @@
+# case: view/binary-to-output
+# command: tf view $/TfsPortableTestRepo/Main/goldenx-2610091539/x/blob.bin /output:C:\Users\<USER>\AppData\Local\Temp\tfp-goldenx-blob-2610091539.bin /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1369
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+
+==== stderr ====

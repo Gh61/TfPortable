@@ -1,0 +1,13 @@
+# case: merge/candidate-unrelated
+# command: tf merge $/TfsPortableTestRepo/Main/goldenx-2610091539/x $/TfsPortableTestRepo/Main/goldenx-2610091539/x/sub /recursive /candidate /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 100
+# timed-out: false
+# duration-ms: 1102
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+
+==== stderr ====
+TF14009: Cannot merge source '$/TfsPortableTestRepo/Main/goldenx-2610091539/x' into target '$/TfsPortableTestRepo/Main/goldenx-2610091539/x/sub' because the target is underneath source.

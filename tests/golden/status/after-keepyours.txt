@@ -1,0 +1,22 @@
+# case: status/after-keepyours
+# command: tf status <WORKSPACE_ROOT>\Main\goldenx-2610091539 /recursive /format:detailed /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 631
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+$/TfsPortableTestRepo/Main/goldenx-2610091539/y/a.txt;C615
+  Uživatel        : <OWNER>
+  Datum           : pátek 9. října 2026 15:42:46
+  Uzamknout       : žádný
+  Změnit          : sloučit
+  Pracovní prostor: <COMPUTER>
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\goldenx-2610091539\y\a.txt
+  Typ souboru     : windows-1250
+
+Změny: 1
+
+==== stderr ====

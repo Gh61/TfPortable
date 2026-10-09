@@ -1,0 +1,24 @@
+# case: difference/after-automerge
+# command: tf difference <WORKSPACE_ROOT>\Main\goldenx-2610091539\y\a.txt /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 642
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+sloučit, upravit: <WORKSPACE_ROOT>\Main\goldenx-2610091539\y\a.txt
+Soubor: Main\goldenx-2610091539\y\a.txt
+===================================================================
+--- Server: $/TfsPortableTestRepo/Main/goldenx-2610091539/y/a.txt;C614
++++ Místní: Main\goldenx-2610091539\y\a.txt
+@@ -1,4 +1,4 @@
+-Line one
++Line one changed in x
+ line two
+ Line three
+ line four changed in y
+===================================================================
+
+==== stderr ====

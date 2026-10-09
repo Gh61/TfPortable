@@ -1,0 +1,13 @@
+# case: rollback/both-switches
+# command: tf rollback /changeset:C597 /toversion:C596 <WORKSPACE_ROOT>\Main\golden2-2610091535\src /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 100
+# timed-out: false
+# duration-ms: 642
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+
+==== stderr ====
+Možnost /changeset nelze zkombinovat s možností /toversion.

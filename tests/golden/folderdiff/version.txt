@@ -1,0 +1,41 @@
+# case: folderdiff/version
+# command: tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/src;C594 $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1709
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+===============================================================================
+Položky, které existují pouze v cestě $/TfsPortableTestRepo/Main/golden2-2610091535/src;C594
+===============================================================================
+
+
+===============================================================================
+Položky, které existují pouze v cestě $/TfsPortableTestRepo/Main/golden2-2610091535/rel;T
+===============================================================================
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/rel/d.txt
+$/TfsPortableTestRepo/Main/golden2-2610091535/rel/only-in-rel.txt
+
+===============================================================================
+Zobrazit položky s rozdílným obsahem
+===============================================================================
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/src/a.txt - 
+	$/TfsPortableTestRepo/Main/golden2-2610091535/rel/a.txt
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/src/b.txt - 
+	$/TfsPortableTestRepo/Main/golden2-2610091535/rel/b.txt
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/src/size.txt - 
+	$/TfsPortableTestRepo/Main/golden2-2610091535/rel/size.txt
+
+===============================================================================
+Shrnutí: Složky: 2, soubory: 7, zdrojové: 0, cílové 2, rozdílné: 3, s chybami: 0
+===============================================================================
+
+
+==== stderr ====

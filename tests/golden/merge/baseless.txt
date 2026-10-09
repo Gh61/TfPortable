@@ -1,0 +1,20 @@
+# case: merge/baseless
+# command: tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/other /recursive /baseless /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 1
+# timed-out: false
+# duration-ms: 2343
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+sloučit: $/TfsPortableTestRepo/Main/golden2-2610091535/src;C594~C594 -> $/TfsPortableTestRepo/Main/golden2-2610091535/other;C602
+sloučit, větev: $/TfsPortableTestRepo/Main/golden2-2610091535/src/b.txt;C597 -> $/TfsPortableTestRepo/Main/golden2-2610091535/other/b.txt
+sloučit, větev: $/TfsPortableTestRepo/Main/golden2-2610091535/src/d.txt;C598 -> $/TfsPortableTestRepo/Main/golden2-2610091535/other/d.txt
+sloučit, větev: $/TfsPortableTestRepo/Main/golden2-2610091535/src/same.txt;C594 -> $/TfsPortableTestRepo/Main/golden2-2610091535/other/same.txt
+sloučit, větev: $/TfsPortableTestRepo/Main/golden2-2610091535/src/size.txt;C594 -> $/TfsPortableTestRepo/Main/golden2-2610091535/other/size.txt
+sloučit, větev: $/TfsPortableTestRepo/Main/golden2-2610091535/src/sub;C594 -> $/TfsPortableTestRepo/Main/golden2-2610091535/other/sub
+sloučit, větev: $/TfsPortableTestRepo/Main/golden2-2610091535/src/sub/c.txt;C594 -> $/TfsPortableTestRepo/Main/golden2-2610091535/other/sub/c.txt
+
+==== stderr ====
+Konflikt (sloučit, upravit): $/TfsPortableTestRepo/Main/golden2-2610091535/src/a.txt;C594~C601 -> $/TfsPortableTestRepo/Main/golden2-2610091535/other/a.txt;C602

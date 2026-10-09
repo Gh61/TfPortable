@@ -1,0 +1,13 @@
+# case: folderdiff/missing-source
+# command: tf folderdiff $/TfsPortableTestRepo/Main/golden2-2610091535/no-such-2610091535 $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 100
+# timed-out: false
+# duration-ms: 963
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+
+==== stderr ====
+V zadané verzi cesta $/TfsPortableTestRepo/Main/golden2-2610091535/no-such-2610091535 na serveru neexistuje jako složka. Zadejte cestu na serveru k existující složce a zopakujte akci.

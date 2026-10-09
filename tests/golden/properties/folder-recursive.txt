@@ -1,0 +1,176 @@
+# case: properties/folder-recursive
+# command: tf properties $/TfsPortableTestRepo/Main/goldenx-2610091539/x /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1284
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\goldenx-2610091539\x
+  Cesta na server: $/TfsPortableTestRepo/Main/goldenx-2610091539/x
+  Sada změn      : 609
+  Změnit         : žádný
+  Typ            : složka
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/goldenx-2610091539/x
+  Sada změn        : 609
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: pátek 9. října 2026 15:40:00
+  Typ              : složka
+
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\.tfignore
+  Cesta na server: $/TfsPortableTestRepo/Main/goldenx-2610091539/x/.tfignore
+  Sada změn      : 609
+  Změnit         : žádný
+  Typ            : soubor
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/goldenx-2610091539/x/.tfignore
+  Sada změn        : 609
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: pátek 9. října 2026 15:40:00
+  Typ              : soubor
+  Typ souboru      : windows-1250
+  Velikost         : 5
+
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\a.txt
+  Cesta na server: $/TfsPortableTestRepo/Main/goldenx-2610091539/x/a.txt
+  Sada změn      : 610
+  Změnit         : žádný
+  Typ            : soubor
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/goldenx-2610091539/x/a.txt
+  Sada změn        : 610
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: pátek 9. října 2026 15:40:06
+  Typ              : soubor
+  Typ souboru      : windows-1250
+  Velikost         : 43
+
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\b.txt
+  Cesta na server: $/TfsPortableTestRepo/Main/goldenx-2610091539/x/b.txt
+  Sada změn      : 609
+  Změnit         : žádný
+  Typ            : soubor
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/goldenx-2610091539/x/b.txt
+  Sada změn        : 609
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: pátek 9. října 2026 15:40:00
+  Typ              : soubor
+  Typ souboru      : windows-1250
+  Velikost         : 10
+
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\bin
+  Cesta na server: $/TfsPortableTestRepo/Main/goldenx-2610091539/x/bin
+  Sada změn      : 609
+  Změnit         : žádný
+  Typ            : složka
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/goldenx-2610091539/x/bin
+  Sada změn        : 609
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: pátek 9. října 2026 15:40:00
+  Typ              : složka
+
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\bin\ignored.txt
+  Cesta na server: $/TfsPortableTestRepo/Main/goldenx-2610091539/x/bin/ignored.txt
+  Sada změn      : 609
+  Změnit         : žádný
+  Typ            : soubor
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/goldenx-2610091539/x/bin/ignored.txt
+  Sada změn        : 609
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: pátek 9. října 2026 15:40:00
+  Typ              : soubor
+  Typ souboru      : windows-1250
+  Velikost         : 22
+
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\blob.bin
+  Cesta na server: $/TfsPortableTestRepo/Main/goldenx-2610091539/x/blob.bin
+  Sada změn      : 609
+  Změnit         : žádný
+  Typ            : soubor
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/goldenx-2610091539/x/blob.bin
+  Sada změn        : 609
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: pátek 9. října 2026 15:40:00
+  Typ              : soubor
+  Typ souboru      : Binary
+  Velikost         : 256
+
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\lf.txt
+  Cesta na server: $/TfsPortableTestRepo/Main/goldenx-2610091539/x/lf.txt
+  Sada změn      : 609
+  Změnit         : žádný
+  Typ            : soubor
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/goldenx-2610091539/x/lf.txt
+  Sada změn        : 609
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: pátek 9. října 2026 15:40:00
+  Typ              : soubor
+  Typ souboru      : windows-1250
+  Velikost         : 20
+
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\sub
+  Cesta na server: $/TfsPortableTestRepo/Main/goldenx-2610091539/x/sub
+  Sada změn      : 609
+  Změnit         : žádný
+  Typ            : složka
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/goldenx-2610091539/x/sub
+  Sada změn        : 609
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: pátek 9. října 2026 15:40:00
+  Typ              : složka
+
+Místní informace:
+  Místní cesta   : <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\sub\c.txt
+  Cesta na server: $/TfsPortableTestRepo/Main/goldenx-2610091539/x/sub/c.txt
+  Sada změn      : 609
+  Změnit         : žádný
+  Typ            : soubor
+Informace o serveru:
+  Cesta na server  : $/TfsPortableTestRepo/Main/goldenx-2610091539/x/sub/c.txt
+  Sada změn        : 609
+  ID odstranění    : 0
+  Uzamknout        : žádný
+  Vlastník zámku   : 
+  Naposledy změněno: pátek 9. října 2026 15:40:00
+  Typ              : soubor
+  Typ souboru      : windows-1250
+  Velikost         : 10
+
+==== stderr ====
+Příkaz properties je zastaralý. Namísto něj použijte prosím příkaz tf info.

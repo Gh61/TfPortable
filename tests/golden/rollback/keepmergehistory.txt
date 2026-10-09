@@ -1,0 +1,15 @@
+# case: rollback/keepmergehistory
+# command: tf rollback /changeset:C599 <WORKSPACE_ROOT>\Main\golden2-2610091535\rel /recursive /keepmergehistory /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 1
+# timed-out: false
+# duration-ms: 2567
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+upravit, vrátit zpět: $/TfsPortableTestRepo/Main/golden2-2610091535/rel/b.txt;C599~C599 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel/b.txt;C599
+odstranit, vrátit zpět: $/TfsPortableTestRepo/Main/golden2-2610091535/rel/d.txt;C599~C599 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel/d.txt;C599
+
+==== stderr ====
+Konflikt (upravit, vrátit zpět): $/TfsPortableTestRepo/Main/golden2-2610091535/rel/a.txt;C599~C599 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel/a.txt;C600

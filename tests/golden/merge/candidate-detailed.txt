@@ -1,0 +1,17 @@
+# case: merge/candidate-detailed
+# command: tf merge $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /candidate /format:detailed /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1019
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+Sada změn Uživatel          Datum        Komentář
+--------- ----------------- ------------ --------------------------------------
+598       <OWNER>     9. 10. 2026  Golden2 add d.txt (2610091535)
+597       <OWNER>     9. 10. 2026  Golden2 edit b.txt (2610091535)
+596       <OWNER>     9. 10. 2026  Golden2 edit a.txt (2610091535)
+
+==== stderr ====

@@ -1,0 +1,23 @@
+# case: merges/detailed
+# command: tf merges $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /format:detailed /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1404
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+Sloučené položky:
+$/TfsPortableTestRepo/Main/golden2-2610091535/src;C594 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel;C595
+$/TfsPortableTestRepo/Main/golden2-2610091535/src/a.txt;C594 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel/a.txt;C595
+$/TfsPortableTestRepo/Main/golden2-2610091535/src/a.txt;C596 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel/a.txt;C599
+$/TfsPortableTestRepo/Main/golden2-2610091535/src/b.txt;C594 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel/b.txt;C595
+$/TfsPortableTestRepo/Main/golden2-2610091535/src/b.txt;C597 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel/b.txt;C599
+$/TfsPortableTestRepo/Main/golden2-2610091535/src/d.txt;C598 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel/d.txt;C599
+$/TfsPortableTestRepo/Main/golden2-2610091535/src/same.txt;C594 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel/same.txt;C595
+$/TfsPortableTestRepo/Main/golden2-2610091535/src/size.txt;C594 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel/size.txt;C595
+$/TfsPortableTestRepo/Main/golden2-2610091535/src/sub;C594 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel/sub;C595
+$/TfsPortableTestRepo/Main/golden2-2610091535/src/sub/c.txt;C594 -> $/TfsPortableTestRepo/Main/golden2-2610091535/rel/sub/c.txt;C595
+
+==== stderr ====

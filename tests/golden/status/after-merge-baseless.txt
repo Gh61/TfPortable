@@ -1,0 +1,89 @@
+# case: status/after-merge-baseless
+# command: tf status <WORKSPACE_ROOT>\Main\golden2-2610091535 /recursive /format:detailed /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 658
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+$/TfsPortableTestRepo/Main/golden2-2610091535/other;C602
+  Uživatel        : <OWNER>
+  Datum           : pátek 9. října 2026 15:37:45
+  Uzamknout       : žádný
+  Změnit          : sloučit
+  Pracovní prostor: <COMPUTER>
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\golden2-2610091535\other
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/other/a.txt;C602
+  Uživatel        : <OWNER>
+  Datum           : pátek 9. října 2026 15:37:45
+  Uzamknout       : žádný
+  Změnit          : sloučit
+  Pracovní prostor: <COMPUTER>
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\golden2-2610091535\other\a.txt
+  Typ souboru     : windows-1250
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/other/b.txt
+  Uživatel        : <OWNER>
+  Datum           : pátek 9. října 2026 15:37:45
+  Uzamknout       : žádný
+  Změnit          : sloučit, větev
+  Pracovní prostor: <COMPUTER>
+  Zdrojová položka: $/TfsPortableTestRepo/Main/golden2-2610091535/src/b.txt
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\golden2-2610091535\other\b.txt
+  Typ souboru     : windows-1250
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/other/d.txt
+  Uživatel        : <OWNER>
+  Datum           : pátek 9. října 2026 15:37:45
+  Uzamknout       : žádný
+  Změnit          : sloučit, větev
+  Pracovní prostor: <COMPUTER>
+  Zdrojová položka: $/TfsPortableTestRepo/Main/golden2-2610091535/src/d.txt
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\golden2-2610091535\other\d.txt
+  Typ souboru     : windows-1250
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/other/same.txt
+  Uživatel        : <OWNER>
+  Datum           : pátek 9. října 2026 15:37:45
+  Uzamknout       : žádný
+  Změnit          : sloučit, větev
+  Pracovní prostor: <COMPUTER>
+  Zdrojová položka: $/TfsPortableTestRepo/Main/golden2-2610091535/src/same.txt
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\golden2-2610091535\other\same.txt
+  Typ souboru     : windows-1250
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/other/size.txt
+  Uživatel        : <OWNER>
+  Datum           : pátek 9. října 2026 15:37:45
+  Uzamknout       : žádný
+  Změnit          : sloučit, větev
+  Pracovní prostor: <COMPUTER>
+  Zdrojová položka: $/TfsPortableTestRepo/Main/golden2-2610091535/src/size.txt
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\golden2-2610091535\other\size.txt
+  Typ souboru     : windows-1250
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/other/sub
+  Uživatel        : <OWNER>
+  Datum           : pátek 9. října 2026 15:37:45
+  Uzamknout       : žádný
+  Změnit          : sloučit, větev
+  Pracovní prostor: <COMPUTER>
+  Zdrojová položka: $/TfsPortableTestRepo/Main/golden2-2610091535/src/sub
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\golden2-2610091535\other\sub
+
+$/TfsPortableTestRepo/Main/golden2-2610091535/other/sub/c.txt
+  Uživatel        : <OWNER>
+  Datum           : pátek 9. října 2026 15:37:45
+  Uzamknout       : žádný
+  Změnit          : sloučit, větev
+  Pracovní prostor: <COMPUTER>
+  Zdrojová položka: $/TfsPortableTestRepo/Main/golden2-2610091535/src/sub/c.txt
+  Místní položka  : [<COMPUTER>] <WORKSPACE_ROOT>\Main\golden2-2610091535\other\sub\c.txt
+  Typ souboru     : windows-1250
+
+Změny: 8
+
+==== stderr ====

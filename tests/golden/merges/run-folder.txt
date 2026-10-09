@@ -1,0 +1,18 @@
+# case: merges/run-folder
+# command: tf merges $/TfsPortableTestRepo/Main/golden2-2610091535/src $/TfsPortableTestRepo/Main/golden2-2610091535/rel /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 870
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+Sada změn Sloučené v sadě změn Autor                            Datum
+--------- -------------------- -------------------------------- ------------
+     594                   595 <OWNER>                    9. 10. 2026
+     596                   599 <OWNER>                    9. 10. 2026
+     597                   599 <OWNER>                    9. 10. 2026
+     598                   599 <OWNER>                    9. 10. 2026
+
+==== stderr ====

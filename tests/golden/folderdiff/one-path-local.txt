@@ -1,0 +1,30 @@
+# case: folderdiff/one-path-local
+# command: tf folderdiff <WORKSPACE_ROOT>\Main\golden2-2610091535\src /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 1829
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091535
+==== stdout ====
+===============================================================================
+Položky, které existují pouze v cestě $/TfsPortableTestRepo/Main/golden2-2610091535/src;T
+===============================================================================
+
+
+===============================================================================
+Položky, které existují pouze v cestě <WORKSPACE_ROOT>\Main\golden2-2610091535\src
+===============================================================================
+
+
+===============================================================================
+Zobrazit položky s rozdílným obsahem
+===============================================================================
+
+===============================================================================
+Shrnutí: Složky: 1, soubory: 4, zdrojové: 0, cílové 0, rozdílné: 0, s chybami: 0
+===============================================================================
+
+
+==== stderr ====

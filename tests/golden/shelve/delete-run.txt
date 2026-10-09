@@ -1,0 +1,12 @@
+# case: shelve/delete-run
+# command: tf shelve /delete Goldenx-2610091539 /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 879
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+
+==== stderr ====

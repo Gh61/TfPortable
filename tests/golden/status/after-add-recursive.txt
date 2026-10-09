@@ -1,0 +1,29 @@
+# case: status/after-add-recursive
+# command: tf status <WORKSPACE_ROOT>\Main\goldenx-2610091539 /recursive /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 631
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+Název souboru Změnit Místní cesta
+------------- ------ ----------------------------------------------------------
+$/TfsPortableTestRepo/Main/goldenx-2610091539
+x             přidat <WORKSPACE_ROOT>\Main\goldenx-2610091539\x
+
+$/TfsPortableTestRepo/Main/goldenx-2610091539/x
+.tfignore     přidat <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\.tfignore
+a.txt         přidat <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\a.txt
+b.txt         přidat <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\b.txt
+blob.bin      přidat <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\blob.bin
+lf.txt        přidat <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\lf.txt
+sub           přidat <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\sub
+
+$/TfsPortableTestRepo/Main/goldenx-2610091539/x/sub
+c.txt         přidat <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\sub\c.txt
+
+Změny: 8
+
+==== stderr ====

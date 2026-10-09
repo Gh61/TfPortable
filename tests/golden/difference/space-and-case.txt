@@ -1,0 +1,25 @@
+# case: difference/space-and-case
+# command: tf difference <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\a.txt /noprompt
+# cwd: <WORKSPACE_ROOT>
+# exit: 0
+# timed-out: false
+# duration-ms: 663
+# console-encoding: windows-1250
+# tf-version: 18.10.12215.6 built by: releases/dev18/18.10 (760940044d)
+# run: 2610091539
+==== stdout ====
+upravit: <WORKSPACE_ROOT>\Main\goldenx-2610091539\x\a.txt
+Soubor: Main\goldenx-2610091539\x\a.txt
+===================================================================
+--- Server: $/TfsPortableTestRepo/Main/goldenx-2610091539/x/a.txt;C610
++++ Místní: Main\goldenx-2610091539\x\a.txt
+@@ -1,4 +1,4 @@
+-Line one
+-line two
++Line  one  
++LINE TWO
+ Line three
+ line four
+===================================================================
+
+==== stderr ====
