@@ -154,8 +154,20 @@ jobs:
             exit 0
           }
           $target = if ('${{ github.ref_type }}' -eq 'tag') { @('--verify-tag') } else { @('--target', '${{ github.sha }}') }
+          # The release notes: the standard line plus the section of this tag from CHANGELOG.md (everything from
+          # "## <tag>" up to the next "## " heading). A missing section fails the release so that it is never empty.
+          $lines = Get-Content CHANGELOG.md
+          $start = ($lines | Select-String -Pattern "^## $([regex]::Escape($tag))\b" | Select-Object -First 1).LineNumber
+          if (-not $start) { throw "CHANGELOG.md has no section '## $tag'; add it before the release." }
+          $section = @()
+          for ($i = $start; $i -lt $lines.Count; $i++) {
+            if ($lines[$i] -match '^## ') { break }
+            $section += $lines[$i]
+          }
+          $notes = "tfp.exe (single file, .NET Framework 4.8) and its SHA-256. See README.md for installation and docs/compat.md for differences from tf.exe. Not a Microsoft product.`n`n## What this release contains`n" + ($section -join "`n").Trim()
+          Set-Content -Path artifacts/release-notes.md -Value $notes -Encoding utf8
           gh release create $tag artifacts/tfp.exe artifacts/tfp.exe.sha256 `
             --title "TfPortable ${{ steps.version.outputs.version }}" `
-            --notes 'tfp.exe (single file, .NET Framework 4.8) and its SHA-256. See README.md for installation and docs/compat.md for differences from tf.exe. Not a Microsoft product.' `
+            --notes-file artifacts/release-notes.md `
             @target
           if ($LASTEXITCODE -ne 0) { throw "gh release create failed with exit $LASTEXITCODE" }
