@@ -118,7 +118,7 @@ namespace TfPortable.Output
             /// <summary>Lines as displayed (without the line ending).</summary>
             public string[] Original { get; }
 
-            /// <summary>Lines as compared: the `\r` of a CRLF ending stays unless /ignoreeol or /ignorespace.</summary>
+            /// <summary>Lines as compared: the `\r` of a CRLF ending stays unless /ignoreeol (/ignorespace keeps it).</summary>
             public string[] Keys { get; }
 
             public bool MissingFinalNewline { get; }

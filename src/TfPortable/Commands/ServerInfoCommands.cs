@@ -276,7 +276,7 @@ namespace TfPortable.Commands
             if (labels.Count == 0 && !string.IsNullOrEmpty(name))
             {
                 // tf.exe exits 100 when a named label does not exist (golden labels/after-delete).
-                throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError, "No labels found.", $"'{toolName} labels' lists every label; '{toolName} labels <name>@<scope>' narrows by scope.", item: name);
+                throw new TfpException(ErrorCodes.ItemNotFound, ExitCodes.GeneralError, $"No label matches {name}.", $"'{toolName} labels' lists every label; '{toolName} labels <name>@<scope>' narrows by scope.", item: name);
             }
 
             output.Lines(detailed ? RenderDetailed(labels) : RenderBrief(labels));
@@ -375,7 +375,7 @@ namespace TfPortable.Commands
             if (roots.Count == 0)
             {
                 // Not an error in tf.exe (golden branches/not-branched): the message and exit 0.
-                output.Line($"{path} is not used in any branch tree.");
+                output.Line($"{path} has no branch relationships.");
                 output.Success(new JObject { ["root"] = path, ["branches"] = new JArray() });
                 return ExitCodes.Success;
             }

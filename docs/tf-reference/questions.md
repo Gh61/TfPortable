@@ -44,6 +44,11 @@ agent; it adjusts the code and `docs/compat.md`.
 17. `unlabel`: which `VersionSpec` is passed to `UnlabelItem` (tfp: the label's own `LabelVersionSpec`)?
 18. `label /delete name@scope`: `DeleteLabel` only, or a query first?
 
+## labels
+
+34. `labels <wildcard>` (for example `labels Rel*`) that matches nothing: exit 100 like an exact name
+    (`labels/after-delete`) or exit 0 with an empty list? (tfp: 100 for both.)
+
 ## lock
 
 19. `lock /lock:none` on an item without a lock: exit 0 or an error? Does tf.exe list the item?

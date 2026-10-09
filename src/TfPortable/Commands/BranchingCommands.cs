@@ -105,7 +105,7 @@ namespace TfPortable.Commands
                 }
             }
 
-            int reported = Math.Max(result.ConflictLines.Count, result.ConflictLines.Count == 0 ? result.Conflicts.Count : 0);
+            int reported = result.ConflictLines.Count > 0 ? result.ConflictLines.Count : result.Conflicts.Count;
             if (result.NumConflicts > reported)
             {
                 // Conflicts no event or query described: the count still counts.

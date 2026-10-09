@@ -190,7 +190,7 @@ namespace TfPortable.IntegrationTests
             Assert.Contains("Merged in Changeset", text.Stdout);
             var detailed = Run($"merges {Main} {Release} /recursive /format:detailed");
             Assert.True(detailed.ExitCode == 0, detailed.Stderr);
-            Assert.Contains("Changeset:", detailed.Stdout);
+            Assert.Contains("Merged items:", detailed.Stdout);
 
             var diff = Run($"folderdiff {Main} {Release} /recursive /noprompt /format:json");
             Assert.True(diff.ExitCode == 0, diff.Stderr);

@@ -212,7 +212,7 @@ namespace TfPortable.Commands
                 // Nothing was unlocked: the item is not locked in this workspace (golden lock/none-on-unlocked, exit 1).
                 foreach (string path in paths)
                 {
-                    output.ItemError(new TfpException(ErrorCodes.ItemNotFound, ExitCodes.PartialSuccess, $"{path} is not locked in your workspace.",
+                    output.ItemError(new TfpException(ErrorCodes.ItemNotFound, ExitCodes.PartialSuccess, $"{path} has no lock to remove.",
                         $"'{toolName} properties {path}' shows the lock state.", item: path));
                 }
             }

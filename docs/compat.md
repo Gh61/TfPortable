@@ -301,7 +301,7 @@ Milestone 4 (2026-10-08) notes on §9–§14, found while implementing against t
 | `view /recursive` | each file preceded by its path | `$/path;C<n>:` before each file |
 | `difference` labels | `--- Server: Program.cs;75` / `+++ Server: Program.cs;81` for two versions, `--- Server: $/path;C81` / `+++ Local: <path>` for a local edit, `Local:` for two server paths | the same shapes; two server paths are labelled `Server:` (compat §12); the `File:` line names the mapped local path when the workspace knows it, else the server path; the diff is TfPortable's own Myers line diff with three lines of context (hunk boundaries may differ from the original in rare cases); an added file is `@@ -0,0 +1,N @@` where the original prints `@@ -1,0 +1,N @@` |
 | `difference` with no pending change | `Comparing local with latest: <path>` | the same, after comparing the file with the latest server version |
-| `difference` line endings | CRLF and LF differ unless `/ignoreeol` | the same; a missing final newline is an end-of-line difference and is marked `\ No newline at end of file` as GNU diff does; the local side is decoded with the item's server encoding (a BOM wins) |
+| `difference` line endings | CRLF and LF differ unless `/ignoreeol`; a missing final newline differs even with `/ignoreeol`; `/ignorespace` keeps line-ending differences (section 20) | the same; a missing final newline is marked `\ No newline at end of file` as GNU diff does; the local side is decoded with the item's server encoding (a BOM wins) |
 | `difference` algorithm | – | linear-space Myers (no size limit); within a block of changes the deletes come before the inserts; a single `/version:C<n>` with two itemspecs applies to both sides |
 | `difference /shelveset` | `<change>: $/path;C<n>` then `Soubor: <name>` per file | the same lines (`File:`); JSON `files[].path` is the server path |
 | `dir` sorting | ordinal-ignore-case, folders first | the same; the queried folder heads the listing and is not counted; a file itemspec lists the file |
@@ -315,7 +315,7 @@ Milestone 4 (2026-10-08) notes on §9–§14, found while implementing against t
 | `history /workitem:<id>` | – | the linking service answers for a PAT on Azure DevOps Services (`OpenQuestionTests`); one call per search |
 | `properties` outside a workspace | needs a workspace | works with a server path: only the `Server information:` section |
 | `labels` with extra labels on the server | – | the golden brief listing compares shape only (later golden runs added labels) |
-| `branches` of a path that is not branched | error | TFP0301 (exit 100) |
+| `branches` of a path that is not branched | TF10101 message on stdout, exit 0 (golden `branches/not-branched`, 2026-10-09) | one message line, exit 0, JSON `branches: []` (section 20; was TFP0301 exit 100 before the capture) |
 | `merge /candidate /format:detailed` | blocks | the `changeset` block per candidate, `*` after the number of a partial one |
 
 ## 15. Phase 2 commands: `merge`, `branch`, `undelete`, `rollback`, `merges`, `folderdiff`, `annotate`
@@ -460,7 +460,7 @@ is a recorded difference. Cases not listed match (exit code, items, order).
 | `undelete/wrong-deletion-id` (`;X1127` for deletion 127) | exit 0; the item is restored anyway | the deletion id is passed to the server; a wrong id is TF14022 (TFP0301, exit 1) in the library | deviate: tf.exe ignores a wrong deletion id; TfPortable reports it |
 | `undelete/folder-not-recursive` | exit 0; the folder and its children are restored (the deletion is one unit) | the same through the library | follow |
 | `undelete/deleted-twice`, `deleted-twice-first-id` | exit 0; without an id the latest deletion, with `;X<first>` the first | the same | follow |
-| `folderdiff/view-same` | exit 0; the folders that exist on both sides are listed as pairs with the same content | folder pairs were missing | fixed |
+| `folderdiff/view-same` | exit 0; the compared folders themselves and the folders that exist on both sides are listed as pairs with the same content | sub-folder pairs were missing; the pair of the two root folders is still not listed | fixed for sub-folders; deviate: no root pair |
 | `folderdiff/view-invalid` | exit 100; TF10120 | TFP0002, exit 100 | follow |
 | `folderdiff/filter-exclude` (`/filter:*.txt;!b.txt`) | the `!` exclusion is ignored, `b.txt` is still compared | `!` excludes (Microsoft docs) | deviate: TfPortable honors the documented exclusion; `b.txt` is left out |
 | `folderdiff/filter-local-paths-only` | exit 0; the filter applies to the local side only | the switch is unsupported (TFP0002) | deviate (unchanged) |
@@ -479,7 +479,7 @@ is a recorded difference. Cases not listed match (exit code, items, order).
 | `add/ignored-noignore`, `already-pending`, `wildcard`, `single-file-run` | exit 0 | the same | follow |
 | `checkin/no-comment` | exit 0; checked in (the test collection has no comment policy) | the same unless a "Changeset Comments" policy is configured (TFP0407) | follow |
 | `checkin/validate-nothing-pending` | exit 100 | TFP0301, exit 100 | follow |
-| `checkin/unchanged-edit` (phase 3 capture) | exit 1; the server commits nothing and drops the unchanged pending edit; stderr names the item | TFP0301 "The server committed nothing", now exit 1 | fixed (was exit 100) |
+| `checkin/unchanged-edit` (phase 3 capture) | exit 1; the server commits nothing and drops the unchanged pending edit; stderr names the item | TFP0301 "The server committed nothing" as an item error, exit 1 (a thrown TFP0301 of `checkin` stays exit 100 for `nothing-pending`) | fixed (was exit 100) |
 | `checkin /associate`, `history /workitem` | not switches of tf.exe 18.10 (unrecognized) | TfPortable extensions (`+` in `docs/commands.md`) | deviate: extensions |
 | `checkout/already-checked-out`, `own-lock`, `folder-recursive` | exit 0 | the same | follow |
 | `delete/with-pending-edit` | exit 1; TF203069 (an item with a pending edit cannot be deleted) | TFP0405 item error, exit 1 | follow |
@@ -498,11 +498,11 @@ is a recorded difference. Cases not listed match (exit code, items, order).
 | `view/lf-file`, `deleted-item-id` | exit 0 | the same | follow |
 | `dir/wildcard`, `wildcard-recursive`, `deleted-x` | exit 0 | the same | follow |
 | `properties/folder`, `folder-recursive`, `version`, `deleted-item`, `deleted-item-id` | exit 0 | the same | follow |
-| `branches/not-branched` | exit 0; "<path> is not used in any branch tree." style message | the same message shape, exit 0, JSON `branches: []` | fixed (was TFP0301, exit 100) |
+| `branches/not-branched` | exit 0; a TF10101 message on stdout | `<path> has no branch relationships.`, exit 0, JSON `branches: []` | fixed (was TFP0301, exit 100) |
 | `label/*`, `labels/*` with a version, an owner, a wildcard | exit 0 | the same | follow |
-| `labels/after-unlabel-folder`, `labels/after-delete` (named label without a match) | exit 100 | TFP0301 "No labels found.", exit 100 | fixed (was an empty list, exit 0) |
+| `labels/after-unlabel-folder`, `labels/after-delete` (named label without a match) | exit 100 | TFP0301 `No label matches <name>.`, exit 100 (also for a wildcard name without a match, which no capture covers) | fixed (was an empty list, exit 0) |
 | `label/delete-run` of a missing label | exit 100 | TFP0301, exit 100 | follow |
-| `lock/none-on-unlocked` | exit 1; TF14090 "Cannot unlock <path>. It is not currently locked in your workspace." | TFP0301 item error "<path> is not locked in your workspace.", exit 1 | fixed (was exit 0) |
+| `lock/none-on-unlocked` | exit 1; TF14090 "Cannot unlock <path>. It is not currently locked in your workspace." | TFP0301 item error `<path> has no lock to remove.`, exit 1 | fixed (was exit 0) |
 | `lock/already-locked`, `checkin-run`, `none-run` | exit 0 | the same | follow |
 | `lock/change-level` (`/lock:checkout` on a checkin-locked item) | exit 1; TF400022 | TFP0501 with the server message, exit 1 | follow |
 | `shelve/no-comment`, `delete-run`, `shelvesets/own-detailed` | exit 0 | the same | follow |

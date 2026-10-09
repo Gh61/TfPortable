@@ -847,7 +847,7 @@ namespace TfPortable.Context
                         .Where(p => (p.ChangeType & ChangeType.Merge) != 0)
                         .Select(p => ToPendingChange(p, false))
                         .ToList();
-                    return new MergeResult(pended, result.Conflicts, result.Failures, Math.Max(result.NumOperations, pended.Count), result.NumConflicts, result.NoActionNeeded && pended.Count == 0);
+                    return new MergeResult(pended, result.Conflicts, result.Failures, Math.Max(result.NumOperations, pended.Count), result.NumConflicts, result.NoActionNeeded && pended.Count == 0, result.ConflictLines);
                 }
 
                 return result;
