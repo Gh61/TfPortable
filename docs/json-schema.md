@@ -54,11 +54,13 @@ Message:
   "message": "File C:\\Src\\App\\Config.xml is writable and has no pending change; get did not overwrite it.",
   "hint": "Review local changes with 'tfp diff'. Use 'tfp get /overwrite' to overwrite it.",
   "item": "C:\\Src\\App\\Config.xml",
-  "activityId": null
+  "activityId": null,
+  "serverMessage": null
 }
 ```
 
-`tfCode`, `hint`, `item`, `activityId` are null when not applicable. `item` is the local path when
+`tfCode`, `hint`, `item`, `activityId`, `serverMessage` (the server's or the library's text, verbatim, as the
+text mode prints it after `Server message:`) are null when not applicable. `item` is the local path when
 the command worked with a local item, otherwise the server path. Every `code` with its meaning, cause
 and next step is listed in [errors.md](errors.md).
 
@@ -131,9 +133,9 @@ Phase 4 commands:
 
 | Command | `data` |
 | --- | --- |
-| `destroy` | `{ "preview": bool, "items": [ { "serverPath", "deletionId", "isFolder" } ], "affectedPendingChanges": [ { "name", "owner", "shelveset": false, "changes": [PendingChange] } ], "affectedShelvedChanges": [ ...the same with "shelveset": true ] }`; a destroy without a recent preview is a fatal TFP0410 |
+| `destroy` | `{ "preview": bool, "items": [ { "serverPath", "deletionId", "isFolder" } ] }`; a destroy without a recent preview is a fatal TFP0410 |
 | `permission` (listing) | `{ "items": [ { "serverItem", "inherit": bool, "entries": [ { "identity", "allow": [string], "deny": [string], "allowInherited": [string], "denyInherited": [string] } ] } ] }` |
-| `permission` (change) | `{ "changes": [ { "serverItem", "identity" or null, "allow": [string], "deny": [string], "remove": [string], "inherit": bool or null } ] }` |
+| `permission` (change) | `{ "changes": [ { "serverItem", "identity" or null, "allow": [string], "deny": [string], "remove": [string], "inherit": bool or null } ], "skipped": [ the same shape ] }`; a change the server did not apply (an unknown identity) is TFP0501 in `errors` (exit 1) |
 | `workspace` | `{ "workspace": Workspace, "created": true }` (`/new`), `{ "workspace": Workspace, "deleted": true, "droppedPendingChanges": n }` (`/delete`), `{ "workspace": Workspace, "updated": true }` (edit), `{ "workspace": Workspace }` (listing) |
 | `property` | `{ "items": [ { "serverPath", "properties": { "name": "value", ... } } ] }` |
 | `resolvepath` | `{ "items": [ { "localPath", "serverPath" } ] }`; an unmapped path is TFP0203 in `errors` (exit 1) |

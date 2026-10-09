@@ -491,8 +491,9 @@ tf vc destroy [/keephistory] itemspec1[;versionspec] [itemspec2...itemspecN] [/s
 | `/keephistory`, `/stopat:` | ✓ passed to the server (`/stopat` without `/keephistory` is TFP0002) |
 | `/startcleanup`, `/silent` | ✓ |
 
-Output: `Destroyed: $/path` per item; pending or shelved changes of other workspaces that the destroy touches are warnings.
-A missing item is TFP0301 (exit 100, as tf.exe VS403405). Protection level 3.
+Output: `Destroyed: $/path` per item. A missing item is TFP0301 (exit 100, as tf.exe VS403405). Protection level 3.
+The library's query of the pending and shelved changes a destroy touches (`AffectedChanges`) is not used: the test
+collection refused it (TF203086) and tf.exe prints nothing of the kind either.
 
 <a id="cmd-permission"></a>
 ### permission
@@ -505,7 +506,7 @@ tf vc permission [/allow:(* |perm1[,perm2,...]] [/deny:(* |perm1[,perm2,...])] [
 | Switch | TfPortable |
 | --- | --- |
 | `itemspec ...`, `/recursive` (listing) | ✓ protection level 1; the `====` block per item with `Server item: $/path (Inherit: Yes)` and, per identity, `Allow`, `Deny`, `Allow (inherited)`, `Deny (inherited)` |
-| `/allow:`, `/deny:`, `/remove:` with `/user:` and/or `/group:` | ✓ protection level 3; the permission names of tf.exe (Read, PendChange, Checkin, Label, Lock, ReviseOther, UnlockOther, UndoOther, LabelOther, AdminProjectRights, CheckinOther, Merge, ManageBranch; `*` = all; an unknown name is TFP0002); the identities go to the server as given (display name, account, e-mail, `[Project]\Group`); prints `$/path: identity` per change as tf.exe |
+| `/allow:`, `/deny:`, `/remove:` with `/user:` and/or `/group:` | ✓ protection level 3; the permission names of tf.exe (Read, PendChange, Checkin, Label, Lock, ReviseOther, UnlockOther, UndoOther, LabelOther, AdminProjectRights, CheckinOther, Merge, ManageBranch; `*` = all; an unknown name is TFP0002); the identities go to the server as given (display name, account, e-mail, `[Project]\Group`); prints `$/path: identity` per applied change as tf.exe; a change the server did not apply (the library returns only the applied ones and raises nothing for an unknown identity) is TFP0501 per item (exit 1) |
 | `/inherit:yes\|no` | ✓ protection level 3 (`$/path: inherit no`) |
 | `/recursive` with a change | ✓ the change is applied to every item below (the server stores ACLs per item) |
 | `/global` | ✗ |

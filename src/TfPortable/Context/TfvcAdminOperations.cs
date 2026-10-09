@@ -24,21 +24,15 @@ namespace TfPortable.Context
         public JObject ToJson() => new JObject { ["serverPath"] = ServerPath, ["deletionId"] = DeletionId, ["isFolder"] = IsFolder };
     }
 
-    /// <summary>Result of a destroy: the items and the pending or shelved changes of other workspaces the destroy touches.</summary>
+    /// <summary>Result of a destroy: the items destroyed, or listed by a preview.</summary>
     internal sealed class DestroyResult
     {
-        public DestroyResult(IReadOnlyList<DestroyedItemInfo> items, IReadOnlyList<PendingSetInfo> affectedPendingChanges, IReadOnlyList<PendingSetInfo> affectedShelvedChanges)
+        public DestroyResult(IReadOnlyList<DestroyedItemInfo> items)
         {
             Items = items;
-            AffectedPendingChanges = affectedPendingChanges;
-            AffectedShelvedChanges = affectedShelvedChanges;
         }
 
         public IReadOnlyList<DestroyedItemInfo> Items { get; }
-
-        public IReadOnlyList<PendingSetInfo> AffectedPendingChanges { get; }
-
-        public IReadOnlyList<PendingSetInfo> AffectedShelvedChanges { get; }
     }
 
     /// <summary>The ACL entry of one identity on an item (`permission` listing).</summary>

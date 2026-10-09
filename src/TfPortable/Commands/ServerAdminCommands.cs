@@ -52,15 +52,11 @@ namespace TfPortable.Commands
             }
 
             var destroyed = new List<DestroyedItemInfo>();
-            var pendingSets = new List<PendingSetInfo>();
-            var shelvedSets = new List<PendingSetInfo>();
             foreach (var item in items)
             {
                 string serverPath = context.ServerPathOf(item, toolName);
                 var result = context.Client.Destroy(new ItemQuery(serverPath, RecursionType.None, item.DeletionId), item.Version, preview, keepHistory, stopAt, commandLine.Has("startcleanup"), commandLine.Has("silent"));
                 destroyed.AddRange(result.Items);
-                pendingSets.AddRange(result.AffectedPendingChanges);
-                shelvedSets.AddRange(result.AffectedShelvedChanges);
             }
 
             if (preview)
@@ -78,22 +74,10 @@ namespace TfPortable.Commands
                 output.Lines(Render(destroyed, preview));
             }
 
-            foreach (string line in AffectedLines(pendingSets, "pending"))
-            {
-                output.Warning(line);
-            }
-
-            foreach (string line in AffectedLines(shelvedSets, "shelved"))
-            {
-                output.Warning(line);
-            }
-
             output.Success(new JObject
             {
                 ["preview"] = preview,
                 ["items"] = new JArray(destroyed.Select(d => d.ToJson()).Cast<object>().ToArray()),
-                ["affectedPendingChanges"] = new JArray(pendingSets.Select(AffectedJson).Cast<object>().ToArray()),
-                ["affectedShelvedChanges"] = new JArray(shelvedSets.Select(AffectedJson).Cast<object>().ToArray()),
             });
             return ExitCodes.Success;
         }
@@ -113,21 +97,6 @@ namespace TfPortable.Commands
             }
         }
 
-        private static IEnumerable<string> AffectedLines(IReadOnlyList<PendingSetInfo> sets, string kind)
-        {
-            foreach (var set in sets)
-            {
-                yield return $"{set.Changes.Count} {kind} change(s) in {(set.IsShelveset ? "shelveset" : "workspace")} {set.Name};{set.Owner} are affected: {string.Join(", ", set.Changes.Select(c => c.ServerPath))}.";
-            }
-        }
-
-        private static JObject AffectedJson(PendingSetInfo set) => new JObject
-        {
-            ["name"] = set.Name,
-            ["owner"] = set.Owner,
-            ["shelveset"] = set.IsShelveset,
-            ["changes"] = new JArray(set.Changes.Select(c => c.ToJson()).Cast<object>().ToArray()),
-        };
     }
 
     /// <summary>
@@ -215,13 +184,30 @@ namespace TfPortable.Commands
                 }
             }
 
-            context.Client.SetPermissions(changes);
+            var applied = context.Client.SetPermissions(changes);
+            var skipped = new JArray();
             foreach (var change in changes)
             {
+                bool done = applied.Any(a => string.Equals(a.ServerItem, change.ServerItem, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(a.Identity, change.Identity, StringComparison.OrdinalIgnoreCase));
+                if (!done)
+                {
+                    // The library returns the changes the server applied and raises no error for the rest (an unknown identity, a missing permission).
+                    output.ItemError(new TfpException(ErrorCodes.ServerError, ExitCodes.PartialSuccess,
+                        $"{change.ServerItem}: the server did not apply the change for {change.Identity ?? "the inheritance"}.",
+                        "Check the identity as the server shows it (display name, account or e-mail) and your permission to administer the item.", item: change.ServerItem));
+                    skipped.Add(change.ToJson());
+                    continue;
+                }
+
                 output.Line(change.Identity == null ? $"{change.ServerItem}: inherit {(change.Inherit == true ? "yes" : "no")}" : $"{change.ServerItem}: {change.Identity}");
             }
 
-            output.Success(new JObject { ["changes"] = new JArray(changes.Select(c => c.ToJson()).Cast<object>().ToArray()) });
+            output.Success(new JObject
+            {
+                ["changes"] = new JArray(changes.Where(c => !skipped.Any(s => (string)s["serverItem"]! == c.ServerItem && (string?)s["identity"] == c.Identity)).Select(c => c.ToJson()).Cast<object>().ToArray()),
+                ["skipped"] = skipped,
+            });
             return ExitCodes.Success;
         }
 

@@ -367,14 +367,10 @@ namespace TfPortable.Context
             var spec = ToItemSpec(item);
             var version = itemVersion ?? VersionSpec.Latest;
 
-            // The library returns the affected pending and shelved changes only with Preview | AffectedChanges, and then no items:
-            // one preview call for the warnings, then the listing (a preview) or the real destroy without the flag.
-            VersionControl.Destroy(spec, version, stopAt, flags | DestroyFlags.Preview | DestroyFlags.AffectedChanges, out PendingSet[] pending, out PendingSet[] shelved);
+            // The AffectedChanges flag (the pending and shelved changes a destroy touches) is accepted only with Preview and then empties
+            // the item list; the test collection refused it with TF203086, so the destroy asks for the items only, as tf.exe prints them.
             var destroyed = VersionControl.Destroy(spec, version, stopAt, preview ? flags | DestroyFlags.Preview : flags);
-            return new DestroyResult(
-                (destroyed ?? Array.Empty<Item>()).Select(i => new DestroyedItemInfo(i.ServerItem, i.DeletionId, i.ItemType == ItemType.Folder)).ToList(),
-                (pending ?? Array.Empty<PendingSet>()).Select(ToPendingSet).ToList(),
-                (shelved ?? Array.Empty<PendingSet>()).Select(ToPendingSet).ToList());
+            return new DestroyResult((destroyed ?? Array.Empty<Item>()).Select(i => new DestroyedItemInfo(i.ServerItem, i.DeletionId, i.ItemType == ItemType.Folder)).ToList());
         }
 
         public IReadOnlyList<ItemPermissionInfo> GetPermissions(IReadOnlyList<string> serverPaths, RecursionType recursion)
@@ -385,7 +381,7 @@ namespace TfPortable.Context
                     e.Allow ?? Array.Empty<string>(), e.Deny ?? Array.Empty<string>(), e.AllowInherited ?? Array.Empty<string>(), e.DenyInherited ?? Array.Empty<string>())).ToList())).ToList();
         }
 
-        public void SetPermissions(IReadOnlyList<PermissionChangeRequest> changes)
+        public IReadOnlyList<PermissionChangeRequest> SetPermissions(IReadOnlyList<PermissionChangeRequest> changes)
         {
             var securityChanges = new List<SecurityChange>();
             foreach (var change in changes)
@@ -401,10 +397,26 @@ namespace TfPortable.Context
                 }
             }
 
-            if (securityChanges.Count > 0)
+            if (securityChanges.Count == 0)
             {
-                VersionControl.SetPermissions(securityChanges.ToArray());
+                return Array.Empty<PermissionChangeRequest>();
             }
+
+            var applied = VersionControl.SetPermissions(securityChanges.ToArray()) ?? Array.Empty<SecurityChange>();
+            var result = new List<PermissionChangeRequest>();
+            foreach (var change in applied)
+            {
+                if (change is PermissionChange permission)
+                {
+                    result.Add(new PermissionChangeRequest(permission.Item, permission.IdentityName, permission.Allow ?? Array.Empty<string>(), permission.Deny ?? Array.Empty<string>(), permission.Remove ?? Array.Empty<string>(), null));
+                }
+                else if (change is InheritanceChange inheritance)
+                {
+                    result.Add(new PermissionChangeRequest(inheritance.Item, null, Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>(), inheritance.Inherit));
+                }
+            }
+
+            return result;
         }
 
         public WorkspaceSummary CreateWorkspace(WorkspaceDefinition definition)

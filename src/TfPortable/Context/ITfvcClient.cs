@@ -201,8 +201,8 @@ namespace TfPortable.Context
         /// <summary>ACLs of the items (`permission` listing).</summary>
         IReadOnlyList<ItemPermissionInfo> GetPermissions(IReadOnlyList<string> serverPaths, RecursionType recursion);
 
-        /// <summary>Applies the ACL changes; the identities are passed to the server as given. Exceptions propagate.</summary>
-        void SetPermissions(IReadOnlyList<PermissionChangeRequest> changes);
+        /// <summary>Applies the ACL changes (identities as given) and returns the ones the server applied; the library raises no error for the rest.</summary>
+        IReadOnlyList<PermissionChangeRequest> SetPermissions(IReadOnlyList<PermissionChangeRequest> changes);
 
         /// <summary>Creates a local workspace for the authenticated user; `mappings` null = `$/` mapped to the current folder is decided by the command.</summary>
         WorkspaceSummary CreateWorkspace(WorkspaceDefinition definition);

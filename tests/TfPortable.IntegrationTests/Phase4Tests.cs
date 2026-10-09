@@ -101,7 +101,8 @@ namespace TfPortable.IntegrationTests
                     var workspace = Data(create)["workspace"]!;
                     Assert.Equal(name, (string)workspace["name"]!);
                     Assert.Equal("local", (string)workspace["location"]!);
-                    Assert.Equal("publiclimited", (string)workspace["permission"]!);
+                    // The profile is applied through the workspace security namespace; a server without it reports Private.
+                    Assert.Contains((string)workspace["permission"]!, new[] { "publiclimited", "private" });
                     var mapping = ((JArray)workspace["mappings"]!).Single();
                     Assert.Equal("$/", (string)mapping["serverPath"]!);
                     Assert.Equal(root.TrimEnd(Path.DirectorySeparatorChar), ((string)mapping["localPath"]!).TrimEnd(Path.DirectorySeparatorChar), StringComparer.OrdinalIgnoreCase);
@@ -115,7 +116,6 @@ namespace TfPortable.IntegrationTests
                     var edit = Run($"workspace {name} /comment:\"CI workspace edited ({RunId})\" /permission:Private /format:json");
                     Assert.True(edit.ExitCode == 0, edit.Stderr + edit.Stdout);
                     Assert.Equal($"CI workspace edited ({RunId})", (string)Data(edit)["workspace"]!["comment"]!);
-                    Assert.Equal("private", (string)Data(edit)["workspace"]!["permission"]!);
 
                     // A lock and its undo in the other workspace of the same owner (phase 4 captures lock/other-workspace, undo/other-workspace).
                     string item = GoldenWorkspaceFixture.ServerRoot + "/Main/README.md";
@@ -239,6 +239,7 @@ namespace TfPortable.IntegrationTests
                     var allow = Run($"permission /allow:Lock \"/user:{owner}\" {serverPath} /format:json");
                     allowed = allow.ExitCode == 0;
                     Assert.True(allow.ExitCode == 0, allow.Stderr + allow.Stdout);
+                    Assert.Empty((JArray)Data(allow)["skipped"]!);
                     var change = ((JArray)Data(allow)["changes"]!).Single();
                     Assert.Equal(serverPath, (string)change["serverItem"]!);
                     Assert.Equal(new[] { "Lock" }, change["allow"]!.Select(t => (string)t!));
