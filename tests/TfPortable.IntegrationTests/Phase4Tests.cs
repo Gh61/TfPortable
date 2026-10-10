@@ -431,11 +431,17 @@ namespace TfPortable.IntegrationTests
                 Assert.Contains("Check-in Notes:", text.Stdout);
                 Assert.Contains($"  Code Reviewer: CI run {RunId}", text.Stdout);
 
-                // checkout with a checkout lock on the committed file, visible on the server, then undone.
-                var checkout = Run($"checkout {file} /lock:checkout /noprompt /format:json");
+                // A checkout lock is refused by the server in a local workspace (TF400022, golden lock/checkout-lock): the pend fails as an item error.
+                var refused = Run($"checkout {file} /lock:checkout /noprompt /format:json");
+                Assert.True(refused.ExitCode != 0, refused.Stderr + refused.Stdout);
+                Assert.Contains("TF400022", refused.Stdout + refused.Stderr);
+                Run($"undo {file} /noprompt");
+
+                // checkout with a checkin lock on the committed file, visible on the server, then undone.
+                var checkout = Run($"checkout {file} /lock:checkin /noprompt /format:json");
                 Assert.True(checkout.ExitCode == 0, checkout.Stderr + checkout.Stdout);
                 var server = ((JArray)Data(Run($"properties {file} /format:json"))["items"]!).Single()["server"]!;
-                Assert.Equal("checkout", (string?)server["lock"]);
+                Assert.Equal("checkin", (string?)server["lock"]);
                 var undo = Run($"undo {file} /noprompt /format:json");
                 Assert.True(undo.ExitCode == 0, undo.Stderr + undo.Stdout);
                 Assert.Equal("none", (string?)((JArray)Data(Run($"properties {file} /format:json"))["items"]!).Single()["server"]!["lock"]);

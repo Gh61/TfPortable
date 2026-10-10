@@ -389,7 +389,7 @@ tf vc shelve /delete shelvesetname[;owner] [/login:u,[p]] [/collection:url]
 tf vc shelvesets [/owner:name] [/format:(brief|detailed|xml)] [/collection:url] [/login:u,[p]] shelvesetname
 ```
 
-`/owner:` and `/format:brief|detailed` ✓ (the default owner is the authenticated user, `*` everyone); `/format:xml` ✗. A named
+`/owner:` and `/format:brief|detailed` ✓ (the default owner is the authenticated user, `*` everyone); `/format:xml` ✗ TFP0006. A named
 shelveset that does not exist is TFP0301 (exit 100, as tf.exe); an empty list without a name prints `No shelvesets found.` (exit 0).
 
 <a id="cmd-unshelve"></a>

@@ -60,7 +60,7 @@ namespace TfPortable.Tests
             Assert.StartsWith("ERROR TFP0002: /user and /group need /allow:, /deny: or /remove:.", Run("permission", "/inherit:no", "/user:x", "$/a").Err);
             Assert.StartsWith("ERROR TFP0002: /template and /location apply to workspace /new only.", Run("workspace", "Ws", "/template:Other").Err);
             Assert.StartsWith("ERROR TFP0002: /allow:Bogus is not a permission name.", Run("permission", "/allow:Bogus", "/user:x", "$/a").Err);
-            Assert.StartsWith("ERROR TFP0006: Switch '/global' of command 'permission' is not supported by tfp yet: it collection-level permissions", Run("permission", "/global", "$/a").Err);
+            Assert.StartsWith("ERROR TFP0006: Switch '/global' of command 'permission' is not supported by tfp yet: it manages collection-level permissions", Run("permission", "/global", "$/a").Err);
             Assert.StartsWith("ERROR TFP0002: workspace /new needs the workspace name.", Run("workspace", "/new").Err);
             Assert.StartsWith("ERROR TFP0002: workspace /delete needs the workspace name.", Run("workspace", "/delete").Err);
             Assert.StartsWith("ERROR TFP0006: Switch '/newowner' of command 'workspace' is not supported by tfp yet: it hands a workspace to another user", Run("workspace", "Ws", "/newowner:x").Err);

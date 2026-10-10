@@ -148,7 +148,7 @@ namespace TfPortable.Cli
                     if (switchSpec.Unsupported != null && spec != null && spec.Status == CommandStatus.Implemented)
                     {
                         throw new TfpException(ErrorCodes.SwitchNotSupported, ExitCodes.GeneralError,
-                            $"Switch '/{switchSpec.Name}' of command '{spec.Name}' is not supported by {toolName} yet: it {switchSpec.Unsupported}.",
+                            $"Switch '/{switchSpec.Name}' of command '{spec.Name}' is not supported by {toolName} yet: {switchSpec.Unsupported}.",
                             $"Use Visual Studio or the original tf.exe for it; '{toolName} help {spec.Name}' lists the supported switches.");
                     }
 
