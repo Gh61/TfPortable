@@ -610,7 +610,10 @@ namespace TfPortable.Context
                 }
             }
 
-            return new ChangesetInfo(cs.ChangesetId, cs.OwnerDisplayName ?? cs.Owner, cs.Owner, cs.CreationDate, cs.Comment, changes, workItems);
+            var notes = includeChanges
+                ? (cs.CheckinNote?.Values ?? Array.Empty<CheckinNoteFieldValue>()).Where(n => !string.IsNullOrEmpty(n.Value)).Select(n => new KeyValuePair<string, string>(n.Name, n.Value)).ToList()
+                : null;
+            return new ChangesetInfo(cs.ChangesetId, cs.OwnerDisplayName ?? cs.Owner, cs.Owner, cs.CreationDate, cs.Comment, changes, workItems, notes);
         }
 
         internal static ItemInfo ToItem(Item item) =>
@@ -850,39 +853,39 @@ namespace TfPortable.Context
                 return new PendingChangeSet(pending.Select(p => ToPendingChange(p, false)).ToList(), detected);
             }
 
-            public PendResult PendAdd(IReadOnlyList<string> localPaths, bool recursive, string? encoding, bool applyIgnore)
+            public PendResult PendAdd(IReadOnlyList<string> localPaths, bool recursive, string? encoding, bool applyIgnore, LockLevel lockLevel)
             {
                 using var collector = new EventCollector(Vcs);
-                int count = workspace.PendAdd(localPaths.ToArray(), recursive, FileType(encoding), LockLevel.None, false, false, applyIgnore);
+                int count = workspace.PendAdd(localPaths.ToArray(), recursive, FileType(encoding), lockLevel, false, false, applyIgnore);
                 return collector.ToPendResult(count);
             }
 
-            public PendResult PendEdit(IReadOnlyList<string> paths, RecursionType recursion, string? encoding)
+            public PendResult PendEdit(IReadOnlyList<string> paths, RecursionType recursion, string? encoding, LockLevel lockLevel)
             {
                 using var collector = new EventCollector(Vcs);
-                int count = workspace.PendEdit(paths.ToArray(), recursion, FileType(encoding), LockLevel.None, false);
+                int count = workspace.PendEdit(paths.ToArray(), recursion, FileType(encoding), lockLevel, false);
                 return collector.ToPendResult(count);
             }
 
-            public PendResult PendDelete(IReadOnlyList<string> paths, RecursionType recursion)
+            public PendResult PendDelete(IReadOnlyList<string> paths, RecursionType recursion, LockLevel lockLevel)
             {
                 using var collector = new EventCollector(Vcs);
-                int count = workspace.PendDelete(paths.ToArray(), recursion, LockLevel.None, true, false);
+                int count = workspace.PendDelete(paths.ToArray(), recursion, lockLevel, true, false);
                 return collector.ToPendResult(count);
             }
 
-            public PendResult PendPropertyChange(IReadOnlyList<string> paths, IReadOnlyList<KeyValuePair<string?, object?>> properties, RecursionType recursion, bool silent)
+            public PendResult PendPropertyChange(IReadOnlyList<string> paths, IReadOnlyList<KeyValuePair<string?, object?>> properties, RecursionType recursion, bool silent, LockLevel lockLevel)
             {
                 using var collector = new EventCollector(Vcs);
                 var values = properties.Select(p => new Microsoft.TeamFoundation.Framework.Client.PropertyValue(p.Key, p.Value)).ToArray();
-                int count = workspace.PendPropertyChange(paths.ToArray(), values, recursion, LockLevel.None, silent ? PendChangesOptions.Silent : PendChangesOptions.None, null, null);
+                int count = workspace.PendPropertyChange(paths.ToArray(), values, recursion, lockLevel, silent ? PendChangesOptions.Silent : PendChangesOptions.None, null, null);
                 return collector.ToPendResult(count);
             }
 
-            public PendResult PendRename(string oldPath, string newPath)
+            public PendResult PendRename(string oldPath, string newPath, LockLevel lockLevel)
             {
                 using var collector = new EventCollector(Vcs);
-                int count = workspace.PendRename(oldPath, newPath, LockLevel.None, true, true, false);
+                int count = workspace.PendRename(oldPath, newPath, lockLevel, true, true, false);
                 return collector.ToPendResult(count);
             }
 
@@ -1023,23 +1026,28 @@ namespace TfPortable.Context
 
             private static string? FileType(string? encoding) => string.IsNullOrWhiteSpace(encoding) ? null : encoding!.Trim();
 
-            public CheckinEvaluation EvaluateCheckin(IReadOnlyList<PendingChangeInfo> changes, string comment, IReadOnlyList<PolicyResultInfo> policies)
+            /// <summary>The checkin notes of `/notes:` as the library wants them; null when none were given.</summary>
+            private static CheckinNote? ToCheckinNote(IReadOnlyList<KeyValuePair<string, string>>? notes) =>
+                notes == null || notes.Count == 0 ? null : new CheckinNote(notes.Select(n => new CheckinNoteFieldValue(n.Key, n.Value)).ToArray());
+
+            public CheckinEvaluation EvaluateCheckin(IReadOnlyList<PendingChangeInfo> changes, string comment, IReadOnlyList<PolicyResultInfo> policies, IReadOnlyList<KeyValuePair<string, string>>? notes)
             {
                 // Policies are left out: the library would load them from the registry of a Visual Studio installation,
                 // which a single tfp.exe does not have. tfp evaluates the policies it knows itself (CheckinPolicies).
                 var pending = Handles(changes);
-                CheckinEvaluationResult result = workspace.EvaluateCheckin2(CheckinEvaluationOptions.Conflicts | CheckinEvaluationOptions.Notes, pending, comment, null, null);
+                CheckinEvaluationResult result = workspace.EvaluateCheckin2(CheckinEvaluationOptions.Conflicts | CheckinEvaluationOptions.Notes, pending, comment, ToCheckinNote(notes), null);
                 var conflicts = (result.Conflicts ?? Array.Empty<CheckinConflict>()).Select(c => new CheckinConflictInfo(c.ServerItem, c.Message, c.Resolvable)).ToList();
-                var notes = (result.NoteFailures ?? Array.Empty<CheckinNoteFailure>()).Select(n => n.Message).ToList();
-                return new CheckinEvaluation(conflicts, notes, policies);
+                var noteFailures = (result.NoteFailures ?? Array.Empty<CheckinNoteFailure>()).Select(n => n.Message).ToList();
+                return new CheckinEvaluation(conflicts, noteFailures, policies);
             }
 
-            public int CheckIn(IReadOnlyList<PendingChangeInfo> changes, string comment, string? author, string? overrideReason, IReadOnlyList<string> overriddenFailures, bool noAutoResolve, bool allowUnchangedContent)
+            public int CheckIn(IReadOnlyList<PendingChangeInfo> changes, string comment, string? author, string? overrideReason, IReadOnlyList<string> overriddenFailures, bool noAutoResolve, bool allowUnchangedContent, IReadOnlyList<KeyValuePair<string, string>>? notes)
             {
                 var parameters = new WorkspaceCheckInParameters(Handles(changes), comment)
                 {
                     NoAutoResolve = noAutoResolve,
                     AllowUnchangedContent = allowUnchangedContent,
+                    CheckinNotes = ToCheckinNote(notes),
                 };
                 if (!string.IsNullOrEmpty(author))
                 {
@@ -1094,7 +1102,7 @@ namespace TfPortable.Context
                 return new PendResult(changes, collector.Failures, count);
             }
 
-            public MergeResult Merge(ItemQuery source, string targetPath, VersionSpec? versionFrom, VersionSpec? versionTo, MergeFlags flags)
+            public MergeResult Merge(ItemQuery source, string targetPath, VersionSpec? versionFrom, VersionSpec? versionTo, MergeFlags flags, LockLevel lockLevel)
             {
                 var options = MergeOptionsEx.None;
                 if (flags.HasFlag(MergeFlags.Force)) { options |= MergeOptionsEx.ForceMerge; }
@@ -1106,7 +1114,7 @@ namespace TfPortable.Context
                 if (flags.HasFlag(MergeFlags.Conservative)) { options |= MergeOptionsEx.Conservative; }
 
                 using var collector = new EventCollector(Vcs);
-                GetStatus status = workspace.Merge(ToItemSpec(source), targetPath, versionFrom, versionTo, LockLevel.None, options);
+                GetStatus status = workspace.Merge(ToItemSpec(source), targetPath, versionFrom, versionTo, lockLevel, options);
                 var result = ToMergeResult(status, collector, new[] { targetPath }, source.Recursion != RecursionType.None);
                 if (flags.HasFlag(MergeFlags.Discard) && result.Changes.Count == 0)
                 {
@@ -1121,10 +1129,10 @@ namespace TfPortable.Context
                 return result;
             }
 
-            public PendResult PendBranch(string sourcePath, string targetPath, VersionSpec version, bool updateDisk, bool silent)
+            public PendResult PendBranch(string sourcePath, string targetPath, VersionSpec version, bool updateDisk, bool silent, LockLevel lockLevel)
             {
                 using var collector = new EventCollector(Vcs);
-                int count = workspace.PendBranch(sourcePath, targetPath, version, LockLevel.None, updateDisk, true, silent);
+                int count = workspace.PendBranch(sourcePath, targetPath, version, lockLevel, updateDisk, true, silent);
                 if (silent && collector.Changes.Count == 0 && count > 0)
                 {
                     // The silent form raises no events; the pending branch exists all the same (golden `branch/silent`).
@@ -1138,14 +1146,14 @@ namespace TfPortable.Context
                 return collector.ToPendResult(count);
             }
 
-            public PendResult PendUndelete(IReadOnlyList<ItemQuery> items, bool updateDisk)
+            public PendResult PendUndelete(IReadOnlyList<ItemQuery> items, bool updateDisk, LockLevel lockLevel)
             {
                 using var collector = new EventCollector(Vcs);
-                int count = workspace.PendUndelete(items.Select(ToItemSpec).ToArray(), LockLevel.None, updateDisk, true);
+                int count = workspace.PendUndelete(items.Select(ToItemSpec).ToArray(), lockLevel, updateDisk, true);
                 return collector.ToPendResult(count);
             }
 
-            public MergeResult Rollback(IReadOnlyList<ItemQuery>? items, VersionSpec? itemVersion, VersionSpec? versionFrom, VersionSpec versionTo, bool toVersion, bool keepMergeHistory, bool noAutoResolve)
+            public MergeResult Rollback(IReadOnlyList<ItemQuery>? items, VersionSpec? itemVersion, VersionSpec? versionFrom, VersionSpec versionTo, bool toVersion, bool keepMergeHistory, bool noAutoResolve, LockLevel lockLevel)
             {
                 var options = RollbackOptions.None;
                 if (toVersion) { options |= RollbackOptions.ToVersion; }
@@ -1162,12 +1170,12 @@ namespace TfPortable.Context
                     // Without items the library's workspace-wide overload pends nothing on a local workspace:
                     // the mapped folders of the workspace, recursively, are the scope instead (as `rollback /changeset:C85` of tf.exe).
                     var roots = workspace.Folders.Where(f => !f.IsCloaked).Select(f => f.ServerItem).ToArray();
-                    status = workspace.Rollback(roots, RecursionType.Full, null, versionFrom, versionTo, LockLevel.None, options, null);
+                    status = workspace.Rollback(roots, RecursionType.Full, null, versionFrom, versionTo, lockLevel, options, null);
                 }
                 else
                 {
                     var recursion = items.Max(i => i.Recursion);
-                    status = workspace.Rollback(items.Select(i => i.Path).ToArray(), recursion, itemVersion, versionFrom, versionTo, LockLevel.None, options, null);
+                    status = workspace.Rollback(items.Select(i => i.Path).ToArray(), recursion, itemVersion, versionFrom, versionTo, lockLevel, options, null);
                 }
 
                 return ToMergeResult(status, collector, items?.Select(i => i.Path).ToArray(), items != null && items.Any(i => i.Recursion != RecursionType.None));

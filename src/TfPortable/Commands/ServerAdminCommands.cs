@@ -116,11 +116,6 @@ namespace TfPortable.Commands
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            if (commandLine.Has("global"))
-            {
-                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "/global (collection-level permissions) is not supported.", "Manage global permissions in the web portal; item permissions work without /global.");
-            }
-
             var allow = Permissions(commandLine, "allow", toolName);
             var deny = Permissions(commandLine, "deny", toolName);
             var remove = Permissions(commandLine, "remove", toolName);
@@ -229,12 +224,14 @@ namespace TfPortable.Commands
                 done.Add(part.ToJson());
             }
 
+            // tf.exe exits 100 when the server applied nothing at all (an empty result); a partial result stays exit 1 through the item errors.
+            int exit = done.Count == 0 && skipped.Count > 0 ? ExitCodes.GeneralError : ExitCodes.Success;
             output.Success(new JObject
             {
                 ["changes"] = done,
                 ["skipped"] = skipped,
-            });
-            return ExitCodes.Success;
+            }, exit);
+            return exit;
         }
 
         /// <summary>`*` or a comma-separated list of permission names (case-insensitive, canonical spelling in the result); an unknown name is TFP0002.</summary>
@@ -319,11 +316,6 @@ namespace TfPortable.Commands
             if (!commandLine.Has("new") && (commandLine.Has("template") || commandLine.Has("location")))
             {
                 throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "/template and /location apply to workspace /new only.", $"Example: '{toolName} workspace /new MyWs /template:Other'.");
-            }
-
-            if (commandLine.Has("newowner"))
-            {
-                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "/newowner is not supported.", "Change the owner in Visual Studio or with the original tf.exe.");
             }
 
             string? permission = Permission(commandLine, toolName);
@@ -508,7 +500,7 @@ namespace TfPortable.Commands
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            WorkspaceCommandSupport.RejectServerLocks(commandLine);
+            var lockLevel = WorkspaceCommandSupport.LockLevelOf(commandLine);
             var items = WorkspaceCommandSupport.Items(commandLine, toolName, false, "property Main\\src\\App.cs");
             bool set = commandLine.Has("setvalues");
             bool delete = commandLine.Has("deletevalues");
@@ -543,7 +535,7 @@ namespace TfPortable.Commands
                 var workspace = context.RequireWorkspace(toolName);
                 var paths = WorkspaceCommandSupport.LocalPaths(items, context, toolName);
                 var recursion = commandLine.Has("recursive") ? RecursionType.Full : RecursionType.None;
-                var result = workspace.PendPropertyChange(paths, properties, recursion, commandLine.Has("silent"));
+                var result = workspace.PendPropertyChange(paths, properties, recursion, commandLine.Has("silent"), lockLevel);
                 output.Lines(WorkspaceCommandSupport.GroupedByFolder(result.Changes, WorkspaceCommandSupport.NameOf));
                 var skipped = WorkspaceCommandSupport.ReportFailures(output, result.Failures, toolName);
                 output.Success(WorkspaceCommandSupport.ChangesJson(result.Changes, skipped));

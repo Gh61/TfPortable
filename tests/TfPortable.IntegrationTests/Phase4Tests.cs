@@ -254,8 +254,10 @@ namespace TfPortable.IntegrationTests
                     var denied = ((JArray)JObject.Parse(allow.Stdout)["errors"]!).FirstOrDefault(e => (string?)e["tfCode"] == "TF14098");
                     if (denied != null)
                     {
-                        // The CI user has no AdminProjectRights on the test project (a server setting, docs/DEVELOPER-TODO.md): the refusal must be reported per item.
-                        Assert.Equal(1, allow.ExitCode);
+                        // The CI user has no AdminProjectRights on the test project (a server setting, docs/DEVELOPER-TODO.md §7): the refusal must be
+                        // reported per item, and nothing applied is exit 100 as tf.exe (question 35).
+                        Assert.Equal(100, allow.ExitCode);
+                        Assert.False((bool)JObject.Parse(allow.Stdout)["ok"]!);
                         Assert.Equal("TFP0501", (string)denied["code"]!);
                         Assert.Equal(serverPath, (string)denied["item"]!);
                         Assert.Single((JArray)Data(allow)["skipped"]!);
@@ -349,7 +351,8 @@ namespace TfPortable.IntegrationTests
                     Assert.Equal(100, otherArguments.ExitCode);
                     Assert.Contains("TFP0410", otherArguments.Stderr);
 
-                    var real = Run($"destroy {serverPath}/gone.txt /noprompt /format:json");
+                    // /startcleanup is passed to the server as tf.exe does: whether Azure DevOps Services accepts it is what this run shows.
+                    var real = Run($"destroy {serverPath}/gone.txt /startcleanup /noprompt /format:json");
                     if (real.ExitCode != 0 && (real.Stderr + real.Stdout).IndexOf("permission", StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         // The CI identity lacks AdminProjectRights on the test project: the gate and the marker were exercised, the destroy itself cannot be.
@@ -396,6 +399,70 @@ namespace TfPortable.IntegrationTests
             using (ProtectionLevelScope.Set(3))
             {
                 Run($"shelve /delete {name} /noprompt");
+            }
+        }
+
+        [IntegrationFact]
+        public void Pend_commands_take_a_server_lock_and_checkin_records_the_notes()
+        {
+            fixture.EnsureReady();
+            string folder = CiFolder("lock2");
+            string argument = CiArgument("lock2");
+            string file = argument + "\\locked.txt";
+            bool committed = false;
+            try
+            {
+                Directory.CreateDirectory(folder);
+                File.WriteAllText(Path.Combine(folder, "locked.txt"), "locked\r\n");
+                // add with a checkin lock: the pending change carries the lock, as tf.exe `add /lock:checkin`.
+                var add = Run($"add {file} /lock:checkin /noprompt /format:json");
+                Assert.True(add.ExitCode == 0, add.Stderr + add.Stdout);
+                var pending = ((JArray)Data(Run($"status {file} /nodetect /format:json"))["changes"]!).Single();
+                Assert.Equal("checkin", (string?)pending["lock"]);
+
+                var checkin = Run($"checkin {file} /comment:\"CI lock and notes ({RunId})\" /notes:\"Code Reviewer=CI run {RunId};Security Reviewer=none\" /associate:1 /override:\"CI notes\" /noprompt /format:json");
+                committed = true;
+                Assert.True(checkin.ExitCode == 0, checkin.Stderr + checkin.Stdout);
+                int changeset = (int)Data(checkin)["changeset"]!;
+                var shown = Run($"changeset {changeset} /format:json");
+                Assert.True(shown.ExitCode == 0, shown.Stderr + shown.Stdout);
+                var notes = (JObject)Data(shown)["changeset"]!["notes"]!;
+                Assert.Equal($"CI run {RunId}", (string?)notes["Code Reviewer"]);
+                Assert.Equal("none", (string?)notes["Security Reviewer"]);
+                var text = Run($"changeset {changeset}");
+                Assert.Contains("Check-in Notes:", text.Stdout);
+                Assert.Contains($"  Code Reviewer: CI run {RunId}", text.Stdout);
+
+                // A checkout lock is refused by the server in a local workspace (TF400022, golden lock/checkout-lock): the pend fails as an item error.
+                var refused = Run($"checkout {file} /lock:checkout /noprompt /format:json");
+                Assert.True(refused.ExitCode != 0, refused.Stderr + refused.Stdout);
+                Assert.Contains("TF400022", refused.Stdout + refused.Stderr);
+                Run($"undo {file} /noprompt");
+
+                // checkout with a checkin lock on the committed file, visible on the server, then undone.
+                var checkout = Run($"checkout {file} /lock:checkin /noprompt /format:json");
+                Assert.True(checkout.ExitCode == 0, checkout.Stderr + checkout.Stdout);
+                var server = ((JArray)Data(Run($"properties {file} /format:json"))["items"]!).Single()["server"]!;
+                Assert.Equal("checkin", (string?)server["lock"]);
+                var undo = Run($"undo {file} /noprompt /format:json");
+                Assert.True(undo.ExitCode == 0, undo.Stderr + undo.Stdout);
+                Assert.Equal("none", (string?)((JArray)Data(Run($"properties {file} /format:json"))["items"]!).Single()["server"]!["lock"]);
+            }
+            finally
+            {
+                Run($"undo {argument} /recursive /noprompt");
+                if (committed)
+                {
+                    Run($"get {argument} /recursive /noprompt");
+                    Run($"delete {argument} /recursive /noprompt");
+                    var cleanup = Run($"checkin {argument} /recursive /comment:\"CI cleanup ({RunId})\" /override:\"CI cleanup\" /noprompt");
+                    if (cleanup.ExitCode != 0)
+                    {
+                        Run($"undo {argument} /recursive /noprompt");
+                    }
+                }
+
+                DeleteScratch(folder);
             }
         }
 

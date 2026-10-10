@@ -106,7 +106,7 @@ namespace TfPortable.Commands
             return notes;
         }
 
-        /// <summary>`Changeset: N`, `User:`, `Date:`, blank, `Comment:` + indented text, blank, `Items:` + aligned change types, `Work items:` when present.</summary>
+        /// <summary>`Changeset: N`, `User:`, `Date:`, blank, `Comment:` + indented text, blank, `Items:` + aligned change types, `Work items:` and `Check-in Notes:` when present.</summary>
         internal static IEnumerable<string> RenderBlock(ChangesetInfo cs)
         {
             yield return $"Changeset: {cs.Id}";
@@ -141,6 +141,17 @@ namespace TfPortable.Commands
                 foreach (var workItem in cs.WorkItems)
                 {
                     yield return $"  {workItem.Id} {workItem.Title}";
+                }
+            }
+
+            if (cs.Notes.Count > 0)
+            {
+                // tf.exe prints the notes of a changeset as `Check-in Notes:` with one `Name: text` line each.
+                yield return string.Empty;
+                yield return "Check-in Notes:";
+                foreach (var note in cs.Notes)
+                {
+                    yield return $"  {note.Key}: {note.Value}";
                 }
             }
         }

@@ -30,12 +30,13 @@ Answered on 2026-10-10 from tf.exe 18.10.12215.6 (the numbers are kept so that o
     tf.exe makes no client-side check (`undo.md`); only a capture with a second account can show the text.
 
 35. `permission` change that the server applies nowhere (every part refused): tf.exe exits 100 because the
-    result list is empty (`permission.md`); tfp reports per-part item errors (exit 1). Which exit code tfp
-    returns when nothing was applied is untested because the CI user cannot change permissions
-    (`docs/DEVELOPER-TODO.md` §6).
+    result list is empty (`permission.md`). Decided on 2026-10-10: tfp exits 100 too when nothing was applied,
+    a partial result stays exit 1 through the item errors. Still untested in CI until the CI user may change
+    permissions (`docs/DEVELOPER-TODO.md` §7).
 
-36. `destroy /startcleanup` on Azure DevOps Services: tf.exe only forwards the flag (`destroy.md`); whether the
-    service accepts it is uncaptured.
+36. `destroy /startcleanup` on Azure DevOps Services: tf.exe only forwards the flag (`destroy.md`). Answered on
+    2026-10-10: the service accepts it (CI run 167, the destroy integration test passes the flag on every run;
+    `docs/compat.md` §22).
 
 ## New facts that need a decision (see PROGRESS.md "Needs the user")
 

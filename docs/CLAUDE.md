@@ -46,6 +46,11 @@ Setup (once, by a person):
   list the aliases (`stat`, `hist`, `lv`, `co`, `del`, ...), so an alias asks for confirmation.
 - Before `tfp get`, `tfp undo` and `tfp reconcile` run the `-preview` variant first when the
   command has one.
+- Do not pass `-lock:checkin` or `-lock:checkout` to `add`, `checkout`, `delete`, `rename` and the
+  branching commands unless the task asks for a lock: a lock blocks other people on the server until the
+  checkin or `undo`.
+- `TFP0006` means a tf.exe switch TfPortable does not support yet; the message says what it does. Do not
+  retry with another spelling; report it.
 - `tfp history` returns at most 256 changesets without `-stopafter:<n>`; the output says how to
   continue. `tfp history ... -comment:<text>`, `-changetype:<types>` and `-workitem:<id>` search.
 - `tfp changeset <n> -diff` shows what a checkin changed as a unified diff.

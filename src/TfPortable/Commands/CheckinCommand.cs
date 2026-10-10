@@ -29,6 +29,7 @@ namespace TfPortable.Commands
 
             string comment = CommentText.Required(commandLine, toolName, "checkin Main\\src /recursive /comment:\"Fix the parser\"");
             var workItems = WorkItemIds(commandLine, toolName);
+            var notes = ChangesetCommand.Notes(commandLine, toolName);
             bool validate = commandLine.Has("validate");
             string? overrideReason = commandLine.Value("override");
             if (overrideReason != null && overrideReason.StartsWith("@", StringComparison.Ordinal))
@@ -53,7 +54,7 @@ namespace TfPortable.Commands
             }
 
             var policies = CheckinPolicies.Evaluate(context.Client.GetCheckinPolicies(changes.Select(c => c.ServerPath).Distinct().ToList()), comment, workItems);
-            var evaluation = workspace.EvaluateCheckin(changes, comment, policies);
+            var evaluation = workspace.EvaluateCheckin(changes, comment, policies, notes);
             output.Lines(WorkspaceCommandSupport.GroupedByFolder(changes, c => $"{(validate ? "Validating" : "Checking in")} {c.ChangeText}: {WorkspaceCommandSupport.NameOf(c)}"));
 
             // Every conflict and policy failure is an item error (stderr in text mode, `errors[]` in JSON) before the summary.
@@ -116,7 +117,7 @@ namespace TfPortable.Commands
                     $"Fix them, or run '{toolName} checkin ... /override:<reason>' to record why they are bypassed.");
             }
 
-            int changeset = workspace.CheckIn(changes, comment, commandLine.Value("author"), overridden ? overrideReason : null, failures, commandLine.Has("noautoresolve"), commandLine.Has("force"));
+            int changeset = workspace.CheckIn(changes, comment, commandLine.Value("author"), overridden ? overrideReason : null, failures, commandLine.Has("noautoresolve"), commandLine.Has("force"), notes);
             if (changeset <= 0)
             {
                 // tf.exe exits 1 here and the server drops the unchanged edit (golden checkin/unchanged-edit). An item error, not a
@@ -155,9 +156,9 @@ namespace TfPortable.Commands
         /// <summary>`checkin /shelveset:name[;owner]`: the shelveset becomes a changeset with the shelveset's comment; the server deletes it (phase 4).</summary>
         private static int CheckInShelveset(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            if (commandLine.Positionals.Count > 0 || commandLine.Has("comment") || commandLine.Has("validate") || commandLine.Has("override"))
+            if (commandLine.Positionals.Count > 0 || commandLine.Has("comment") || commandLine.Has("validate") || commandLine.Has("override") || commandLine.Has("notes"))
             {
-                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "checkin /shelveset takes no itemspec, /comment, /validate or /override: the shelveset is checked in as it is.",
+                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "checkin /shelveset takes no itemspec, /comment, /notes, /validate or /override: the shelveset is checked in as it is.",
                     $"Example: '{toolName} checkin /shelveset:MyWork'.");
             }
 

@@ -71,14 +71,14 @@ namespace TfPortable.Commands
             {
                 if (adds.Count > 0)
                 {
-                    var result = workspace.PendAdd(adds, false, null, !commandLine.Has("noignore"));
+                    var result = workspace.PendAdd(adds, false, null, !commandLine.Has("noignore"), LockLevel.None);
                     promoted.AddRange(result.Changes);
                     failures.AddRange(result.Failures);
                 }
 
                 if (deletes.Count > 0)
                 {
-                    var result = workspace.PendDelete(deletes, RecursionType.None);
+                    var result = workspace.PendDelete(deletes, RecursionType.None, LockLevel.None);
                     promoted.AddRange(result.Changes);
                     failures.AddRange(result.Failures);
                 }

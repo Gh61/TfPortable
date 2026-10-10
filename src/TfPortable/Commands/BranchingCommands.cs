@@ -21,7 +21,7 @@ namespace TfPortable.Commands
         /// <summary>`tfp merge source destination [/recursive] [/version:v[~v]] [/preview] [/force] [/baseless] [/discard] [/noautoresolve] [/noimplicitbaseless] [/conservative]`.</summary>
         public static int Merge(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            WorkspaceCommandSupport.RejectServerLocks(commandLine);
+            var lockLevel = WorkspaceCommandSupport.LockLevelOf(commandLine);
             using var context = ContextResolver.Resolve(commandLine, output, toolName, requireWorkspace: true);
             var workspace = context.RequireWorkspace(toolName);
             var summary = context.Workspace?.Summary;
@@ -51,7 +51,7 @@ namespace TfPortable.Commands
             if (preview) { flags |= MergeFlags.Preview; }
 
             // The preview is the server's own (the NoMerge option): the same operations a merge would pend, nothing pended.
-            var result = workspace.Merge(new ItemQuery(source, recursion), target, from, to, flags);
+            var result = workspace.Merge(new ItemQuery(source, recursion), target, from, to, flags, lockLevel);
             ReportMergeResult(output, result, "There are no changes to merge.", toolName, preview);
             output.Success(new JObject
             {
@@ -127,7 +127,7 @@ namespace TfPortable.Commands
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            WorkspaceCommandSupport.RejectServerLocks(commandLine);
+            var lockLevel = WorkspaceCommandSupport.LockLevelOf(commandLine);
             if (commandLine.Positionals.Count != 2)
             {
                 throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "branch needs the source item and the new item.", $"Example: '{toolName} branch $/Project/Main $/Project/Feature-x'.");
@@ -141,7 +141,7 @@ namespace TfPortable.Commands
             string? versionText = commandLine.Value("version");
             VersionSpec version = source.Version ?? (versionText == null ? VersionSpec.Latest : VersionSpecParser.ParseSingle(versionText, summary?.Name, summary?.Owner));
 
-            var result = workspace.PendBranch(context.ServerPathOf(source, toolName), target.Path, version, !commandLine.Has("noget"), commandLine.Has("silent"));
+            var result = workspace.PendBranch(context.ServerPathOf(source, toolName), target.Path, version, !commandLine.Has("noget"), commandLine.Has("silent"), lockLevel);
             output.Line(target.Path);
             output.Line();
             output.Lines(WorkspaceCommandSupport.GroupedByFolder(result.Changes, WorkspaceCommandSupport.NameOf));
@@ -161,13 +161,13 @@ namespace TfPortable.Commands
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            WorkspaceCommandSupport.RejectServerLocks(commandLine);
+            var lockLevel = WorkspaceCommandSupport.LockLevelOf(commandLine);
             var items = WorkspaceCommandSupport.Items(commandLine, toolName, false, "undelete $/Project/Main/old.txt;X12");
             using var context = ContextResolver.Resolve(commandLine, output, toolName, requireWorkspace: true);
             var workspace = context.RequireWorkspace(toolName);
             var recursion = commandLine.Has("recursive") ? RecursionType.Full : RecursionType.None;
 
-            var result = workspace.PendUndelete(items.Select(i => new ItemQuery(i.Path, recursion, i.DeletionId)).ToList(), !commandLine.Has("noget"));
+            var result = workspace.PendUndelete(items.Select(i => new ItemQuery(i.Path, recursion, i.DeletionId)).ToList(), !commandLine.Has("noget"), lockLevel);
             output.Lines(WorkspaceCommandSupport.GroupedByFolder(result.Changes, WorkspaceCommandSupport.NameOf));
             var skipped = WorkspaceCommandSupport.ReportFailures(output, result.Failures, toolName);
             output.Success(WorkspaceCommandSupport.ChangesJson(result.Changes, skipped));
@@ -185,7 +185,7 @@ namespace TfPortable.Commands
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            WorkspaceCommandSupport.RejectServerLocks(commandLine);
+            var lockLevel = WorkspaceCommandSupport.LockLevelOf(commandLine);
             string? changesetText = commandLine.Value("changeset");
             string? toVersionText = commandLine.Value("toversion");
             if ((changesetText == null) == (toVersionText == null))
@@ -225,7 +225,7 @@ namespace TfPortable.Commands
                 to = range.To;
             }
 
-            var result = workspace.Rollback(queries, itemVersion, from, to, toVersion, commandLine.Has("keepmergehistory"), commandLine.Has("noautoresolve"));
+            var result = workspace.Rollback(queries, itemVersion, from, to, toVersion, commandLine.Has("keepmergehistory"), commandLine.Has("noautoresolve"), lockLevel);
             BranchingCommands.ReportMergeResult(output, result, "There is nothing to roll back.", toolName);
             output.Success(new JObject
             {

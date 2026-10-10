@@ -12,11 +12,11 @@ in SPEC.md and `docs/compat.md`; JSON fields in `docs/json-schema.md`.
 
 The executable form of this table is `src/TfPortable/Cli/CommandCatalog.cs` (milestone 2): `tfp help`,
 `tfp help <command>`, `tfp help /format:json`, the switch validation (TFP0002) and the MSYS
-converted-path detection all derive from it. Keep the two in sync; a switch marked ✗ below is
-simply absent from the catalog (unknown switch), unless its rejection needs a specific message.
+converted-path detection all derive from it. Keep the two in sync; a switch marked ✗ below is in the
+catalog as unsupported, so the parser answers TFP0006 with the reason (a typo stays TFP0002).
 
 Legend: **✓** implemented as in tf.exe · **~** accepted, limited or no-op (see note) ·
-**✗** rejected with TFP0002 (not needed, or would write to the server) · **+** TfPortable extension.
+**✗** not supported yet, TFP0006 with the reason (decision of 2026-10-10; ask for it when you need it) · **+** TfPortable extension.
 The error codes a command can return are described in [errors.md](errors.md).
 
 ## Phase 1
@@ -33,7 +33,7 @@ tf vc status [itemspec] [/collection:url] [/login:u,[p]]
 | Switch | TfPortable |
 | --- | --- |
 | `/format:brief` `/format:detailed` | ✓ |
-| `/format:xml` | ✗ (use `/format:json`) |
+| `/format:xml` | ✗ TFP0006 (use `/format:json`) |
 | `/recursive`, `/nodetect`, `/user:`, `/shelveset:`, `/workspace:` | ✓ (`/user` prints the original's warning about local workspaces) |
 
 <a id="cmd-add"></a>
@@ -47,7 +47,7 @@ tf vc add [itemspec] [/lock:(none|checkin|checkout)] [/encoding:filetype]
 | Switch | TfPortable |
 | --- | --- |
 | `/recursive`, `/noignore`, `/encoding:` | ✓ (`/encoding`, not `/type` as the SPEC draft said) |
-| `/lock:` | ~ `none` accepted; `checkin`/`checkout` rejected (locks write to the server; checkout locks are not supported in local workspaces anyway, golden `lock/checkout-lock`) |
+| `/lock:` | ✓ `none` (default), `checkin`, `checkout`: the pended item carries the lock on the server, as `lock` does (a checkout lock is not supported in local workspaces by the server, golden `lock/checkout-lock`) |
 
 <a id="cmd-checkout"></a>
 ### checkout (alias `edit`)
@@ -116,7 +116,7 @@ tf vc resolve [itemspec] [/auto:(AutoMerge|AutoMergeForced|TakeTheirs|KeepYours|
 | --- | --- |
 | `/auto:` | ✓ with the help's names; the documentation names `AcceptMerge`, `AcceptYours`, `AcceptTheirs`, `AcceptYoursRenameTheirs` are accepted as aliases (the golden capture used them successfully: `resolve/accept-yours`, `resolve/accept-theirs`). `AutoMergeForced` ✓. Text output prints the server's resolution names (`KeepYours`, `TakeTheirs`), JSON lower-case |
 | `/preview`, `/recursive`, `/newname:` | ✓ |
-| `/overridetype:`, `/converttotype:`, `/properties:` | ✗ (encoding and property conflicts; add on demand) |
+| `/overridetype:`, `/converttotype:`, `/properties:` | ✗ TFP0006 (encoding and property conflicts do not arise in practice; add on demand) |
 
 <a id="cmd-reconcile"></a>
 ### reconcile
@@ -170,9 +170,9 @@ tf vc workspaces /remove:(*|ws1[,ws2,...]) /collection:(*|url) [/login:u,[p]]
 | Switch | TfPortable |
 | --- | --- |
 | `/owner`, `/computer`, `/format:brief\|detailed`, `workspacename` | ✓ |
-| `/format:xml` | ✗ (use `/format:json`) |
+| `/format:xml` | ✗ TFP0006 (use `/format:json`) |
 | `/remove:` | ✓ (local cache only, as in tf.exe) |
-| `/updateUserName:`, `/updateComputerName:` | ✗ (server writes) |
+| `/updateUserName:`, `/updateComputerName:` | ✗ TFP0006 (server administration after an account or machine rename) |
 
 <a id="cmd-history"></a>
 ### history (`hist` is not in the help; tf.exe accepts it)
@@ -232,10 +232,10 @@ Formats: Brief, Context, Rcs, SS, SS_SideBySide, SS_Unix, Unified, Unix, Visual
 | --- | --- |
 | one itemspec, two itemspecs, `/shelveset:` | ✓ |
 | `/format:unified`, `/format:brief` | ✓ |
-| other formats (`context`, `rcs`, `ss*`, `unix`, `visual`) | ✗ TFP0002 (docs/compat.md §12) |
+| other formats (`context`, `rcs`, `ss*`, `unix`, `visual`) | ✗ TFP0006 (docs/compat.md §12) |
 | `/ignorespace`, `/ignoreeol`, `/ignorecase`, `/recursive` | ✓ |
 | `/encoding:` | ~ accepted (forces the encoding used to read both sides) |
-| `/options`, `/configure` | ✗ (external diff tool configuration) |
+| `/options`, `/configure` | ✗ TFP0006 (external diff tool configuration of Visual Studio) |
 
 <a id="cmd-dir"></a>
 ### dir
@@ -288,7 +288,7 @@ tf vc merge [/recursive] [/force] [/candidate] [/discard] [/version:versionspec]
 | `/candidate` with `/recursive`, `/version:`, `/format:` | ✓ phase 1 |
 | `/force`, `/baseless`, `/discard`, `/noimplicitbaseless`, `/conservative`, `/noautoresolve`, `/recursive`, `/version:from~to` | ✓ phase 2, as pending changes (mapped to the merge options of the client library; a single `/version:C<n>` is the upper bound) |
 | `/preview` | ✓ phase 2 through the server's preview (the `NoMerge` merge option): the operations a merge would pend, in the merge line shape; predicted conflicts are `Conflict (...)` lines as in the original (TFP0403, exit 1) |
-| `/lock:none` | ✓; `/lock:checkin\|checkout` ✗ (server locks) |
+| `/lock:` | ✓ as in `add` (the merged items carry the lock) |
 | `/nosummary` | ~ accepted; tf.exe 18.10 prints no summary either (golden `merge/nosummary` equals `merge/all-run`) |
 | `/format:brief\|detailed` | ~ accepted; the pending merge listing has one shape in tf.exe 18.10 too (golden `merge/detailed`) |
 
@@ -302,7 +302,7 @@ tf vc merges [source] destination [/recursive] [/extended] [/format:(brief|detai
 ```
 
 `/extended` is listed by the help but rejected at run time by tf.exe 18.10 ("option not allowed",
-golden `merges/extended`); TfPortable does not implement it (✗). `/recursive`, `/showall` ✓;
+golden `merges/extended`); TfPortable does not implement it (✗ TFP0006). `/recursive`, `/showall` ✓;
 `/format:brief` is the table Changeset, Merged in Changeset, Author, Date (`*` after a partial merge),
 `/format:detailed` is the list of merged items (`Merged items:`, then `$/src/a.txt;C596 -> $/rel/a.txt;C599`
 per item, golden `merges/detailed`). Without a source every merge into the destination is listed.
@@ -331,7 +331,7 @@ tf vc folderdiff [sourcePath] targetPath [/recursive] [/noprompt] [/collection:u
 | `sourcePath targetPath` (server or local, `;version` on a server path) | ✓ compared by content hash (the server's MD5, computed for local files); the relative path decides which items are compared |
 | `targetPath` alone | ✓ the folder against its counterpart in the workspace: the server folder is the source and the local folder the target (golden `folderdiff/one-path-local`); a server path alone is accepted too (tf.exe 18.10 refuses it with TF206007, `docs/compat.md` §20); TFP0201 outside a workspace |
 | `/recursive`, `/filter:` (`;`-separated patterns, `!` excludes), `/view:` | ✓ (default view: sourceOnly, targetOnly, different); tf.exe 18.10 ignores a `!` exclusion (golden `folderdiff/filter-exclude`), tfp honors it as the Microsoft docs describe |
-| `/filterLocalPathsOnly` | ✗ |
+| `/filterLocalPathsOnly` | ✗ TFP0006 (an edge case of `/filter`) |
 | `/noprompt` | ~ accepted (tfp never opens the dialog) |
 
 ## Phase 3 (the everyday write path; protection level 2, `/delete` level 3)
@@ -355,7 +355,8 @@ tf vc checkin /shelveset:shelvesetname[;shelvesetowner] [/bypass] [/noprompt] [/
 | `/associate:id[,id]` | **+** links the work items to the changeset over the REST work item API after the checkin (the "Fixed in Changeset" link); not a switch of tf.exe 18.10 (golden `checkin/associate`, exit 100) |
 | `/force` | ✓ checks in an edit whose content did not change (`AllowUnchangedContent`); without it the server commits nothing, drops the pending edit and tfp reports TFP0301 with exit 1 (golden `checkin/unchanged-edit`) |
 | `/shelveset:name[;owner]` | ✓ phase 4: the shelveset is checked in as a changeset with its own comment and deleted by the server (`Changeset #<n> checked in.`, `Shelveset <name>;<owner> deleted.`); no itemspec, `/comment`, `/validate` or `/override` with it; `/associate`, `/author`, `/force`, `/noautoresolve` apply |
-| `/notes:`, `/saved`, `/bypass`, `/new` | ✗ |
+| `/notes:` | ✓ `"Name=Value;Name2=Value2"` or `@file` (one `Name=Value` per line): the checkin notes, evaluated against the required notes of the project and stored in the changeset (`changeset <n>` shows them under `Check-in Notes:`, JSON `notes`) |
+| `/saved`, `/bypass`, `/new` | ✗ TFP0006 (a Visual Studio dialog state, the gated-build bypass, the Visual Studio dialog) |
 
 Output: `Checking in <change>: <name>` grouped by folder, then `Changeset #<n> checked in.` Nothing pending is TFP0301 (exit 100).
 Every conflict (TFP0406), failed policy or missing note (TFP0407) and policy tfp cannot evaluate (TFP0409) is an item error,
@@ -379,7 +380,7 @@ tf vc shelve /delete shelvesetname[;owner] [/login:u,[p]] [/collection:url]
 | `/comment:`, `/replace`, `/move`, `/recursive` | ✓ (a shelveset that exists without `/replace` is TFP0408) |
 | `/delete` | ✓ at protection level 3 (prints `Shelveset <name>;<owner> deleted.`; tf.exe is silent) |
 | `/validate` | ✓ phase 4: the checkin policies and notes are evaluated as `checkin /validate` does; a failure is an item error (exit 1) and the shelveset is still created (tf.exe refuses `/validate` with `/noprompt`, phase 4 capture `shelve/validate`) |
-| `/new` | ✗ |
+| `/new` | ✗ TFP0006 (opens the Visual Studio shelve dialog) |
 
 <a id="cmd-shelvesets"></a>
 ### shelvesets
@@ -388,7 +389,7 @@ tf vc shelve /delete shelvesetname[;owner] [/login:u,[p]] [/collection:url]
 tf vc shelvesets [/owner:name] [/format:(brief|detailed|xml)] [/collection:url] [/login:u,[p]] shelvesetname
 ```
 
-`/owner:` and `/format:brief|detailed` ✓ (the default owner is the authenticated user, `*` everyone); `/format:xml` ✗. A named
+`/owner:` and `/format:brief|detailed` ✓ (the default owner is the authenticated user, `*` everyone); `/format:xml` ✗ TFP0006. A named
 shelveset that does not exist is TFP0301 (exit 100, as tf.exe); an empty list without a name prints `No shelvesets found.` (exit 0).
 
 <a id="cmd-unshelve"></a>
@@ -416,7 +417,7 @@ tf vc label /delete labelname[@scope] itemspec [/login:u,[p]] [/collection:url]
 | `labelname[@scope]` | ✓; without a scope the team project of the first item |
 | `/version:`, `/comment:`, `/child:replace\|merge`, `/recursive` | ✓ (default `/child:fail`); without `/version` a local path is labelled at the workspace version, a server path at the latest |
 | `/delete` | ✓ at protection level 3 (takes `labelname@scope` only) |
-| `/owner:` | ✗ (the label belongs to the authenticated user) |
+| `/owner:` | ✗ TFP0006 (the label belongs to the authenticated user) |
 
 <a id="cmd-unlabel"></a>
 ### unlabel
@@ -445,7 +446,7 @@ server's error, not TFP0203).
 tf vc undelete [/noget] [/lock:(none|checkin|checkout)] [/recursive] itemspec[;deletionID] [/login:u,[p]]
 ```
 
-`itemspec[;Xn]`, `/noget`, `/recursive`, `/lock:none` ✓ (grouped listing like `add`); `/lock:checkin|checkout` ✗.
+`itemspec[;Xn]`, `/noget`, `/recursive`, `/lock:` ✓ (grouped listing like `add`; the lock as in `add`).
 An item that is not deleted or does not exist is TFP0301 (exit 1, golden `undelete/not-found`).
 
 <a id="cmd-rollback"></a>
@@ -460,7 +461,7 @@ tf vc rollback /toversion:versionspec itemspec [/recursive] [/lock:...] [/versio
 
 Exactly one of `/changeset:` (a changeset or a range, with or without items) and `/toversion:` (items
 required) ✓; `/recursive`, `/version:` (the version of the items), `/keepmergehistory`, `/noautoresolve`,
-`/lock:none` ✓; `/lock:checkin|checkout` ✗. Lines `edit, rollback: $/a.txt;C85~C85 -> $/a.txt;C87`;
+`/lock:` ✓ as in `add`. Lines `edit, rollback: $/a.txt;C85~C85 -> $/a.txt;C87`;
 conflicts are TFP0403 item errors (exit 1); nothing to do prints `There is nothing to roll back.`.
 
 <a id="cmd-branch"></a>
@@ -473,8 +474,8 @@ tf vc branch olditem newitem [/version:versionspec] [/noget] [/lock:(none|checki
 
 `olditem newitem`, `/version:` (default latest), `/noget`, `/silent`, `/lock:none` ✓ (prints the target
 path and the branched tree grouped like `add`; with `/silent` the server returns no items, so nothing is
-listed or downloaded); `/lock:checkin|checkout` ✗; `/checkin`, `/comment:`,
-`/author:`, `/notes:` ✗ (they check in immediately).
+listed or downloaded); `/lock:` ✓ as in `add`; `/checkin`, `/comment:`,
+`/author:`, `/notes:` ✗ TFP0006 (they check in immediately; TfPortable pends the branch and `checkin` commits it).
 
 ## Phase 4 (server administration; `destroy`, permission changes and workspace changes at protection level 3)
 
@@ -491,7 +492,7 @@ tf vc destroy [/keephistory] itemspec1[;versionspec] [itemspec2...itemspecN] [/s
 | `itemspec[;versionspec\|;Xdeletionid]` | ✓ one server call per item (a local path is mapped through the workspace) |
 | `/preview` | ✓ lists `Would destroy: $/path` per item and records the preview; **the real destroy needs a preview with the same items and switches in the last 10 minutes** (TFP0410 otherwise; one preview covers one destroy). tf.exe prints `Destroyed:` even in a preview |
 | `/keephistory`, `/stopat:` | ✓ passed to the server (`/stopat` without `/keephistory` is TFP0002) |
-| `/startcleanup`, `/silent` | ✓ |
+| `/startcleanup`, `/silent` | ✓ (`/startcleanup` is passed to the server; Azure DevOps Services accepted it, CI run 167 of 2026-10-10) |
 
 Output: `Destroyed: $/path` per item. A missing item is TFP0301 (exit 100, as tf.exe VS403405). Protection level 3.
 The library's query of the pending and shelved changes a destroy touches (`AffectedChanges`) is not used: it empties
@@ -509,10 +510,10 @@ tf vc permission [/allow:(* |perm1[,perm2,...]] [/deny:(* |perm1[,perm2,...])] [
 | Switch | TfPortable |
 | --- | --- |
 | `itemspec ...`, `/recursive` (listing) | ✓ protection level 1; the `====` block per item with `Server item: $/path (Inherit: Yes)` and, per identity, `Allow`, `Deny`, `Allow (inherited)`, `Deny (inherited)` |
-| `/allow:`, `/deny:`, `/remove:` with `/user:` and/or `/group:` | ✓ protection level 3; the permission names of tf.exe (Read, PendChange, Checkin, Label, Lock, ReviseOther, UnlockOther, UndoOther, LabelOther, AdminProjectRights, CheckinOther, Merge, ManageBranch; `*` = all; an unknown name is TFP0002); the identities go to the server as given (display name, account, e-mail, `[Project]\Group`); prints `$/path: identity` per applied change as tf.exe; a change the server did not apply (an unknown identity, an inheritance change on `$/`) is TFP0501 per item (exit 1) with the library's failure text as the server message |
+| `/allow:`, `/deny:`, `/remove:` with `/user:` and/or `/group:` | ✓ protection level 3; the permission names of tf.exe (Read, PendChange, Checkin, Label, Lock, ReviseOther, UnlockOther, UndoOther, LabelOther, AdminProjectRights, CheckinOther, Merge, ManageBranch; `*` = all; an unknown name is TFP0002); the identities go to the server as given (display name, account, e-mail, `[Project]\Group`); prints `$/path: identity` per applied change as tf.exe; a change the server did not apply (an unknown identity, an inheritance change on `$/`) is TFP0501 per item (exit 1) with the library's failure text as the server message; when the server applied nothing at all the exit code is 100, as tf.exe with its empty result |
 | `/inherit:yes\|no` | ✓ protection level 3 (`$/path: inherit no`) |
 | `/recursive` with a change | ✓ the change is applied to every item below (the server stores ACLs per item) |
-| `/global` | ✗ |
+| `/global` | ✗ TFP0006 (collection-level permissions are server administration) |
 
 <a id="cmd-workspace"></a>
 ### workspace
@@ -531,7 +532,7 @@ tf vc workspace [/collection:url] [/comment:("comment"|@commentfile)] [/newname:
 | --- | --- |
 | `/new name` | ✓ protection level 3; the name is required (tf.exe defaults to the computer name; a tool without a dialog wants it explicit); a local workspace of the authenticated user with `$/` mapped to the current folder, or the mappings of `/template:`; `/comment:`, `/computer:`, `/permission:` (default Private), `/filetime:` (default current) ✓; `/location:server` is TFP0204; another owner is TFP0002. Prints `Workspace <name>;<owner> created.` and the detailed listing |
 | `/delete name[;owner]` | ✓ protection level 3; deletes the workspace on the server and from the local cache; the pending changes it had are dropped (a warning with their count); prints `Workspace <name>;<owner> deleted.` (tf.exe is silent) |
-| `name /newname: /comment: /computer: /permission: /filetime:` | ✓ protection level 3 (`Workspace <name>;<owner> updated.` and the listing); `/newowner:` ✗ |
+| `name /newname: /comment: /computer: /permission: /filetime:` | ✓ protection level 3 (`Workspace <name>;<owner> updated.` and the listing); `/newowner:` ✗ TFP0006 |
 | `name` without switches | ✓ protection level 1: the detailed listing of `workspaces /format:detailed` |
 
 <a id="cmd-property"></a>
@@ -554,7 +555,7 @@ tf vc property itemspec /deleteall [/recursive] [/silent] [/lock:none]
 | `/output:` | ✓ writes the value of the single property named by `/propertynames` to the file (its bytes for a binary value, UTF-8 text otherwise) and prints `Wrote <name> of <item> to <file>.`; a missing property is a warning (exit 0); needs exactly one name and no `/recursive` |
 | `/setvalues:` | ✓ protection level 2: pends a property change (`name=value[;name=value...]`; `;;` and `==` are literal separators; a value `@file` reads the file as a binary value); the usual grouped listing of the pended items, `status` shows the change type `property`, `undo` takes it back, `checkin` stores it |
 | `/deletevalues:`, `/deleteall` | ✓ protection level 2: pend the deletion of the named properties (repeatable or comma-separated) or of every property |
-| `/silent`, `/lock:none` | ✓ as on `add`; another lock level is TFP0002 |
+| `/silent`, `/lock:` | ✓ as on `add` |
 | `/setproperty` | not a switch of tf.exe 18.10 either (capture `property/set`, exit 100): TFP0002 |
 
 The combinations tf.exe refuses are TFP0002 (exit 100): a write switch with `/output`, `/version`, `/propertynames` or

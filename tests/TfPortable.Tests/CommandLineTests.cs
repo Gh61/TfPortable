@@ -105,10 +105,16 @@ namespace TfPortable.Tests
         [Fact]
         public void Value_outside_the_allowed_list_is_TFP0002()
         {
-            var error = Assert.Throws<TfpException>(() => CommandLine.Parse(new[] { "status", "/format:xml" }));
+            var error = Assert.Throws<TfpException>(() => CommandLine.Parse(new[] { "status", "/format:bogus" }));
             Assert.Equal(ErrorCodes.InvalidSwitch, error.Code);
             Assert.Equal(ExitCodes.GeneralError, error.ExitCode);
             Assert.Contains("brief, detailed, json", error.Hint);
+
+            // A value tf.exe knows and TfPortable does not support (yet) is TFP0006, not a typo.
+            var unsupported = Assert.Throws<TfpException>(() => CommandLine.Parse(new[] { "status", "/format:xml" }));
+            Assert.Equal(ErrorCodes.SwitchNotSupported, unsupported.Code);
+            Assert.StartsWith("Value 'xml' of '/format' for command 'status' is not supported by tfp yet.", unsupported.Message);
+            Assert.Contains("brief, detailed, json", unsupported.Hint);
         }
 
         [Fact]
