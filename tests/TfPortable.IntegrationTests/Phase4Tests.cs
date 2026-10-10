@@ -391,6 +391,97 @@ namespace TfPortable.IntegrationTests
             }
         }
 
+        [IntegrationFact]
+        public void Property_set_is_checked_in_read_back_written_out_deleted_and_undone()
+        {
+            fixture.EnsureReady();
+            string folder = CiFolder("prop");
+            string argument = CiArgument("prop");
+            string serverPath = CiServerPath("prop");
+            string file = argument + "\\p.txt";
+            string outputFile = Path.Combine(Path.GetTempPath(), "tfp-ci-prop-" + RunId + ".bin");
+            bool committed = false;
+            try
+            {
+                Directory.CreateDirectory(folder);
+                File.WriteAllText(Path.Combine(folder, "p.txt"), "p\r\n");
+                File.WriteAllBytes(Path.Combine(folder, "icon.bin"), new byte[] { 0, 1, 2, 255 });
+                var add = Run($"add {file} /noprompt");
+                Assert.True(add.ExitCode == 0, add.Stderr + add.Stdout);
+                var checkin = Run($"checkin {argument} /recursive /comment:\"CI property ({RunId})\" /associate:1 /override:\"CI property\" /noprompt /format:json");
+                committed = true;
+                Assert.True(checkin.ExitCode == 0, checkin.Stderr + checkin.Stdout);
+
+                // The write form is level 2: a property set and a binary value from a file, as one pending change.
+                var set = Run($"property /setvalues:tfp-owner=team-a;;b;tfp-icon=@{Path.Combine(folder, "icon.bin")} {file} /format:json");
+                Assert.True(set.ExitCode == 0, set.Stderr + set.Stdout);
+                var change = ((JArray)Data(set)["changes"]!).Single();
+                Assert.Contains("property", change["changeTypes"]!.Select(t => (string?)t));
+                Assert.Contains((JArray)Data(Run($"status {file} /nodetect /format:json"))["changes"]!, c => c["changeTypes"]!.Any(t => (string?)t == "property"));
+                var checkinProperties = Run($"checkin {file} /comment:\"CI property values ({RunId})\" /associate:1 /override:\"CI property\" /noprompt /format:json");
+                Assert.True(checkinProperties.ExitCode == 0, checkinProperties.Stderr + checkinProperties.Stdout);
+
+                var all = Run($"property {file} /format:json");
+                Assert.True(all.ExitCode == 0, all.Stderr + all.Stdout);
+                var properties = ((JArray)Data(all)["items"]!).Single()["properties"]!;
+                Assert.Equal("team-a;b", (string?)properties["tfp-owner"]);
+                Assert.Equal("<binary, 4 bytes>", (string?)properties["tfp-icon"]);
+                Assert.Contains("tfp-owner = team-a;b", all.Stdout.Replace("\r", string.Empty));
+                var filtered = Run($"property {file} /propertynames:tfp-owner /format:json");
+                Assert.True(filtered.ExitCode == 0, filtered.Stderr + filtered.Stdout);
+                var filteredProperties = (JObject)((JArray)Data(filtered)["items"]!).Single()["properties"]!;
+                Assert.Equal(new[] { "tfp-owner" }, filteredProperties.Properties().Select(p => p.Name));
+                var written = Run($"property {file} /propertynames:tfp-icon \"/output:{outputFile}\" /format:json");
+                Assert.True(written.ExitCode == 0, written.Stderr + written.Stdout);
+                Assert.Equal(outputFile, (string?)Data(written)["output"]);
+                Assert.Equal(new byte[] { 0, 1, 2, 255 }, File.ReadAllBytes(outputFile));
+                var missing = Run($"property {file} /propertynames:tfp-none \"/output:{outputFile}.none\" /format:json");
+                Assert.True(missing.ExitCode == 0, missing.Stderr + missing.Stdout);
+                Assert.False(File.Exists(outputFile + ".none"));
+                Assert.NotEmpty((JArray)JObject.Parse(missing.Stdout)["warnings"]!);
+
+                // Deletions are pending changes too; undo takes them back.
+                var deleteOne = Run($"property /deletevalues:tfp-owner {file} /format:json");
+                Assert.True(deleteOne.ExitCode == 0, deleteOne.Stderr + deleteOne.Stdout);
+                Assert.Single((JArray)Data(deleteOne)["changes"]!);
+                var undo = Run($"undo {file} /noprompt /format:json");
+                Assert.True(undo.ExitCode == 0, undo.Stderr + undo.Stdout);
+                var deleteAll = Run($"property /deleteall {file}");
+                Assert.True(deleteAll.ExitCode == 0, deleteAll.Stderr + deleteAll.Stdout);
+                Assert.Contains("p.txt", deleteAll.Stdout);
+                var undoAll = Run($"undo {file} /noprompt /format:json");
+                Assert.True(undoAll.ExitCode == 0, undoAll.Stderr + undoAll.Stdout);
+                Assert.Empty((JArray)Data(Run($"status {file} /nodetect /format:json"))["changes"]!);
+                var stillThere = Run($"property {file} /format:json");
+                Assert.Equal("team-a;b", (string?)((JArray)Data(stillThere)["items"]!).Single()["properties"]!["tfp-owner"]);
+
+                // The write form is blocked at level 1 before the tool connects.
+                using (ProtectionLevelScope.Set(1))
+                {
+                    var blocked = Run($"property /setvalues:x=y {file}");
+                    Assert.Equal(100, blocked.ExitCode);
+                    Assert.StartsWith("ERROR TFP0004: Switch '/setvalues' of 'property' needs protection level 2.", blocked.Stderr);
+                }
+            }
+            finally
+            {
+                Run($"undo {argument} /recursive /noprompt");
+                if (committed)
+                {
+                    Run($"get {argument} /recursive /noprompt");
+                    Run($"delete {argument} /recursive /noprompt");
+                    var cleanup = Run($"checkin {argument} /recursive /comment:\"CI cleanup ({RunId})\" /override:\"CI cleanup\" /noprompt");
+                    if (cleanup.ExitCode != 0)
+                    {
+                        Run($"undo {argument} /recursive /noprompt");
+                    }
+                }
+
+                try { File.Delete(outputFile); } catch (IOException) { }
+                DeleteScratch(folder);
+            }
+        }
+
         private static void DeleteScratch(string directory)
         {
             try

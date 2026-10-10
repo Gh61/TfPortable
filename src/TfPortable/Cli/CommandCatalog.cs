@@ -31,7 +31,7 @@ namespace TfPortable.Cli
     /// <summary>One switch of a command: name, short form, value rule and the values it accepts.</summary>
     internal sealed class SwitchSpec
     {
-        public SwitchSpec(string name, string? shortName, SwitchValue value, string summary, string[]? values = null, bool extension = false, bool secret = false)
+        public SwitchSpec(string name, string? shortName, SwitchValue value, string summary, string[]? values = null, bool extension = false, bool secret = false, bool repeatable = false)
         {
             Name = name;
             ShortName = shortName;
@@ -40,6 +40,7 @@ namespace TfPortable.Cli
             Values = values ?? Array.Empty<string>();
             Extension = extension;
             Secret = secret;
+            Repeatable = repeatable;
         }
 
         /// <summary>Canonical lower-case name without the leading '/'.</summary>
@@ -60,6 +61,9 @@ namespace TfPortable.Cli
 
         /// <summary>The value may be a credential (`/login`, `/pat`); error messages never echo it.</summary>
         public bool Secret { get; }
+
+        /// <summary>The switch may be given more than once (tf.exe `/deletevalues`, `/propertynames`); the values are joined with a comma.</summary>
+        public bool Repeatable { get; }
 
         /// <summary>`/name`, `/name:<value>` or `/name:a|b` for usage lines.</summary>
         public string Usage
@@ -399,8 +403,14 @@ namespace TfPortable.Cli
                 new SwitchSpec("newname", null, SwitchValue.Required, "Rename the workspace (protection level 3)."),
                 new SwitchSpec("newowner", null, SwitchValue.Required, "Not supported.")),
             new CommandSpec("property", Array.Empty<string>(), 4, CommandStatus.Implemented,
-                "List the versioned-item properties of items (the write form /setvalues, /deletevalues, /deleteall of tf.exe is planned).", "itemspec ...",
-                Version, Recursive),
+                "List the versioned-item properties of items, or pend a property change (/setvalues, /deletevalues, /deleteall).", "itemspec ...",
+                Version, Recursive, Lock,
+                new SwitchSpec("setvalues", null, SwitchValue.Required, "Pend a property set: name=value[;name=value...]; ';;' and '==' escape the separators; a value '@file' reads the file as a binary value (protection level 2)."),
+                new SwitchSpec("deletevalues", null, SwitchValue.Required, "Pend the deletion of the named properties; repeatable or comma-separated (protection level 2).", repeatable: true),
+                new SwitchSpec("deleteall", null, SwitchValue.None, "Pend the deletion of every property of the items (protection level 2)."),
+                new SwitchSpec("propertynames", null, SwitchValue.Required, "List only these properties; repeatable or comma-separated.", repeatable: true),
+                new SwitchSpec("output", null, SwitchValue.Required, "Write the value of the single property named by /propertynames to this file (bytes for a binary value)."),
+                new SwitchSpec("silent", null, SwitchValue.None, "Pend without listing the changes.")),
             new CommandSpec("resolvepath", Array.Empty<string>(), 4, CommandStatus.Implemented,
                 "Translate a local path to its server path and a server path to its local path.", "itemspec ..."),
 

@@ -356,9 +356,10 @@ try {
 
     # --- property ------------------------------------------------------------------------------------
     Write-Host '--- property' -ForegroundColor Cyan
-    # No help capture exists for property (only the one-line listing of `tf vc help`); the forms follow the Microsoft docs.
+    # No help capture exists for property (only the one-line listing of `tf vc help`); the switches come from the decompiled
+    # option table (docs/tf-reference/property.md): the write form is /setvalues, not /setproperty (the first capture used that).
     Invoke-Case 'property' 'read' @('property', "$WsA\$GL\a.txt") | Out-Null
-    Invoke-Case 'property' 'set' @('property', '/setproperty:tfp-golden=1', "$WsA\$GL\a.txt") | Out-Null
+    Invoke-Case 'property' 'set' @('property', '/setvalues:tfp-golden=1', "$WsA\$GL\a.txt") | Out-Null
     Invoke-Case 'property' 'read-after-set' @('property', "$WsA\$GL\a.txt") | Out-Null
     Invoke-Case 'status' 'after-property' @('status', "$WsA\$GL", '/recursive', '/noprompt') | Out-Null
     Invoke-Step @('undo', "$WsA\$GL", '/recursive', '/noprompt') -Expect @(0, 1, 100) | Out-Null

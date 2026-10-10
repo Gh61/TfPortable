@@ -137,7 +137,8 @@ Phase 4 commands:
 | `permission` (listing) | `{ "items": [ { "serverItem", "inherit": bool, "entries": [ { "identity", "allow": [string], "deny": [string], "allowInherited": [string], "denyInherited": [string] } ] } ] }` |
 | `permission` (change) | `{ "changes": [ { "serverItem", "identity" or null, "allow": [string], "deny": [string], "remove": [string], "inherit": bool or null } ], "skipped": [ the same shape ] }`; a request with an identity and `/inherit` is two changes (the inheritance one has `identity` null); a change the server did not apply (an unknown identity, no permission to administer) is TFP0501 in `errors` (exit 1) with the library's failure text in `serverMessage` |
 | `workspace` | `{ "workspace": Workspace, "created": true }` (`/new`), `{ "workspace": Workspace, "deleted": true, "droppedPendingChanges": n }` (`/delete`), `{ "workspace": Workspace, "updated": true }` (edit), `{ "workspace": Workspace }` (listing) |
-| `property` | `{ "items": [ { "serverPath", "properties": { "name": "value", ... } } ] }` |
+| `property` (listing) | `{ "items": [ { "serverPath", "properties": { "name": "value", ... } } ], "output": "<file>" or null }`; a binary value is the text `<binary, n bytes>` (`/output` writes its bytes) |
+| `property` (`/setvalues`, `/deletevalues`, `/deleteall`) | `{ "changes": [PendingChange], "skipped": [...] }` as the pend commands; the change type is `property` |
 | `resolvepath` | `{ "items": [ { "localPath", "serverPath" } ] }`; an unmapped path is TFP0203 in `errors` (exit 1) |
 | `docs`, `msdn` | `{ "url", "opened": bool }` |
 | `workfold /map /unmap /cloak /decloak` | `{ "workspace": Workspace, "edit": "map"\|"unmap"\|"cloak"\|"decloak" }` (the mappings after the change) |

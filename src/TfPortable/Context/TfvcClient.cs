@@ -480,18 +480,31 @@ namespace TfPortable.Context
             return deleted;
         }
 
-        public IReadOnlyList<ItemPropertiesInfo> GetItemProperties(IReadOnlyList<ItemQuery> items, VersionSpec version)
+        public IReadOnlyList<ItemPropertiesInfo> GetItemProperties(IReadOnlyList<ItemQuery> items, VersionSpec version, IReadOnlyList<string>? propertyNames)
         {
             // GetItems with a property filter returns the versioned-item properties on every item (the dedicated property query is obsolete).
-            var sets = VersionControl.GetItems(items.Select(ToItemSpec).ToArray(), version, DeletedState.Any, ItemType.Any, GetItemsOptions.None, new[] { "*" }, null)
+            string[] filters = propertyNames == null || propertyNames.Count == 0 ? new[] { "*" } : propertyNames.ToArray();
+            var sets = VersionControl.GetItems(items.Select(ToItemSpec).ToArray(), version, DeletedState.Any, ItemType.Any, GetItemsOptions.None, filters, null)
                 ?? Array.Empty<ItemSet>();
             var result = new List<ItemPropertiesInfo>();
             foreach (var item in sets.Where(s => s?.Items != null).SelectMany(s => s.Items))
             {
-                var properties = (item.PropertyValues ?? (IList<Microsoft.TeamFoundation.Framework.Client.PropertyValue>)new List<Microsoft.TeamFoundation.Framework.Client.PropertyValue>())
-                    .Select(p => new KeyValuePair<string, string?>(p.PropertyName, p.Value?.ToString()))
-                    .ToList();
-                result.Add(new ItemPropertiesInfo(item.ServerItem, properties));
+                var properties = new List<KeyValuePair<string, string?>>();
+                var binaries = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+                foreach (var property in item.PropertyValues ?? (IList<Microsoft.TeamFoundation.Framework.Client.PropertyValue>)new List<Microsoft.TeamFoundation.Framework.Client.PropertyValue>())
+                {
+                    if (property.Value is byte[] bytes)
+                    {
+                        binaries[property.PropertyName] = bytes;
+                        properties.Add(new KeyValuePair<string, string?>(property.PropertyName, ItemPropertiesInfo.BinaryText(bytes)));
+                    }
+                    else
+                    {
+                        properties.Add(new KeyValuePair<string, string?>(property.PropertyName, property.Value == null ? null : Convert.ToString(property.Value, System.Globalization.CultureInfo.InvariantCulture)));
+                    }
+                }
+
+                result.Add(new ItemPropertiesInfo(item.ServerItem, properties, binaries));
             }
 
             return result;
@@ -855,6 +868,14 @@ namespace TfPortable.Context
             {
                 using var collector = new EventCollector(Vcs);
                 int count = workspace.PendDelete(paths.ToArray(), recursion, LockLevel.None, true, false);
+                return collector.ToPendResult(count);
+            }
+
+            public PendResult PendPropertyChange(IReadOnlyList<string> paths, IReadOnlyList<KeyValuePair<string?, object?>> properties, RecursionType recursion, bool silent)
+            {
+                using var collector = new EventCollector(Vcs);
+                var values = properties.Select(p => new Microsoft.TeamFoundation.Framework.Client.PropertyValue(p.Key, p.Value)).ToArray();
+                int count = workspace.PendPropertyChange(paths.ToArray(), values, recursion, LockLevel.None, silent ? PendChangesOptions.Silent : PendChangesOptions.None, null, null);
                 return collector.ToPendResult(count);
             }
 

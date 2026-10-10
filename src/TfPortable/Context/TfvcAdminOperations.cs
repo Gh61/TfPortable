@@ -145,15 +145,22 @@ namespace TfPortable.Context
     /// <summary>The versioned-item properties of one server item (`property`).</summary>
     internal sealed class ItemPropertiesInfo
     {
-        public ItemPropertiesInfo(string serverPath, IReadOnlyList<KeyValuePair<string, string?>> properties)
+        public ItemPropertiesInfo(string serverPath, IReadOnlyList<KeyValuePair<string, string?>> properties, IReadOnlyDictionary<string, byte[]>? binaryValues = null)
         {
             ServerPath = serverPath;
             Properties = properties;
+            BinaryValues = binaryValues ?? new Dictionary<string, byte[]>();
         }
 
         public string ServerPath { get; }
 
+        /// <summary>Name and text of every property; a binary value shows as `&lt;binary, n bytes&gt;` (its bytes are in <see cref="BinaryValues"/>).</summary>
         public IReadOnlyList<KeyValuePair<string, string?>> Properties { get; }
+
+        /// <summary>The bytes of the binary properties, by name.</summary>
+        public IReadOnlyDictionary<string, byte[]> BinaryValues { get; }
+
+        public static string BinaryText(byte[] bytes) => $"<binary, {bytes.Length} bytes>";
 
         public JObject ToJson()
         {

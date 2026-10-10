@@ -538,14 +538,28 @@ tf vc workspace [/collection:url] [/comment:("comment"|@commentfile)] [/newname:
 ### property
 
 ```
-tf vc property itemspec [/version:versionspec] [/recursive]
+tf vc property itemspec [/version:versionspec] [/recursive] [/propertynames:name]... [/output:file]
+tf vc property itemspec /setvalues:name=value[;name=value...] [/recursive] [/silent] [/lock:none]
+tf vc property itemspec /deletevalues:name... [/recursive] [/silent] [/lock:none]
+tf vc property itemspec /deleteall [/recursive] [/silent] [/lock:none]
 ```
 
-✓ protection level 1: a dashed line, `Server item: $/path`, then `name = value` per property or `The item has no properties.`
-(phase 4 capture `property/read`). tf.exe 18.10 has no `/setproperty` (capture `property/set`, exit 100); its real write
-form is `/setvalues:name=value;...`, `/deletevalues:name`, `/deleteall` (a pending property change, plus `/propertynames:`
-and `/output:` for reading), see `docs/tf-reference/property.md`. TfPortable does not offer it yet (TFP0002); the
-implementation is planned (decision of 2026-10-10, brief in that note).
+(tf.exe 18.10 has no help text for `property`; the forms come from its decompiled option table, `docs/tf-reference/property.md`.)
+
+| Switch | TfPortable |
+| --- | --- |
+| listing | ✓ protection level 1: a dashed line, `Server item: $/path`, then `name = value` per property or `The item has no properties.` (phase 4 capture `property/read`); a binary value shows as `<binary, n bytes>` |
+| `/version:`, `/recursive` | ✓ |
+| `/propertynames:` | ✓ repeatable or comma-separated; lists only these properties |
+| `/output:` | ✓ writes the value of the single property named by `/propertynames` to the file (its bytes for a binary value, UTF-8 text otherwise) and prints `Wrote <name> of <item> to <file>.`; a missing property is a warning (exit 0); needs exactly one name and no `/recursive` |
+| `/setvalues:` | ✓ protection level 2: pends a property change (`name=value[;name=value...]`; `;;` and `==` are literal separators; a value `@file` reads the file as a binary value); the usual grouped listing of the pended items, `status` shows the change type `property`, `undo` takes it back, `checkin` stores it |
+| `/deletevalues:`, `/deleteall` | ✓ protection level 2: pend the deletion of the named properties (repeatable or comma-separated) or of every property |
+| `/silent`, `/lock:none` | ✓ as on `add`; another lock level is TFP0002 |
+| `/setproperty` | not a switch of tf.exe 18.10 either (capture `property/set`, exit 100): TFP0002 |
+
+The combinations tf.exe refuses are TFP0002 (exit 100): a write switch with `/output`, `/version`, `/propertynames` or
+`/collection`; `/setvalues` with `/deletevalues` or `/deleteall`; `/output` with `/recursive` or without exactly one
+`/propertynames`; an empty name or value in `/setvalues`.
 
 <a id="cmd-resolvepath"></a>
 ### resolvepath

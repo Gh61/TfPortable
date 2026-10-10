@@ -33,6 +33,9 @@ namespace TfPortable.Context
 
         PendResult PendRename(string oldPath, string newPath);
 
+        /// <summary>Pends a property change on the paths: a null value deletes the property, a null name with a null value deletes every property.</summary>
+        PendResult PendPropertyChange(IReadOnlyList<string> paths, IReadOnlyList<KeyValuePair<string?, object?>> properties, RecursionType recursion, bool silent);
+
         /// <summary>Undoes the pending changes of the items; the result lists the undone changes.</summary>
         PendResult Undo(IReadOnlyList<ItemQuery> items);
 
@@ -214,7 +217,7 @@ namespace TfPortable.Context
         bool DeleteWorkspace(string name, string? owner);
 
         /// <summary>Versioned-item properties of the items at a version (`property`).</summary>
-        IReadOnlyList<ItemPropertiesInfo> GetItemProperties(IReadOnlyList<ItemQuery> items, VersionSpec version);
+        IReadOnlyList<ItemPropertiesInfo> GetItemProperties(IReadOnlyList<ItemQuery> items, VersionSpec version, IReadOnlyList<string>? propertyNames);
 
         /// <summary>Checks a shelveset in as a changeset (`checkin /shelveset`); the server deletes the shelveset. Returns the changeset number.</summary>
         int CheckInShelveset(string name, string? owner, string? author, bool noAutoResolve, bool allowUnchangedContent);

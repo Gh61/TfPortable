@@ -104,6 +104,30 @@ namespace TfPortable.Tests
             Assert.False(DestroyPreviewMarker.IsValid(key));
             Assert.Empty(Directory.GetFiles(Path.Combine(directory, "destroy")));
 
+            // The stamp is read as text and as UTC whatever the culture and the time zone (the developer's cs-CZ, UTC+2 machine saw every marker as stale:
+            // Json.NET had turned the stamp into a DateTime whose string form lost the offset).
+            var culture = System.Globalization.CultureInfo.CurrentCulture;
+            try
+            {
+                System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("cs-CZ");
+                var fromZulu = DestroyPreviewMarker.PreviewedAt("{ \"previewedAt\": \"2026-10-09T12:00:00.0000000Z\" }");
+                Assert.Equal(DateTimeKind.Utc, fromZulu!.Value.Kind);
+                Assert.Equal(now, fromZulu.Value);
+                var fromOffset = DestroyPreviewMarker.PreviewedAt("{ \"previewedAt\": \"2026-10-09T14:00:00.0000000+02:00\" }");
+                Assert.Equal(DateTimeKind.Utc, fromOffset!.Value.Kind);
+                Assert.Equal(now, fromOffset.Value);
+                Assert.Null(DestroyPreviewMarker.PreviewedAt("{ \"previewedAt\": \"yesterday\" }"));
+                Assert.Null(DestroyPreviewMarker.PreviewedAt("{ }"));
+                DestroyPreviewMarker.Clock = () => now;
+                DestroyPreviewMarker.Write(key, "https://dev.azure.com/org", "me@example.com", new[] { "$/P/b.txt" }, false, null);
+                DestroyPreviewMarker.Clock = () => now.AddMinutes(9);
+                Assert.True(DestroyPreviewMarker.Consume(key));
+            }
+            finally
+            {
+                System.Globalization.CultureInfo.CurrentCulture = culture;
+            }
+
             // The version of the item and the spelling of /stopat are part of the key.
             Assert.Equal(DestroyPreviewMarker.Key("u", "me", new[] { "$/a;C5" }, true, "C5"), DestroyPreviewMarker.Key("u", "me", new[] { "$/a;C5" }, true, "5"));
             Assert.NotEqual(DestroyPreviewMarker.Key("u", "me", new[] { "$/a;C5" }, true, "C5"), DestroyPreviewMarker.Key("u", "me", new[] { "$/a;C6" }, true, "C5"));
@@ -209,6 +233,52 @@ namespace TfPortable.Tests
             Assert.Equal(0, exit3);
             Assert.Contains("/preview", stdout3);
             Assert.Contains("Protection level: 3", stdout3);
+        }
+
+        [Fact]
+        public void Property_write_form_parses_values_and_refuses_the_combinations_of_the_original()
+        {
+            var values = PropertyCommand.ParseSetValues("owner=team;note=a==b;;c;empty-ok=x", "tfp");
+            Assert.Equal(new[] { "owner", "note", "empty-ok" }, values.Select(v => v.Key));
+            Assert.Equal("team", values[0].Value);
+            Assert.Equal("a=b;c", values[1].Value);
+            Assert.Equal(new[] { "a", "b;c", "" }, PropertyCommand.SplitUnescaped("a;b;;c;", ';'));
+
+            string file = Path.Combine(directory, "icon.bin");
+            File.WriteAllBytes(file, new byte[] { 1, 2, 3 });
+            var binary = PropertyCommand.ParseSetValues("icon=@" + file, "tfp").Single();
+            Assert.Equal(new byte[] { 1, 2, 3 }, (byte[])binary.Value!);
+            Assert.Contains("does not exist", Assert.Throws<TfpException>(() => PropertyCommand.ParseSetValues("icon=@" + Path.Combine(directory, "missing.bin"), "tfp")).Message);
+            foreach (string bad in new[] { "owner", "=x", "owner=", "owner=team;", "" })
+            {
+                var error = Assert.Throws<TfpException>(() => PropertyCommand.ParseSetValues(bad, "tfp"));
+                Assert.Equal(ErrorCodes.InvalidSwitch, error.Code);
+            }
+
+            // Repeated switches accumulate, as tf.exe accepts /deletevalues and /propertynames more than once.
+            var repeated = CommandLine.Parse(new[] { "property", "/deletevalues:a", "/deletevalues:b,c", "x.txt" });
+            Assert.Equal(new[] { "a", "b", "c" }, repeated.Values("deletevalues"));
+
+            Assert.StartsWith("ERROR TFP0002: /setvalues and /deletevalues cannot be combined.", Run("property", "/setvalues:a=1", "/deletevalues:b", "x.txt").Err);
+            Assert.StartsWith("ERROR TFP0002: /setvalues and /deleteall cannot be combined.", Run("property", "/setvalues:a=1", "/deleteall", "x.txt").Err);
+            Assert.StartsWith("ERROR TFP0002: a property change and /output cannot be combined.", Run("property", "/deleteall", "/output:v.txt", "x.txt").Err);
+            Assert.StartsWith("ERROR TFP0002: a property change and /version cannot be combined.", Run("property", "/deletevalues:a", "/version:C5", "x.txt").Err);
+            Assert.StartsWith("ERROR TFP0002: a property change and /propertynames cannot be combined.", Run("property", "/setvalues:a=1", "/propertynames:a", "x.txt").Err);
+            Assert.StartsWith("ERROR TFP0002: a property change and /collection cannot be combined.", Run("property", "/setvalues:a=1", "/collection:https://dev.azure.com/org", "x.txt").Err);
+            Assert.StartsWith("ERROR TFP0002: /output needs exactly one property name in /propertynames.", Run("property", "/output:v.txt", "x.txt").Err);
+            Assert.StartsWith("ERROR TFP0002: /output needs exactly one property name in /propertynames.", Run("property", "/output:v.txt", "/propertynames:a,b", "x.txt").Err);
+            Assert.StartsWith("ERROR TFP0002: /output and /recursive cannot be combined.", Run("property", "/output:v.txt", "/propertynames:a", "/recursive", "x.txt").Err);
+            Assert.StartsWith("ERROR TFP0002: /setvalues: 'owner' is not name=value.", Run("property", "/setvalues:owner", "x.txt").Err);
+            Assert.StartsWith("ERROR TFP0002: /lock:checkin", Run("property", "/setvalues:a=1", "/lock:checkin", "x.txt").Err);
+
+            var set = CommandLine.Parse(new[] { "property", "/setvalues:a=1", "x.txt" });
+            Assert.Equal((2, "setvalues"), ProtectionLevels.Required(set.Spec!, set));
+            var deleteAll = CommandLine.Parse(new[] { "property", "/deleteall", "x.txt" });
+            Assert.Equal((2, "deleteall"), ProtectionLevels.Required(deleteAll.Spec!, deleteAll));
+            var read = CommandLine.Parse(new[] { "property", "/propertynames:a", "/output:v.txt", "x.txt" });
+            Assert.Equal((1, (string?)null), ProtectionLevels.Required(read.Spec!, read));
+            new ToolSettings { ProtectionLevel = 1 }.Save();
+            Assert.StartsWith("ERROR TFP0004: Switch '/setvalues' of 'property' needs protection level 2.", Run("property", "/setvalues:a=1", "x.txt").Err);
         }
 
         [Fact]

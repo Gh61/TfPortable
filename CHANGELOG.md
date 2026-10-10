@@ -3,6 +3,25 @@
 One section per release. The CI release step copies the section of the released tag into the
 GitHub release notes, so write the section before the release is run. The newest release comes first.
 
+## v0.3.0 (2026-10-10)
+
+Everything of v0.2.0 plus phase 4: every tf.exe version-control command is now implemented or answers
+`TFP0005` with the reason, so no command returns `TFP0003` any more.
+
+- `destroy` (level 3) needs a `/preview` of the same items and switches in the last 10 minutes; without it
+  the command ends with `TFP0410`. `/keephistory`, `/stopat`, `/startcleanup`, `/silent`.
+- `permission`: the ACL listing at level 1, `/allow`, `/deny`, `/remove`, `/inherit` with `/user`/`/group`
+  at level 3; a change the server did not apply is `TFP0501` per item with the server's text.
+- `workspace /new`, `/delete` and the edit form (level 3); `property` listing with `/propertynames` and
+  `/output`, and the write form of tf.exe (`/setvalues`, `/deletevalues`, `/deleteall`) as a pending
+  change at level 2; `resolvepath`; `docs [command] [/url]` with `msdn` as its alias.
+- Completions: `workfold /map /unmap /cloak /decloak`, `changeset /comment /notes`, `checkin /shelveset`,
+  `unshelve /move`, `shelve /validate`, `lock` and `undo` on another workspace (level 3).
+- `proxy`, `configure`, `certificates` and the `git`/`settings` groups answer `TFP0005`.
+- JSON messages carry `serverMessage`; `docs/errors.md` lists every error code with its cause and next
+  step; `docs/tf-reference/` holds the notes verified from the decompiled tf.exe 18.10.
+- Fix: the destroy preview marker was read as stale (or in the future) on every machine outside UTC.
+
 ## v0.2.0 (2026-10-09)
 
 Everything of v0.1.0 (phase 1) plus phases 2 and 3.
