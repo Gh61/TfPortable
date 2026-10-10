@@ -306,7 +306,7 @@ namespace TfPortable.Tests
             Assert.Contains("(TFP0006: it bypasses a gated check-in build", help.Out);
             var json = JObject.Parse(Run("help", "checkin", "/format:json").Out);
             var bypass = ((JArray)json["data"]!["commands"]!.First(c => (string)c["name"]! == "checkin")["switches"]!).First(s => (string)s["name"]! == "bypass");
-            Assert.StartsWith("bypasses a gated check-in build", (string)bypass["unsupported"]!);
+            Assert.StartsWith("it bypasses a gated check-in build", (string)bypass["unsupported"]!);
             var comment = ((JArray)json["data"]!["commands"]!.First(c => (string)c["name"]! == "checkin")["switches"]!).First(s => (string)s["name"]! == "comment");
             Assert.Null((string?)comment["unsupported"]);
 
