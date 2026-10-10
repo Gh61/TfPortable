@@ -118,8 +118,8 @@ is set up). Kept for history; SPEC.md "Fáze 4" is the current definition.
 
 ## 6. Still open from earlier
 
-- A lawyer's look at LICENSE-EXCEPTION and THIRD-PARTY-NOTICES (`v0.1.0` and `v0.2.0` ship with the current
-  texts).
+- ~~A lawyer's look at LICENSE-EXCEPTION and THIRD-PARTY-NOTICES~~: closed on 2026-10-10, the developer
+  decided not to have the texts reviewed; they stay as written, to the best of the developer's knowledge.
 - Leftover workspaces `tfp-golden-<id>` in the collection after a CI run that died mid-way: delete them
   occasionally (`tf workspaces /owner:*`).
 - The CI user (`Test TfPortable`) has no **AdminProjectRights** on `$/TfsPortableTestRepo`, so
