@@ -263,7 +263,8 @@ namespace TfPortable.Context
     /// <summary>Changeset of docs/json-schema.md; `Changes` and `WorkItems` are null when they were not requested (brief history).</summary>
     internal sealed class ChangesetInfo
     {
-        public ChangesetInfo(int id, string owner, string? ownerUniqueName, DateTime date, string? comment, IReadOnlyList<ChangeInfo>? changes = null, IReadOnlyList<WorkItemInfo>? workItems = null)
+        public ChangesetInfo(int id, string owner, string? ownerUniqueName, DateTime date, string? comment, IReadOnlyList<ChangeInfo>? changes = null, IReadOnlyList<WorkItemInfo>? workItems = null,
+            IReadOnlyList<KeyValuePair<string, string>>? notes = null)
         {
             Id = id;
             Owner = owner;
@@ -272,7 +273,11 @@ namespace TfPortable.Context
             Comment = comment;
             Changes = changes;
             WorkItems = workItems;
+            Notes = notes ?? Array.Empty<KeyValuePair<string, string>>();
         }
+
+        /// <summary>The checkin notes (name and text), empty when the changeset has none.</summary>
+        public IReadOnlyList<KeyValuePair<string, string>> Notes { get; }
 
         public int Id { get; }
 
@@ -297,7 +302,19 @@ namespace TfPortable.Context
             ["comment"] = Comment,
             ["changes"] = includeChanges && Changes != null ? new JArray(Changes.Select(c => c.ToJson()).Cast<object>().ToArray()) : null,
             ["workItems"] = includeChanges && WorkItems != null ? new JArray(WorkItems.Select(w => w.ToJson()).Cast<object>().ToArray()) : null,
+            ["notes"] = includeChanges ? NotesJson() : null,
         };
+
+        private JObject NotesJson()
+        {
+            var notes = new JObject();
+            foreach (var note in Notes)
+            {
+                notes[note.Key] = note.Value;
+            }
+
+            return notes;
+        }
     }
 
     /// <summary>An item to query: server or absolute local path, recursion and optional deletion id.</summary>

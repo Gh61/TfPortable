@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.TeamFoundation.VersionControl.Client;
 using Newtonsoft.Json.Linq;
 using TfPortable.Cli;
 using TfPortable.Commands;
@@ -59,10 +60,10 @@ namespace TfPortable.Tests
             Assert.StartsWith("ERROR TFP0002: /user and /group need /allow:, /deny: or /remove:.", Run("permission", "/inherit:no", "/user:x", "$/a").Err);
             Assert.StartsWith("ERROR TFP0002: /template and /location apply to workspace /new only.", Run("workspace", "Ws", "/template:Other").Err);
             Assert.StartsWith("ERROR TFP0002: /allow:Bogus is not a permission name.", Run("permission", "/allow:Bogus", "/user:x", "$/a").Err);
-            Assert.StartsWith("ERROR TFP0002: /global (collection-level permissions) is not supported.", Run("permission", "/global", "$/a").Err);
+            Assert.StartsWith("ERROR TFP0006: Switch '/global' of command 'permission' is not supported by tfp yet: it collection-level permissions", Run("permission", "/global", "$/a").Err);
             Assert.StartsWith("ERROR TFP0002: workspace /new needs the workspace name.", Run("workspace", "/new").Err);
             Assert.StartsWith("ERROR TFP0002: workspace /delete needs the workspace name.", Run("workspace", "/delete").Err);
-            Assert.StartsWith("ERROR TFP0002: /newowner is not supported.", Run("workspace", "Ws", "/newowner:x").Err);
+            Assert.StartsWith("ERROR TFP0006: Switch '/newowner' of command 'workspace' is not supported by tfp yet: it hands a workspace to another user", Run("workspace", "Ws", "/newowner:x").Err);
             // The catalog enumerates /permission, so the parser rejects an unknown value before the command runs.
             Assert.StartsWith("ERROR TFP0002: 'Secret' is not a valid value", Run("workspace", "/new", "Ws", "/permission:Secret").Err);
             Assert.StartsWith("ERROR TFP0204: /location:server is not supported;", Run("workspace", "/new", "Ws", "/location:server").Err);
@@ -269,7 +270,7 @@ namespace TfPortable.Tests
             Assert.StartsWith("ERROR TFP0002: /output needs exactly one property name in /propertynames.", Run("property", "/output:v.txt", "/propertynames:a,b", "x.txt").Err);
             Assert.StartsWith("ERROR TFP0002: /output and /recursive cannot be combined.", Run("property", "/output:v.txt", "/propertynames:a", "/recursive", "x.txt").Err);
             Assert.StartsWith("ERROR TFP0002: /setvalues: 'owner' is not name=value.", Run("property", "/setvalues:owner", "x.txt").Err);
-            Assert.StartsWith("ERROR TFP0002: /lock:checkin", Run("property", "/setvalues:a=1", "/lock:checkin", "x.txt").Err);
+            Assert.Equal(LockLevel.Checkin, WorkspaceCommandSupport.LockLevelOf(CommandLine.Parse(new[] { "property", "/setvalues:a=1", "/lock:checkin", "x.txt" })));
 
             var set = CommandLine.Parse(new[] { "property", "/setvalues:a=1", "x.txt" });
             Assert.Equal((2, "setvalues"), ProtectionLevels.Required(set.Spec!, set));
@@ -279,6 +280,64 @@ namespace TfPortable.Tests
             Assert.Equal((1, (string?)null), ProtectionLevels.Required(read.Spec!, read));
             new ToolSettings { ProtectionLevel = 1 }.Save();
             Assert.StartsWith("ERROR TFP0004: Switch '/setvalues' of 'property' needs protection level 2.", Run("property", "/setvalues:a=1", "x.txt").Err);
+        }
+
+        [Fact]
+        public void Unsupported_switches_of_tf_exe_are_TFP0006_and_server_locks_and_checkin_notes_are_accepted()
+        {
+            // Switches tf.exe has and TfPortable leaves out for now: a distinct code with the reason, before anything connects.
+            Assert.StartsWith("ERROR TFP0006: Switch '/bypass' of command 'checkin' is not supported by tfp yet: it bypasses a gated check-in build", Run("checkin", "/bypass", "/comment:x", "a.txt").Err);
+            Assert.StartsWith("ERROR TFP0006: Switch '/new' of command 'shelve' is not supported by tfp yet", Run("shelve", "/new", "s1").Err);
+            Assert.StartsWith("ERROR TFP0006: Switch '/options' of command 'difference' is not supported by tfp yet", Run("difference", "/options:x", "a.txt").Err);
+            Assert.StartsWith("ERROR TFP0006: Value 'context' of '/format' for command 'difference' is not supported by tfp yet.", Run("difference", "/format:context", "a.txt").Err);
+            Assert.StartsWith("ERROR TFP0006: Switch '/updateusername' of command 'workspaces' is not supported by tfp yet", Run("workspaces", "/updateUserName:x").Err);
+            Assert.StartsWith("ERROR TFP0006: Switch '/owner' of command 'label' is not supported by tfp yet", Run("label", "L1", "a.txt", "/owner:x").Err);
+            Assert.StartsWith("ERROR TFP0006: Switch '/extended' of command 'merges' is not supported by tfp yet", Run("merges", "$/a", "/extended").Err);
+            Assert.StartsWith("ERROR TFP0006: Switch '/filterlocalpathsonly' of command 'folderdiff' is not supported by tfp yet", Run("folderdiff", "$/a", "$/b", "/filterLocalPathsOnly").Err);
+            Assert.StartsWith("ERROR TFP0006: Switch '/checkin' of command 'branch' is not supported by tfp yet", Run("branch", "$/a", "$/b", "/checkin").Err);
+            Assert.StartsWith("ERROR TFP0006: Switch '/overridetype' of command 'resolve' is not supported by tfp yet", Run("resolve", "/overridetype:text").Err);
+            Assert.Equal(100, Run("shelvesets", "/format:xml").Exit);
+            Assert.StartsWith("ERROR TFP0002:", Run("status", "/format:bogus").Err);
+            Assert.StartsWith("ERROR TFP0002:", Run("checkin", "/nosuchswitch", "/comment:x").Err);
+
+            // Help marks them and the catalog keeps them; the JSON help carries the reason.
+            var help = Run("help", "checkin");
+            Assert.Contains("/bypass", help.Out);
+            Assert.Contains("(TFP0006: it bypasses a gated check-in build", help.Out);
+            var json = JObject.Parse(Run("help", "checkin", "/format:json").Out);
+            var bypass = ((JArray)json["data"]!["commands"]!.First(c => (string)c["name"]! == "checkin")["switches"]!).First(s => (string)s["name"]! == "bypass");
+            Assert.StartsWith("bypasses a gated check-in build", (string)bypass["unsupported"]!);
+            var comment = ((JArray)json["data"]!["commands"]!.First(c => (string)c["name"]! == "checkin")["switches"]!).First(s => (string)s["name"]! == "comment");
+            Assert.Null((string?)comment["unsupported"]);
+
+            // Server locks on the pend commands and the checkin notes are accepted by the parser and levels (the server call follows).
+            foreach (string[] line in new[] { new[] { "add", "/lock:checkin", "a.txt" }, new[] { "checkout", "/lock:checkout", "a.txt" }, new[] { "delete", "/lock:checkin", "a.txt" },
+                new[] { "rename", "/lock:checkin", "a.txt", "b.txt" }, new[] { "merge", "$/a", "$/b", "/lock:checkin" }, new[] { "branch", "$/a", "$/b", "/lock:checkout" },
+                new[] { "rollback", "/changeset:5", "/lock:checkin" }, new[] { "undelete", "a.txt", "/lock:checkin" } })
+            {
+                var parsed = CommandLine.Parse(line);
+                Assert.Equal(line[0], parsed.Spec!.Name);
+                Assert.Equal(line.Any(a => a == "/lock:checkout") ? LockLevel.CheckOut : LockLevel.Checkin, WorkspaceCommandSupport.LockLevelOf(parsed));
+                Assert.Equal(2, ProtectionLevels.Required(parsed.Spec!, parsed).Level);
+            }
+
+            Assert.Equal(LockLevel.None, WorkspaceCommandSupport.LockLevelOf(CommandLine.Parse(new[] { "add", "a.txt" })));
+            Assert.Equal(LockLevel.None, WorkspaceCommandSupport.LockLevelOf(CommandLine.Parse(new[] { "add", "/lock:none", "a.txt" })));
+            Assert.StartsWith("ERROR TFP0002: 'both' is not a valid value of '/lock'", Run("add", "/lock:both", "a.txt").Err);
+
+            var notes = ChangesetCommand.Notes(CommandLine.Parse(new[] { "checkin", "/comment:x", "/notes:Code Reviewer=Jan Novak;Security Reviewer=none", "a.txt" }), "tfp")!;
+            Assert.Equal(new[] { "Code Reviewer", "Security Reviewer" }, notes.Select(n => n.Key));
+            Assert.Equal("Jan Novak", notes[0].Value);
+            Assert.StartsWith("ERROR TFP0002: /notes entry 'nope' is not Name=Value.", Run("checkin", "/comment:x", "/notes:nope", "a.txt").Err);
+            Assert.StartsWith("ERROR TFP0002: checkin /shelveset takes no itemspec, /comment, /notes, /validate or /override", Run("checkin", "/shelveset:s1", "/notes:a=b").Err);
+
+            // The changeset block prints the notes as tf.exe does.
+            var changeset = new ChangesetInfo(5, "me", "me@x", new DateTime(2026, 10, 10, 12, 0, 0, DateTimeKind.Utc), "c", Array.Empty<ChangeInfo>(), Array.Empty<WorkItemInfo>(),
+                new[] { new KeyValuePair<string, string>("Code Reviewer", "Jan Novak") });
+            var block = ChangesetCommand.RenderBlock(changeset).ToList();
+            Assert.Contains("Check-in Notes:", block);
+            Assert.Contains("  Code Reviewer: Jan Novak", block);
+            Assert.Equal("Jan Novak", (string)changeset.ToJson(true)["notes"]!["Code Reviewer"]!);
         }
 
         [Fact]

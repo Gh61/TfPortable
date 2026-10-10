@@ -178,14 +178,16 @@ namespace TfPortable.Commands
         };
 
         /// <summary>`/lock:checkin|checkout` are refused: locks write to the server (docs/commands.md).</summary>
-        public static void RejectServerLocks(CommandLine commandLine)
+        /// <summary>The lock level of a pend command's `/lock:` switch (none by default); the parser already limited the value to none, checkin, checkout.</summary>
+        public static LockLevel LockLevelOf(CommandLine commandLine)
         {
             string? value = commandLine.Value("lock");
-            if (value != null && !value.Equals("none", StringComparison.OrdinalIgnoreCase))
+            if (value == null || value.Equals("none", StringComparison.OrdinalIgnoreCase))
             {
-                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, $"/lock:{value} is not supported; locks are written to the server.",
-                    "Use /lock:none (the default), or lock the item with Visual Studio or the original tf.exe.");
+                return LockLevel.None;
             }
+
+            return value.Equals("checkout", StringComparison.OrdinalIgnoreCase) ? LockLevel.CheckOut : LockLevel.Checkin;
         }
     }
 }

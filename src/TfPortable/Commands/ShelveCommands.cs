@@ -85,7 +85,7 @@ namespace TfPortable.Commands
             {
                 // The checkin policies and notes as `checkin /validate` sees them; a failure is reported, the shelveset is still created.
                 var policies = CheckinPolicies.Evaluate(context.Client.GetCheckinPolicies(changes.Select(c => c.ServerPath).Distinct().ToList()), comment ?? string.Empty, new List<int>());
-                var evaluation = workspace.EvaluateCheckin(changes, comment ?? string.Empty, policies);
+                var evaluation = workspace.EvaluateCheckin(changes, comment ?? string.Empty, policies, null);
                 foreach (var conflict in evaluation.Conflicts)
                 {
                     output.ItemError(new TfpException(ErrorCodes.CheckinConflict, ExitCodes.PartialSuccess, $"Conflict: {conflict.Message}", $"Run '{toolName} get' and '{toolName} resolve' for the item before the checkin.", item: conflict.ServerPath));

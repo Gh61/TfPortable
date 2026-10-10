@@ -552,3 +552,15 @@ Implemented on 2026-10-09 from the phase 4 captures (`index-phase4-2610091138.js
 | `unshelve /move` | `Unshelving ...` then `Shelveset X deleted.` (`unshelve/move`) | the same; with conflicts or failures the shelveset is kept and a warning says so | follow |
 | `shelve /validate` | refused with `/noprompt` (`shelve/validate`, exit 100) | evaluates the policies and notes as `checkin /validate`, reports failures as item errors (exit 1) and shelves anyway | deviate: usable without a prompt |
 | `lock /workspace:<other>`, `undo /workspace:<other>` | work against another workspace of the owner (`lock/other-workspace`, `undo/other-workspace`) | the same through the global `/workspace:`; protection level 3 | follow |
+
+## 22. Version 1.0 preparation (2026-10-10, the developer's decisions)
+
+| Area | tf.exe 18.10 | TfPortable | Verdict |
+| --- | --- | --- | --- |
+| `/lock:checkin\|checkout` on `add`, `checkout`, `delete`, `rename`, `merge`, `branch`, `rollback`, `undelete`, `property` | the pended item carries the lock on the server | the same (the lock level goes to the library's pend call); protection level 2 as `lock` | follow (until 2026-10-10 the switches were refused: the tool was written for agents first, the developer decided that people use it too) |
+| `checkin /notes:` | `"Name=Value;..."` or `@file`; the notes are evaluated with the policies and stored in the changeset | the same (`CheckinNote` in the evaluation and in the checkin); `changeset <n>` prints them under `Check-in Notes:`, JSON `notes` | follow |
+| switches TfPortable does not support yet (`checkin /saved /bypass /new`, `shelve /new`, `/format:xml` of `status`, `workspaces`, `shelvesets`, the other `difference` formats and `/options /configure`, `resolve /overridetype /converttotype /properties`, `workspaces /updateUserName /updateComputerName`, `workspace /newowner`, `permission /global`, `label /owner`, `merges /extended`, `folderdiff /filterLocalPathsOnly`, `branch /checkin /comment /author /notes`) | implemented | `TFP0006` with the reason, before anything connects; `tfp help <command>` marks them; a typo stays `TFP0002` | deviate: left out on purpose, each with its reason in `docs/commands.md` |
+| `permission` change the server applied nowhere | exit 100 (empty result, `docs/tf-reference/permission.md`) | exit 100 too; a partially applied change stays exit 1 through the item errors | follow |
+| `destroy /startcleanup` on Azure DevOps Services | the flag is forwarded | the same; the CI run of 2026-10-10 shows whether the service accepts it (`docs/tf-reference/questions.md` 36) | follow |
+| `undo /workspace:<other>` without the permission | the server's error | the same, passed through as TFP0501 with the server message; no client-side check (decision of 2026-10-10, question 25a) | follow |
+

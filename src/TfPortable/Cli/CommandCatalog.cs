@@ -31,7 +31,8 @@ namespace TfPortable.Cli
     /// <summary>One switch of a command: name, short form, value rule and the values it accepts.</summary>
     internal sealed class SwitchSpec
     {
-        public SwitchSpec(string name, string? shortName, SwitchValue value, string summary, string[]? values = null, bool extension = false, bool secret = false, bool repeatable = false)
+        public SwitchSpec(string name, string? shortName, SwitchValue value, string summary, string[]? values = null, bool extension = false, bool secret = false, bool repeatable = false,
+            string? unsupported = null, string[]? unsupportedValues = null)
         {
             Name = name;
             ShortName = shortName;
@@ -41,6 +42,8 @@ namespace TfPortable.Cli
             Extension = extension;
             Secret = secret;
             Repeatable = repeatable;
+            Unsupported = unsupported;
+            UnsupportedValues = unsupportedValues ?? Array.Empty<string>();
         }
 
         /// <summary>Canonical lower-case name without the leading '/'.</summary>
@@ -65,6 +68,14 @@ namespace TfPortable.Cli
         /// <summary>The switch may be given more than once (tf.exe `/deletevalues`, `/propertynames`); the values are joined with a comma.</summary>
         public bool Repeatable { get; }
 
+        /// <summary>A switch of tf.exe that TfPortable does not support (yet): the reason, shown with TFP0006; null when supported.</summary>
+        public string? Unsupported { get; }
+
+        /// <summary>Values of tf.exe that TfPortable does not support (yet), e.g. `/format:xml`; TFP0006 instead of TFP0002.</summary>
+        public string[] UnsupportedValues { get; }
+
+        public bool IsUnsupportedValue(string value) => UnsupportedValues.Any(v => string.Equals(v, value, StringComparison.OrdinalIgnoreCase));
+
         /// <summary>`/name`, `/name:<value>` or `/name:a|b` for usage lines.</summary>
         public string Usage
         {
@@ -80,7 +91,7 @@ namespace TfPortable.Cli
             }
         }
 
-        public bool Accepts(string value) => Values.Length == 0 || Values.Any(v => string.Equals(v, value, StringComparison.OrdinalIgnoreCase));
+        public bool Accepts(string value) => Values.Length == 0 || Values.Any(v => string.Equals(v, value, StringComparison.OrdinalIgnoreCase)) || IsUnsupportedValue(value);
     }
 
     /// <summary>One command of the catalog with its aliases, phase, status and switches.</summary>
@@ -143,7 +154,7 @@ namespace TfPortable.Cli
         private static readonly SwitchSpec Recursive = new SwitchSpec("recursive", "R", SwitchValue.None, "Include subfolders.");
         private static readonly SwitchSpec Version = new SwitchSpec("version", "V", SwitchValue.Required, "Versionspec: C<n>, <n>, T, L<label>[@scope], D<date>, W[name[;owner]]; ranges a~b.");
         private static readonly SwitchSpec Preview = new SwitchSpec("preview", null, SwitchValue.None, "Show what would be done without doing it.");
-        private static readonly SwitchSpec Lock = new SwitchSpec("lock", "K", SwitchValue.Required, "Lock level; only 'none' is accepted (locks write to the server).", new[] { "none", "checkin", "checkout" });
+        private static readonly SwitchSpec Lock = new SwitchSpec("lock", "K", SwitchValue.Required, "Lock level of the pended items: none (default), checkin blocks checkins of others, checkout blocks checkouts too (a lock is written to the server).", new[] { "none", "checkin", "checkout" });
         private static readonly SwitchSpec Encoding = new SwitchSpec("encoding", null, SwitchValue.Required, "File encoding, e.g. utf-8, windows-1250, binary.");
         private static readonly SwitchSpec Owner = new SwitchSpec("owner", "O", SwitchValue.Required, "Owner filter (* for everyone).");
         private static readonly SwitchSpec Shelveset = new SwitchSpec("shelveset", null, SwitchValue.Required, "Shelveset name[;owner].");
@@ -151,6 +162,13 @@ namespace TfPortable.Cli
 
         private static SwitchSpec Format(params string[] values) =>
             new SwitchSpec("format", "F", SwitchValue.Required, "Output format.", values.Concat(new[] { Json }).ToArray());
+
+        /// <summary>A format switch whose tf.exe values in <paramref name="unsupported"/> answer TFP0006 (`xml`, the external diff formats).</summary>
+        private static SwitchSpec FormatWithout(string[] unsupported, params string[] values) =>
+            new SwitchSpec("format", "F", SwitchValue.Required, "Output format.", values.Concat(new[] { Json }).ToArray(), unsupportedValues: unsupported);
+
+        private static SwitchSpec Unsupported(string name, SwitchValue value, string reason) =>
+            new SwitchSpec(name, null, value, "Not supported by TfPortable yet.", unsupported: reason);
 
         public static readonly CommandSpec[] Commands =
         {
@@ -175,7 +193,7 @@ namespace TfPortable.Cli
             // Phase 1: workspace commands (milestone 3).
             new CommandSpec("status", new[] { "stat" }, 1, CommandStatus.Implemented,
                 "Pending changes of the workspace and, in a local workspace, detected changes.", "[itemspec ...]",
-                Recursive, Format("brief", "detailed"),
+                Recursive, FormatWithout(new[] { "xml" }, "brief", "detailed"),
                 new SwitchSpec("user", "U", SwitchValue.Required, "Owner of the pending changes (* for everyone)."),
                 Shelveset,
                 new SwitchSpec("nodetect", null, SwitchValue.None, "Skip the detection of local changes.")),
@@ -209,7 +227,10 @@ namespace TfPortable.Cli
                 new SwitchSpec("auto", null, SwitchValue.Required, "Resolution for all conflicts.",
                     new[] { "AutoMerge", "AutoMergeForced", "TakeTheirs", "KeepYours", "OverwriteLocal", "DeleteConflict", "KeepYoursRenameTheirs", "AcceptMerge", "AcceptYours", "AcceptTheirs", "AcceptYoursRenameTheirs" }),
                 Preview, Recursive,
-                new SwitchSpec("newname", "N", SwitchValue.Required, "New path for KeepYoursRenameTheirs.")),
+                new SwitchSpec("newname", "N", SwitchValue.Required, "New path for KeepYoursRenameTheirs."),
+                Unsupported("overridetype", SwitchValue.Required, "resolves an encoding conflict by forcing a file type; such conflicts do not arise in practice"),
+                Unsupported("converttotype", SwitchValue.Required, "resolves an encoding conflict by converting the content; such conflicts do not arise in practice"),
+                Unsupported("properties", SwitchValue.Required, "resolves a property conflict; such conflicts do not arise in practice")),
             new CommandSpec("reconcile", Array.Empty<string>(), 1, CommandStatus.Implemented,
                 "Compare the disk with the workspace: promote local changes or clean untracked files.", "[itemspec ...]",
                 new SwitchSpec("clean", null, SwitchValue.None, "Delete files that are not under version control (needs /noprompt without /preview)."),
@@ -235,8 +256,10 @@ namespace TfPortable.Cli
                 "List workspaces of the collection.", "[workspacename]",
                 Owner,
                 new SwitchSpec("computer", "M", SwitchValue.Required, "Computer filter (* for every computer)."),
-                Format("brief", "detailed"),
-                new SwitchSpec("remove", null, SwitchValue.Required, "Remove workspaces from the local cache (* or a comma-separated list).")),
+                FormatWithout(new[] { "xml" }, "brief", "detailed"),
+                new SwitchSpec("remove", null, SwitchValue.Required, "Remove workspaces from the local cache (* or a comma-separated list)."),
+                Unsupported("updateusername", SwitchValue.Required, "rewrites the owner of workspaces on the server after an account was renamed; server administration, not work with code"),
+                Unsupported("updatecomputername", SwitchValue.Required, "rewrites the computer of workspaces on the server after a machine was renamed; server administration, not work with code")),
 
             // Phase 1: history and content (milestone 4).
             new CommandSpec("history", new[] { "hist" }, 1, CommandStatus.Implemented,
@@ -268,11 +291,13 @@ namespace TfPortable.Cli
                 Recursive),
             new CommandSpec("difference", new[] { "diff" }, 1, CommandStatus.Implemented,
                 "Unified diff between workspace and server, two versions, two paths, or a shelveset.", "itemspec [itemspec2]",
-                Version, Encoding, Format("unified", "brief"),
+                Version, Encoding, FormatWithout(new[] { "visual", "context", "rcs", "ss", "ss_sidebyside", "ss_unix", "unix" }, "unified", "brief"),
                 new SwitchSpec("ignorespace", null, SwitchValue.None, "Ignore whitespace."),
                 new SwitchSpec("ignoreeol", null, SwitchValue.None, "Ignore line-ending differences."),
                 new SwitchSpec("ignorecase", null, SwitchValue.None, "Ignore case."),
-                Recursive, Shelveset),
+                Recursive, Shelveset,
+                Unsupported("options", SwitchValue.Required, "passes options to the external diff tool configured in Visual Studio; TfPortable has no external tool"),
+                Unsupported("configure", SwitchValue.None, "opens the Visual Studio dialog for external diff tools; TfPortable shows no dialog")),
             new CommandSpec("dir", Array.Empty<string>(), 1, CommandStatus.Implemented,
                 "List server items.", "itemspec",
                 Version, Recursive,
@@ -302,7 +327,8 @@ namespace TfPortable.Cli
             new CommandSpec("merges", Array.Empty<string>(), 2, CommandStatus.Implemented,
                 "Merge history between two branches.", "[source] destination",
                 Recursive, Format("brief", "detailed"),
-                new SwitchSpec("showall", null, SwitchValue.None, "Include merges of deleted items.")),
+                new SwitchSpec("showall", null, SwitchValue.None, "Include merges of deleted items."),
+                Unsupported("extended", SwitchValue.None, "an extended merge history listing that tf.exe 18.10 itself left empty in the capture (golden merges/extended)")),
             new CommandSpec("annotate", Array.Empty<string>(), 2, CommandStatus.Implemented,
                 "Who changed each line and in which changeset (TfPortable extension).", "itemspec",
                 Version),
@@ -310,7 +336,7 @@ namespace TfPortable.Cli
                 "Differences between two folders (text only).", "[sourcePath] targetPath",
                 Recursive,
                 new SwitchSpec("filter", null, SwitchValue.Required, "Filter patterns."),
-                new SwitchSpec("filterlocalpathsonly", null, SwitchValue.None, "Apply the filter to local paths only."),
+                Unsupported("filterlocalpathsonly", SwitchValue.None, "applies /filter to the local side only; an edge case of /filter"),
                 new SwitchSpec("view", null, SwitchValue.Required, "Which items to show: same, different, sourceOnly, targetOnly (comma-separated).")),
 
             // Phase 3: the everyday write path.
@@ -323,7 +349,11 @@ namespace TfPortable.Cli
                 new SwitchSpec("author", null, SwitchValue.Required, "Author of the changeset when it is not the authenticated user."),
                 new SwitchSpec("force", null, SwitchValue.None, "Check in edits whose content did not change."),
                 new SwitchSpec("shelveset", null, SwitchValue.Required, "Check a shelveset in as a changeset (name[;owner]); the shelveset is deleted; no itemspec or /comment."),
-                Recursive, NoAutoResolve),
+                new SwitchSpec("notes", null, SwitchValue.Required, "Checkin notes: \"Name=Value;Name2=Value2\" or @file (one Name=Value per line)."),
+                Recursive, NoAutoResolve,
+                Unsupported("saved", SwitchValue.None, "a state of the Visual Studio checkin dialog"),
+                Unsupported("bypass", SwitchValue.None, "bypasses a gated check-in build on the server; use /override:<reason> to record why policies are bypassed"),
+                Unsupported("new", SwitchValue.None, "opens the Visual Studio checkin dialog")),
             new CommandSpec("shelve", Array.Empty<string>(), 3, CommandStatus.Implemented,
                 "Store pending changes on the server as a shelveset.", "shelvesetname[;owner] [itemspec ...] [/comment:text|@file] [/replace] [/move] [/recursive]",
                 new SwitchSpec("comment", "C", SwitchValue.Required, "Shelveset comment; @file reads it from a file."),
@@ -331,10 +361,11 @@ namespace TfPortable.Cli
                 new SwitchSpec("move", null, SwitchValue.None, "Undo the local pending changes after shelving them."),
                 new SwitchSpec("delete", null, SwitchValue.None, "Delete the shelveset instead of creating one (protection level 3)."),
                 new SwitchSpec("validate", null, SwitchValue.None, "Evaluate the checkin policies and notes before shelving; failures are item errors (exit 1), the shelveset is still created."),
-                Recursive),
+                Recursive,
+                Unsupported("new", SwitchValue.None, "opens the Visual Studio shelve dialog")),
             new CommandSpec("shelvesets", Array.Empty<string>(), 3, CommandStatus.Implemented,
                 "List shelvesets.", "[shelvesetname[;owner]]",
-                Owner, Format("brief", "detailed")),
+                Owner, FormatWithout(new[] { "xml" }, "brief", "detailed")),
             new CommandSpec("unshelve", Array.Empty<string>(), 3, CommandStatus.Implemented,
                 "Restore a shelveset into the workspace.", "shelvesetname[;owner] [itemspec ...] [/recursive] [/nomerge]",
                 Recursive,
@@ -346,7 +377,8 @@ namespace TfPortable.Cli
                 new SwitchSpec("comment", "C", SwitchValue.Required, "Label comment; @file reads it from a file."),
                 new SwitchSpec("child", null, SwitchValue.Required, "Items already in the label: replace them or merge (default: fail).", new[] { "replace", "merge", "fail" }),
                 new SwitchSpec("delete", null, SwitchValue.None, "Delete the label instead of creating one (protection level 3)."),
-                Version, Recursive),
+                Version, Recursive,
+                Unsupported("owner", SwitchValue.Required, "creates the label under another owner; labels of TfPortable belong to the authenticated user")),
             new CommandSpec("unlabel", Array.Empty<string>(), 3, CommandStatus.Implemented,
                 "Remove items from a label.", "labelname[@scope] itemspec ... [/recursive]",
                 Recursive),
@@ -370,7 +402,11 @@ namespace TfPortable.Cli
                 Version,
                 new SwitchSpec("noget", null, SwitchValue.None, "Do not download the new branch."),
                 Lock,
-                new SwitchSpec("silent", null, SwitchValue.None, "Less output.")),
+                new SwitchSpec("silent", null, SwitchValue.None, "Less output."),
+                Unsupported("checkin", SwitchValue.None, "checks the branch in at once; TfPortable pends it and 'checkin' commits it"),
+                Unsupported("comment", SwitchValue.Required, "the comment of the immediate checkin (/checkin)"),
+                Unsupported("author", SwitchValue.Required, "the author of the immediate checkin (/checkin)"),
+                Unsupported("notes", SwitchValue.Required, "the checkin notes of the immediate checkin (/checkin)")),
 
             // Phase 4: the rest of tf.exe that makes sense for a portable, PAT-only tool (SPEC.md "Fáze 4").
             new CommandSpec("destroy", Array.Empty<string>(), 4, CommandStatus.Implemented,
@@ -389,7 +425,7 @@ namespace TfPortable.Cli
                 new SwitchSpec("user", null, SwitchValue.Required, "User identities (comma-separated; display name, account or e-mail as the server shows it)."),
                 new SwitchSpec("group", null, SwitchValue.Required, "Group identities (comma-separated, e.g. [Project]\\Contributors)."),
                 Recursive,
-                new SwitchSpec("global", null, SwitchValue.None, "Collection-level permissions (not supported).")),
+                Unsupported("global", SwitchValue.None, "collection-level permissions (AdminWorkspaces and the like) are server administration, not version control")),
             new CommandSpec("workspace", Array.Empty<string>(), 4, CommandStatus.Implemented,
                 "Create (/new), delete (/delete), edit or show a workspace.", "[workspacename[;owner]]",
                 new SwitchSpec("new", null, SwitchValue.None, "Create a local workspace for the authenticated user; $/ is mapped to the current folder unless /template is given (protection level 3)."),
@@ -401,7 +437,7 @@ namespace TfPortable.Cli
                 new SwitchSpec("location", null, SwitchValue.Required, "Only 'local' is accepted.", new[] { "local", "server" }),
                 new SwitchSpec("filetime", null, SwitchValue.Required, "File timestamps on get: the time of the get, or the checkin time of the version.", new[] { "current", "checkin" }),
                 new SwitchSpec("newname", null, SwitchValue.Required, "Rename the workspace (protection level 3)."),
-                new SwitchSpec("newowner", null, SwitchValue.Required, "Not supported.")),
+                Unsupported("newowner", SwitchValue.Required, "hands a workspace to another user; TfPortable works with the workspaces of the authenticated user only")),
             new CommandSpec("property", Array.Empty<string>(), 4, CommandStatus.Implemented,
                 "List the versioned-item properties of items, or pend a property change (/setvalues, /deletevalues, /deleteall).", "itemspec ...",
                 Version, Recursive, Lock,

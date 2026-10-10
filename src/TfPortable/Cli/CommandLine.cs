@@ -145,7 +145,20 @@ namespace TfPortable.Cli
                 if (!help && (spec != null || rawCommand.Length == 0))
                 {
                     // Known command, or a global switch without any command; an unknown command stays TFP0001.
+                    if (switchSpec.Unsupported != null && spec != null && spec.Status == CommandStatus.Implemented)
+                    {
+                        throw new TfpException(ErrorCodes.SwitchNotSupported, ExitCodes.GeneralError,
+                            $"Switch '/{switchSpec.Name}' of command '{spec.Name}' is not supported by {toolName} yet: it {switchSpec.Unsupported}.",
+                            $"Use Visual Studio or the original tf.exe for it; '{toolName} help {spec.Name}' lists the supported switches.");
+                    }
+
                     ValidateValue(spec?.Name, switchSpec, raw.Value, toolName);
+                    if (raw.Value != null && switchSpec.IsUnsupportedValue(raw.Value) && spec != null && spec.Status == CommandStatus.Implemented)
+                    {
+                        throw new TfpException(ErrorCodes.SwitchNotSupported, ExitCodes.GeneralError,
+                            $"Value '{raw.Value}' of '/{switchSpec.Name}' for command '{spec.Name}' is not supported by {toolName} yet.",
+                            $"Supported values: {string.Join(", ", switchSpec.Values)}. Use Visual Studio or the original tf.exe for '{raw.Value}'.");
+                    }
                 }
 
                 result.Set(switchSpec.Name, switchSpec.Repeatable && result.Has(switchSpec.Name) && raw.Value != null ? result.Value(switchSpec.Name) + "," + raw.Value : raw.Value);

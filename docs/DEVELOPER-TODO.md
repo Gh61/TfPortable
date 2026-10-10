@@ -122,8 +122,18 @@ is set up). Kept for history; SPEC.md "Fáze 4" is the current definition.
   decided not to have the texts reviewed; they stay as written, to the best of the developer's knowledge.
 - Leftover workspaces `tfp-golden-<id>` in the collection after a CI run that died mid-way: delete them
   occasionally (`tf workspaces /owner:*`).
-- The CI user (`Test TfPortable`) has no **AdminProjectRights** on `$/TfsPortableTestRepo`, so
-  `permission /allow` in the phase 4 integration test is refused by the server (TF14098) and the
-  test only checks that the refusal is reported. To exercise a real permission change in CI, grant
-  the test user "Administer" (AdminProjectRights) on `$/TfsPortableTestRepo/CI` (Project settings →
-  Repositories → TFVC → the folder → Security).
+- The permission of the CI user: see §7.
+
+## 7. "Manage permissions" for the CI user (agreed on 2026-10-10)
+
+The CI user `Test TfPortable` (the owner of `TFP_TEST_PAT`) has no **AdminProjectRights** on
+`$/TfsPortableTestRepo`, so `permission /allow` in `Phase4Tests` is refused by the server (TF14098) and the test
+only checks that the refusal is reported per item.
+
+- Grant the user **Manage permissions** (that is AdminProjectRights) on the folder `$/TfsPortableTestRepo/CI`:
+  Azure DevOps → Project settings → Repositories → the TFVC repository → the folder `CI` → Security → add
+  `Test TfPortable` → Manage permissions: **Allow**. Nothing else is needed.
+- Done when a CI run after the change passes and `Phase4Tests.Workfold_edits_changeset_edit_shelveset_checkin_unshelve_move_and_permission_change`
+  takes the real-change branch (the listing shows the explicit `Lock` allow and the `remove` succeeds); that
+  run also answers question 35 of `docs/tf-reference/questions.md` (the exit code when nothing is applied is
+  already 100 in the code).

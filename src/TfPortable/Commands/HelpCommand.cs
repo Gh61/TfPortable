@@ -143,7 +143,7 @@ namespace TfPortable.Commands
             int width = switches.Max(s => SwitchLabel(s).Length);
             foreach (var s in switches)
             {
-                string extra = s.Extension ? " (TfPortable extension)" : string.Empty;
+                string extra = s.Extension ? " (TfPortable extension)" : s.Unsupported != null ? $" (TFP0006: it {s.Unsupported})" : string.Empty;
                 yield return $"  {SwitchLabel(s).PadRight(width)}  {s.Summary}{extra}";
             }
 
@@ -178,6 +178,7 @@ namespace TfPortable.Commands
                     ["values"] = new JArray(s.Values.Cast<object>().ToArray()),
                     ["summary"] = s.Summary,
                     ["extension"] = s.Extension,
+                    ["unsupported"] = s.Unsupported,
                 }).Cast<object>().ToArray()),
             };
         }

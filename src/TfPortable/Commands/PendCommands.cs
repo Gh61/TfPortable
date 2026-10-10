@@ -17,7 +17,7 @@ namespace TfPortable.Commands
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            WorkspaceCommandSupport.RejectServerLocks(commandLine);
+            var lockLevel = WorkspaceCommandSupport.LockLevelOf(commandLine);
             var items = WorkspaceCommandSupport.Items(commandLine, toolName, false, "add Main\\src\\New.cs");
             using var context = ContextResolver.Resolve(commandLine, output, toolName, requireWorkspace: true);
             var workspace = context.RequireWorkspace(toolName);
@@ -25,7 +25,7 @@ namespace TfPortable.Commands
 
             // .tfignore applies to wildcard and /recursive expansion only; an explicitly named file is always added (docs/compat.md §5).
             bool expands = commandLine.Has("recursive") || items.Any(i => i.HasWildcard);
-            var result = workspace.PendAdd(paths, commandLine.Has("recursive"), commandLine.Value("encoding"), expands && !commandLine.Has("noignore"));
+            var result = workspace.PendAdd(paths, commandLine.Has("recursive"), commandLine.Value("encoding"), expands && !commandLine.Has("noignore"), lockLevel);
             output.Lines(WorkspaceCommandSupport.GroupedByFolder(result.Changes, WorkspaceCommandSupport.NameOf));
             var skipped = WorkspaceCommandSupport.ReportFailures(output, result.Failures, toolName);
             output.Success(WorkspaceCommandSupport.ChangesJson(result.Changes, skipped));
@@ -40,14 +40,14 @@ namespace TfPortable.Commands
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            WorkspaceCommandSupport.RejectServerLocks(commandLine);
+            var lockLevel = WorkspaceCommandSupport.LockLevelOf(commandLine);
             var items = WorkspaceCommandSupport.Items(commandLine, toolName, false, "checkout Main\\src\\App.cs");
             using var context = ContextResolver.Resolve(commandLine, output, toolName, requireWorkspace: true);
             var workspace = context.RequireWorkspace(toolName);
             var paths = WorkspaceCommandSupport.LocalPaths(items, context, toolName);
 
             var recursion = commandLine.Has("recursive") ? RecursionType.Full : RecursionType.None;
-            var result = workspace.PendEdit(paths, recursion, commandLine.Value("encoding"));
+            var result = workspace.PendEdit(paths, recursion, commandLine.Value("encoding"), lockLevel);
             output.Lines(WorkspaceCommandSupport.GroupedByFolder(result.Changes, WorkspaceCommandSupport.NameOf));
             var skipped = WorkspaceCommandSupport.ReportFailures(output, result.Failures, toolName);
             output.Success(WorkspaceCommandSupport.ChangesJson(result.Changes, skipped));
@@ -62,7 +62,7 @@ namespace TfPortable.Commands
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            WorkspaceCommandSupport.RejectServerLocks(commandLine);
+            var lockLevel = WorkspaceCommandSupport.LockLevelOf(commandLine);
             bool detect = commandLine.Has("detect");
             var items = WorkspaceCommandSupport.Items(commandLine, toolName, detect, "delete Main\\src\\Old.cs");
             using var context = ContextResolver.Resolve(commandLine, output, toolName, requireWorkspace: true);
@@ -85,7 +85,7 @@ namespace TfPortable.Commands
                 recursion = RecursionType.None;
             }
 
-            var result = workspace.PendDelete(paths, recursion);
+            var result = workspace.PendDelete(paths, recursion, lockLevel);
             output.Lines(WorkspaceCommandSupport.GroupedByFolder(result.Changes, WorkspaceCommandSupport.NameOf));
             var skipped = WorkspaceCommandSupport.ReportFailures(output, result.Failures, toolName);
             output.Success(WorkspaceCommandSupport.ChangesJson(result.Changes, skipped));
@@ -100,7 +100,7 @@ namespace TfPortable.Commands
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
-            WorkspaceCommandSupport.RejectServerLocks(commandLine);
+            var lockLevel = WorkspaceCommandSupport.LockLevelOf(commandLine);
             if (commandLine.Positionals.Count != 2)
             {
                 throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "rename needs exactly two items: the old and the new path.", $"Example: '{toolName} rename Main\\src\\Old.cs Main\\src\\New.cs'.");
@@ -111,7 +111,7 @@ namespace TfPortable.Commands
             var workspace = context.RequireWorkspace(toolName);
             var paths = WorkspaceCommandSupport.LocalPaths(items, context, toolName);
 
-            var result = workspace.PendRename(paths[0], paths[1]);
+            var result = workspace.PendRename(paths[0], paths[1], lockLevel);
             if (result.Failures.Count > 0 && result.Changes.Count == 0)
             {
                 // The original stops with exit 100 when the source does not exist (rename/not-found).

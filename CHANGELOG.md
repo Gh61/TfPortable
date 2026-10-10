@@ -3,6 +3,17 @@
 One section per release. The CI release step copies the section of the released tag into the
 GitHub release notes, so write the section before the release is run. The newest release comes first.
 
+## Unreleased
+
+- `/lock:checkin` and `/lock:checkout` on `add`, `checkout`, `delete`, `rename`, `merge`, `branch`,
+  `rollback`, `undelete` and `property`: the pended item carries the lock on the server, as in tf.exe.
+- `checkin /notes:"Name=Value;..."` (or `@file`): checkin notes are evaluated and stored; `changeset`
+  shows them (`Check-in Notes:`, JSON `notes`).
+- `TFP0006`: a switch of tf.exe that TfPortable does not support yet answers this code with the reason
+  (`checkin /bypass`, `/format:xml`, `workspace /newowner`, ...); `tfp help <command>` marks them.
+  A typo stays `TFP0002`.
+- `permission` exits 100 when the server applied none of the requested changes (tf.exe's behavior).
+
 ## v0.3.0 (2026-10-10)
 
 Everything of v0.2.0 plus phase 4: every tf.exe version-control command is now implemented or answers

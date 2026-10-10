@@ -22,6 +22,7 @@ namespace TfPortable.Errors
         public const string NotSupported = "TFP0003";
         public const string ProtectionLevel = "TFP0004";
         public const string NotOffered = "TFP0005";
+        public const string SwitchNotSupported = "TFP0006";
 
         public const string PatMissing = "TFP0101";
         public const string PatRejected = "TFP0102";
@@ -59,6 +60,7 @@ namespace TfPortable.Errors
             [NotSupported] = ExitCodes.GeneralError,
             [ProtectionLevel] = ExitCodes.GeneralError,
             [NotOffered] = ExitCodes.GeneralError,
+            [SwitchNotSupported] = ExitCodes.GeneralError,
             [PatMissing] = ExitCodes.Authentication,
             [PatRejected] = ExitCodes.Authentication,
             [PatScope] = ExitCodes.Authentication,

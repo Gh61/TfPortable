@@ -25,16 +25,16 @@ namespace TfPortable.Context
         PendingChangeSet GetPendingChanges(IReadOnlyList<ItemQuery> items, bool detectCandidates);
 
         /// <summary>Pends adds for local paths (wildcards allowed); `applyIgnore` honors .tfignore during expansion.</summary>
-        PendResult PendAdd(IReadOnlyList<string> localPaths, bool recursive, string? encoding, bool applyIgnore);
+        PendResult PendAdd(IReadOnlyList<string> localPaths, bool recursive, string? encoding, bool applyIgnore, LockLevel lockLevel);
 
-        PendResult PendEdit(IReadOnlyList<string> paths, RecursionType recursion, string? encoding);
+        PendResult PendEdit(IReadOnlyList<string> paths, RecursionType recursion, string? encoding, LockLevel lockLevel);
 
-        PendResult PendDelete(IReadOnlyList<string> paths, RecursionType recursion);
+        PendResult PendDelete(IReadOnlyList<string> paths, RecursionType recursion, LockLevel lockLevel);
 
-        PendResult PendRename(string oldPath, string newPath);
+        PendResult PendRename(string oldPath, string newPath, LockLevel lockLevel);
 
         /// <summary>Pends a property change on the paths: a null value deletes the property, a null name with a null value deletes every property.</summary>
-        PendResult PendPropertyChange(IReadOnlyList<string> paths, IReadOnlyList<KeyValuePair<string?, object?>> properties, RecursionType recursion, bool silent);
+        PendResult PendPropertyChange(IReadOnlyList<string> paths, IReadOnlyList<KeyValuePair<string?, object?>> properties, RecursionType recursion, bool silent, LockLevel lockLevel);
 
         /// <summary>Undoes the pending changes of the items; the result lists the undone changes.</summary>
         PendResult Undo(IReadOnlyList<ItemQuery> items);
@@ -53,13 +53,13 @@ namespace TfPortable.Context
         IReadOnlyList<ExtendedItemInfo> GetExtendedItems(IReadOnlyList<ItemQuery> items);
 
         /// <summary>Asks the server what would stop a checkin of the changes: conflicts and note failures. Policies are tfp's own pass (`CheckinPolicies`).</summary>
-        CheckinEvaluation EvaluateCheckin(IReadOnlyList<PendingChangeInfo> changes, string comment, IReadOnlyList<PolicyResultInfo> policies);
+        CheckinEvaluation EvaluateCheckin(IReadOnlyList<PendingChangeInfo> changes, string comment, IReadOnlyList<PolicyResultInfo> policies, IReadOnlyList<KeyValuePair<string, string>>? notes);
 
         /// <summary>
         /// Checks the changes in and returns the changeset number (0 when the server committed nothing). `overrideReason`
         /// records a policy override with the given failure messages; the library's checkin exceptions propagate.
         /// </summary>
-        int CheckIn(IReadOnlyList<PendingChangeInfo> changes, string comment, string? author, string? overrideReason, IReadOnlyList<string> overriddenFailures, bool noAutoResolve, bool allowUnchangedContent);
+        int CheckIn(IReadOnlyList<PendingChangeInfo> changes, string comment, string? author, string? overrideReason, IReadOnlyList<string> overriddenFailures, bool noAutoResolve, bool allowUnchangedContent, IReadOnlyList<KeyValuePair<string, string>>? notes);
 
         /// <summary>Shelves the changes under `name` for the authenticated user; `replace` overwrites an existing shelveset, `move` undoes the local changes.</summary>
         void Shelve(string name, string? comment, IReadOnlyList<PendingChangeInfo> changes, bool replace, bool move);
@@ -71,19 +71,19 @@ namespace TfPortable.Context
         PendResult SetLock(IReadOnlyList<string> paths, LockLevel level, RecursionType recursion);
 
         /// <summary>Pends a merge of the source (server path with recursion) into the target path; null versions = everything.</summary>
-        MergeResult Merge(ItemQuery source, string targetPath, VersionSpec? versionFrom, VersionSpec? versionTo, MergeFlags flags);
+        MergeResult Merge(ItemQuery source, string targetPath, VersionSpec? versionFrom, VersionSpec? versionTo, MergeFlags flags, LockLevel lockLevel);
 
         /// <summary>Pends a branch of the source at the version into the target path; `updateDisk` false = /noget.</summary>
-        PendResult PendBranch(string sourcePath, string targetPath, VersionSpec version, bool updateDisk, bool silent);
+        PendResult PendBranch(string sourcePath, string targetPath, VersionSpec version, bool updateDisk, bool silent, LockLevel lockLevel);
 
         /// <summary>Pends undeletes of deleted items (deletion id in the query, 0 = the only deleted one); `updateDisk` false = /noget.</summary>
-        PendResult PendUndelete(IReadOnlyList<ItemQuery> items, bool updateDisk);
+        PendResult PendUndelete(IReadOnlyList<ItemQuery> items, bool updateDisk, LockLevel lockLevel);
 
         /// <summary>
         /// Pends the reverse of the changesets `versionFrom`..`versionTo` (null items = the whole workspace), or with `toVersion`
         /// brings the items back to `versionTo`. `itemVersion` is the version the item paths refer to (null = the library's default).
         /// </summary>
-        MergeResult Rollback(IReadOnlyList<ItemQuery>? items, VersionSpec? itemVersion, VersionSpec? versionFrom, VersionSpec versionTo, bool toVersion, bool keepMergeHistory, bool noAutoResolve);
+        MergeResult Rollback(IReadOnlyList<ItemQuery>? items, VersionSpec? itemVersion, VersionSpec? versionFrom, VersionSpec versionTo, bool toVersion, bool keepMergeHistory, bool noAutoResolve, LockLevel lockLevel);
 
         /// <summary>Changes the mappings (phase 4 `workfold /map /unmap /cloak /decloak`); the summary is refreshed afterwards.</summary>
         void Map(string serverPath, string localPath);

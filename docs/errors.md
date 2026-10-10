@@ -30,6 +30,7 @@ no workspace or collection.
 | TFP0003 | A tf.exe command or switch that is recognized but not available in this build (planned for a later phase). | Use Visual Studio or the original tf.exe for it. From version 1.0 this code is never returned. | 100 |
 | TFP0004 | The command or switch needs a higher protection level than the configured one (1 read only, 2 everyday work, 3 everything). | A person raises the level with `tfp protection set <n>` in an interactive terminal. An agent reports it and leaves the level alone. | 100 |
 | TFP0005 | A tf.exe command TfPortable never offers: `proxy`, `configure`, `certificates`, the `git` and `settings` groups (client configuration, dialogs, certificate sign-in). | The message says what the command does and why it has no place in a portable, PAT-only tool; use Visual Studio or tf.exe. | 100 |
+| TFP0006 | A switch (or a switch value) of tf.exe that TfPortable does not support yet, e.g. `checkin /bypass`, `/format:xml`, `workspace /newowner` (the list is in `docs/commands.md`, marked ✗). A typo or an unknown switch is TFP0002, not this code. | The message says what the switch does; use Visual Studio or the original tf.exe for it, or ask for it to be added. `tfp help <command>` marks these switches. | 100 |
 
 ## Sign-in (TFP01xx, exit 110)
 
