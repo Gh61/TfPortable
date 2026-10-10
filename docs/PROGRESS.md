@@ -40,6 +40,12 @@ Statuses: not started, in progress, blocked, done.
    the CI step "Check the embedded assemblies against THIRD-PARTY-NOTICES" and THIRD-PARTY-NOTICES.
 5. README "Phases and progress" can go once `v1.0` is out (the developer's note of 2026-10-09); keep the
    protection levels section.
+6. The tf.exe reference notes are complete (`docs/tf-reference/`, 2026-10-10). Pending the developer's answer on
+   the `property` write form (see "Needs the user"): if yes, add `/setvalues`, `/deletevalues`, `/deleteall`
+   (level 2, `Workspace.PendPropertyChange`) and `/propertynames`, `/output` to the catalog, SPEC.md, commands.md,
+   json-schema.md and compat.md §21; the capture script for phase 4 should then use `/setvalues`, not
+   `/setproperty`. The decompiled sources live only in `local/decomp/` on the developer's machine (never
+   committed); re-run `tools/decompile-tf.ps1` to recreate them.
 
 ## Needs the user
 
@@ -47,6 +53,11 @@ The checklist with the details lives in `docs/DEVELOPER-TODO.md` (release `v0.2.
 test project, the golden captures of phases 3 and 4 in one sitting, the permanent shelveset, the decisions
 before phase 4). The items below are kept for history.
 
+- Decision after the decompilation of 2026-10-10 (`docs/tf-reference/property.md`): tf.exe 18.10 can write item
+  properties (`property /setvalues:name=value /deletevalues:name /deleteall`, a pending change, level 2 by the
+  protection model). Should tfp offer the write form (and the read-side `/propertynames:`, `/output:`)? Until
+  decided, `property` stays read-only (TFP0002) and SPEC.md says so. Related, smaller: `rollback /toversion`
+  works without an itemspec in tf.exe (tfp requires one); accept the relaxation?
 - A lawyer's look at LICENSE-EXCEPTION and THIRD-PARTY-NOTICES (Decisions 2026-10-07) is still
   open; `v0.1.0` was released with the current texts.
 - Phase 3 answers of 2026-10-08: CI may check in under `$/TfsPortableTestRepo/CI/<run>` (done, with
@@ -187,6 +198,8 @@ before phase 4). The items below are kept for history.
 | 2026-10-09 | CI loop of PR #17: TF203086 on `destroy` was the library's demand for a full-recursion item spec (a destroy is always recursive), not the `AffectedChanges` flag; the flag is dropped anyway (it empties the item list and tf.exe prints no affected changes either); `SetPermissions` returns only the applied changes and reports the rest only through the NonFatalError event (an identity given by e-mail was not found), so an unapplied change is a TFP0501 item error (JSON `skipped`) with the library's failure text as `serverMessage`; the integration test addresses the CI user by display name; `workspace` edits re-read the workspace from the server (the runtime cache keeps the old permission profile); `lock` passes server paths to the library as given (a lock in another workspace needs no local copy); the JSON Message gains `serverMessage` (the server text was visible in text mode only); the workspace permission profile is applied through the workspace security namespace, which the test collection may not offer (the test accepts Private) | CI runs 140–145 |
 | 2026-10-09 | Second review of PR #17 (the CI-fix commits, independent agent): a request with an identity and `/inherit` is two library changes, so `permission` matches the applied changes and the failures per part (a rejected root inheritance change next to an applied permission change is no longer silent, `.` as the identity is accepted as applied) and treats everything as applied when the library reported no failure (the echoed identity form is not relied on); SPEC.md lost the `affectedPendingChanges[]`/`affectedShelvedChanges[]` fields of `destroy` and gained `skipped[]` of `permission` and `serverMessage` of the Message; commands.md says `lock /workspace:` works (level 3) and that an unmapped server path is the server's error; the workspace test asserts the edited profile when the server applies profiles | Review findings |
 | 2026-10-09 | `docs/errors.md` lists every TFP code with situation, next step and exit code, linked from README, `docs/CLAUDE.md`, `json-schema.md`, `commands.md` and SPEC.md; `CHANGELOG.md` holds the release notes and the CI release step copies the section of the released tag into the GitHub release | Developer's request of 2026-10-09; the release pages of v0.1.0 and v0.2.0 cannot be edited from the cloud session (403) |
+| 2026-10-10 | tf.exe 18.10.12215.6 decompiled on the developer's machine (`tools/decompile-tf.ps1`, fixed: the `FileVersion` string of tf.exe 18 contains `built by: releases/...` and is not a folder name, the command classes are `Command<Name>.cs`, and `Microsoft.TeamFoundation.Client.dll` is decompiled too because the exit-code and stream machinery lives there). All 34 questions of `docs/tf-reference/questions.md` answered into 15 notes (`general.md`, `checkin.md`, `shelve.md`, `label.md`, `lock.md`, `destroy.md`, `permission.md`, `workspace.md`, `undo.md`, `property.md`, `merge.md`, `branch.md`, `rollback.md`, `undelete.md`, `folderdiff.md`); three questions stay open (server messages and an untestable exit code). Key facts: one exit-code rule (max wins, a differing lower code collapses to 1, escaped exceptions are 100, library per-item errors are 1) plus explicit per-command `SetExitCode` calls; warnings and errors go to stderr, listings and info to stdout, by message kind; `/noprompt` is implied when stdout is redirected; `.tfignore` is applied by the library's `PendAdd` and `add` turns its warning into exit 1; `checkin` evaluates policies and notes before every checkin and conflicts only with `/validate`, `/override` without failures is dropped silently, `/associate` is not a switch; `shelve /validate` is incompatible with `/noprompt`; `label` passes a null scope to the server; `branch` defaults to Latest; `rollback /toversion` is `v`..Latest; `folderdiff` compares length and MD5 and defaults to one level; `workspace /new` location comes from the server setting | Every behavior tfp implements from these questions matches the notes except the deviations already in `docs/compat.md`; no code change needed |
+| 2026-10-10 | `property` has a write form in tf.exe 18.10 after all: `/setvalues:name=value;...`, `/deletevalues:name`, `/deleteall` pend a property change (`Workspace.PendPropertyChange`), and `/propertynames:`/`/output:` filter and export on reading. SPEC.md (catalog row and phase 4 table) and `docs/compat.md` §21 corrected to state the fact; tfp keeps `property` read-only until the developer decides (see "Needs the user") | The phase 4 capture tried `/setproperty`, which is not the name; the decompiled option table (`Options.cs`, exact enum names) shows the real switches |
 
 ## Open questions
 
@@ -210,8 +223,18 @@ edit, `shelve /replace`, `unshelve` with a local file in the way, `label` withou
 edge cases), `add /recursive` with `.tfignore` (tf.exe exits 1; tfp keeps 0), `reconcile /promote` without
 switches (promotes nothing in tf.exe; tfp keeps promoting), TFP0402 for `unshelve`.
 
+Closed on 2026-10-10 by decompiling tf.exe 18.10.12215.6 (`docs/tf-reference/*.md`, Decisions 2026-10-10): all 34
+questions of `docs/tf-reference/questions.md`, including the exit-code rule, the stream rule, the `.tfignore`
+mechanism, the checkin evaluation options, `/override` semantics, the shelve/unshelve library calls, label
+defaults, destroy flags, permission shape and identity handling, workspace defaults, `property` switches, merge
+preview and summary rules, branch and rollback version defaults, folderdiff comparison.
+
 Open:
 
+- From the decompilation (`docs/tf-reference/questions.md`, 25a, 35, 36): the server's message for
+  `undo /workspace:<other>` without permission; tfp's exit code when a `permission` change applies nowhere
+  (tf.exe: 100; tfp reports per-part item errors, untested because the CI user cannot change permissions);
+  whether Azure DevOps Services accepts `destroy /startcleanup`.
 - No golden case exists for TFP0402 from `get` (the library's "writable" status): local workspaces report a
   conflict instead; `unshelve/local-file-in-the-way` is the only capture of a writable file in the way.
 - A checkin policy failure is still uncaptured (the test project has no policy); `checkin /associate` is a
@@ -241,6 +264,19 @@ Open:
   `tools/capture-tf-golden-extra.ps1` (from C84, including history padding).
 
 ## Session log
+
+### 2026-10-10 – local session, decompilation of tf.exe (branch `main`)
+
+- Done: `tools/decompile-tf.ps1` run on the developer's machine against Visual Studio 18 Community
+  (tf.exe 18.10.12215.6, client assemblies 20.271); three script fixes (version folder name, `Command<Name>.cs`
+  index, `Microsoft.TeamFoundation.Client.dll` included). Every question of `docs/tf-reference/questions.md`
+  answered from the decompiled command classes into 15 notes under `docs/tf-reference/`; `questions.md` now lists
+  the three remaining server-side questions and the facts that need a decision. SPEC.md and `docs/compat.md`
+  §20/§21 corrected on the `property` write form. No code changed: everything tfp implements from the former
+  assumptions matches, the remaining differences were already recorded as deviations.
+- Next: the developer decides on the `property` write form and the `rollback /toversion` relaxation ("Needs the
+  user"); then release `v0.3.0` (step 3 of "Next steps").
+- Blockers: none.
 
 ### 2026-10-09 – cloud session, phase 4 (branch `p4-server`, PR #17)
 

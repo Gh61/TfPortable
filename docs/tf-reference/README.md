@@ -30,7 +30,9 @@ command makes, how exit codes are chosen) without running anything against a ser
 
    It installs `ilspycmd` when needed, decompiles `TF.exe` and the `Microsoft.TeamFoundation.VersionControl.*`
    assemblies next to it into `local\decomp\<version>\`, and writes `index.md` there with the assembly versions
-   and the list of `*Command.cs` files.
+   and the list of command classes (`TF\Microsoft.TeamFoundation.VersionControl.CommandLine\Command<Name>.cs`).
+   The exit-code and output machinery lives in `Microsoft.TeamFoundation.Client.dll`
+   (`Microsoft.TeamFoundation.Client.CommandLine` and `ConsoleHost`), which the script decompiles as well.
 2. Answer the questions in `questions.md`, one file per command (`checkin.md`, `label.md`, ...), using the
    template below. Either the developer answers them, or the developer gives the agent the `local/decomp/`
    folder in a session (upload or a shared drive) and the agent writes the notes for the developer's review.
