@@ -86,16 +86,16 @@ namespace TfPortable.Settings
             bool valid = false;
             try
             {
-                var json = JObject.Parse(File.ReadAllText(path, Encoding.UTF8));
-                string? stamp = (string?)json["previewedAt"];
-                if (stamp != null && DateTime.TryParse(stamp, null, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime previewedAt))
+                DateTime? previewedAt = PreviewedAt(File.ReadAllText(path, Encoding.UTF8));
+                if (previewedAt != null)
                 {
-                    var age = Clock() - previewedAt.ToUniversalTime();
+                    var age = Clock() - previewedAt.Value;
                     valid = age >= TimeSpan.Zero && age <= Validity;
                 }
             }
-            catch (Exception ex) when (ex is Newtonsoft.Json.JsonException || ex is IOException)
+            catch (Exception ex) when (ex is Newtonsoft.Json.JsonException || ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is InvalidCastException)
             {
+                // A damaged or unreadable marker (a stamp that is not a string, a protected file) is stale, never a crash.
                 valid = false;
             }
 
@@ -105,6 +105,24 @@ namespace TfPortable.Settings
             }
 
             return valid;
+        }
+
+        /// <summary>
+        /// The UTC instant of the preview from the marker text, or null when it is missing or unreadable. The reader keeps the stamp a
+        /// string: with its default date handling, Json.NET turns an ISO stamp into a DateTime whose string form has no offset, and the
+        /// marker then looked hours old (or in the future) on every machine outside UTC.
+        /// </summary>
+        internal static DateTime? PreviewedAt(string markerText)
+        {
+            using var reader = new Newtonsoft.Json.JsonTextReader(new StringReader(markerText)) { DateParseHandling = Newtonsoft.Json.DateParseHandling.None };
+            var json = JObject.Load(reader);
+            string? stamp = (string?)json["previewedAt"];
+            if (stamp != null && DateTime.TryParse(stamp, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime previewedAt))
+            {
+                return previewedAt.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(previewedAt, DateTimeKind.Utc) : previewedAt.ToUniversalTime();
+            }
+
+            return null;
         }
 
         /// <summary>Removes the marker: one preview covers one destroy that reached the server.</summary>

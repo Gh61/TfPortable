@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Newtonsoft.Json.Linq;
 using TfPortable.Cli;
@@ -496,15 +497,66 @@ namespace TfPortable.Commands
         }
     }
 
-    /// <summary>`tfp property itemspec ... [/version:] [/recursive]`: the versioned-item properties (level 1). The write form of tf.exe
-    /// (`/setvalues`, `/deletevalues`, `/deleteall`, a pending property change) is planned; see docs/tf-reference/property.md.</summary>
+    /// <summary>
+    /// `tfp property itemspec ... [/version:] [/recursive] [/propertynames:] [/output:]` lists the versioned-item properties (level 1);
+    /// `/setvalues:name=value;...`, `/deletevalues:name`, `/deleteall` pend a property change in the workspace (level 2), as tf.exe 18.10
+    /// (docs/tf-reference/property.md).
+    /// </summary>
     internal sealed class PropertyCommand : ICommand
     {
         public string Name => "property";
 
         public int Run(CommandLine commandLine, OutputWriter output, string toolName)
         {
+            WorkspaceCommandSupport.RejectServerLocks(commandLine);
             var items = WorkspaceCommandSupport.Items(commandLine, toolName, false, "property Main\\src\\App.cs");
+            bool set = commandLine.Has("setvalues");
+            bool delete = commandLine.Has("deletevalues");
+            bool deleteAll = commandLine.Has("deleteall");
+            bool writes = set || delete || deleteAll;
+            RejectCombinations(commandLine, toolName);
+
+            if (writes)
+            {
+                var properties = new List<KeyValuePair<string?, object?>>();
+                if (set)
+                {
+                    properties.AddRange(ParseSetValues(commandLine.Value("setvalues")!, toolName));
+                }
+
+                foreach (string name in commandLine.Values("deletevalues"))
+                {
+                    properties.Add(new KeyValuePair<string?, object?>(name, null));
+                }
+
+                if (deleteAll)
+                {
+                    properties.Add(new KeyValuePair<string?, object?>(null, null));
+                }
+
+                if (properties.Count == 0)
+                {
+                    throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "/deletevalues needs at least one property name.", $"Example: '{toolName} property /deletevalues:owner Main\\src\\App.cs'.");
+                }
+
+                using var context = ContextResolver.Resolve(commandLine, output, toolName, requireWorkspace: true);
+                var workspace = context.RequireWorkspace(toolName);
+                var paths = WorkspaceCommandSupport.LocalPaths(items, context, toolName);
+                var recursion = commandLine.Has("recursive") ? RecursionType.Full : RecursionType.None;
+                var result = workspace.PendPropertyChange(paths, properties, recursion, commandLine.Has("silent"));
+                output.Lines(WorkspaceCommandSupport.GroupedByFolder(result.Changes, WorkspaceCommandSupport.NameOf));
+                var skipped = WorkspaceCommandSupport.ReportFailures(output, result.Failures, toolName);
+                output.Success(WorkspaceCommandSupport.ChangesJson(result.Changes, skipped));
+                return ExitCodes.Success;
+            }
+
+            return List(commandLine, output, toolName, items);
+        }
+
+        private static int List(CommandLine commandLine, OutputWriter output, string toolName, List<ParsedItemSpec> items)
+        {
+            var names = commandLine.Values("propertynames");
+            string? outputPath = commandLine.Value("output");
             using var context = ContextResolver.Resolve(commandLine, output, toolName, requireWorkspace: false);
             var summary = context.Workspace?.Summary;
             var recursion = commandLine.Has("recursive") ? RecursionType.Full : RecursionType.None;
@@ -512,16 +564,152 @@ namespace TfPortable.Commands
             var version = versionText == null ? VersionSpec.Latest : VersionSpecParser.ParseSingle(versionText, summary?.Name, summary?.Owner);
 
             var queries = items.Select(i => new ItemQuery(context.ServerPathOf(i, toolName), recursion, i.DeletionId)).ToList();
-            var properties = context.Client.GetItemProperties(queries, version);
+            var properties = context.Client.GetItemProperties(queries, version, names);
             if (properties.Count == 0)
             {
                 // The server returns nothing for an item without properties: list the items asked for.
                 properties = queries.Select(q => new ItemPropertiesInfo(q.Path, Array.Empty<KeyValuePair<string, string?>>())).ToList();
             }
 
-            output.Lines(Render(properties));
-            output.Success(new JObject { ["items"] = new JArray(properties.Select(p => p.ToJson()).Cast<object>().ToArray()) });
+            string? written = null;
+            if (outputPath != null)
+            {
+                // tf.exe writes the first value of the one requested property: bytes for a binary value, text otherwise.
+                string name = names[0];
+                var holder = properties.FirstOrDefault(p => p.Properties.Any(v => string.Equals(v.Key, name, StringComparison.OrdinalIgnoreCase)));
+                if (holder == null)
+                {
+                    output.Warning($"No item has the property '{name}'; nothing was written to {outputPath}.");
+                }
+                else
+                {
+                    string fullPath = Path.GetFullPath(outputPath);
+                    if (holder.BinaryValues.TryGetValue(name, out var bytes))
+                    {
+                        File.WriteAllBytes(fullPath, bytes);
+                    }
+                    else
+                    {
+                        string? value = holder.Properties.First(v => string.Equals(v.Key, name, StringComparison.OrdinalIgnoreCase)).Value;
+                        File.WriteAllText(fullPath, value ?? string.Empty, new UTF8Encoding(false));
+                    }
+
+                    written = fullPath;
+                    output.Line($"Wrote {name} of {holder.ServerPath} to {fullPath}.");
+                }
+            }
+            else
+            {
+                output.Lines(Render(properties));
+            }
+
+            output.Success(new JObject
+            {
+                ["items"] = new JArray(properties.Select(p => p.ToJson()).Cast<object>().ToArray()),
+                ["output"] = written,
+            });
             return ExitCodes.Success;
+        }
+
+        /// <summary>The switch combinations tf.exe refuses (exit 100): a write form with a read filter, `/output` or `/version`, `/output` without one property name or with `/recursive`.</summary>
+        internal static void RejectCombinations(CommandLine commandLine, string toolName)
+        {
+            bool set = commandLine.Has("setvalues");
+            bool delete = commandLine.Has("deletevalues");
+            bool deleteAll = commandLine.Has("deleteall");
+            bool outputFile = commandLine.Has("output");
+            string? conflict = null;
+            if (set && delete) { conflict = "/setvalues and /deletevalues"; }
+            else if (set && deleteAll) { conflict = "/setvalues and /deleteall"; }
+            else if ((set || delete || deleteAll) && outputFile) { conflict = "a property change and /output"; }
+            else if ((set || delete || deleteAll) && commandLine.Has("version")) { conflict = "a property change and /version"; }
+            else if ((set || delete || deleteAll) && commandLine.Has("propertynames")) { conflict = "a property change and /propertynames"; }
+            else if ((set || delete || deleteAll) && commandLine.Has("collection")) { conflict = "a property change and /collection"; }
+
+            if (conflict != null)
+            {
+                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, $"{conflict} cannot be combined.",
+                    $"Change properties in the workspace ('{toolName} property /setvalues:name=value <item>') or list them ('{toolName} property /propertynames:name <item>'), not both.");
+            }
+
+            if (outputFile)
+            {
+                var names = commandLine.Values("propertynames");
+                if (names.Length != 1)
+                {
+                    throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "/output needs exactly one property name in /propertynames.",
+                        $"Example: '{toolName} property /propertynames:icon /output:icon.bin Main\\src\\App.cs'.");
+                }
+
+                if (commandLine.Has("recursive"))
+                {
+                    throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "/output and /recursive cannot be combined.", "Name one item.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// `name=value[;name=value...]` of tf.exe: `;;` is a literal semicolon, `==` a literal equals sign; a value `@file` reads the file
+        /// as a binary value. An empty name or value is TFP0002.
+        /// </summary>
+        internal static List<KeyValuePair<string?, object?>> ParseSetValues(string text, string toolName)
+        {
+            var result = new List<KeyValuePair<string?, object?>>();
+            foreach (string pair in SplitUnescaped(text, ';'))
+            {
+                var parts = SplitUnescaped(pair, '=');
+                string name = parts.Count > 0 ? parts[0] : string.Empty;
+                string value = parts.Count > 1 ? string.Join("=", parts.Skip(1)) : string.Empty;
+                if (parts.Count < 2 || name.Length == 0 || value.Length == 0)
+                {
+                    throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, $"/setvalues: '{pair}' is not name=value.",
+                        $"Example: '{toolName} property /setvalues:owner=team;icon=@icon.png Main\\src\\App.cs' (';;' and '==' for literal separators).");
+                }
+
+                if (value.Length > 1 && value[0] == '@')
+                {
+                    string file = Path.GetFullPath(value.Substring(1));
+                    if (!File.Exists(file))
+                    {
+                        throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, $"/setvalues: the file {file} of the binary value '{name}' does not exist.", "A value that starts with @ names a file whose bytes become the property value.");
+                    }
+
+                    result.Add(new KeyValuePair<string?, object?>(name, File.ReadAllBytes(file)));
+                    continue;
+                }
+
+                result.Add(new KeyValuePair<string?, object?>(name, value));
+            }
+
+            return result;
+        }
+
+        /// <summary>Splits on a separator unless it is doubled; a doubled separator becomes one literal character.</summary>
+        internal static List<string> SplitUnescaped(string text, char separator)
+        {
+            var result = new List<string>();
+            var current = new StringBuilder();
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] == separator)
+                {
+                    if (i + 1 < text.Length && text[i + 1] == separator)
+                    {
+                        current.Append(separator);
+                        i++;
+                        continue;
+                    }
+
+                    result.Add(current.ToString());
+                    current.Clear();
+                    continue;
+                }
+
+                current.Append(text[i]);
+            }
+
+            result.Add(current.ToString());
+            return result;
         }
 
         /// <summary>The block of the original (golden `property/read`): a dashed line, `Server item:`, then the properties or a note.</summary>

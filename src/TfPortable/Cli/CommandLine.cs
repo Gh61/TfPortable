@@ -148,7 +148,7 @@ namespace TfPortable.Cli
                     ValidateValue(spec?.Name, switchSpec, raw.Value, toolName);
                 }
 
-                result.Set(switchSpec.Name, raw.Value);
+                result.Set(switchSpec.Name, switchSpec.Repeatable && result.Has(switchSpec.Name) && raw.Value != null ? result.Value(switchSpec.Name) + "," + raw.Value : raw.Value);
             }
 
             return result;
