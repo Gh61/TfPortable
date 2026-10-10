@@ -492,7 +492,7 @@ tf vc destroy [/keephistory] itemspec1[;versionspec] [itemspec2...itemspecN] [/s
 | `itemspec[;versionspec\|;Xdeletionid]` | ✓ one server call per item (a local path is mapped through the workspace) |
 | `/preview` | ✓ lists `Would destroy: $/path` per item and records the preview; **the real destroy needs a preview with the same items and switches in the last 10 minutes** (TFP0410 otherwise; one preview covers one destroy). tf.exe prints `Destroyed:` even in a preview |
 | `/keephistory`, `/stopat:` | ✓ passed to the server (`/stopat` without `/keephistory` is TFP0002) |
-| `/startcleanup`, `/silent` | ✓ (`/startcleanup` is passed to the server; Azure DevOps Services accepted it in CI on 2026-10-10) |
+| `/startcleanup`, `/silent` | ✓ (`/startcleanup` is passed to the server; Azure DevOps Services accepted it, CI run 167 of 2026-10-10) |
 
 Output: `Destroyed: $/path` per item. A missing item is TFP0301 (exit 100, as tf.exe VS403405). Protection level 3.
 The library's query of the pending and shelved changes a destroy touches (`AffectedChanges`) is not used: it empties

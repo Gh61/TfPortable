@@ -34,9 +34,9 @@ Answered on 2026-10-10 from tf.exe 18.10.12215.6 (the numbers are kept so that o
     a partial result stays exit 1 through the item errors. Still untested in CI until the CI user may change
     permissions (`docs/DEVELOPER-TODO.md` §7).
 
-36. `destroy /startcleanup` on Azure DevOps Services: tf.exe only forwards the flag (`destroy.md`). The destroy
-    integration test passes it since 2026-10-10; the CI result says whether the service accepts it (recorded in
-    `docs/compat.md` §22 once known).
+36. `destroy /startcleanup` on Azure DevOps Services: tf.exe only forwards the flag (`destroy.md`). Answered on
+    2026-10-10: the service accepts it (CI run 167, the destroy integration test passes the flag on every run;
+    `docs/compat.md` §22).
 
 ## New facts that need a decision (see PROGRESS.md "Needs the user")
 

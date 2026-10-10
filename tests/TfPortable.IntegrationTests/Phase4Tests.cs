@@ -254,8 +254,10 @@ namespace TfPortable.IntegrationTests
                     var denied = ((JArray)JObject.Parse(allow.Stdout)["errors"]!).FirstOrDefault(e => (string?)e["tfCode"] == "TF14098");
                     if (denied != null)
                     {
-                        // The CI user has no AdminProjectRights on the test project (a server setting, docs/DEVELOPER-TODO.md): the refusal must be reported per item.
-                        Assert.Equal(1, allow.ExitCode);
+                        // The CI user has no AdminProjectRights on the test project (a server setting, docs/DEVELOPER-TODO.md §7): the refusal must be
+                        // reported per item, and nothing applied is exit 100 as tf.exe (question 35).
+                        Assert.Equal(100, allow.ExitCode);
+                        Assert.False((bool)JObject.Parse(allow.Stdout)["ok"]!);
                         Assert.Equal("TFP0501", (string)denied["code"]!);
                         Assert.Equal(serverPath, (string)denied["item"]!);
                         Assert.Single((JArray)Data(allow)["skipped"]!);
