@@ -426,7 +426,10 @@ namespace TfPortable.IntegrationTests
                 var properties = ((JArray)Data(all)["items"]!).Single()["properties"]!;
                 Assert.Equal("team-a;b", (string?)properties["tfp-owner"]);
                 Assert.Equal("<binary, 4 bytes>", (string?)properties["tfp-icon"]);
-                Assert.Contains("tfp-owner = team-a;b", all.Stdout.Replace("\r", string.Empty));
+                var text = Run($"property {file}");
+                Assert.True(text.ExitCode == 0, text.Stderr + text.Stdout);
+                Assert.Contains("tfp-owner = team-a;b", text.Stdout);
+                Assert.Contains("tfp-icon = <binary, 4 bytes>", text.Stdout);
                 var filtered = Run($"property {file} /propertynames:tfp-owner /format:json");
                 Assert.True(filtered.ExitCode == 0, filtered.Stderr + filtered.Stdout);
                 var filteredProperties = (JObject)((JArray)Data(filtered)["items"]!).Single()["properties"]!;
