@@ -19,8 +19,9 @@ Read from: `TF/Microsoft.TeamFoundation.VersionControl.CommandLine/CommandRollba
   with `paths` = the item specs **as given, an empty array when none**; the library's workspace-wide behavior
   decides what an empty array means (the whole workspace). So `/changeset:C85~C90` without items rolls back the
   whole workspace from C85 to C90 in one call.
-- `/toversion:<v>`: **versionFrom = v, versionTo = Latest**, with `RollbackOptions.ToVersion`; the switch
-  needs no itemspec in tf.exe itself (the Microsoft docs require one). `/keepmergehistory` →
+- `/toversion:<v>`: **versionFrom = v, versionTo = Latest**, with `RollbackOptions.ToVersion`. tf.exe itself
+  does not check for an itemspec, but the server refuses the empty list with TF203065 (exit 100; golden
+  `rollback/toversion-no-item`), so an itemspec is required in effect. `/keepmergehistory` →
   `KeepMergeHistory`, `/silent` → `Silent`, `/noautoresolve` → `NoAutoResolve`.
 - Operations print through the `Merging` event (same shapes as `merge`); failures without operations → exit
   100; nothing to do → stdout "no changes to roll back" unless `/silent`.
@@ -31,4 +32,5 @@ Read from: `TF/Microsoft.TeamFoundation.VersionControl.CommandLine/CommandRollba
 
 - compat.md §15: `v` as the lower bound and Latest as the upper bound for `/toversion`, the whole workspace for
   `/changeset` without items: confirmed exactly.
-- tfp requires an itemspec for `/toversion` (from the docs); tf.exe does not. Optional relaxation.
+- tfp requires an itemspec for `/toversion` (TFP0002, exit 100) where tf.exe lets the server refuse it (TF203065,
+  exit 100): same outcome, kept (decided with the developer on 2026-10-10).

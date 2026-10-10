@@ -41,5 +41,4 @@ Answered on 2026-10-10 from tf.exe 18.10.12215.6 (the numbers are kept so that o
 
 - `property` has a write form in tf.exe 18.10 (`/setvalues`, `/deletevalues`, `/deleteall`, pending property
   changes) and read-side switches `/propertynames` and `/output`; SPEC.md and compat.md §21 said there was none.
-- `rollback /toversion` works without an itemspec in tf.exe (tfp requires one, following the Microsoft docs).
 - `add /noignore` exists in tf.exe 18.10 (tfp has it in the catalog already).

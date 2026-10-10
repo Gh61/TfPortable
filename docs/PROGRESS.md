@@ -56,8 +56,8 @@ before phase 4). The items below are kept for history.
 - Decision after the decompilation of 2026-10-10 (`docs/tf-reference/property.md`): tf.exe 18.10 can write item
   properties (`property /setvalues:name=value /deletevalues:name /deleteall`, a pending change, level 2 by the
   protection model). Should tfp offer the write form (and the read-side `/propertynames:`, `/output:`)? Until
-  decided, `property` stays read-only (TFP0002) and SPEC.md says so. Related, smaller: `rollback /toversion`
-  works without an itemspec in tf.exe (tfp requires one); accept the relaxation?
+  decided, `property` stays read-only (TFP0002) and SPEC.md says so. (The `rollback /toversion` question raised
+  the same day was withdrawn: the server requires the itemspec, TF203065, so tfp's TFP0002 stays.)
 - A lawyer's look at LICENSE-EXCEPTION and THIRD-PARTY-NOTICES (Decisions 2026-10-07) is still
   open; `v0.1.0` was released with the current texts.
 - Phase 3 answers of 2026-10-08: CI may check in under `$/TfsPortableTestRepo/CI/<run>` (done, with
@@ -274,8 +274,11 @@ Open:
   the three remaining server-side questions and the facts that need a decision. SPEC.md and `docs/compat.md`
   §20/§21 corrected on the `property` write form. No code changed: everything tfp implements from the former
   assumptions matches, the remaining differences were already recorded as deviations.
-- Next: the developer decides on the `property` write form and the `rollback /toversion` relaxation ("Needs the
-  user"); then release `v0.3.0` (step 3 of "Next steps").
+- Developer's answers the same day: `rollback /toversion` stays as it is (the itemspec is required by the server,
+  golden `rollback/toversion-no-item`, so the relaxation would only swap TFP0002 for TF203065); the `property`
+  write form is still undecided (properties explained: free item metadata, no Visual Studio UI).
+- Next: the developer decides on the `property` write form ("Needs the user"); then release `v0.3.0` (step 3 of
+  "Next steps").
 - Blockers: none.
 
 ### 2026-10-09 – cloud session, phase 4 (branch `p4-server`, PR #17)
