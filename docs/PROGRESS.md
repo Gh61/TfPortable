@@ -14,8 +14,8 @@ Read this first in every session. Update it at the end of every session (see CLA
 | 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | done: [PR #4](https://github.com/Gh61/TfPortable/pull/4) (docs/CLAUDE.md, compatibility tests, embedded-assembly check, THIRD-PARTY-NOTICES) reviewed, CI green and merged into `main` on 2026-10-08; release [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) published the same day (developer approved; `tfp.exe` + SHA-256 from the CI run on 2a1c007) | user approved the release on 2026-10-08 |
 | P2 | Phase 2: `merge`, `branch`, `rollback`, `undelete` as pending changes, `merges`, `folderdiff`, `annotate` | cloud + CI | done: [PR #12](https://github.com/Gh61/TfPortable/pull/12) reviewed by an independent agent (findings under Decisions), CI green (195 unit and 86 integration tests) and merged into `main` on 2026-10-08 with a merge commit | – |
 | P3 | Phase 3: protection levels, `checkin`, `shelve`/`shelvesets`/`unshelve`, `label`/`unlabel`, `lock` | cloud + CI | done: [PR #9](https://github.com/Gh61/TfPortable/pull/9) merged into `main` on 2026-10-08 (merge commit 3c92ea2) after an independent review (findings under Decisions); 187 unit and 82 integration tests green | release `v0.2.0` (developer) |
-| P4 | Phase 4: `destroy` (preview marker), `permission`, `workspace`, `property`, `resolvepath`, `docs`/`msdn`, `workfold` mapping edits, `changeset /comment /notes`, `checkin /shelveset`, `unshelve /move`, `shelve /validate`, `lock`/`undo` on another workspace; `proxy`/`configure`/`certificates` as TFP0005; `docs/errors.md` | cloud + CI | done: [PR #17](https://github.com/Gh61/TfPortable/pull/17) reviewed twice by an independent agent (findings under Decisions), CI green (205 unit and 94 integration tests, run 150 on 047d922) and merged into `main` on 2026-10-09 with a merge commit | release `v0.3.0`, then `v1.0` when no TFP0003 is left (developer) |
-| P4b | `property` write form of tf.exe (`/setvalues`, `/deletevalues`, `/deleteall`, `/propertynames`, `/output`); destroy preview marker fix for machines outside UTC | cloud + CI | done: [PR #18](https://github.com/Gh61/TfPortable/pull/18) reviewed by an independent agent (findings under Decisions), CI green (206 unit and 95 integration tests, run 157 on ff71155) and merged into `main` on 2026-10-10 with a merge commit | release `v0.3.0` (developer's word of 2026-10-10) |
+| P4 | Phase 4: `destroy` (preview marker), `permission`, `workspace`, `property`, `resolvepath`, `docs`/`msdn`, `workfold` mapping edits, `changeset /comment /notes`, `checkin /shelveset`, `unshelve /move`, `shelve /validate`, `lock`/`undo` on another workspace; `proxy`/`configure`/`certificates` as TFP0005; `docs/errors.md` | cloud + CI | done: [PR #17](https://github.com/Gh61/TfPortable/pull/17) reviewed twice by an independent agent (findings under Decisions), CI green (205 unit and 94 integration tests, run 150 on 047d922) and merged into `main` on 2026-10-09 with a merge commit | released as [v0.3.0](https://github.com/Gh61/TfPortable/releases/tag/v0.3.0) on 2026-10-10; `v1.0` is the developer's call (see next steps) |
+| P4b | `property` write form of tf.exe (`/setvalues`, `/deletevalues`, `/deleteall`, `/propertynames`, `/output`); destroy preview marker fix for machines outside UTC | cloud + CI | done: [PR #18](https://github.com/Gh61/TfPortable/pull/18) reviewed by an independent agent (findings under Decisions), CI green (206 unit and 95 integration tests, run 157 on ff71155) and merged into `main` on 2026-10-10 with a merge commit | released as [v0.3.0](https://github.com/Gh61/TfPortable/releases/tag/v0.3.0) on 2026-10-10 |
 | GC | Golden comparison: tfp against the captures of phases 2, 3, 4 and the extra2 gaps (2026-10-09) | cloud + CI | done: [PR #14](https://github.com/Gh61/TfPortable/pull/14) reviewed by an independent agent (findings under Decisions), CI green (197 unit and 90 integration tests) and merged into `main` on 2026-10-09 with a merge commit; fixes and recorded deviations in `docs/compat.md` §20 | – |
 
 Statuses: not started, in progress, blocked, done.
@@ -31,12 +31,20 @@ Statuses: not started, in progress, blocked, done.
 2. Optional follow-ups the comparison surfaced (not started): golden tests that load the phase 2 and extra2
    cases explicitly (the golden runner only runs cases listed by `group/name`); the `get` over a writable
    file case (TFP0402) is still uncaptured.
-3. Phase 4 is merged ([PR #17](https://github.com/Gh61/TfPortable/pull/17)). Next: release `v0.3.0` on the
-   developer's word (add the section to `CHANGELOG.md` first, CI copies it into the release notes), and `v1.0`
-   once nothing returns `TFP0003` (SPEC.md "Fáze 4"; every catalog command is now implemented or `TFP0005`,
-   so check `tfp help /format:json` for a remaining `notAvailable` status before the tag). The two release
-   pages of v0.1.0 and v0.2.0 still need their notes pasted from `CHANGELOG.md` by hand. A real permission
-   change in CI needs AdminProjectRights for the CI user (`docs/DEVELOPER-TODO.md` §6).
+3. Phase 4 and the `property` write form are released as [v0.3.0](https://github.com/Gh61/TfPortable/releases/tag/v0.3.0)
+   (2026-10-10, workflow run 38051753926 on e2c359a, the release notes copied from `CHANGELOG.md`). The SPEC.md
+   rule for `v1.0` holds: no catalog command has the status that returns `TFP0003` (the code path in `Program`
+   stays for the catalog check). What is left before `v1.0` is the developer's call, none of it code the agent
+   can finish alone: the lawyer's look at LICENSE-EXCEPTION and THIRD-PARTY-NOTICES (open since v0.1.0); the
+   README "Phases and progress" section to drop at 1.0 (developer's note of 2026-10-09); the switches refused
+   on purpose with `TFP0002` (marked ✗ in `docs/commands.md`: server locks on the pend commands,
+   `workspace /newowner`, `/location:server`, `permission /global`, `/format:xml`, the external diff formats and
+   `difference /options /configure`, `workspaces /updateUserName /updateComputerName`, `resolve /overridetype
+   /converttotype /properties`, `labels /owner`, `checkin /notes /saved /bypass /new`) stay deviations unless the
+   developer wants any of them in 1.0; the server settings that keep two paths untested in CI (AdminProjectRights
+   for the CI user → a real `permission` change; a checkin policy on the test project → `TFP0407`); the three
+   open server-side questions of `docs/tf-reference/questions.md` (25a, 35, 36). The two release pages of v0.1.0
+   and v0.2.0 still need their notes pasted from `CHANGELOG.md` by hand.
 4. If a package changes later, update `src/TfPortable/embedded-assemblies.txt` from the output of
    the CI step "Check the embedded assemblies against THIRD-PARTY-NOTICES" and THIRD-PARTY-NOTICES.
 5. README "Phases and progress" can go once `v1.0` is out (the developer's note of 2026-10-09); keep the
@@ -272,8 +280,10 @@ Open:
   combinations, level 2, docs, unit and integration tests, the capture script uses `/setvalues`); the destroy
   marker stamp is read as UTC on every machine (the developer's failing test was a real bug, see Decisions);
   `CHANGELOG.md` has the `v0.3.0` section so the release can run right after the merge.
-- Done too: independent review (two should-fix findings, fixed), CI green (run 157), merged with a merge commit.
-- Next: run the release workflow with `release_tag=v0.3.0`, then report what still blocks `v1.0`.
+- Done too: independent review (two should-fix findings, fixed), CI green (run 159 after a timing fix of the
+  workspace profile assertion), merged with a merge commit (e2c359a); `v0.3.0` released from `main` through the
+  workflow run with `release_tag=v0.3.0`; the `v1.0` status reported to the developer (next step 3).
+- Next: whatever the developer decides for `v1.0` (next step 3).
 - Blockers: none.
 
 ### 2026-10-10 – local session, decompilation of tf.exe (branch `main`)
