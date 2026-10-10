@@ -118,8 +118,16 @@ namespace TfPortable.IntegrationTests
                     Assert.Equal($"CI workspace edited ({RunId})", (string)Data(edit)["workspace"]!["comment"]!);
                     if ((string)workspace["permission"]! == "publiclimited")
                     {
-                        // The server applies profiles: the edit must show the new one.
-                        Assert.Equal("private", (string)Data(edit)["workspace"]!["permission"]!);
+                        // The server applies profiles, but its security service reports the new ACL with a delay (CI run 158 read the
+                        // old profile right after the edit, and the creation sometimes reports Private before the profile is visible).
+                        string? permission = (string?)Data(edit)["workspace"]!["permission"];
+                        for (int attempt = 0; attempt < 10 && permission != "private"; attempt++)
+                        {
+                            System.Threading.Thread.Sleep(1500);
+                            permission = (string?)Data(Run($"workspace {name} /format:json"))["workspace"]!["permission"];
+                        }
+
+                        Assert.Equal("private", permission);
                     }
 
                     // A lock and its undo in the other workspace of the same owner (phase 4 captures lock/other-workspace, undo/other-workspace).
