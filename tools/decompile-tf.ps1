@@ -6,7 +6,8 @@
     Finds TF.exe (vswhere, or -TfPath), installs the ILSpy command line tool when it is missing (`dotnet tool
     install -g ilspycmd`), decompiles TF.exe and every Microsoft.TeamFoundation.VersionControl.* assembly next to it
     into local\decomp\<tf version>\<assembly>\ and writes local\decomp\<tf version>\index.md with the assembly list,
-    the versions and the classes whose name ends with "Command". Nothing under local\ is committed (.gitignore).
+    the versions and the command classes (tf.exe names them Command<Name>.cs under
+    TF\Microsoft.TeamFoundation.VersionControl.CommandLine\). Nothing under local\ is committed (.gitignore).
     The rules for using the output are in docs/tf-reference/README.md.
 
 .PARAMETER TfPath
@@ -43,7 +44,9 @@ function Find-Tf {
 }
 
 $tf = Find-Tf $TfPath
-$version = (Get-Item -LiteralPath $tf).VersionInfo.FileVersion
+# FileVersion of tf.exe 18 reads "18.10.12215.6 built by: releases/dev18/18.10 (...)", which is not a folder name.
+$versionInfo = (Get-Item -LiteralPath $tf).VersionInfo
+$version = '{0}.{1}.{2}.{3}' -f $versionInfo.FileMajorPart, $versionInfo.FileMinorPart, $versionInfo.FileBuildPart, $versionInfo.FilePrivatePart
 $folder = Split-Path -Parent $tf
 $target = Join-Path $OutDir $version
 New-Item -ItemType Directory -Force -Path $target | Out-Null
@@ -55,9 +58,11 @@ if (-not $ilspy) {
     $ilspy = Get-Command ilspycmd -ErrorAction Stop
 }
 
-# TF.exe plus the version control assemblies next to it; the client library of the NuGet package is the same code
-# the agent already reads, so it is skipped unless it lives only here.
+# TF.exe, the version control assemblies next to it, and Microsoft.TeamFoundation.Client.dll, which holds the
+# command-line base classes (Command, CommandLine, ExitCode, Options, ConsoleHost) that decide exit codes and streams.
 $assemblies = @(Get-Item -LiteralPath $tf) + @(Get-ChildItem -LiteralPath $folder -Filter 'Microsoft.TeamFoundation.VersionControl.*.dll')
+$clientDll = Join-Path $folder 'Microsoft.TeamFoundation.Client.dll'
+if (Test-Path -LiteralPath $clientDll) { $assemblies += Get-Item -LiteralPath $clientDll }
 $index = New-Object System.Collections.Generic.List[string]
 $index.Add("# Decompiled tf.exe $version")
 $index.Add('')
@@ -78,7 +83,10 @@ foreach ($assembly in $assemblies) {
 $index.Add('')
 $index.Add('## Command classes')
 $index.Add('')
-$commands = Get-ChildItem -LiteralPath $target -Recurse -Filter '*Command.cs' | Sort-Object Name
+# tf.exe names its command classes Command<Name>.cs (plus the GitCommand*/SettingsCommand* and the base classes);
+# only TF.exe's own folder is indexed, the UI assemblies contain thousands of unrelated *Command classes.
+$tfFolder = Join-Path $target ([System.IO.Path]::GetFileNameWithoutExtension((Get-Item -LiteralPath $tf).Name))
+$commands = Get-ChildItem -LiteralPath $tfFolder -Recurse -Include 'Command*.cs', '*Command.cs' | Sort-Object Name
 foreach ($file in $commands) {
     $index.Add("- ``$($file.FullName.Substring($target.Length + 1))``")
 }

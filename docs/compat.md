@@ -521,8 +521,9 @@ is a recorded difference. Cases not listed match (exit code, items, order).
 | `workfold/folder-argument`, `server-path` | exit 0 | the same | follow |
 
 Phase 4 captures (`index-phase4-2610091138.json`, reference only): `property /setproperty` is not a
-switch of tf.exe 18.10; `destroy /keephistory` reported nothing to destroy; `undo /workspace:<other>`
-and `lock /workspace:<other>` work against another workspace of the same owner.
+switch of tf.exe 18.10 (the write form is `/setvalues`, see `docs/tf-reference/property.md`); `destroy
+/keephistory` reported nothing to destroy; `undo /workspace:<other>` and `lock /workspace:<other>` work against
+another workspace of the same owner.
 
 ## 21. Phase 4 (`destroy`, `permission`, `workspace`, `property`, `resolvepath`, `docs`; phase 3 completions)
 
@@ -541,7 +542,7 @@ Implemented on 2026-10-09 from the phase 4 captures (`index-phase4-2610091138.js
 | `workspace /new` mapping | `$/` to the current folder | the same (or the mappings of `/template:`) | follow |
 | `workspace /delete` | silent (`workspace/delete-local-4`), asks about pending changes without `/noprompt` | `Workspace <name>;<owner> deleted.`; pending changes are dropped with a warning naming their count | deviate: one line of confirmation, no question |
 | `workspace /newowner`, `/location:server` | supported | TFP0002, TFP0204 | deviate: local workspaces of the authenticated user only |
-| `property` | dashed line, `Server item:`, `No properties` note (`property/read`); `/setproperty` unrecognized (`property/set`) | the same shape; no write form | follow |
+| `property` | dashed line, `Server item:`, `No properties` note (`property/read`); `/setproperty` unrecognized (`property/set`); the real write form of tf.exe 18.10 is `/setvalues:name=value;...`, `/deletevalues:name`, `/deleteall` (a pending property change), plus `/propertynames:` and `/output:` for reading (`docs/tf-reference/property.md`, 2026-10-10) | the same read shape; no write form yet | deviate for now: the write form was unknown when phase 4 was designed; the developer decided on 2026-10-10 to add it (brief in `docs/tf-reference/property.md`) |
 | `resolvepath` | not captured (no help text in tf.exe 18.10) | `<given> -> <counterpart>` per item, TFP0203 per unmapped item | TfPortable's own shape |
 | `msdn` | opens the Microsoft documentation of a command in the browser | alias of `docs`: opens the TfPortable documentation (GitHub) and prints the URL; `/url` prints only | deviate: own documentation |
 | `proxy`, `configure`, `certificates`, `tf git`, `tf settings` | client configuration, dialogs, certificate sign-in | TFP0005 with the explanation | deviate: never offered |
