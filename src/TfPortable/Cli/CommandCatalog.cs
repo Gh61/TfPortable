@@ -399,7 +399,7 @@ namespace TfPortable.Cli
                 new SwitchSpec("newname", null, SwitchValue.Required, "Rename the workspace (protection level 3)."),
                 new SwitchSpec("newowner", null, SwitchValue.Required, "Not supported.")),
             new CommandSpec("property", Array.Empty<string>(), 4, CommandStatus.Implemented,
-                "List the versioned-item properties of items (tf.exe 18.10 has no write form).", "itemspec ...",
+                "List the versioned-item properties of items (the write form /setvalues, /deletevalues, /deleteall of tf.exe is planned).", "itemspec ...",
                 Version, Recursive),
             new CommandSpec("resolvepath", Array.Empty<string>(), 4, CommandStatus.Implemented,
                 "Translate a local path to its server path and a server path to its local path.", "itemspec ..."),

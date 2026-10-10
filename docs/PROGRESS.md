@@ -40,12 +40,19 @@ Statuses: not started, in progress, blocked, done.
    the CI step "Check the embedded assemblies against THIRD-PARTY-NOTICES" and THIRD-PARTY-NOTICES.
 5. README "Phases and progress" can go once `v1.0` is out (the developer's note of 2026-10-09); keep the
    protection levels section.
-6. The tf.exe reference notes are complete (`docs/tf-reference/`, 2026-10-10). Pending the developer's answer on
-   the `property` write form (see "Needs the user"): if yes, add `/setvalues`, `/deletevalues`, `/deleteall`
-   (level 2, `Workspace.PendPropertyChange`) and `/propertynames`, `/output` to the catalog, SPEC.md, commands.md,
-   json-schema.md and compat.md §21; the capture script for phase 4 should then use `/setvalues`, not
-   `/setproperty`. The decompiled sources live only in `local/decomp/` on the developer's machine (never
-   committed); re-run `tools/decompile-tf.ps1` to recreate them.
+6. The tf.exe reference notes are complete (`docs/tf-reference/`, 2026-10-10). Next cloud task (developer's
+   decision of 2026-10-10): implement the `property` write form for tf.exe compatibility exactly as the
+   "Implementation brief" in `docs/tf-reference/property.md` says (`/setvalues`, `/deletevalues`, `/deleteall`
+   at level 2 through `Workspace.PendPropertyChange`; `/propertynames`, `/output` for reading; the invalid
+   combinations; docs and tests listed there). The decompiled sources live only in `local/decomp/` on the
+   developer's machine (never committed); re-run `tools/decompile-tf.ps1` to recreate them.
+7. For the cloud agent: the unit test `Phase4CommandTests.Destroy_without_a_recent_preview_is_TFP0410_before_anything_else_is_checked`
+   fails on the developer's machine (Windows 11, cs-CZ, local time UTC+2) at the `IsValid(key)` assertion after a
+   marker was written with a UTC clock 9 minutes earlier, and it fails on the unchanged `main` tree too, while
+   CI (`windows-latest`, en-US) is green. Checked and not the cause: the `o` round-trip stamp parses as UTC
+   under cs-CZ. Suspects: the test's `Clock` swap (a static shared by tests that run in parallel in the same
+   collection) or the `DirectoryProvider` swap racing with another test class. Make the test deterministic
+   (own collection, or inject clock and directory through the test) and run it under a non-English culture.
 
 ## Needs the user
 
@@ -53,11 +60,6 @@ The checklist with the details lives in `docs/DEVELOPER-TODO.md` (release `v0.2.
 test project, the golden captures of phases 3 and 4 in one sitting, the permanent shelveset, the decisions
 before phase 4). The items below are kept for history.
 
-- Decision after the decompilation of 2026-10-10 (`docs/tf-reference/property.md`): tf.exe 18.10 can write item
-  properties (`property /setvalues:name=value /deletevalues:name /deleteall`, a pending change, level 2 by the
-  protection model). Should tfp offer the write form (and the read-side `/propertynames:`, `/output:`)? Until
-  decided, `property` stays read-only (TFP0002) and SPEC.md says so. (The `rollback /toversion` question raised
-  the same day was withdrawn: the server requires the itemspec, TF203065, so tfp's TFP0002 stays.)
 - A lawyer's look at LICENSE-EXCEPTION and THIRD-PARTY-NOTICES (Decisions 2026-10-07) is still
   open; `v0.1.0` was released with the current texts.
 - Phase 3 answers of 2026-10-08: CI may check in under `$/TfsPortableTestRepo/CI/<run>` (done, with
@@ -199,7 +201,7 @@ before phase 4). The items below are kept for history.
 | 2026-10-09 | Second review of PR #17 (the CI-fix commits, independent agent): a request with an identity and `/inherit` is two library changes, so `permission` matches the applied changes and the failures per part (a rejected root inheritance change next to an applied permission change is no longer silent, `.` as the identity is accepted as applied) and treats everything as applied when the library reported no failure (the echoed identity form is not relied on); SPEC.md lost the `affectedPendingChanges[]`/`affectedShelvedChanges[]` fields of `destroy` and gained `skipped[]` of `permission` and `serverMessage` of the Message; commands.md says `lock /workspace:` works (level 3) and that an unmapped server path is the server's error; the workspace test asserts the edited profile when the server applies profiles | Review findings |
 | 2026-10-09 | `docs/errors.md` lists every TFP code with situation, next step and exit code, linked from README, `docs/CLAUDE.md`, `json-schema.md`, `commands.md` and SPEC.md; `CHANGELOG.md` holds the release notes and the CI release step copies the section of the released tag into the GitHub release | Developer's request of 2026-10-09; the release pages of v0.1.0 and v0.2.0 cannot be edited from the cloud session (403) |
 | 2026-10-10 | tf.exe 18.10.12215.6 decompiled on the developer's machine (`tools/decompile-tf.ps1`, fixed: the `FileVersion` string of tf.exe 18 contains `built by: releases/...` and is not a folder name, the command classes are `Command<Name>.cs`, and `Microsoft.TeamFoundation.Client.dll` is decompiled too because the exit-code and stream machinery lives there). All 34 questions of `docs/tf-reference/questions.md` answered into 15 notes (`general.md`, `checkin.md`, `shelve.md`, `label.md`, `lock.md`, `destroy.md`, `permission.md`, `workspace.md`, `undo.md`, `property.md`, `merge.md`, `branch.md`, `rollback.md`, `undelete.md`, `folderdiff.md`); three questions stay open (server messages and an untestable exit code). Key facts: one exit-code rule (max wins, a differing lower code collapses to 1, escaped exceptions are 100, library per-item errors are 1) plus explicit per-command `SetExitCode` calls; warnings and errors go to stderr, listings and info to stdout, by message kind; `/noprompt` is implied when stdout is redirected; `.tfignore` is applied by the library's `PendAdd` and `add` turns its warning into exit 1; `checkin` evaluates policies and notes before every checkin and conflicts only with `/validate`, `/override` without failures is dropped silently, `/associate` is not a switch; `shelve /validate` is incompatible with `/noprompt`; `label` passes a null scope to the server; `branch` defaults to Latest; `rollback /toversion` is `v`..Latest; `folderdiff` compares length and MD5 and defaults to one level; `workspace /new` location comes from the server setting | Every behavior tfp implements from these questions matches the notes except the deviations already in `docs/compat.md`; no code change needed |
-| 2026-10-10 | `property` has a write form in tf.exe 18.10 after all: `/setvalues:name=value;...`, `/deletevalues:name`, `/deleteall` pend a property change (`Workspace.PendPropertyChange`), and `/propertynames:`/`/output:` filter and export on reading. SPEC.md (catalog row and phase 4 table) and `docs/compat.md` §21 corrected to state the fact; tfp keeps `property` read-only until the developer decides (see "Needs the user") | The phase 4 capture tried `/setproperty`, which is not the name; the decompiled option table (`Options.cs`, exact enum names) shows the real switches |
+| 2026-10-10 | `property` has a write form in tf.exe 18.10 after all: `/setvalues:name=value;...`, `/deletevalues:name`, `/deleteall` pend a property change (`Workspace.PendPropertyChange`), and `/propertynames:`/`/output:` filter and export on reading. SPEC.md (catalog row and phase 4 table), `docs/compat.md` §21, `docs/commands.md` and the catalog help text corrected to state the fact. The developer decided the same day that tfp implements the write form for tf.exe compatibility, by the cloud agent in the next task; the brief (switches, escapes, invalid combinations, library call, protection level, docs, tests) is in `docs/tf-reference/property.md`. `rollback /toversion` stays as it is: the itemspec is required by the server (TF203065, golden `rollback/toversion-no-item`) | The phase 4 capture tried `/setproperty`, which is not the name; the decompiled option table (`Options.cs`, exact enum names) shows the real switches |
 
 ## Open questions
 
@@ -276,9 +278,9 @@ Open:
   assumptions matches, the remaining differences were already recorded as deviations.
 - Developer's answers the same day: `rollback /toversion` stays as it is (the itemspec is required by the server,
   golden `rollback/toversion-no-item`, so the relaxation would only swap TFP0002 for TF203065); the `property`
-  write form is still undecided (properties explained: free item metadata, no Visual Studio UI).
-- Next: the developer decides on the `property` write form ("Needs the user"); then release `v0.3.0` (step 3 of
-  "Next steps").
+  write form will be implemented by the cloud agent (brief in `docs/tf-reference/property.md`). Branch
+  `tf-reference-notes` merged into `main` with a merge commit on the developer's word.
+- Next: the cloud agent implements the `property` write form (step 6 of "Next steps"); release `v0.3.0` (step 3).
 - Blockers: none.
 
 ### 2026-10-09 – cloud session, phase 4 (branch `p4-server`, PR #17)

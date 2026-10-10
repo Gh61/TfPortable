@@ -496,7 +496,8 @@ namespace TfPortable.Commands
         }
     }
 
-    /// <summary>`tfp property itemspec ... [/version:] [/recursive]`: the versioned-item properties (level 1). tf.exe 18.10 has no write form.</summary>
+    /// <summary>`tfp property itemspec ... [/version:] [/recursive]`: the versioned-item properties (level 1). The write form of tf.exe
+    /// (`/setvalues`, `/deletevalues`, `/deleteall`, a pending property change) is planned; see docs/tf-reference/property.md.</summary>
     internal sealed class PropertyCommand : ICommand
     {
         public string Name => "property";

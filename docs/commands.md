@@ -542,7 +542,10 @@ tf vc property itemspec [/version:versionspec] [/recursive]
 ```
 
 ✓ protection level 1: a dashed line, `Server item: $/path`, then `name = value` per property or `The item has no properties.`
-(phase 4 capture `property/read`). tf.exe 18.10 has no `/setproperty` (capture `property/set`, exit 100); TfPortable has none either (TFP0002).
+(phase 4 capture `property/read`). tf.exe 18.10 has no `/setproperty` (capture `property/set`, exit 100); its real write
+form is `/setvalues:name=value;...`, `/deletevalues:name`, `/deleteall` (a pending property change, plus `/propertynames:`
+and `/output:` for reading), see `docs/tf-reference/property.md`. TfPortable does not offer it yet (TFP0002); the
+implementation is planned (decision of 2026-10-10, brief in that note).
 
 <a id="cmd-resolvepath"></a>
 ### resolvepath

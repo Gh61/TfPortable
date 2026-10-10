@@ -35,7 +35,43 @@ Read from: `TF/Microsoft.TeamFoundation.VersionControl.CommandLine/CommandProper
 
 ## Consequences for TfPortable
 
-- compat.md §21 and SPEC.md say "no write form in tf.exe 18.10": **wrong**; the write form is
-  `/setvalues`/`/deletevalues`/`/deleteall` and it is a pending change (level 2 by the protection model). Whether
-  tfp offers it is a design decision for the developer (recorded under "Needs the user" in PROGRESS.md).
-- `/propertynames` and `/output` are read-side switches tfp does not have; optional.
+- compat.md §21 and SPEC.md said "no write form in tf.exe 18.10": **wrong**; the write form is
+  `/setvalues`/`/deletevalues`/`/deleteall` and it is a pending change. The developer decided on 2026-10-10 that
+  tfp implements it for tf.exe compatibility (cloud agent, next milestone); until then TFP0002.
+
+## Implementation brief for TfPortable (decided 2026-10-10)
+
+What properties are: free metadata on a versioned item, a dictionary `name → string | byte[]` stored by the
+server next to content and encoding. Microsoft uses them internally (for example the executable bit for
+cross-platform clients); Visual Studio has no UI for them. A property change is a pending change of change type
+"property" and is checked in like any other.
+
+Switches to add to the `property` catalog row (names exactly as tf.exe, see "Switches" above):
+
+| Switch | Value | Level | Meaning |
+| --- | --- | --- | --- |
+| `/setvalues:` | `name=value[;name=value...]`; `;;` and `==` escape the separators; a value `@file` reads the file bytes as a binary value | 2 | pend a property set |
+| `/deletevalues:` | `name`, repeatable | 2 | pend a property delete (value null) |
+| `/deleteall` | none | 2 | pend the deletion of every property (one `PropertyValue` with a null name and null value) |
+| `/propertynames:` | `name`, repeatable | 1 | reading: filter instead of `*` |
+| `/output:` | file path | 1 | reading: write the value of the single requested property to the file (bytes for binary, text otherwise); needs exactly one `/propertynames` and no `/recursive` |
+| `/lock:`, `/silent` | as on `add` | 2 | passed to the pend call; `/lock` with a server lock stays refused as on the other pend commands |
+
+Invalid combinations (TFP0002, exit 100, as in tf.exe): `/setvalues` with `/deletevalues`, `/deleteall`,
+`/output`, `/version`, `/propertynames` or `/collection`; `/deletevalues` or `/deleteall` with `/output`,
+`/version`, `/propertynames` or `/collection`; `/output` with `/deleteall`; an empty name or value in
+`/setvalues`.
+
+Library call for the write forms: `Workspace.PendPropertyChange(string[] paths, PropertyValue[] properties,
+RecursionType recursion, LockLevel lockLevel, PendChangesOptions options, null, null)` on the workspace of the
+item specs (`PendChangesOptions.Silent` for `/silent`). The pended changes arrive through the library's
+`NewPendingChange` event (change type `property`), so the output is the usual grouped `property: <item>` listing
+of the pend commands and `status` shows them as `property`. `undo` reverts them.
+
+Protection level: the command stays level 1 for reading; `/setvalues`, `/deletevalues`, `/deleteall` raise it to
+level 2 (same mechanism as `workfold /map`). JSON: reading keeps `items[]`; writing returns the usual
+`changes: [PendingChange]`. Documentation to update: SPEC.md catalog row and phase 4 table, `docs/commands.md`,
+`docs/json-schema.md`, `docs/compat.md` §21, `docs/CLAUDE.md` permission snippet (`tfp property` moves from
+`allow` to the same treatment as `tfp permission`: listing allowed, writes ask). Integration test: set, read back
+(`/propertynames`), `/output`, delete, `/deleteall`, undo, under the CI folder; the phase 4 capture script should
+use `/setvalues` instead of `/setproperty` when the developer re-captures.
