@@ -15,7 +15,7 @@ Read this first in every session. Update it at the end of every session (see CLA
 | P2 | Phase 2: `merge`, `branch`, `rollback`, `undelete` as pending changes, `merges`, `folderdiff`, `annotate` | cloud + CI | done: [PR #12](https://github.com/Gh61/TfPortable/pull/12) reviewed by an independent agent (findings under Decisions), CI green (195 unit and 86 integration tests) and merged into `main` on 2026-10-08 with a merge commit | – |
 | P3 | Phase 3: protection levels, `checkin`, `shelve`/`shelvesets`/`unshelve`, `label`/`unlabel`, `lock` | cloud + CI | done: [PR #9](https://github.com/Gh61/TfPortable/pull/9) merged into `main` on 2026-10-08 (merge commit 3c92ea2) after an independent review (findings under Decisions); 187 unit and 82 integration tests green | release `v0.2.0` (developer) |
 | P4 | Phase 4: `destroy` (preview marker), `permission`, `workspace`, `property`, `resolvepath`, `docs`/`msdn`, `workfold` mapping edits, `changeset /comment /notes`, `checkin /shelveset`, `unshelve /move`, `shelve /validate`, `lock`/`undo` on another workspace; `proxy`/`configure`/`certificates` as TFP0005; `docs/errors.md` | cloud + CI | done: [PR #17](https://github.com/Gh61/TfPortable/pull/17) reviewed twice by an independent agent (findings under Decisions), CI green (205 unit and 94 integration tests, run 150 on 047d922) and merged into `main` on 2026-10-09 with a merge commit | release `v0.3.0`, then `v1.0` when no TFP0003 is left (developer) |
-| P4b | `property` write form of tf.exe (`/setvalues`, `/deletevalues`, `/deleteall`, `/propertynames`, `/output`); destroy preview marker fix for machines outside UTC | cloud + CI | in progress: branch `p5-property`, [PR #18](https://github.com/Gh61/TfPortable/pull/18) | release `v0.3.0` after the merge (developer's word of 2026-10-10) |
+| P4b | `property` write form of tf.exe (`/setvalues`, `/deletevalues`, `/deleteall`, `/propertynames`, `/output`); destroy preview marker fix for machines outside UTC | cloud + CI | done: [PR #18](https://github.com/Gh61/TfPortable/pull/18) reviewed by an independent agent (findings under Decisions), CI green (206 unit and 95 integration tests, run 157 on ff71155) and merged into `main` on 2026-10-10 with a merge commit | release `v0.3.0` (developer's word of 2026-10-10) |
 | GC | Golden comparison: tfp against the captures of phases 2, 3, 4 and the extra2 gaps (2026-10-09) | cloud + CI | done: [PR #14](https://github.com/Gh61/TfPortable/pull/14) reviewed by an independent agent (findings under Decisions), CI green (197 unit and 90 integration tests) and merged into `main` on 2026-10-09 with a merge commit; fixes and recorded deviations in `docs/compat.md` §20 | – |
 
 Statuses: not started, in progress, blocked, done.
@@ -43,7 +43,7 @@ Statuses: not started, in progress, blocked, done.
    protection levels section.
 6. The tf.exe reference notes are complete (`docs/tf-reference/`, 2026-10-10). The `property` write form the
    developer asked for is implemented on branch `p5-property` ([PR #18](https://github.com/Gh61/TfPortable/pull/18))
-   exactly as the brief in `docs/tf-reference/property.md` says. The decompiled sources live only in `local/decomp/`
+   exactly as the brief in `docs/tf-reference/property.md` says (merged 2026-10-10). The decompiled sources live only in `local/decomp/`
    on the developer's machine (never committed); re-run `tools/decompile-tf.ps1` to recreate them.
 7. The destroy marker unit test that failed on the developer's machine found a real bug (Decisions 2026-10-10): the
    marker stamp lost its offset through Json.NET's date handling, so `destroy` always ended with TFP0410 outside UTC.
@@ -271,8 +271,8 @@ Open:
   combinations, level 2, docs, unit and integration tests, the capture script uses `/setvalues`); the destroy
   marker stamp is read as UTC on every machine (the developer's failing test was a real bug, see Decisions);
   `CHANGELOG.md` has the `v0.3.0` section so the release can run right after the merge.
-- Next: CI green on PR #18, independent review, merge with a merge commit, run the release workflow with
-  `release_tag=v0.3.0`, then report what still blocks `v1.0`.
+- Done too: independent review (two should-fix findings, fixed), CI green (run 157), merged with a merge commit.
+- Next: run the release workflow with `release_tag=v0.3.0`, then report what still blocks `v1.0`.
 - Blockers: none.
 
 ### 2026-10-10 – local session, decompilation of tf.exe (branch `main`)
