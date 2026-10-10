@@ -35,9 +35,9 @@ Statuses: not started, in progress, blocked, done.
    (2026-10-10, workflow run 38051753926 on e2c359a, the release notes copied from `CHANGELOG.md`). The SPEC.md
    rule for `v1.0` holds: no catalog command has the status that returns `TFP0003` (the code path in `Program`
    stays for the catalog check). The developer's decisions of 2026-10-10 (Decisions) are on branch
-   `v1-switches`: server locks on the pend commands and `checkin /notes` implemented, the rest of the refused
-   switches answer `TFP0006`, `permission` exits 100 when nothing was applied, `destroy /startcleanup` tried in
-   CI. Still before `v1.0`: the README "Phases and progress" section to drop (developer's note of 2026-10-09,
+   `v1-switches` (merged 2026-10-10): server locks on the pend commands and `checkin /notes` implemented, the
+   rest of the refused switches answer `TFP0006`, `permission` exits 100 when nothing was applied,
+   `destroy /startcleanup` accepted by Azure DevOps Services in CI. Still before `v1.0`: the README "Phases and progress" section to drop (developer's note of 2026-10-09,
    confirmed 2026-10-10: before the release); the developer's server settings (`docs/DEVELOPER-TODO.md` §2
    checkin policy, §7 Manage permissions for the CI user); the switches refused
    on purpose with `TFP0002` (marked ✗ in `docs/commands.md`: server locks on the pend commands,
@@ -285,9 +285,11 @@ Open:
 
 - Done: the developer's decisions on the refused switches (Decisions 2026-10-10): server locks on the pend
   commands, `checkin /notes`, `TFP0006` for the switches left out, `permission` exit 100 when nothing was
-  applied, `destroy /startcleanup` in the CI test, `docs/DEVELOPER-TODO.md` §7, `CHANGELOG.md` "Unreleased".
-- Next: CI, independent review, merge; then the developer's server settings and the README phases section
-  before the `v1.0` release.
+  applied, `destroy /startcleanup` in the CI test (accepted by the service), `docs/DEVELOPER-TODO.md` §7,
+  `CHANGELOG.md` "Unreleased"; independent review (one blocking finding on a test, fixed), CI green (run 170,
+  207 unit and 96 integration tests), merged with a merge commit.
+- Next: the developer's server settings (`docs/DEVELOPER-TODO.md` §2 and §7) and the README phases section
+  before the `v1.0` release; `v1.0` on the developer's word.
 - Blockers: none.
 
 ### 2026-10-10 – cloud session, property write form and the marker fix (branch `p5-property`, PR #18)
