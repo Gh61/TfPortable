@@ -73,7 +73,7 @@ namespace TfPortable.Tests
             Assert.StartsWith("ERROR TFP0002: workfold /map needs the server folder and the local folder.", Run("workfold", "/map", "$/a").Err);
             Assert.StartsWith("ERROR TFP0005: Command 'proxy' is not part of tfp", Run("proxy", "/configure", "/enabled:true").Err);
             Assert.StartsWith("ERROR TFP0002: workfold takes one of /map, /unmap, /cloak and /decloak.", Run("workfold", "/map", "/cloak", "$/a", "x").Err);
-            Assert.StartsWith("ERROR TFP0002: checkin /shelveset takes no itemspec, /comment, /validate or /override", Run("checkin", "/shelveset:x", "/comment:c").Err);
+            Assert.StartsWith("ERROR TFP0002: checkin /shelveset takes no itemspec, /comment, /notes, /validate or /override", Run("checkin", "/shelveset:x", "/comment:c").Err);
             Assert.StartsWith("ERROR TFP0002: /notes entry 'bogus' is not Name=Value.", Run("changeset", "5", "/notes:bogus").Err);
         }
 

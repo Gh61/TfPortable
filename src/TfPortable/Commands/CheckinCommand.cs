@@ -29,6 +29,7 @@ namespace TfPortable.Commands
 
             string comment = CommentText.Required(commandLine, toolName, "checkin Main\\src /recursive /comment:\"Fix the parser\"");
             var workItems = WorkItemIds(commandLine, toolName);
+            var notes = ChangesetCommand.Notes(commandLine, toolName);
             bool validate = commandLine.Has("validate");
             string? overrideReason = commandLine.Value("override");
             if (overrideReason != null && overrideReason.StartsWith("@", StringComparison.Ordinal))
@@ -53,7 +54,6 @@ namespace TfPortable.Commands
             }
 
             var policies = CheckinPolicies.Evaluate(context.Client.GetCheckinPolicies(changes.Select(c => c.ServerPath).Distinct().ToList()), comment, workItems);
-            var notes = ChangesetCommand.Notes(commandLine, toolName);
             var evaluation = workspace.EvaluateCheckin(changes, comment, policies, notes);
             output.Lines(WorkspaceCommandSupport.GroupedByFolder(changes, c => $"{(validate ? "Validating" : "Checking in")} {c.ChangeText}: {WorkspaceCommandSupport.NameOf(c)}"));
 
