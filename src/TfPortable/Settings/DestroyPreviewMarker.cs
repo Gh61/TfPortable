@@ -93,8 +93,9 @@ namespace TfPortable.Settings
                     valid = age >= TimeSpan.Zero && age <= Validity;
                 }
             }
-            catch (Exception ex) when (ex is Newtonsoft.Json.JsonException || ex is IOException)
+            catch (Exception ex) when (ex is Newtonsoft.Json.JsonException || ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is InvalidCastException)
             {
+                // A damaged or unreadable marker (a stamp that is not a string, a protected file) is stale, never a crash.
                 valid = false;
             }
 

@@ -559,7 +559,9 @@ tf vc property itemspec /deleteall [/recursive] [/silent] [/lock:none]
 
 The combinations tf.exe refuses are TFP0002 (exit 100): a write switch with `/output`, `/version`, `/propertynames` or
 `/collection`; `/setvalues` with `/deletevalues` or `/deleteall`; `/output` with `/recursive` or without exactly one
-`/propertynames`; an empty name or value in `/setvalues`.
+`/propertynames`; an empty name or value in `/setvalues`. Limits: a text value cannot start with `@` (that spelling
+names a file), and a property name with a comma or surrounding spaces cannot be passed to `/deletevalues` or
+`/propertynames` (the values are split on commas and trimmed).
 
 <a id="cmd-resolvepath"></a>
 ### resolvepath
