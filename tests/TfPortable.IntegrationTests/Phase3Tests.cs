@@ -55,14 +55,14 @@ namespace TfPortable.IntegrationTests
                 Assert.Equal(100, noComment.ExitCode);
                 Assert.Contains("TFP0002", noComment.Stderr);
 
-                // The policies of the test project decide the shape: a work item policy makes a checkin without /associate fail
-                // with TFP0407, a policy tfp cannot evaluate (builds, code analysis) needs /override. Without any policy the
-                // policy assertions are inconclusive and skipped.
+                // The test project has the "Work Items" and "Changeset Comments" policies (the developer, 2026-10-11, docs/DEVELOPER-TODO.md §2):
+                // a checkin without /associate fails with TFP0407; a policy tfp cannot evaluate (builds, code analysis) would need /override.
                 var validate = Run($"checkin {argument} /recursive /comment:\"CI validate ({RunId})\" /validate /noprompt /format:json");
                 var validated = Data(validate);
                 var policies = (JArray)validated["policies"]!;
                 bool workItemPolicy = policies.Any(p => (string)p["name"]! == "Work Items" || ((string?)p["message"] ?? string.Empty).Contains("/associate"));
                 bool unknownPolicy = policies.Any(p => (string)p["status"]! == "unknown");
+                Assert.True(workItemPolicy, "The test project must have the Work Items checkin policy (docs/DEVELOPER-TODO.md §2); policies seen: " + policies.ToString(Newtonsoft.Json.Formatting.None));
                 string overrideSwitch = unknownPolicy ? $" /override:\"CI run {RunId}: policies that need Visual Studio\"" : string.Empty;
                 Assert.True((bool)validated["validated"]!);
                 Assert.Null(((JValue)validated["changeset"]!).Value);
