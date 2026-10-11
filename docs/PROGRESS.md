@@ -31,8 +31,8 @@ Statuses: not started, in progress, blocked, done.
 2. Optional follow-ups the comparison surfaced (not started): golden tests that load the phase 2 and extra2
    cases explicitly (the golden runner only runs cases listed by `group/name`); the `get` over a writable
    file case (TFP0402) is still uncaptured.
-3. `v1.0.0` released on 2026-10-11 (the developer's word after the server settings were verified by CI run 183;
-   PR #23 merged, CI workflow run with `release_tag=v1.0.0`). Before it, phase 4 and the `property` write form were released as [v0.3.0](https://github.com/Gh61/TfPortable/releases/tag/v0.3.0)
+3. [v1.0.0](https://github.com/Gh61/TfPortable/releases/tag/v1.0.0) released on 2026-10-11 (the developer's word after the server settings were verified by CI run 183;
+   PR #23 merged, CI workflow run 189 with `release_tag=v1.0.0` on 76eb720 after the permission timing fix of PR #25; `tfp.exe` 4,064,256 bytes). Before it, phase 4 and the `property` write form were released as [v0.3.0](https://github.com/Gh61/TfPortable/releases/tag/v0.3.0)
    (2026-10-10, workflow run 38051753926 on e2c359a, the release notes copied from `CHANGELOG.md`). The SPEC.md
    rule for `v1.0` holds: no catalog command has the status that returns `TFP0003` (the code path in `Program`
    stays for the catalog check). The developer's decisions of 2026-10-10 (Decisions) are on branch
