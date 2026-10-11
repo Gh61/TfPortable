@@ -3,7 +3,11 @@
 One section per release. The CI release step copies the section of the released tag into the
 GitHub release notes, so write the section before the release is run. The newest release comes first.
 
-## Unreleased
+## v1.0.0 (unreleased)
+
+Everything of v0.3.0. The first stable version: every version-control command of tf.exe is implemented or
+answers `TFP0005`/`TFP0006` with the reason, the CI covers the checkin policies and the permission changes of
+the test project, and the behavior is verified against tf.exe 18.10 (captures and decompiled sources).
 
 - `/lock:checkin` and `/lock:checkout` on `add`, `checkout`, `delete`, `rename`, `merge`, `branch`,
   `rollback`, `undelete` and `property`: the pended item carries the lock on the server, as in tf.exe.
