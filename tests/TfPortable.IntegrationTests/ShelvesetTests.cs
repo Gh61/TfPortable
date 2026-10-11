@@ -11,8 +11,8 @@ namespace TfPortable.IntegrationTests
 {
     /// <summary>
     /// Live tests of the shelveset reading commands against the permanent shelveset `tfp-golden-shelveset` of the test
-    /// collection (created by the developer on 2026-10-08, any owner). Until `shelve` exists (phase 3) the tests cannot
-    /// create one themselves. Nothing is written: no unshelve, no delete.
+    /// collection (created by the developer on 2026-10-08, any owner). The shelveset stays on purpose (decided 2026-10-11):
+    /// the test reads a shelveset of another owner without writing anything. Nothing is written: no unshelve, no delete.
     /// </summary>
     [Collection(GoldenCollection.Name)]
     public class ShelvesetTests

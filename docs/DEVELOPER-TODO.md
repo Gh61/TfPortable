@@ -27,6 +27,10 @@ configured (`tfp checkin /validate /format:json` lists the policies with `passed
 - Done when a CI run after the change passes and its log shows `TFP0407` in the validate step of
   `Phase3Tests.Checkin_validates_commits_links_a_work_item_and_reports_nothing_pending`.
 
+Configured on 2026-10-11 by the developer: Work Items and Changeset Comments (no build policy). Still to see: the
+first CI run after the change (Actions → CI → Run workflow on `main` with an empty `release_tag` runs the tests
+without a release, or any pull request). The agent then records the result here and in PROGRESS.md.
+
 ## 3. Golden captures with the original tf.exe (one sitting, one sign-in)
 
 Run on a Windows machine with Visual Studio (tf.exe 18.x) and the seeded test workspace of
@@ -73,6 +77,12 @@ and compared with tfp (`docs/compat.md` §20, PR "golden-compare"). Still uncapt
 local file (TFP0402; local workspaces report a conflict instead), a checkin policy failure (section 2 is still
 open), `undo /workspace:<other>` without permission.
 
+No further capture run is needed (agreed on 2026-10-11). The three uncaptured cases do not justify a fifth sitting:
+the policy failure shape of tf.exe is known from the decompiled sources (`docs/tf-reference/checkin.md`: "Policy
+violations:" on stderr, exit 100, `/validate` exit 100) and the live behavior is checked by CI now that the test
+project has policies; the TFP0402 `get` case cannot happen in a local workspace; `undo /workspace:<other>` without
+permission needs a second account. Golden tests never compare texts, so the missing captures cost nothing.
+
 ## 3b. Decompile tf.exe for the reference notes (agreed on 2026-10-08)
 
 - Run `.\tools\decompile-tf.ps1` on the machine with Visual Studio. It decompiles `TF.exe` and the version
@@ -83,17 +93,27 @@ open), `undo /workspace:<other>` without permission.
   that README and in CLAUDE.md.
 - Done when `questions.md` is empty, or every remaining question says why it cannot be answered.
 
+Done on 2026-10-10: tf.exe 18.10.12215.6 decompiled, 15 notes under `docs/tf-reference/`, every question answered
+except 25a (needs a second account), 35 (answered by the first CI run after §7) and 36 (answered: the service
+accepts `destroy /startcleanup`); each says why. Nothing else to do; `local\decomp\` stays on the developer's
+machine and is recreated by the script when a new tf.exe version is to be compared.
+
 ## 4. Permanent shelveset `tfp-golden-shelveset`
 
 `ShelvesetTests` still reads it (`status`, `difference`, `view` with `/shelveset`). Once the agent rewrites
 that test to create its own shelveset through `tfp shelve` (planned), the permanent one can be deleted. Until
 then keep it.
 
+Decided on 2026-10-11: the shelveset stays for good as the fixture of the read-only test (`ShelvesetTests` proves
+that the shelveset reading commands work on a shelveset of another owner without writing anything). No rewrite
+planned. Do not delete it.
+
 ## 5. Decisions before phase 4
 
 Decided on 2026-10-09 (phase 2 first: done; the scope table below with `resolvepath` added, `property` read-only,
 `docs`/`msdn`, `proxy`/`configure`/`certificates` as `TFP0005`; `destroy` with the preview marker; the `main` ruleset
-is set up). Kept for history; SPEC.md "Fáze 4" is the current definition.
+is set up). Everything in this section is implemented and released (`v0.3.0`, PR #17 and PR #18; `property`
+gained the write form afterwards). Kept for history; SPEC.md "Fáze 4" is the current definition.
 
 1. **Phase 2 first?** `merge`, `branch`, `rollback`, `undelete`, `merges`, `annotate`, `folderdiff` are
    captured (`tests/golden/`) and specified (SPEC.md "Fáze 2") but not implemented; the catalog answers
@@ -121,8 +141,10 @@ is set up). Kept for history; SPEC.md "Fáze 4" is the current definition.
 - ~~A lawyer's look at LICENSE-EXCEPTION and THIRD-PARTY-NOTICES~~: closed on 2026-10-10, the developer
   decided not to have the texts reviewed; they stay as written, to the best of the developer's knowledge.
 - Leftover workspaces `tfp-golden-<id>` in the collection after a CI run that died mid-way: delete them
-  occasionally (`tf workspaces /owner:*`).
-- The permission of the CI user: see §7.
+  occasionally (`tf workspaces /owner:*`). A recurring chore, never "done".
+- The permission of the CI user: see §7 (done on 2026-10-11).
+
+Nothing else is open in this section (2026-10-11).
 
 ## 7. "Manage permissions" for the CI user (agreed on 2026-10-10)
 
@@ -137,3 +159,9 @@ only checks that the refusal is reported per item.
   takes the real-change branch (the listing shows the explicit `Lock` allow and the `remove` succeeds); that
   run also answers question 35 of `docs/tf-reference/questions.md` (the exit code when nothing is applied is
   already 100 in the code).
+
+Granted on 2026-10-11 by the developer (Manage permissions: Allow on `$/TfsPortableTestRepo/CI`). Still to see:
+the first CI run after the change (same run as for §2). "Manage permissions" is the item permission TFVC calls
+`AdminProjectRights`, which `destroy` checks on the item too, so
+`Phase4Tests.Destroy_needs_a_preview_then_removes_the_item_and_its_history` may now run the real destroy under
+the CI folder instead of returning at the permission check; the test handles both outcomes.
