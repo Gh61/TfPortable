@@ -36,6 +36,55 @@ namespace TfPortable.IntegrationTests
 
         private static string CiArgument(string test) => "CI\\" + RunId + "-" + test;
 
+        /// <summary>
+        /// What the server holds when tfp sees no policy: the policy envelopes of both annotation keys of the team project and every
+        /// annotation of the collection (name, item, the start of the value), read through the client library. Diagnostics only.
+        /// </summary>
+        private string PolicyDiagnostics()
+        {
+            try
+            {
+                string pat = Environment.GetEnvironmentVariable("TFP_TEST_PAT")!;
+                var credentials = new VssCredentials(new Microsoft.VisualStudio.Services.Common.WindowsCredential(false), new VssBasicCredential(string.Empty, pat), CredentialPromptType.DoNotPrompt);
+                using (var connection = new TfsTeamProjectCollection(new Uri(fixture.Collection.TrimEnd('/')), credentials))
+                {
+                    connection.EnsureAuthenticated();
+                    var vcs = connection.GetService<VersionControlServer>();
+                    var project = vcs.GetTeamProjectForServerPath(GoldenWorkspaceFixture.ServerRoot);
+                    var field = typeof(PolicyEnvelope).GetField("m_className", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    string Describe(PolicyEnvelope[]? envelopes) => envelopes == null ? "null" : string.Join(" | ", envelopes.Select(e => $"type='{e.Type}' enabled={e.Enabled} class='{field?.GetValue(e)}' policy={(e.Policy == null ? "null" : e.Policy.GetType().Name)}"));
+#pragma warning disable CS0618
+                    string text = $"\nproject {project.ServerItem}: client policies [{Describe(project.GetCheckinClientPolicies())}], legacy policies [{Describe(project.GetCheckinPolicies())}]";
+#pragma warning restore CS0618
+                    var layer = typeof(VersionControlServer).GetProperty("WebServiceLayer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(vcs);
+                    var query = layer?.GetType().GetMethod("QueryAnnotation", new[] { typeof(string), typeof(string), typeof(int) });
+                    if (layer != null && query != null)
+                    {
+                        // Annotation is an internal type of the library: read its properties by name.
+                        var annotations = (Array?)query.Invoke(layer, new object?[] { null, null, 0 });
+                        var parts = new System.Collections.Generic.List<string>();
+                        foreach (object? annotation in annotations ?? Array.Empty<object>())
+                        {
+                            if (annotation == null) { continue; }
+                            var type = annotation.GetType();
+                            string Prop(string name) => Convert.ToString(type.GetProperty(name)?.GetValue(annotation)) ?? string.Empty;
+                            string value = Prop("AnnotationValue").Replace("\r", " ").Replace("\n", " ");
+                            string line = $"{Prop("Name")} on '{Prop("AnnotatedItem")}' = '{value}'";
+                            parts.Add(line.Length > 400 ? line.Substring(0, 400) : line);
+                        }
+
+                        text += "\nannotations of the collection: " + string.Join(" | ", parts);
+                    }
+
+                    return text;
+                }
+            }
+            catch (Exception ex)
+            {
+                return "\n(diagnostics failed: " + ex.GetType().Name + ": " + ex.Message + ")";
+            }
+        }
+
         [IntegrationFact]
         public void Checkin_validates_commits_links_a_work_item_and_reports_nothing_pending()
         {
@@ -62,7 +111,7 @@ namespace TfPortable.IntegrationTests
                 var policies = (JArray)validated["policies"]!;
                 bool workItemPolicy = policies.Any(p => (string)p["name"]! == "Work Items" || ((string?)p["message"] ?? string.Empty).Contains("/associate"));
                 bool unknownPolicy = policies.Any(p => (string)p["status"]! == "unknown");
-                Assert.True(workItemPolicy, "The test project must have the Work Items checkin policy (docs/DEVELOPER-TODO.md §2); policies seen: " + policies.ToString(Newtonsoft.Json.Formatting.None));
+                Assert.True(workItemPolicy, "The test project must have the Work Items checkin policy (docs/DEVELOPER-TODO.md §2); policies seen: " + policies.ToString(Newtonsoft.Json.Formatting.None) + PolicyDiagnostics());
                 string overrideSwitch = unknownPolicy ? $" /override:\"CI run {RunId}: policies that need Visual Studio\"" : string.Empty;
                 Assert.True((bool)validated["validated"]!);
                 Assert.Null(((JValue)validated["changeset"]!).Value);
