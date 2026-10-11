@@ -9,7 +9,7 @@ It keeps tf.exe command names and switches.
 
 | File | What it is |
 | --- | --- |
-| `docs/SPEC.md` | The specification (in Czech). Behavior, commands, errors, exit codes, milestones. |
+| `docs/SPEC.md` | The specification (in Czech, with an English note at the top; no translation planned). Behavior, commands, errors, exit codes, milestones. |
 | `docs/compat.md` | Where TfPortable deliberately differs from the original tf.exe, and why. |
 | `tests/golden/` | Captured output of the original tf.exe (stdout, stderr, exit code) per command and case. |
 | `docs/PROGRESS.md` | Current state: milestones, decisions, open questions, session log. |
