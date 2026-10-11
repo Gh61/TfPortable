@@ -8,18 +8,17 @@ Tick an item by deleting it or by writing the date and the result next to it. Ea
 | § | Item | Status |
 | --- | --- | --- |
 | 1 | Release `v0.2.0` | **DONE** 2026-10-09 |
-| 2 | Checkin policies on the test project | **DONE** 2026-10-11 (Work Items + Changeset Comments, no build policy); the agent still has to see one CI run after it |
+| 2 | Checkin policies on the test project | **OPEN again** 2026-10-11: configured in Visual Studio, but CI runs 174 and 176 see no policy on the project (details in §2); please re-check and save |
 | 3 | Golden captures with tf.exe | **DONE** 2026-10-09 (all four runs); no further run, decided 2026-10-11 |
 | 3b | Decompile tf.exe for the reference notes | **DONE** 2026-10-10 |
 | 4 | Permanent shelveset `tfp-golden-shelveset` | **DECIDED** 2026-10-11: stays for good, nothing to do |
 | 5 | Decisions before phase 4 | **DONE** 2026-10-09 (decided, implemented, released in `v0.3.0`; `main` ruleset set up) |
 | 6 | Still open from earlier | **DONE**, only the recurring workspace cleanup remains |
-| 7 | Manage permissions for the CI user | **DONE** 2026-10-11; the agent still has to see one CI run after it |
+| 7 | Manage permissions for the CI user | **DONE and verified** 2026-10-11 (CI run 174) |
 
-Nothing is waiting for the developer. The only open step is the agent's: read the first CI run after §2 and §7
-(Actions → CI → Run workflow on `main` with an empty `release_tag`, or any pull request) and record its outcome
-in §2, §7, PROGRESS.md "Open questions" and `docs/tf-reference/questions.md` (question 35). After that: the README
-"Phases and progress" section goes, and `v1.0` is released on the developer's word.
+Waiting for the developer: §2 (the checkin policies are not visible on the server, see the section). Everything
+else is done and verified. After §2: `v1.0` is released on the developer's word (the README phases section is
+gone, `CHANGELOG.md` has the `v1.0.0` section).
 
 ## 1. Release `v0.2.0` (phases 2 and 3) – DONE 2026-10-09
 
@@ -45,9 +44,14 @@ configured (`tfp checkin /validate /format:json` lists the policies with `passed
 - Done when a CI run after the change passes and its log shows `TFP0407` in the validate step of
   `Phase3Tests.Checkin_validates_commits_links_a_work_item_and_reports_nothing_pending`.
 
-DONE: configured on 2026-10-11 by the developer: Work Items and Changeset Comments (no build policy). Still to see: the
-first CI run after the change (Actions → CI → Run workflow on `main` with an empty `release_tag` runs the tests
-without a release, or any pull request). The agent then records the result here and in PROGRESS.md.
+Configured on 2026-10-11 by the developer: Work Items and Changeset Comments (no build policy). **Not visible to
+the server yet** (CI runs 174 and 176 of 2026-10-11, PR #23): `tfp checkin /validate /format:json` lists no policy,
+the client library finds no policy envelope under either annotation key (`CheckinClientPolicies`,
+`CheckinPolicies`) of `$/TfsPortableTestRepo`, and a query of every annotation of the collection returns none.
+Please check in Visual Studio: Team Explorer → Settings → Source Control → Check-in Policy must list both
+policies for the team project **TfsPortableTestRepo** (not another project) with their checkboxes ticked, and
+the dialog closed with OK; then `tf checkin /validate` (or `tfp checkin /validate`) on any pending change must
+name the Work Items policy. The strict assertion in `Phase3Tests` stays until a CI run shows it.
 
 ## 3. Golden captures with the original tf.exe (one sitting, one sign-in) – DONE 2026-10-09, no further run
 
@@ -177,8 +181,9 @@ only checked that the refusal is reported per item.
   run also answers question 35 of `docs/tf-reference/questions.md` (the exit code when nothing is applied is
   already 100 in the code).
 
-DONE: granted on 2026-10-11 by the developer (Manage permissions: Allow on `$/TfsPortableTestRepo/CI`). Still to see:
-the first CI run after the change (same run as for §2). "Manage permissions" is the item permission TFVC calls
+DONE and verified: granted on 2026-10-11 by the developer (Manage permissions: Allow on `$/TfsPortableTestRepo/CI`);
+CI run 174 of 2026-10-11 (PR #23) applied `permission /allow:Lock` for the CI user, listed the explicit allow and
+removed it again, and the destroy test ran the real `destroy /startcleanup` under the CI folder. "Manage permissions" is the item permission TFVC calls
 `AdminProjectRights`, which `destroy` checks on the item too, so
 `Phase4Tests.Destroy_needs_a_preview_then_removes_the_item_and_its_history` may now run the real destroy under
 the CI folder instead of returning at the permission check; the test handles both outcomes.
