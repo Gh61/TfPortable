@@ -31,8 +31,8 @@ Answered on 2026-10-10 from tf.exe 18.10.12215.6 (the numbers are kept so that o
 
 35. `permission` change that the server applies nowhere (every part refused): tf.exe exits 100 because the
     result list is empty (`permission.md`). Decided on 2026-10-10: tfp exits 100 too when nothing was applied,
-    a partial result stays exit 1 through the item errors. Still untested in CI until the CI user may change
-    permissions (`docs/DEVELOPER-TODO.md` §7).
+    a partial result stays exit 1 through the item errors. Answered in CI: run 167 (before the CI user had the
+    permission) showed the refusal path with exit 100, run 174 of 2026-10-11 (after it) the applied path.
 
 36. `destroy /startcleanup` on Azure DevOps Services: tf.exe only forwards the flag (`destroy.md`). Answered on
     2026-10-10: the service accepts it (CI run 167, the destroy integration test passes the flag on every run;
