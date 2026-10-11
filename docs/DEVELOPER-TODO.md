@@ -8,7 +8,7 @@ Tick an item by deleting it or by writing the date and the result next to it. Ea
 | § | Item | Status |
 | --- | --- | --- |
 | 1 | Release `v0.2.0` | **DONE** 2026-10-09 |
-| 2 | Checkin policies on the test project | **OPEN again** 2026-10-11: configured in Visual Studio, but CI runs 174 and 176 see no policy on the project (details in §2); please re-check and save |
+| 2 | Checkin policies on the test project | **DONE and verified** 2026-10-11 (CI run 183, after the developer saved the dialog and tfp learned the class names of Visual Studio 18) |
 | 3 | Golden captures with tf.exe | **DONE** 2026-10-09 (all four runs); no further run, decided 2026-10-11 |
 | 3b | Decompile tf.exe for the reference notes | **DONE** 2026-10-10 |
 | 4 | Permanent shelveset `tfp-golden-shelveset` | **DECIDED** 2026-10-11: stays for good, nothing to do |
@@ -16,9 +16,8 @@ Tick an item by deleting it or by writing the date and the result next to it. Ea
 | 6 | Still open from earlier | **DONE**, only the recurring workspace cleanup remains |
 | 7 | Manage permissions for the CI user | **DONE and verified** 2026-10-11 (CI run 174) |
 
-Waiting for the developer: §2 (the checkin policies are not visible on the server, see the section). Everything
-else is done and verified. After §2: `v1.0` is released on the developer's word (the README phases section is
-gone, `CHANGELOG.md` has the `v1.0.0` section).
+Nothing is waiting for the developer: every item is done and verified (§2 and §7 by CI run 183 of 2026-10-11).
+`v1.0.0` is released from this state.
 
 ## 1. Release `v0.2.0` (phases 2 and 3) – DONE 2026-10-09
 
@@ -44,14 +43,14 @@ configured (`tfp checkin /validate /format:json` lists the policies with `passed
 - Done when a CI run after the change passes and its log shows `TFP0407` in the validate step of
   `Phase3Tests.Checkin_validates_commits_links_a_work_item_and_reports_nothing_pending`.
 
-Configured on 2026-10-11 by the developer: Work Items and Changeset Comments (no build policy). **Not visible to
-the server yet** (CI runs 174 and 176 of 2026-10-11, PR #23): `tfp checkin /validate /format:json` lists no policy,
-the client library finds no policy envelope under either annotation key (`CheckinClientPolicies`,
-`CheckinPolicies`) of `$/TfsPortableTestRepo`, and a query of every annotation of the collection returns none.
-Please check in Visual Studio: Team Explorer → Settings → Source Control → Check-in Policy must list both
-policies for the team project **TfsPortableTestRepo** (not another project) with their checkboxes ticked, and
-the dialog closed with OK; then `tf checkin /validate` (or `tfp checkin /validate`) on any pending change must
-name the Work Items policy. The strict assertion in `Phase3Tests` stays until a CI run shows it.
+DONE and verified: configured on 2026-10-11 by the developer (Work Items and Changeset Comments, no build policy).
+The first attempt was not saved (the dialog was closed without OK, CI runs 174 and 176 saw no policy); after the
+second attempt CI run 182 saw both policies but tfp reported them as unknown (TFP0409): Visual Studio 18 stores the
+classes `Microsoft.TeamFoundation.VersionControl.Controls.WorkItemCheckinPolicy` and
+`CheckForCommentsPolicy.CheckForCommentsCheckinPolicy`, which tfp did not recognize, and listed them once per item.
+Both fixed in PR #23; CI run 183 shows `TFP0407` in the validate step of
+`Phase3Tests.Checkin_validates_commits_links_a_work_item_and_reports_nothing_pending` and the checkin with
+`/associate:1` passes the policy.
 
 ## 3. Golden captures with the original tf.exe (one sitting, one sign-in) – DONE 2026-10-09, no further run
 

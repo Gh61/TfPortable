@@ -81,7 +81,8 @@ namespace TfPortable.IntegrationTests
             }
             catch (Exception ex)
             {
-                return "\n(diagnostics failed: " + ex.GetType().Name + ": " + ex.Message + ")";
+                var reason = ex.GetBaseException();
+                return "\n(diagnostics failed: " + reason.GetType().Name + ": " + reason.Message + ")";
             }
         }
 

@@ -3,7 +3,7 @@
 One section per release. The CI release step copies the section of the released tag into the
 GitHub release notes, so write the section before the release is run. The newest release comes first.
 
-## v1.0.0 (unreleased)
+## v1.0.0 (2026-10-11)
 
 Everything of v0.3.0. The first stable version: every version-control command of tf.exe is implemented or
 answers `TFP0005`/`TFP0006` with the reason, the CI covers the checkin policies and the permission changes of
@@ -17,6 +17,9 @@ the test project, and the behavior is verified against tf.exe 18.10 (captures an
   (`checkin /bypass`, `/format:xml`, `workspace /newowner`, ...); `tfp help <command>` marks them.
   A typo stays `TFP0002`.
 - `permission` exits 100 when the server applied none of the requested changes (tf.exe's behavior).
+- Checkin policies: the "Work Items" and "Changeset Comments" policies as Visual Studio 18 stores them
+  (`WorkItemCheckinPolicy`, `CheckForCommentsCheckinPolicy`) are recognized and evaluated; the policies of a
+  project are listed once, not once per item; `checkin /format:json` shows the class of every policy.
 
 ## v0.3.0 (2026-10-10)
 
