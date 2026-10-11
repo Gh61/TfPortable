@@ -1,5 +1,12 @@
 # TfPortable – specifikace
 
+> **Note for English readers.** This specification is written in Czech and is the binding description of
+> TfPortable's behavior (commands, switches, errors, exit codes, milestones); every other document in the
+> repository, the code and every message the tool prints are English. No translation is planned: the
+> developer is the author of this document and no outside contributors are expected. The English documents
+> cover what a user needs: `README.md`, `docs/commands.md`, `docs/errors.md`, `docs/json-schema.md`,
+> `docs/compat.md` (where tfp differs from tf.exe and why) and `CHANGELOG.md`.
+
 Stav k 2026-10-07. Exportováno z pracovního dokumentu; od teď je zdrojem pravdy tento soubor.
 
 ## Název a repozitář

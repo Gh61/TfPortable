@@ -4,104 +4,51 @@ Read this first in every session. Update it at the end of every session (see CLA
 
 ## Status
 
-| # | Milestone | Where | Status | Gate |
-| --- | --- | --- | --- | --- |
-| 0 | Spec refinement from golden files (`docs/compat.md`, SPEC.md updates) | local | done (Gate A passed 2026-10-07; help capture still to be reviewed) | user approves SPEC.md |
-| 1 | Spike: `tfp whoami` + `tfp status` with PAT, Costura single exe, clean machine | local | done (clean-machine test passed, Gate B approved 2026-10-08) | user approves architecture |
-| 2 | Core: parser, workspace context, errors, JSON envelope, `login`/`logout`/`whoami` | cloud + CI | done: [PR #1](https://github.com/Gh61/TfPortable/pull/1) merged into `main` on 2026-10-08 after an independent review | – |
-| 3 | Workspace commands: status, add, checkout, delete, rename, undo, get, resolve, reconcile, localversions, workfold, workspaces | cloud + CI | done: [PR #2](https://github.com/Gh61/TfPortable/pull/2) merged into `main` on 2026-10-08 after an independent review (findings under Decisions) | – |
-| 4 | History and content: history (incl. search), changeset (/diff), view, diff, dir, properties, labels, branches, merge /candidate | cloud + CI | done: [PR #3](https://github.com/Gh61/TfPortable/pull/3) merged into `main` on 2026-10-08 (merge commit ff64062) after an independent review (findings under Decisions) | – |
-| 5 | Integration: CLAUDE.md template for users, compat tests, GitHub release of `tfp.exe` | cloud + CI | done: [PR #4](https://github.com/Gh61/TfPortable/pull/4) (docs/CLAUDE.md, compatibility tests, embedded-assembly check, THIRD-PARTY-NOTICES) reviewed, CI green and merged into `main` on 2026-10-08; release [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0) published the same day (developer approved; `tfp.exe` + SHA-256 from the CI run on 2a1c007) | user approved the release on 2026-10-08 |
-| P2 | Phase 2: `merge`, `branch`, `rollback`, `undelete` as pending changes, `merges`, `folderdiff`, `annotate` | cloud + CI | done: [PR #12](https://github.com/Gh61/TfPortable/pull/12) reviewed by an independent agent (findings under Decisions), CI green (195 unit and 86 integration tests) and merged into `main` on 2026-10-08 with a merge commit | – |
-| P3 | Phase 3: protection levels, `checkin`, `shelve`/`shelvesets`/`unshelve`, `label`/`unlabel`, `lock` | cloud + CI | done: [PR #9](https://github.com/Gh61/TfPortable/pull/9) merged into `main` on 2026-10-08 (merge commit 3c92ea2) after an independent review (findings under Decisions); 187 unit and 82 integration tests green | release `v0.2.0` (developer) |
-| P4 | Phase 4: `destroy` (preview marker), `permission`, `workspace`, `property`, `resolvepath`, `docs`/`msdn`, `workfold` mapping edits, `changeset /comment /notes`, `checkin /shelveset`, `unshelve /move`, `shelve /validate`, `lock`/`undo` on another workspace; `proxy`/`configure`/`certificates` as TFP0005; `docs/errors.md` | cloud + CI | done: [PR #17](https://github.com/Gh61/TfPortable/pull/17) reviewed twice by an independent agent (findings under Decisions), CI green (205 unit and 94 integration tests, run 150 on 047d922) and merged into `main` on 2026-10-09 with a merge commit | released as [v0.3.0](https://github.com/Gh61/TfPortable/releases/tag/v0.3.0) on 2026-10-10; `v1.0` is the developer's call (see next steps) |
-| P4b | `property` write form of tf.exe (`/setvalues`, `/deletevalues`, `/deleteall`, `/propertynames`, `/output`); destroy preview marker fix for machines outside UTC | cloud + CI | done: [PR #18](https://github.com/Gh61/TfPortable/pull/18) reviewed by an independent agent (findings under Decisions), CI green (206 unit and 95 integration tests, run 157 on ff71155) and merged into `main` on 2026-10-10 with a merge commit | released as [v0.3.0](https://github.com/Gh61/TfPortable/releases/tag/v0.3.0) on 2026-10-10 |
-| GC | Golden comparison: tfp against the captures of phases 2, 3, 4 and the extra2 gaps (2026-10-09) | cloud + CI | done: [PR #14](https://github.com/Gh61/TfPortable/pull/14) reviewed by an independent agent (findings under Decisions), CI green (197 unit and 90 integration tests) and merged into `main` on 2026-10-09 with a merge commit; fixes and recorded deviations in `docs/compat.md` §20 | – |
+[v1.0.0](https://github.com/Gh61/TfPortable/releases/tag/v1.0.0) was released on 2026-10-11 from `main` (CI
+workflow run 189 on 76eb720). Every milestone and phase of SPEC.md is done, every switch of tf.exe is either
+implemented or answers `TFP0006` (marked ✗ in `docs/commands.md`), and no catalog command returns `TFP0003`.
+`CHANGELOG.md` lists what each release contains; the history of the milestones and phases (PRs #1 to #26,
+releases v0.1.0, v0.2.0, v0.3.0, v1.0.0) is in the session log below and in the git history of this file.
 
-Statuses: not started, in progress, blocked, done.
+| Milestone | Status |
+| --- | --- |
+| Milestones 0–5, phases 2–4, golden comparison, v1.0 preparation (SPEC.md) | done, released as v1.0.0 |
+
+New work starts as a new row here (not started, in progress, blocked, done), with its branch and PR.
 
 ## Next steps
 
-0. The golden comparison is merged ([PR #14](https://github.com/Gh61/TfPortable/pull/14)): the code fixes and
-   the recorded deviations are in `docs/compat.md` §20; the captures of all four runs are committed
-   (`index-phase2-2610091535.json`, `index-extra2-2610091539.json`, `index-phase3-2610091137.json`,
-   `index-phase4-2610091138.json`).
-1. Phases 2 and 3 are released as [v0.2.0](https://github.com/Gh61/TfPortable/releases/tag/v0.2.0)
-   (2026-10-09, CI run 37970558255 on d94a6a7, at the developer's request in the session).
-2. Optional follow-ups the comparison surfaced (not started): golden tests that load the phase 2 and extra2
-   cases explicitly (the golden runner only runs cases listed by `group/name`); the `get` over a writable
-   file case (TFP0402) is still uncaptured.
-3. [v1.0.0](https://github.com/Gh61/TfPortable/releases/tag/v1.0.0) released on 2026-10-11 (the developer's word after the server settings were verified by CI run 183;
-   PR #23 merged, CI workflow run 189 with `release_tag=v1.0.0` on 76eb720 after the permission timing fix of PR #25; `tfp.exe` 4,064,256 bytes). Before it, phase 4 and the `property` write form were released as [v0.3.0](https://github.com/Gh61/TfPortable/releases/tag/v0.3.0)
-   (2026-10-10, workflow run 38051753926 on e2c359a, the release notes copied from `CHANGELOG.md`). The SPEC.md
-   rule for `v1.0` holds: no catalog command has the status that returns `TFP0003` (the code path in `Program`
-   stays for the catalog check). The developer's decisions of 2026-10-10 (Decisions) are on branch
-   `v1-switches` (merged 2026-10-10): server locks on the pend commands and `checkin /notes` implemented, the
-   rest of the refused switches answer `TFP0006`, `permission` exits 100 when nothing was applied,
-   `destroy /startcleanup` accepted by Azure DevOps Services in CI. Still before `v1.0`: the README "Phases and progress" section to drop (developer's note of 2026-10-09,
-   confirmed 2026-10-10: before the release); the first CI run after the developer's server settings of
-   2026-10-11 (`docs/DEVELOPER-TODO.md` §2 checkin policies Work Items + Changeset Comments, §7 Manage permissions
-   for the CI user on `$/TfsPortableTestRepo/CI`): it must show `TFP0407` in the validate step of `Phase3Tests`,
-   the real-change branch of the `Phase4Tests` permission test (answers question 35 of
-   `docs/tf-reference/questions.md`) and possibly the real destroy under the CI folder; record the outcome in
-   `docs/DEVELOPER-TODO.md` §2 and §7, in "Open questions" and in `questions.md`. The switches refused
-   on purpose with `TFP0006` (marked ✗ in `docs/commands.md`) stay deviations unless the developer wants any of
-   them in 1.0. Question 25a stays open (needs a second account). The two release pages of v0.1.0
-   and v0.2.0 still need their notes pasted from `CHANGELOG.md` by hand. No further golden capture run is
-   planned (Decisions 2026-10-11).
-4. If a package changes later, update `src/TfPortable/embedded-assemblies.txt` from the output of
-   the CI step "Check the embedded assemblies against THIRD-PARTY-NOTICES" and THIRD-PARTY-NOTICES.
-5. The README "Phases and progress" section is gone (2026-10-11, before the release as the developer asked);
-   the protection levels section stays. `CHANGELOG.md` holds the `v1.0.0` section (date to fill at the
-   release).
-6. The tf.exe reference notes are complete (`docs/tf-reference/`, 2026-10-10). The `property` write form the
-   developer asked for is implemented on branch `p5-property` ([PR #18](https://github.com/Gh61/TfPortable/pull/18))
-   exactly as the brief in `docs/tf-reference/property.md` says (merged 2026-10-10). The decompiled sources live only in `local/decomp/`
-   on the developer's machine (never committed); re-run `tools/decompile-tf.ps1` to recreate them.
-7. The destroy marker unit test that failed on the developer's machine found a real bug (Decisions 2026-10-10): the
-   marker stamp lost its offset through Json.NET's date handling, so `destroy` always ended with TFP0410 outside UTC.
-   Fixed in PR #18; the test now checks the stamp reading under cs-CZ.
+Nothing is planned. Maintenance after v1.0.0:
+
+- A bug fix or a new switch follows the loop of CLAUDE.md: branch, draft PR, CI, independent review, merge
+  with a merge commit, a `CHANGELOG.md` entry, a release by running the CI workflow on `main` with
+  `release_tag` (Actions → CI → Run workflow) or by pushing a tag `v*`.
+- If a package changes, update `src/TfPortable/embedded-assemblies.txt` from the output of the CI step
+  "Check the embedded assemblies against THIRD-PARTY-NOTICES" and THIRD-PARTY-NOTICES.
+- The golden fixture creates a temporary local workspace `tfp-golden-<id>` on the CI runner and deletes it at
+  the end; a run that dies mid-way may leave one behind in the test collection (harmless, visible in
+  `tf workspaces /owner:*`). Delete such leftovers occasionally; a recurring chore, never done.
 
 ## Needs the user
 
-The checklist with the details lives in `docs/DEVELOPER-TODO.md` (release `v0.2.0`, checkin policies on the
-test project, the golden captures of phases 3 and 4 in one sitting, the permanent shelveset, the decisions
-before phase 4). The items below are kept for history.
+Nothing. The developer's checklist (`docs/DEVELOPER-TODO.md`) was closed and deleted on 2026-10-11; its items
+are recorded under "Decisions" (2026-10-09 to 2026-10-11). What stays with the developer for good:
 
-- The lawyer's look at LICENSE-EXCEPTION and THIRD-PARTY-NOTICES is closed: the developer decided on
-  2026-10-10 not to have the texts reviewed (Decisions 2026-10-10).
-- Phase 3 answers of 2026-10-08: CI may check in under `$/TfsPortableTestRepo/CI/<run>` (done, with
-  a delete checkin at the end), the developer cannot easily run tf.exe for new captures (so phase 3
-  follows the existing captures and the Microsoft docs; `tools/capture-tf-golden-phase3.ps1` is ready
-  for later), and work item #1 (a bug) exists for `checkin /associate`.
-- The CI user has no AdminProjectRights on the test project: the phase 4 permission test can only check
-  that the server's refusal (TF14098) is reported per item. `docs/DEVELOPER-TODO.md` §7 says what to grant.
-  Granted on 2026-10-11 on the `CI` folder; the next CI run shows the effect.
-- Paste the v0.1.0 and v0.2.0 sections of `CHANGELOG.md` into the two GitHub release pages (the cloud
-  session cannot edit releases). Release `v0.3.0` after phase 4 merges; `v1.0` when every phase is done.
-- The permanent shelveset `tfp-golden-shelveset` was created by the developer on 2026-10-08;
-  `ShelvesetTests` finds it by name (any owner) and fails with the visible shelveset names when it
-  does not. It stays for good (developer's decision of 2026-10-11): the test reads a shelveset of another
-  owner without writing anything, which a shelveset the test creates itself could not prove.
-- Set up the `main` ruleset the developer agreed to on 2026-10-08: pull request required, the CI
-  check `Build, test, package (windows-latest)` required (branch up to date), force pushes and
-  deletions blocked, no required approvals (the agent merges after an independent review), no
-  linear-history requirement (merge commits are the convention).
-- Later releases: run the CI workflow manually on `main` with `release_tag` (Actions → CI → Run
-  workflow), or push a tag `v*` from a machine that can push tags.
-- The golden fixture creates a temporary local workspace named `tfp-golden-<id>` on the CI runner
-  (owner: the PAT's user) and deletes it at the end; a run that dies mid-way may leave one behind
-  in the collection (harmless, but visible in `tf workspaces /owner:*`). Delete such leftovers
-  occasionally.
-- The CI workflow now runs once per commit on a PR branch (`push` is limited to `main`, PR #9) and
-  runs queue up behind each other (`concurrency` group): the integration tests of two runs at the same
-  time interfere through the shared test collection.
-
+- The permanent shelveset `tfp-golden-shelveset` on the test collection is the fixture of the read-only
+  `ShelvesetTests`; it must not be deleted.
+- The `main` ruleset (pull request required, the CI check required, force pushes and deletions blocked, no
+  required approvals, no linear-history requirement) and the checkin policies "Work Items" and "Changeset
+  Comments" on the test project, plus Manage permissions for the CI user on `$/TfsPortableTestRepo/CI`, are
+  what the integration tests expect.
+- Question 25a of `docs/tf-reference/questions.md` (`undo /workspace:<other>` without permission) needs a
+  second account to observe the server's message; the server's message is passed through, so nothing waits on it.
+- The workspace cleanup under "Next steps".
 
 ## Decisions
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-11 | After v1.0.0 the working documents are reduced to what still holds: `docs/DEVELOPER-TODO.md` (every item done and verified) is deleted, its recorded facts stay under "Decisions" and the permanent notes moved to "Needs the user" and "Next steps"; this file keeps Decisions, Open questions and the golden facts unchanged, the status table, next steps and the session log are condensed (the full text is in the git history, `git show b820bc7:docs/PROGRESS.md`); `docs/SPEC.md` gets an English note at the top saying that the specification is in Czech and binding, with no translation planned (the developer is its author and no outside contributors are expected); CLAUDE.md records the note | Developer's decision of 2026-10-11 |
 | 2026-10-07 | Executable is `tfp.exe`, project TfPortable, repository `tfportable` | Same name as tf.exe would hide which implementation runs |
 | 2026-10-07 | License GPL v3 with an additional permission (section 7) for the Microsoft client libraries; files LICENSE, LICENSE-EXCEPTION, THIRD-PARTY-NOTICES | Microsoft's library license forbids subjecting it to a copyleft license; to be checked by a lawyer before the first release |
 | 2026-10-07 | All tool output (messages, hints, prompts) in English; original TFS messages kept verbatim | Universal tool; searchable error codes |
@@ -253,22 +200,22 @@ mechanism, the checkin evaluation options, `/override` semantics, the shelve/uns
 defaults, destroy flags, permission shape and identity handling, workspace defaults, `property` switches, merge
 preview and summary rules, branch and rollback version defaults, folderdiff comparison.
 
+Closed on 2026-10-11 by CI runs 174 and 183 after the developer's server settings (Decisions 2026-10-11): question
+35 (`permission` exits 100 when nothing was applied; the applied path verified with Manage permissions for the CI
+user), question 36 (Azure DevOps Services accepts `destroy /startcleanup`), and the checkin policies "Work Items"
+and "Changeset Comments" (evaluated by tfp with the Visual Studio 18 class names, `TFP0407` in the validate step of
+`Phase3Tests`).
+
 Open:
 
-- From the decompilation (`docs/tf-reference/questions.md`, 25a, 35, 36): the server's message for
-  `undo /workspace:<other>` without permission; tfp's exit code when a `permission` change applies nowhere
-  (tf.exe: 100; tfp reports per-part item errors, untested because the CI user cannot change permissions);
-  whether Azure DevOps Services accepts `destroy /startcleanup`.
+- Question 25a of `docs/tf-reference/questions.md`: the server's message for `undo /workspace:<other>` without
+  permission. Needs a second account; tfp passes the server's message through, no client-side check.
 - No golden case exists for TFP0402 from `get` (the library's "writable" status): local workspaces report a
   conflict instead; `unshelve/local-file-in-the-way` is the only capture of a writable file in the way.
 - A checkin policy failure is uncaptured with tf.exe and stays so (no further capture run, Decisions
   2026-10-11); its shape is known from the decompiled sources (`docs/tf-reference/checkin.md`) and golden
   tests never compare texts. `checkin /associate` is a tfp extension, so the "Work Items" policy shape stays
   tfp's own.
-- Checkin policies: tfp evaluates "Work Items" and "Changeset Comments" itself and reports the rest as unknown
-  (TFP0409); `/override` is level 2 (decided 2026-10-08). The developer configured both policies on the test
-  project on 2026-10-11; the first CI run after that must show the policy assertions of `Phase3Tests` running
-  (`TFP0407` in the validate step). Until that run is seen, this stays open.
 
 ## Golden files – facts
 
@@ -292,272 +239,40 @@ Open:
 
 ## Session log
 
-### 2026-10-11 – cloud session, verification of the server settings and the v1.0 docs (branches `v1-verify`, `v1-docs`)
+Entries before 2026-10-11 are condensed; the full log is in the git history (`git show b820bc7:docs/PROGRESS.md`).
 
-- Done: PR #22 (the developer's checklist) merged; PR #23 makes the policy, permission and destroy tests strict:
-  Manage permissions and the real destroy are verified (run 174), the checkin policies are not visible to the
-  server (runs 174 and 176, diagnostics in the assertion message); README without the phases section,
-  `CHANGELOG.md` with the `v1.0.0` section; the findings recorded in `docs/DEVELOPER-TODO.md` §2 and §7,
-  "Needs the user" and `questions.md` 35.
-- Done too: the developer saved the policies again; tfp learned the Visual Studio 18 policy classes and queries
-  the policies once per project (Decisions 2026-10-11); CI run 183 green with every strict test; PR #23 merged;
-  `v1.0.0` released on the developer's word of 2026-10-11 (CI workflow with `release_tag=v1.0.0`).
-- Next: nothing planned; the recurring workspace cleanup of `docs/DEVELOPER-TODO.md` §6 stays.
+### 2026-10-11 – cloud session, documents after v1.0.0 (branch `claude/vibrant-mayer-9kx4fh`)
+
+- Done: `docs/DEVELOPER-TODO.md` deleted (every item done and verified), this file condensed to what still
+  holds, English note at the top of `docs/SPEC.md`, CLAUDE.md updated (Decisions 2026-10-11).
+- Next: nothing planned (see "Next steps").
 - Blockers: none.
 
-### 2026-10-11 – local session, the developer's checklist (branch `developer-todo-2026-10-11`)
+### 2026-10-07 to 2026-10-11 – from the specification to v1.0.0 (condensed)
 
-- Done: the developer reported §1, §2 (Work Items + Changeset Comments, no build policy), §5 and §7 of
-  `docs/DEVELOPER-TODO.md` as done and decided §3 (no further capture run), §3b (nothing more) and §4 (the
-  permanent shelveset stays). Checklist and PROGRESS updated accordingly (Decisions 2026-10-11); no code
-  changed. `gh` is not installed on the developer's machine and the test secrets are not in its environment, so
-  the CI run that proves §2 and §7 could not be started or read from this session.
-- Next: one CI run on `main` (Actions → CI → Run workflow, empty `release_tag`) or the pull request of this
-  branch; then record `TFP0407` in the `Phase3Tests` validate step, the real-change branch of the `Phase4Tests`
-  permission test (question 35) and whether the destroy test ran the real destroy, in `docs/DEVELOPER-TODO.md`
-  §2 and §7, "Open questions" and `questions.md`. Then the README phases section and `v1.0` on the developer's
-  word.
-- Blockers: none.
-
-### 2026-10-10 – cloud session, version 1.0 preparation (branch `v1-switches`)
-
-- Done: the developer's decisions on the refused switches (Decisions 2026-10-10): server locks on the pend
-  commands, `checkin /notes`, `TFP0006` for the switches left out, `permission` exit 100 when nothing was
-  applied, `destroy /startcleanup` in the CI test (accepted by the service), `docs/DEVELOPER-TODO.md` §7,
-  `CHANGELOG.md` "Unreleased"; independent review (one blocking finding on a test, fixed), CI green (run 170,
-  207 unit and 96 integration tests), merged with a merge commit.
-- Next: the developer's server settings (`docs/DEVELOPER-TODO.md` §2 and §7) and the README phases section
-  before the `v1.0` release; `v1.0` on the developer's word.
-- Blockers: none.
-
-### 2026-10-10 – cloud session, property write form and the marker fix (branch `p5-property`, PR #18)
-
-- Done: the `property` write form per the developer's brief (switches, escapes, binary values, refused
-  combinations, level 2, docs, unit and integration tests, the capture script uses `/setvalues`); the destroy
-  marker stamp is read as UTC on every machine (the developer's failing test was a real bug, see Decisions);
-  `CHANGELOG.md` has the `v0.3.0` section so the release can run right after the merge.
-- Done too: independent review (two should-fix findings, fixed), CI green (run 159 after a timing fix of the
-  workspace profile assertion), merged with a merge commit (e2c359a); `v0.3.0` released from `main` through the
-  workflow run with `release_tag=v0.3.0`; the `v1.0` status reported to the developer (next step 3).
-- Next: whatever the developer decides for `v1.0` (next step 3).
-- Blockers: none.
-
-### 2026-10-10 – local session, decompilation of tf.exe (branch `main`)
-
-- Done: `tools/decompile-tf.ps1` run on the developer's machine against Visual Studio 18 Community
-  (tf.exe 18.10.12215.6, client assemblies 20.271); three script fixes (version folder name, `Command<Name>.cs`
-  index, `Microsoft.TeamFoundation.Client.dll` included). Every question of `docs/tf-reference/questions.md`
-  answered from the decompiled command classes into 15 notes under `docs/tf-reference/`; `questions.md` now lists
-  the three remaining server-side questions and the facts that need a decision. SPEC.md and `docs/compat.md`
-  §20/§21 corrected on the `property` write form. No code changed: everything tfp implements from the former
-  assumptions matches, the remaining differences were already recorded as deviations.
-- Developer's answers the same day: `rollback /toversion` stays as it is (the itemspec is required by the server,
-  golden `rollback/toversion-no-item`, so the relaxation would only swap TFP0002 for TF203065); the `property`
-  write form will be implemented by the cloud agent (brief in `docs/tf-reference/property.md`). Branch
-  `tf-reference-notes` merged into `main` with a merge commit on the developer's word.
-- Next: the cloud agent implements the `property` write form (step 6 of "Next steps"); release `v0.3.0` (step 3).
-- Blockers: none.
-
-### 2026-10-09 – cloud session, phase 4 (branch `p4-server`, PR #17)
-
-- Done (same session, before this entry): PR #14 (golden comparison) merged, `v0.2.0` released, PR #15 and
-  PR #16 (README protection levels, `CHANGELOG.md` as the release notes source) merged.
-- Done: SPEC.md "Fáze 4" from the developer's answers, `docs/errors.md`, the phase 4 commands (`destroy` with
-  the preview marker, `permission`, `workspace`, `property`, `resolvepath`, `docs`/`msdn`), the phase 3
-  completions (`checkin /shelveset`, `unshelve /move`, `shelve /validate`), `workfold` mapping edits,
-  `changeset /comment /notes`, `lock /workspace` at level 3, TFP0005 for the never-offered commands and
-  groups; unit tests (`Phase4CommandTests`) and integration tests (`Phase4Tests`); docs (commands.md with
-  anchors for `docs`, json-schema.md, compat.md §21, CLAUDE.md template, README, DEVELOPER-TODO).
-- Done (CI loop, runs 140–150): the parser keeps the switches of never-offered commands, `property` reads
-  through `GetItems`, `destroy` sends a full-recursion item spec (TF203086) without the `AffectedChanges`
-  flag, `permission` reports the library's non-fatal failures per change part with the server message
-  (`skipped[]`), `lock /workspace:<other>` passes server paths, workspace edits re-read the workspace,
-  JSON Messages carry `serverMessage`; two independent reviews (findings under Decisions). CI green on
-  047d922 (205 unit, 94 integration tests); merged with a merge commit.
-- Next: release `v0.3.0` on the developer's word; `v1.0` once nothing returns TFP0003.
-- Blockers: the CI user has no AdminProjectRights on the test project, so the permission change itself is
-  not exercised in CI (the refusal is); see "Needs the user".
-
-### 2026-10-09 – cloud session, golden comparison (branch `golden-compare`)
-
-- Done (earlier in the session): PR #13 merged (ac08eaf): `tools/capture-tf-golden-phase2.ps1`,
-  `tools/capture-tf-golden-extra2.ps1`, the all-in-one runner order, the phase 2 script fix after the
-  developer's first run. The developer then captured all four runs and committed them (bcb807a).
-- Done: every case of the phase 2 and extra2 runs (and the phase 3 and 4 runs) compared with tfp. Code fixes
-  and recorded deviations under Decisions 2026-10-09 and in `docs/compat.md` §20; `commands.md`,
-  `json-schema.md`, `tf-reference/questions.md` (27–33, 3, 25, 26), `DEVELOPER-TODO.md` updated. Unit tests
-  for the conflict lines, the merged-items list and the `difference` option semantics; the
-  labels-after-delete integration assertion now expects exit 100.
-- CI loop (runs 129–132): the new conflict-line unit test exposed a pended-count line for conflict-only merges
-  (fixed) and the stderr form of an item error (no item prefix); the review (3 blocking, 4 should-fix, 5 nits)
-  found the ineffective `checkin` exit code and the stale `merges` integration assertion; all fixed, CI green,
-  merged with a merge commit.
-- Release `v0.2.0` published from `main` (d94a6a7) on the developer's request: `tfp.exe` 4,000,256 bytes
-  and its SHA-256.
-- Next: phase 4 waits for the scope decision (questions put to the developer in the session).
-- Blockers: none.
-
-### 2026-10-08 – cloud session, phase 2 (branch `p2-branching`, PR #12)
-
-- Done (before this entry, same session): PR #11 merged (a26a2a7): native checkin policies (variant 3),
-  `/override` at level 2, TFP0409, `docs/DEVELOPER-TODO.md`, the capture scripts for phases 3 and 4 and the
-  all-in-one script, `tools/decompile-tf.ps1` with `docs/tf-reference/` (rules, template, questions) and the
-  CLAUDE.md rule on decompiled sources.
-- Done: phase 2 on the developer's brief. Client: `Merge`, `PendBranch`, `PendUndelete`, `Rollback`,
-  `QueryMerges`, merge sources on pending changes, item hash, `UnifiedDiff.MatchingLines`. Commands:
-  `merge` (pending, `/preview` through the server's `NoMerge` option, flags), `branch`, `undelete`, `rollback`
-  (`/changeset`, `/toversion`), `merges` (brief and detailed), `folderdiff` (hash comparison, filters,
-  views, single-path form), `annotate` (extension). Catalog rows implemented, help section "Phase 2",
-  unit tests (`Phase2CommandTests`), integration tests (`Phase2Tests`: branch and undo, preview and merge
-  and undo, rollback and undelete on the CI folder, merges/folderdiff/annotate on the seeded branches).
-  Docs: SPEC.md "Fáze 2" and catalog rows, commands.md, json-schema.md, compat.md §15, questions 27–32,
-  README phase table, the agent template (permissions and the pending-only note).
-- CI loop (runs 114–120) and review: three unit failures on the first run (annotate line endings, the help
-  footer, the `/view` enumeration), then the integration findings recorded under Decisions (Merging event,
-  rollback scope and `/toversion` order, the seeded merge conflict in the preview) and the review findings
-  (1 blocking, 5 should-fix, 8 nits) fixed in the same loop. Merged with a merge commit.
-- Next: the developer's checklist (`docs/DEVELOPER-TODO.md`); phase 4 waits for the scope decision.
-- Blockers: none.
-
-### 2026-10-08 – cloud session, phase 3 (branch `p3-protection`, PR #9)
-
-- Done: protection levels (settings file, catalog map, `protection` command, TFP0004, level in `help` and
-  `whoami`); `checkin` (evaluation, `/validate`, `/override`, `/associate` over REST), `shelve` (`/replace`,
-  `/move`, `/delete`), `shelvesets`, `unshelve`, `label` (`/child`, `/delete`), `unlabel`, `lock`; error codes
-  TFP0406–TFP0408; unit tests (`ProtectionTests`, `Phase3CommandTests`); CI tests (`Phase3Tests`) with the
-  CI folder and the cleanup; docs (commands.md, json-schema.md, compat.md §16 and §18, SPEC.md error rows and
-  tool commands, the agent template with `checkin`/`shelve` guidance and the `protection set` deny rule);
-  `tools/capture-tf-golden-phase3.ps1` for the developer. The first CI runs failed on four unit tests (the
-  help catalog had no section for implemented phase 3 commands, the no-argument run hit the protection gate
-  with a null spec, the error catalog test and a `/delete` argument test lacked the new codes and the gate):
-  fixed in 9a072bd.
-- CI loop: the twin runs of one commit interfered through the shared test collection (lock, `get`), so CI
-  runs are serialized and `push` is limited to `main`; the lock test uses a file of its own run. Independent
-  review: 0 blocking, 8 should-fix, 4 nits, all fixed (Decisions). PR #9 merged (3c92ea2) with 187 unit and
-  82 integration tests green.
-- Next: the developer releases `v0.2.0` (Actions → CI → Run workflow with `release_tag`) and, when tf.exe is
-  at hand, runs `tools/capture-tf-golden-phase3.ps1`; then compare tfp against the new captures.
-- Blockers: none.
-
-### 2026-10-08 – cloud session 1 continued, milestones 3–5 to the merge
-
-- Done: PR #2 (milestone 3) reviewed by an independent agent, four should-fix items and two nits
-  applied, CI green, merged into `main` (merge commit 106c574). Milestone 4 CI brought from 18
-  failures to green (owner placeholder of the seed changesets, whole-word Czech → English phrase
-  mapping, properties without the stream check, `was not found in source control` → TFP0301,
-  changeset item order by parent folder, diff prefix/suffix matching; two golden cases that later
-  golden runs invalidated compare shape or items only). PR #3 reviewed (13 should-fix items, no
-  blockers) and the fixes applied (commit d099adb; linear-space Myers diff, work items on request,
-  `/workitem` through the linking service, wildcards and deleted items in `history`/`view`, CRLF
-  and final-newline differences, shelveset diff lines, `dir <file>`, merge candidates detailed).
-  Milestone 5 on `m5-integration` ([PR #4](https://github.com/Gh61/TfPortable/pull/4)):
-  `docs/CLAUDE.md`, `CompatibilityTests`, the embedded-assembly CI check with
-  `src/TfPortable/embedded-assemblies.txt` (33 assemblies + Costura resources), THIRD-PARTY-NOTICES
-  section 3 updated; reviewed, findings applied.
-- Next: PR #3 merged (ff64062); PR #4 merged (bd1fa08); release `v0.1.0` published through the new
-  `workflow_dispatch` input (PR #5, the git proxy of the cloud session refuses tag pushes). Then the
-  open questions: branch `open-questions`, `OpenQuestionTests`, review nits of PR #3; see "Decisions".
-  Phases 3 and 4 defined (branch `docs-phases`); phase 3 starts on the developer's brief.
-- Blockers: none. The developer sets up the `main` ruleset (PR required, CI check required, no
-  force pushes; no required approvals so that the agent can merge).
-
-### 2026-10-08 – cloud session 1 continued, review of PR #1 and milestone 3
-
-- Done: independent review of PR #1 (findings and fixes under "Decisions"), fixes pushed to `m2-core`.
-  Milestone 3 on `m3-workspace` (branched from `m2-core`, merged after each fix): `ITfvcWorkspace`
-  gained PendAdd/PendEdit/PendDelete/PendRename/Undo/Get/QueryConflicts/Resolve/GetLocalVersions,
-  `ITfvcClient` QueryWorkspaces/RemoveCachedWorkspaces/QueryPendingSets/QueryShelvedChanges;
-  commands add, checkout, delete, rename, undo (`Commands/PendCommands.cs`), get, resolve, reconcile,
-  localversions, workfold, workspaces (`Commands/WorkspaceInfoCommands.cs`), status detailed/`/user`/
-  `/shelveset`; shared helpers in `Commands/WorkspaceCommandSupport.cs`. Rendering unit tests;
-  `WorkspaceGoldenTests` scenario; docs (`json-schema.md` rows, `compat.md` §1.3 and milestone 3
-  notes, README status).
-- CI of `m3-workspace` went green after three fixes (undo names a rename as pended, golden item
-  suffixes stripped, scenario cleanup; a label-width unit test). Independent review of PR #2 started.
-- Milestone 4 on `m4-history` ([PR #3](https://github.com/Gh61/TfPortable/pull/3)): client methods
-  for changesets, items, content, labels, branches and merge candidates; commands history (full),
-  changeset, view, difference, dir, properties, labels, branches, merge /candidate; own unified
-  diff; unit tests; `HistoryGoldenTests`; docs (json-schema rows, compat.md milestone 4 notes,
-  README status). CLAUDE.md gained the review-and-merge loop on the developer's request.
-- Next: review findings of PR #2 → fix → merge; CI of `m4-history` → review → merge; milestone 5.
-- Blockers: none.
-
-### 2026-10-08 – cloud session 1, milestone 2 (Claude Code on Linux, CI on windows-latest)
-
-- Done: branch `m2-core`, draft [PR #1](https://github.com/Gh61/TfPortable/pull/1). Code of
-  milestone 2 complete: `Cli/CommandCatalog.cs` (every command, alias, phase, status, switch),
-  `Cli/CommandLine.cs` (table-driven parser, `@file`, short forms per command, value validation,
-  `PeekCommand`), `Cli/VersionSpecParser.cs`, `Cli/ItemSpecParser.cs`; `Errors/` catalog with
-  defaults and compat.md overrides, ActivityId; `Output/` item errors, envelope context on errors,
-  block helpers; `Context/` `ITfvcClient`, `TfvcClient`, DTOs, resolver with `/workspace`,
-  `/login`, TFP0203 helper; `help` from the catalog (text + JSON), TFP0003 for planned and
-  out-of-scope commands, Ctrl+C in the PAT prompt. 144 unit tests (parser, catalog, versionspec,
-  itemspec, errors, output, dispatch, rendering). Golden infrastructure and `GeneralGoldenTests`;
-  CI step for the standalone exe. Docs: `docs/json-schema.md` (`help` with `status`, `login`,
-  `whoami`), `docs/compat.md` §2 parser notes, README status.
-- CI: run 3 failed on five unit tests (Newtonsoft null typing, cs-CZ parsing "10:00 PM", out-of-scope
-  switches, envelope command name before parsing); fixed in the second push. Run 5: 144 unit and
-  18 integration tests passed, none skipped (the secrets are set): the fixture created a local
-  workspace with the client library, `tfp login /pat:-` stored the PAT, the `status` golden cases
-  and `whoami` ran against the test collection; the standalone exe ran `version`, `help
-  /format:json` (48 commands), `status` outside a workspace (120) and an unknown command (2), but
-  the step failed on PowerShell's handling of the last exit code (fixed: `exit 0` at the end).
-  Runs 11 and 12 (head `1e8017e`): green. PR #1 marked ready for review.
-- Next: see "Next steps" 1–3.
-- Blockers: PR review by the developer.
-
-### 2026-10-07 – local session 1, KICKOFF-LOCAL step 0 (Claude Code, Windows)
-
-- Done: repository checked (LICENSE is GPL v3, LICENSE-EXCEPTION present); created THIRD-PARTY-NOTICES
-  (license texts taken from the NuGet packages themselves) and `.gitignore`; scanned `tests/golden/` for
-  personal data and redacted it (see "Decisions"); backup of the unredacted files in the scratchpad.
-  Developer provided the manifests (sanitized copies in `tests/golden/manifests/`) and confirmed the
-  redaction; first commit made.
-- Step 1 done: all 203 golden cases (86 + 76 + 41) compared with SPEC.md; `docs/compat.md` (per-command
-  tables, exit-code table, cross-cutting decisions) and `docs/golden-format.md` (file format,
-  placeholders, manifests, normalization, what is compared, replayable cases) written; four open
-  questions closed, five new ones recorded.
-- Step 2 done: SPEC.md updated with the compat.md decisions, `docs/json-schema.md` drafted,
-  `tools/capture-tf-help.ps1` written (syntax-checked, not run), Gate A questions listed under
-  "Needs the user".
-- Gate A passed (all four questions answered, recorded under "Decisions").
-- Step 3 done: solution, three projects, `Directory.Build.props`, `FodyWeavers.xml`, CI workflow
-  (`.github/workflows/ci.yml`: restore, build Release, unit + integration tests with secrets, artifact,
-  release on `v*` tags), README, `.gitattributes`. Release build and both test projects pass locally
-  (unit 3/3; integration 4 passed, 1 skipped without secrets).
-- Step 4 (spike) in progress: Auth (Credential Manager P/Invoke, URL normalization, PAT prompt,
-  connection), Context (workspace detection), Cli (minimal parser with MSYS detection), Commands (help,
-  version, login, logout, whoami, status), Errors, Output (text + JSON envelope); 28 unit tests. Offline
-  paths verified from PowerShell, Git Bash and from the exe alone in an empty folder; exe 3.6 MB after
-  exclusions. Known small gaps for milestone 2: JSON `collection` is null when the error happens before the
-  context is resolved; `status /format:detailed`, `/user`, `/shelveset` return TFP0002 in this build.
-- Next: developer runs `tfp login`; then server verification, clean-machine test, spike report, Gate B.
-- Blockers: `tfp login` (developer); `tests/golden/help/` not yet captured; repository not yet pushed.
-
-### 2026-10-08 – local session 1 continued, spike verification (milestone 1)
-
-- Done: root cause of TF30063 found (TFVC SOAP API accepts only full-access PATs; REST accepts custom
-  scopes) by web search, decompilation and an HTTP trace; connection switched back to Basic auth without
-  prompting; `login` verifies over REST first; TFP0103 explains the scope case. Developer created a
-  full-access PAT; `whoami` and `status` verified from PowerShell, Git Bash and the exe alone in an empty
-  folder, including pending and detected changes. CLAUDE.md and README updated with the lessons.
-- Spike report: Costura single exe works (3.6 MB, 34 assemblies after exclusions, nothing forced a design
-  change); Credential Manager P/Invoke works; workspace detection reuses the tf.exe 18 cache with the
-  20.256 client; one design consequence: PAT must have Full access (read-only PAT impossible).
-- Next: clean-machine test by the developer, Gate B, then step 5 (`docs/KICKOFF-CLOUD.md`).
-- Blockers: Gate B (developer); `tests/golden/help/` not yet captured; repository not yet pushed.
-- Later the same day: Gate B passed on a clean Windows Server; help captured and summarized in
-  `docs/commands.md` (SPEC.md corrected: `/encoding`, `/noautoresolve`, resolve names, `/format:xml`,
-  `view /console`); step 5 done: `docs/KICKOFF-CLOUD.md` written, "Needs the user" lists the cloud
-  prerequisites. Local phase complete.
-- Help capture re-run from the repository root with the developer's consent (no sign-in needed):
-  88 cases, committed; integrity test passes.
-- Next: developer pushes `main` and sets the secrets; cloud agent starts milestone 2.
-- Blockers: none.
-
-### 2026-10-07 – specification and golden files (claude.ai conversation)
-
-- Done: SPEC.md, license decision, test project seeded, golden files captured (basic, pending changes,
-  server-writing scenarios, long history).
-- Next: local session per `docs/KICKOFF-LOCAL.md`.
-- Blockers: none.
+- 2026-10-07: specification and the first golden captures with tf.exe 18.10 (claude.ai conversation, local
+  session); milestone 0 (compat.md) and the spike of milestone 1 (`whoami`, `status`, Costura single exe).
+- 2026-10-08: milestones 2 to 5 in the cloud ([PR #1](https://github.com/Gh61/TfPortable/pull/1) core,
+  [PR #2](https://github.com/Gh61/TfPortable/pull/2) workspace commands, [PR #3](https://github.com/Gh61/TfPortable/pull/3)
+  history and content, [PR #4](https://github.com/Gh61/TfPortable/pull/4) integration docs and release
+  preparation), release [v0.1.0](https://github.com/Gh61/TfPortable/releases/tag/v0.1.0); phase 3
+  ([PR #9](https://github.com/Gh61/TfPortable/pull/9) protection levels, checkin, shelve, label, lock;
+  [PR #11](https://github.com/Gh61/TfPortable/pull/11) checkin policies) and phase 2
+  ([PR #12](https://github.com/Gh61/TfPortable/pull/12) merge, branch, rollback, undelete, merges, folderdiff, annotate).
+- 2026-10-09: golden captures of phases 2, 3, 4 and extra2 by the developer, the comparison
+  ([PR #14](https://github.com/Gh61/TfPortable/pull/14), `docs/compat.md` §20), release
+  [v0.2.0](https://github.com/Gh61/TfPortable/releases/tag/v0.2.0); phase 4
+  ([PR #17](https://github.com/Gh61/TfPortable/pull/17) destroy with a mandatory preview, permission, workspace,
+  property, resolvepath, docs, `docs/errors.md`).
+- 2026-10-10: decompilation of tf.exe for `docs/tf-reference/` (local session); the `property` write form and the
+  destroy marker fix for machines outside UTC ([PR #18](https://github.com/Gh61/TfPortable/pull/18)), release
+  [v0.3.0](https://github.com/Gh61/TfPortable/releases/tag/v0.3.0); the developer's decisions for v1.0 and their
+  implementation ([PR #21](https://github.com/Gh61/TfPortable/pull/21): server locks on the pend commands,
+  `checkin /notes`, `TFP0006`, `permission` exit 100, `destroy /startcleanup` in CI).
+- 2026-10-11: the developer's checklist closed ([PR #22](https://github.com/Gh61/TfPortable/pull/22): checkin
+  policies and Manage permissions set on the test project), verified by strict integration tests
+  ([PR #23](https://github.com/Gh61/TfPortable/pull/23), CI runs 174 and 183, Visual Studio 18 policy class names),
+  v1.0 docs ([PR #24](https://github.com/Gh61/TfPortable/pull/24)), the permission test timing fix
+  ([PR #25](https://github.com/Gh61/TfPortable/pull/25)), release
+  [v1.0.0](https://github.com/Gh61/TfPortable/releases/tag/v1.0.0) (CI run 189 on 76eb720), docs after the
+  release ([PR #26](https://github.com/Gh61/TfPortable/pull/26)).
