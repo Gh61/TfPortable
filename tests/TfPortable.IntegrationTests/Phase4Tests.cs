@@ -261,8 +261,17 @@ namespace TfPortable.IntegrationTests
                         var change = ((JArray)Data(allow)["changes"]!).Single();
                         Assert.Equal(serverPath, (string)change["serverItem"]!);
                         Assert.Equal(new[] { "Lock" }, change["allow"]!.Select(t => (string)t!));
+                        // The security service reports a changed ACL with a delay (the release run 186 of 2026-10-11 listed only the
+                        // inherited entries right after the change, runs 174 and 183 the explicit one): poll before asserting.
                         var listing = Run($"permission {serverPath} /format:json");
-                        Assert.True(((JArray)Data(listing)["items"]!).Single()["entries"]!.Any(e => e["allow"]!.Any(p => (string?)p == "Lock")), "No explicit Lock allow in the listing: " + listing.Stdout);
+                        bool Listed(TfpResult result) => ((JArray)Data(result)["items"]!).Single()["entries"]!.Any(e => e["allow"]!.Any(p => (string?)p == "Lock"));
+                        for (int attempt = 0; attempt < 10 && !Listed(listing); attempt++)
+                        {
+                            System.Threading.Thread.Sleep(1500);
+                            listing = Run($"permission {serverPath} /format:json");
+                        }
+
+                        Assert.True(Listed(listing), "No explicit Lock allow in the listing: " + listing.Stdout);
                         var remove = Run($"permission /remove:Lock \"/user:{owner}\" {serverPath}");
                         Assert.True(remove.ExitCode == 0, remove.Stderr + remove.Stdout);
                         allowed = false;
