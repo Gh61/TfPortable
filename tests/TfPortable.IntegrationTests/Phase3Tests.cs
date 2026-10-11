@@ -119,8 +119,8 @@ namespace TfPortable.IntegrationTests
                 Assert.NotEmpty((JArray)validated["changes"]!);
                 if (workItemPolicy)
                 {
-                    Assert.Equal(100, validate.ExitCode);
-                    Assert.Contains("TFP0407", validate.Stderr + validate.Stdout);
+                    Assert.True(validate.ExitCode == 100, "exit " + validate.ExitCode + ": " + validate.Stderr + validate.Stdout);
+                    Assert.True((validate.Stderr + validate.Stdout).Contains("TFP0407"), "No TFP0407 in the validate output: " + validate.Stderr + validate.Stdout);
                     Assert.Contains((JArray)validated["policyFailures"]!, f => ((string)f!).Contains("/associate"));
                 }
                 else if (unknownPolicy)
