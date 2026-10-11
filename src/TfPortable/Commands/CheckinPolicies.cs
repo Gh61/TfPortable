@@ -40,15 +40,17 @@ namespace TfPortable.Commands
 
         // The implementing class decides when it is known (a "Work Item Query Policy" or a custom "Code Review Comments" policy
         // must stay unknown); the display name counts only when the class could not be read, and only as an exact match.
-        private static bool IsWorkItemPolicy(CheckinPolicyInfo policy) => Is(policy, ".WorkItemPolicy", "Work Items");
+        // Visual Studio 18 stores `...Controls.WorkItemCheckinPolicy` and `CheckForCommentsPolicy.CheckForCommentsCheckinPolicy`
+        // (seen on the test project on 2026-10-11), older versions `...WorkItemPolicy` and `...CheckForCommentsPolicy`.
+        private static bool IsWorkItemPolicy(CheckinPolicyInfo policy) => Is(policy, new[] { ".WorkItemPolicy", ".WorkItemCheckinPolicy" }, "Work Items");
 
-        private static bool IsCommentPolicy(CheckinPolicyInfo policy) => Is(policy, ".CheckForCommentsPolicy", "Changeset Comments Policy");
+        private static bool IsCommentPolicy(CheckinPolicyInfo policy) => Is(policy, new[] { ".CheckForCommentsPolicy", ".CheckForCommentsCheckinPolicy" }, "Changeset Comments Policy");
 
-        private static bool Is(CheckinPolicyInfo policy, string classSuffix, string displayName)
+        private static bool Is(CheckinPolicyInfo policy, string[] classSuffixes, string displayName)
         {
             if (!string.IsNullOrEmpty(policy.ClassName))
             {
-                return policy.ClassName!.EndsWith(classSuffix, StringComparison.OrdinalIgnoreCase);
+                return classSuffixes.Any(suffix => policy.ClassName!.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
             }
 
             return string.Equals(policy.TypeName, displayName, StringComparison.OrdinalIgnoreCase);
