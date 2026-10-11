@@ -43,14 +43,18 @@ namespace TfPortable.Context
     /// <summary>A checkin policy of a team project and what tfp made of it.</summary>
     internal sealed class PolicyResultInfo
     {
-        public PolicyResultInfo(string name, PolicyStatus status, string? message)
+        public PolicyResultInfo(string name, PolicyStatus status, string? message, string? className = null)
         {
             Name = name;
             Status = status;
             Message = message;
+            ClassName = className;
         }
 
         public string Name { get; }
+
+        /// <summary>The implementing class the server stores for the policy (how tfp recognizes it); null when it could not be read.</summary>
+        public string? ClassName { get; }
 
         public PolicyStatus Status { get; }
 
@@ -62,6 +66,7 @@ namespace TfPortable.Context
             ["name"] = Name,
             ["status"] = Status.ToString().ToLowerInvariant(),
             ["message"] = Message,
+            ["class"] = ClassName,
         };
     }
 

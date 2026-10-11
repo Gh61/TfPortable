@@ -134,19 +134,23 @@ namespace TfPortable.Tests
                 new CheckinPolicyInfo("Code Review Comments", "Contoso.Policies.CodeReviewCommentsPolicy"),
                 new CheckinPolicyInfo("Work Items", null),
                 new CheckinPolicyInfo("Pracovní položky", null),
+                // The class names Visual Studio 18 stores (the test project, 2026-10-11).
+                new CheckinPolicyInfo("Work Items", "Microsoft.TeamFoundation.VersionControl.Controls.WorkItemCheckinPolicy"),
+                new CheckinPolicyInfo("Changeset Comments Policy", "CheckForCommentsPolicy.CheckForCommentsCheckinPolicy"),
             };
 
             var withoutWorkItem = CheckinPolicies.Evaluate(policies, "fix", Array.Empty<int>());
-            Assert.Equal(new[] { PolicyStatus.Failed, PolicyStatus.Passed, PolicyStatus.Unknown, PolicyStatus.Unknown, PolicyStatus.Unknown, PolicyStatus.Failed, PolicyStatus.Unknown }, withoutWorkItem.Select(p => p.Status));
+            Assert.Equal(new[] { PolicyStatus.Failed, PolicyStatus.Passed, PolicyStatus.Unknown, PolicyStatus.Unknown, PolicyStatus.Unknown, PolicyStatus.Failed, PolicyStatus.Unknown, PolicyStatus.Failed, PolicyStatus.Passed }, withoutWorkItem.Select(p => p.Status));
             Assert.Contains("/associate", withoutWorkItem[0].Message);
+            Assert.Equal("Microsoft.TeamFoundation.VersionControl.Controls.WorkItemCheckinPolicy", (string?)withoutWorkItem[7].ToJson()["class"]);
 
             var withWorkItem = CheckinPolicies.Evaluate(policies, "fix", new[] { 1 });
-            Assert.Equal(new[] { PolicyStatus.Passed, PolicyStatus.Passed, PolicyStatus.Unknown, PolicyStatus.Unknown, PolicyStatus.Unknown, PolicyStatus.Passed, PolicyStatus.Unknown }, withWorkItem.Select(p => p.Status));
+            Assert.Equal(new[] { PolicyStatus.Passed, PolicyStatus.Passed, PolicyStatus.Unknown, PolicyStatus.Unknown, PolicyStatus.Unknown, PolicyStatus.Passed, PolicyStatus.Unknown, PolicyStatus.Passed, PolicyStatus.Passed }, withWorkItem.Select(p => p.Status));
 
             var evaluation = new CheckinEvaluation(Array.Empty<CheckinConflictInfo>(), Array.Empty<string>(), withoutWorkItem);
-            Assert.Equal(2, evaluation.PolicyFailures.Count());
+            Assert.Equal(3, evaluation.PolicyFailures.Count());
             Assert.Equal(4, evaluation.UnknownPolicies.Count());
-            Assert.Equal(6, evaluation.OverridableFailures.Count());
+            Assert.Equal(7, evaluation.OverridableFailures.Count());
         }
 
         [Fact]

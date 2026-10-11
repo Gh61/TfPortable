@@ -309,7 +309,18 @@ namespace TfPortable.Context
             // the implementing class name is stable but not public, so it is read through reflection when available.
             var field = typeof(PolicyEnvelope).GetField("m_className", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var result = new List<CheckinPolicyInfo>();
-            string[] paths = serverPaths.ToArray();
+            // Policies belong to the team project: one query per project, otherwise the library answers once per item
+            // (three items of one project gave every policy three times, CI run 182 of 2026-10-11).
+            string[] paths = serverPaths
+                .Select(p => Microsoft.TeamFoundation.VersionControl.Common.VersionControlPath.GetTeamProject(p))
+                .Where(p => !string.IsNullOrEmpty(p))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            if (paths.Length == 0)
+            {
+                return result;
+            }
+
             // Current Visual Studio versions store the policies under the "client policies" annotation; the library's own
             // evaluation reads that key first and falls back to the legacy key, so does tfp.
             var envelopes = VersionControl.GetCheckinClientPoliciesForServerPaths(paths);

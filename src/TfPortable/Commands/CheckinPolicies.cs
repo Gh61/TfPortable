@@ -20,18 +20,18 @@ namespace TfPortable.Commands
                 if (IsWorkItemPolicy(policy))
                 {
                     result.Add(workItemIds.Count > 0
-                        ? new PolicyResultInfo(policy.TypeName, PolicyStatus.Passed, null)
-                        : new PolicyResultInfo(policy.TypeName, PolicyStatus.Failed, $"{policy.TypeName}: the checkin must be associated with a work item. Pass /associate:<id>."));
+                        ? new PolicyResultInfo(policy.TypeName, PolicyStatus.Passed, null, policy.ClassName)
+                        : new PolicyResultInfo(policy.TypeName, PolicyStatus.Failed, $"{policy.TypeName}: the checkin must be associated with a work item. Pass /associate:<id>.", policy.ClassName));
                 }
                 else if (IsCommentPolicy(policy))
                 {
                     result.Add(string.IsNullOrWhiteSpace(comment)
-                        ? new PolicyResultInfo(policy.TypeName, PolicyStatus.Failed, $"{policy.TypeName}: the checkin needs a comment.")
-                        : new PolicyResultInfo(policy.TypeName, PolicyStatus.Passed, null));
+                        ? new PolicyResultInfo(policy.TypeName, PolicyStatus.Failed, $"{policy.TypeName}: the checkin needs a comment.", policy.ClassName)
+                        : new PolicyResultInfo(policy.TypeName, PolicyStatus.Passed, null, policy.ClassName));
                 }
                 else
                 {
-                    result.Add(new PolicyResultInfo(policy.TypeName, PolicyStatus.Unknown, $"{policy.TypeName}: tfp cannot evaluate this policy. It runs inside Visual Studio only."));
+                    result.Add(new PolicyResultInfo(policy.TypeName, PolicyStatus.Unknown, $"{policy.TypeName}: tfp cannot evaluate this policy. It runs inside Visual Studio only.", policy.ClassName));
                 }
             }
 
@@ -40,15 +40,17 @@ namespace TfPortable.Commands
 
         // The implementing class decides when it is known (a "Work Item Query Policy" or a custom "Code Review Comments" policy
         // must stay unknown); the display name counts only when the class could not be read, and only as an exact match.
-        private static bool IsWorkItemPolicy(CheckinPolicyInfo policy) => Is(policy, ".WorkItemPolicy", "Work Items");
+        // Visual Studio 18 stores `...Controls.WorkItemCheckinPolicy` and `CheckForCommentsPolicy.CheckForCommentsCheckinPolicy`
+        // (seen on the test project on 2026-10-11), older versions `...WorkItemPolicy` and `...CheckForCommentsPolicy`.
+        private static bool IsWorkItemPolicy(CheckinPolicyInfo policy) => Is(policy, new[] { ".WorkItemPolicy", ".WorkItemCheckinPolicy" }, "Work Items");
 
-        private static bool IsCommentPolicy(CheckinPolicyInfo policy) => Is(policy, ".CheckForCommentsPolicy", "Changeset Comments Policy");
+        private static bool IsCommentPolicy(CheckinPolicyInfo policy) => Is(policy, new[] { ".CheckForCommentsPolicy", ".CheckForCommentsCheckinPolicy" }, "Changeset Comments Policy");
 
-        private static bool Is(CheckinPolicyInfo policy, string classSuffix, string displayName)
+        private static bool Is(CheckinPolicyInfo policy, string[] classSuffixes, string displayName)
         {
             if (!string.IsNullOrEmpty(policy.ClassName))
             {
-                return policy.ClassName!.EndsWith(classSuffix, StringComparison.OrdinalIgnoreCase);
+                return classSuffixes.Any(suffix => policy.ClassName!.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
             }
 
             return string.Equals(policy.TypeName, displayName, StringComparison.OrdinalIgnoreCase);

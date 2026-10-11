@@ -251,19 +251,10 @@ namespace TfPortable.IntegrationTests
                 {
                     var allow = Run($"permission /allow:Lock \"/user:{owner}\" {serverPath} /format:json");
                     allowed = allow.ExitCode == 0;
+                    // The CI user has Manage permissions (AdminProjectRights) on the CI folder (the developer, 2026-10-11, docs/DEVELOPER-TODO.md §7):
+                    // the change must be applied. Before that the server refused it with TF14098 (TFP0501 per item, exit 100 as tf.exe).
                     var denied = ((JArray)JObject.Parse(allow.Stdout)["errors"]!).FirstOrDefault(e => (string?)e["tfCode"] == "TF14098");
-                    if (denied != null)
-                    {
-                        // The CI user has no AdminProjectRights on the test project (a server setting, docs/DEVELOPER-TODO.md §7): the refusal must be
-                        // reported per item, and nothing applied is exit 100 as tf.exe (question 35).
-                        Assert.Equal(100, allow.ExitCode);
-                        Assert.False((bool)JObject.Parse(allow.Stdout)["ok"]!);
-                        Assert.Equal("TFP0501", (string)denied["code"]!);
-                        Assert.Equal(serverPath, (string)denied["item"]!);
-                        Assert.Single((JArray)Data(allow)["skipped"]!);
-                        Assert.Empty((JArray)Data(allow)["changes"]!);
-                    }
-                    else
+                    Assert.True(denied == null, "The CI user still lacks Manage permissions on the CI folder (docs/DEVELOPER-TODO.md §7): " + allow.Stdout);
                     {
                         Assert.True(allow.ExitCode == 0, allow.Stderr + allow.Stdout);
                         Assert.Empty((JArray)Data(allow)["skipped"]!);
@@ -336,12 +327,6 @@ namespace TfPortable.IntegrationTests
                     Assert.StartsWith("ERROR TFP0410: destroy needs a preview of the same items and switches first", noPreview.Stderr);
 
                     var preview = Run($"destroy /preview {serverPath}/gone.txt /noprompt /format:json");
-                    if (preview.ExitCode != 0 && (preview.Stderr + preview.Stdout).IndexOf("permission", StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        // The CI identity lacks the destroy permission on the test project (the server checks it for the preview too): the gate was exercised.
-                        return;
-                    }
-
                     Assert.True(preview.ExitCode == 0, preview.Stderr + preview.Stdout);
                     Assert.True((bool)Data(preview)["preview"]!);
                     Assert.Contains((JArray)Data(preview)["items"]!, i => (string)i["serverPath"]! == serverPath + "/gone.txt");
@@ -353,12 +338,6 @@ namespace TfPortable.IntegrationTests
 
                     // /startcleanup is passed to the server as tf.exe does: whether Azure DevOps Services accepts it is what this run shows.
                     var real = Run($"destroy {serverPath}/gone.txt /startcleanup /noprompt /format:json");
-                    if (real.ExitCode != 0 && (real.Stderr + real.Stdout).IndexOf("permission", StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        // The CI identity lacks AdminProjectRights on the test project: the gate and the marker were exercised, the destroy itself cannot be.
-                        return;
-                    }
-
                     Assert.True(real.ExitCode == 0, real.Stderr + real.Stdout);
                     destroyed = true;
                     Assert.Contains((JArray)Data(real)["items"]!, i => (string)i["serverPath"]! == serverPath + "/gone.txt");
