@@ -20,18 +20,18 @@ namespace TfPortable.Commands
                 if (IsWorkItemPolicy(policy))
                 {
                     result.Add(workItemIds.Count > 0
-                        ? new PolicyResultInfo(policy.TypeName, PolicyStatus.Passed, null)
-                        : new PolicyResultInfo(policy.TypeName, PolicyStatus.Failed, $"{policy.TypeName}: the checkin must be associated with a work item. Pass /associate:<id>."));
+                        ? new PolicyResultInfo(policy.TypeName, PolicyStatus.Passed, null, policy.ClassName)
+                        : new PolicyResultInfo(policy.TypeName, PolicyStatus.Failed, $"{policy.TypeName}: the checkin must be associated with a work item. Pass /associate:<id>.", policy.ClassName));
                 }
                 else if (IsCommentPolicy(policy))
                 {
                     result.Add(string.IsNullOrWhiteSpace(comment)
-                        ? new PolicyResultInfo(policy.TypeName, PolicyStatus.Failed, $"{policy.TypeName}: the checkin needs a comment.")
-                        : new PolicyResultInfo(policy.TypeName, PolicyStatus.Passed, null));
+                        ? new PolicyResultInfo(policy.TypeName, PolicyStatus.Failed, $"{policy.TypeName}: the checkin needs a comment.", policy.ClassName)
+                        : new PolicyResultInfo(policy.TypeName, PolicyStatus.Passed, null, policy.ClassName));
                 }
                 else
                 {
-                    result.Add(new PolicyResultInfo(policy.TypeName, PolicyStatus.Unknown, $"{policy.TypeName}: tfp cannot evaluate this policy. It runs inside Visual Studio only."));
+                    result.Add(new PolicyResultInfo(policy.TypeName, PolicyStatus.Unknown, $"{policy.TypeName}: tfp cannot evaluate this policy. It runs inside Visual Studio only.", policy.ClassName));
                 }
             }
 
