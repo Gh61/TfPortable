@@ -38,16 +38,16 @@ Statuses: not started, in progress, blocked, done.
    `v1-switches` (merged 2026-10-10): server locks on the pend commands and `checkin /notes` implemented, the
    rest of the refused switches answer `TFP0006`, `permission` exits 100 when nothing was applied,
    `destroy /startcleanup` accepted by Azure DevOps Services in CI. Still before `v1.0`: the README "Phases and progress" section to drop (developer's note of 2026-10-09,
-   confirmed 2026-10-10: before the release); the developer's server settings (`docs/DEVELOPER-TODO.md` §2
-   checkin policy, §7 Manage permissions for the CI user); the switches refused
-   on purpose with `TFP0002` (marked ✗ in `docs/commands.md`: server locks on the pend commands,
-   `workspace /newowner`, `/location:server`, `permission /global`, `/format:xml`, the external diff formats and
-   `difference /options /configure`, `workspaces /updateUserName /updateComputerName`, `resolve /overridetype
-   /converttotype /properties`, `labels /owner`, `checkin /notes /saved /bypass /new`) stay deviations unless the
-   developer wants any of them in 1.0; the server settings that keep two paths untested in CI (AdminProjectRights
-   for the CI user → a real `permission` change; a checkin policy on the test project → `TFP0407`); the three
-   open server-side questions of `docs/tf-reference/questions.md` (25a, 35, 36). The two release pages of v0.1.0
-   and v0.2.0 still need their notes pasted from `CHANGELOG.md` by hand.
+   confirmed 2026-10-10: before the release); the first CI run after the developer's server settings of
+   2026-10-11 (`docs/DEVELOPER-TODO.md` §2 checkin policies Work Items + Changeset Comments, §7 Manage permissions
+   for the CI user on `$/TfsPortableTestRepo/CI`): it must show `TFP0407` in the validate step of `Phase3Tests`,
+   the real-change branch of the `Phase4Tests` permission test (answers question 35 of
+   `docs/tf-reference/questions.md`) and possibly the real destroy under the CI folder; record the outcome in
+   `docs/DEVELOPER-TODO.md` §2 and §7, in "Open questions" and in `questions.md`. The switches refused
+   on purpose with `TFP0006` (marked ✗ in `docs/commands.md`) stay deviations unless the developer wants any of
+   them in 1.0. Question 25a stays open (needs a second account). The two release pages of v0.1.0
+   and v0.2.0 still need their notes pasted from `CHANGELOG.md` by hand. No further golden capture run is
+   planned (Decisions 2026-10-11).
 4. If a package changes later, update `src/TfPortable/embedded-assemblies.txt` from the output of
    the CI step "Check the embedded assemblies against THIRD-PARTY-NOTICES" and THIRD-PARTY-NOTICES.
 5. README "Phases and progress" can go once `v1.0` is out (the developer's note of 2026-10-09); keep the
@@ -73,12 +73,14 @@ before phase 4). The items below are kept for history.
   follows the existing captures and the Microsoft docs; `tools/capture-tf-golden-phase3.ps1` is ready
   for later), and work item #1 (a bug) exists for `checkin /associate`.
 - The CI user has no AdminProjectRights on the test project: the phase 4 permission test can only check
-  that the server's refusal (TF14098) is reported per item. `docs/DEVELOPER-TODO.md` §6 says what to grant.
+  that the server's refusal (TF14098) is reported per item. `docs/DEVELOPER-TODO.md` §7 says what to grant.
+  Granted on 2026-10-11 on the `CI` folder; the next CI run shows the effect.
 - Paste the v0.1.0 and v0.2.0 sections of `CHANGELOG.md` into the two GitHub release pages (the cloud
   session cannot edit releases). Release `v0.3.0` after phase 4 merges; `v1.0` when every phase is done.
 - The permanent shelveset `tfp-golden-shelveset` was created by the developer on 2026-10-08;
   `ShelvesetTests` finds it by name (any owner) and fails with the visible shelveset names when it
-  does not.
+  does not. It stays for good (developer's decision of 2026-10-11): the test reads a shelveset of another
+  owner without writing anything, which a shelveset the test creates itself could not prove.
 - Set up the `main` ruleset the developer agreed to on 2026-10-08: pull request required, the CI
   check `Build, test, package (windows-latest)` required (branch up to date), force pushes and
   deletions blocked, no required approvals (the agent merges after an independent review), no
@@ -215,6 +217,7 @@ before phase 4). The items below are kept for history.
 | 2026-10-10 | Review of PR #18 (independent agent, no blocking finding): a damaged marker (a stamp that is not a string, a protected file) is stale instead of a crash (`IsValid` catches the argument, cast and access exceptions too); the SPEC.md protection level table names `property` (listing) at L1 and `property /setvalues /deletevalues /deleteall` at L2; commands.md states the two limits of the write form (a text value cannot start with `@`, a property name with a comma or surrounding spaces cannot be given to `/deletevalues` or `/propertynames`) | Review findings |
 | 2026-10-10 | Destroy preview marker outside UTC (PR #18): `JObject.Parse` turns the ISO stamp of the marker into a `DateTime` (Json.NET's default date handling) and the `(string)` conversion of that token has no offset, so the stamp was parsed as unspecified local time and `ToUniversalTime` shifted it by the machine's offset: on UTC+2 every marker was two hours old, so `destroy` always ended with TFP0410; CI (UTC) never saw it. The stamp is now read with `DateParseHandling.None` and the invariant culture (`DestroyPreviewMarker.PreviewedAt`), and the unit test checks a `Z` and a `+02:00` stamp under cs-CZ. The static `Clock`/`DirectoryProvider` swap was not the cause (the class is in the `ToolSettings` collection and no other test touches the marker) | The developer's report of 2026-10-10 (PROGRESS next step 7) |
 | 2026-10-10 | tf.exe 18.10.12215.6 decompiled on the developer's machine (`tools/decompile-tf.ps1`, fixed: the `FileVersion` string of tf.exe 18 contains `built by: releases/...` and is not a folder name, the command classes are `Command<Name>.cs`, and `Microsoft.TeamFoundation.Client.dll` is decompiled too because the exit-code and stream machinery lives there). All 34 questions of `docs/tf-reference/questions.md` answered into 15 notes (`general.md`, `checkin.md`, `shelve.md`, `label.md`, `lock.md`, `destroy.md`, `permission.md`, `workspace.md`, `undo.md`, `property.md`, `merge.md`, `branch.md`, `rollback.md`, `undelete.md`, `folderdiff.md`); three questions stay open (server messages and an untestable exit code). Key facts: one exit-code rule (max wins, a differing lower code collapses to 1, escaped exceptions are 100, library per-item errors are 1) plus explicit per-command `SetExitCode` calls; warnings and errors go to stderr, listings and info to stdout, by message kind; `/noprompt` is implied when stdout is redirected; `.tfignore` is applied by the library's `PendAdd` and `add` turns its warning into exit 1; `checkin` evaluates policies and notes before every checkin and conflicts only with `/validate`, `/override` without failures is dropped silently, `/associate` is not a switch; `shelve /validate` is incompatible with `/noprompt`; `label` passes a null scope to the server; `branch` defaults to Latest; `rollback /toversion` is `v`..Latest; `folderdiff` compares length and MD5 and defaults to one level; `workspace /new` location comes from the server setting | Every behavior tfp implements from these questions matches the notes except the deviations already in `docs/compat.md`; no code change needed |
+| 2026-10-11 | The developer's checklist (`docs/DEVELOPER-TODO.md`) closed in the local session: §2 checkin policies Work Items and Changeset Comments configured on the test project (no build policy); §7 Manage permissions (AdminProjectRights) granted to the CI user on `$/TfsPortableTestRepo/CI`; §3 no fifth golden capture run (the uncaptured policy failure shape is known from the decompiled sources, the TFP0402 `get` case cannot happen in a local workspace, `undo /workspace:<other>` without permission needs a second account, and golden tests never compare texts); §3b decompilation done, the three remaining questions say why they stay; §4 the permanent shelveset `tfp-golden-shelveset` stays for good as the fixture of the read-only `ShelvesetTests` (no rewrite); §5 and §6 closed. Both server settings are verified by the first CI run after them, which the agent records | Developer's message of 2026-10-11 |
 | 2026-10-10 | `property` has a write form in tf.exe 18.10 after all: `/setvalues:name=value;...`, `/deletevalues:name`, `/deleteall` pend a property change (`Workspace.PendPropertyChange`), and `/propertynames:`/`/output:` filter and export on reading. SPEC.md (catalog row and phase 4 table), `docs/compat.md` §21, `docs/commands.md` and the catalog help text corrected to state the fact. The developer decided the same day that tfp implements the write form for tf.exe compatibility, by the cloud agent in the next task; the brief (switches, escapes, invalid combinations, library call, protection level, docs, tests) is in `docs/tf-reference/property.md`. `rollback /toversion` stays as it is: the itemspec is required by the server (TF203065, golden `rollback/toversion-no-item`) | The phase 4 capture tried `/setproperty`, which is not the name; the decompiled option table (`Options.cs`, exact enum names) shows the real switches |
 
 ## Open questions
@@ -253,11 +256,14 @@ Open:
   whether Azure DevOps Services accepts `destroy /startcleanup`.
 - No golden case exists for TFP0402 from `get` (the library's "writable" status): local workspaces report a
   conflict instead; `unshelve/local-file-in-the-way` is the only capture of a writable file in the way.
-- A checkin policy failure is still uncaptured (the test project has no policy); `checkin /associate` is a
-  tfp extension, so the "Work Items" policy shape stays assumed.
+- A checkin policy failure is uncaptured with tf.exe and stays so (no further capture run, Decisions
+  2026-10-11); its shape is known from the decompiled sources (`docs/tf-reference/checkin.md`) and golden
+  tests never compare texts. `checkin /associate` is a tfp extension, so the "Work Items" policy shape stays
+  tfp's own.
 - Checkin policies: tfp evaluates "Work Items" and "Changeset Comments" itself and reports the rest as unknown
-  (TFP0409); `/override` is level 2 (decided 2026-10-08). The test project has no policy yet, so the policy
-  assertions of `Phase3Tests` are skipped until the developer configures one (see `docs/DEVELOPER-TODO.md`).
+  (TFP0409); `/override` is level 2 (decided 2026-10-08). The developer configured both policies on the test
+  project on 2026-10-11; the first CI run after that must show the policy assertions of `Phase3Tests` running
+  (`TFP0407` in the validate step). Until that run is seen, this stays open.
 
 ## Golden files – facts
 
@@ -280,6 +286,20 @@ Open:
   `tools/capture-tf-golden-extra.ps1` (from C84, including history padding).
 
 ## Session log
+
+### 2026-10-11 – local session, the developer's checklist (branch `developer-todo-2026-10-11`)
+
+- Done: the developer reported §1, §2 (Work Items + Changeset Comments, no build policy), §5 and §7 of
+  `docs/DEVELOPER-TODO.md` as done and decided §3 (no further capture run), §3b (nothing more) and §4 (the
+  permanent shelveset stays). Checklist and PROGRESS updated accordingly (Decisions 2026-10-11); no code
+  changed. `gh` is not installed on the developer's machine and the test secrets are not in its environment, so
+  the CI run that proves §2 and §7 could not be started or read from this session.
+- Next: one CI run on `main` (Actions → CI → Run workflow, empty `release_tag`) or the pull request of this
+  branch; then record `TFP0407` in the `Phase3Tests` validate step, the real-change branch of the `Phase4Tests`
+  permission test (question 35) and whether the destroy test ran the real destroy, in `docs/DEVELOPER-TODO.md`
+  §2 and §7, "Open questions" and `questions.md`. Then the README phases section and `v1.0` on the developer's
+  word.
+- Blockers: none.
 
 ### 2026-10-10 – cloud session, version 1.0 preparation (branch `v1-switches`)
 
