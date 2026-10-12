@@ -38,13 +38,16 @@ scripts work, and fixes the problems above:
 - a single `tfp.exe` that runs on any Windows with .NET Framework 4.8;
 - every error with a stable `TFPxxxx` code ([docs/errors.md](docs/errors.md)), the original `TFxxxxx` code when there is one, and the
   next step to take; `/format:json` returns one JSON document per command; dates are ISO 8601;
-  nothing is truncated.
+  tables are never cut to 79 columns (only `history` stops at 256 changesets without `/stopafter`
+  and says how to continue).
 
-It is meant for local workspaces and for the daily loop of an agent: see what changed, read
-history and files, diff, add, edit, rename, delete, undo, get. Commands that write to the server
-immediately and irreversibly (`checkin`, `shelve`, `lock`, `label`, `destroy`, `permission`,
-workspace creation) are recognized and refused with a clear message; use Visual Studio or the
-original `tf.exe` for them.
+It is meant for local workspaces. Every version-control command of `tf.exe` is there, from the
+daily loop of an agent (see what changed, read history and files, diff, add, edit, rename, delete,
+undo, get) through checkin, shelving, labels, locks and branching to server administration
+(`destroy`, `permission`, `workspace`, `property`). What a command may do is decided by the
+protection level (below): the irreversible commands need level 3, which a person sets in their own
+terminal. Only `proxy`, `configure` and `certificates` are never offered (`TFP0005`), and a few
+switches of `tf.exe` answer `TFP0006` with the reason (marked ✗ in [docs/commands.md](docs/commands.md)).
 
 ## Install
 
@@ -88,6 +91,8 @@ tfp checkout Main\src\App.cs
 tfp rename Main\src\Old.cs Main\src\New.cs
 tfp undo Main\src\App.cs
 tfp get /preview                            what a get would do, without doing it
+tfp checkin Main /recursive /comment:"Fix" /associate:1234
+tfp shelve MyWork Main /recursive /comment:"Parked"
 tfp status /recursive /format:json          the same data as JSON
 ```
 
@@ -101,24 +106,38 @@ Exit codes: `0` success, `1` partial success or a per-item failure, `2` unknown 
 
 | Command | What it does |
 | --- | --- |
-| `login`, `logout`, `whoami` | Store, remove and check the PAT; show identity, collection, workspace and mappings |
+| `login`, `logout`, `whoami` | Store, remove and check the PAT; show identity, collection, workspace, mappings and protection level |
 | `status` (`stat`) | Pending changes, plus changes detected on disk in a local workspace |
-| `add`, `checkout` (`edit`), `delete` (`del`), `rename` (`move`) | Create pending changes in the workspace |
-| `undo` | Revert pending changes |
+| `add`, `checkout` (`edit`), `delete` (`del`), `rename` (`move`) | Create pending changes in the workspace (`/lock:` for a server lock) |
+| `undo` | Revert pending changes, also in another workspace (`/workspace:`, level 3) |
 | `get` | Update the workspace to a version; `/preview` shows what would happen |
 | `resolve` | List conflicts, or resolve them with `/auto:` |
 | `reconcile` | Promote detected changes to pending changes, or clean untracked files |
 | `localversions` (`lv`) | Which version of each item the workspace has |
-| `workfold`, `workspaces` | Mappings of the current workspace; workspaces of the collection |
+| `workfold`, `workspaces` | Mappings of the current workspace (`/map`, `/unmap`, `/cloak`, `/decloak` edit them); workspaces of the collection |
+| `workspace` | Show, create (`/new`), edit and delete a workspace |
 | `history` (`hist`) | Changesets of an item or folder, with filters by comment, change type and work item |
-| `changeset` | Details of one checkin; `/diff` prints its unified diff |
+| `changeset` | Details of one checkin; `/diff` prints its unified diff; `/comment:` and `/notes:` edit it |
 | `view` | Content of a file at a version, written to the console or to `/output:` |
 | `difference` (`diff`) | Unified or brief diff of a local change, two versions, two items or a shelveset |
+| `folderdiff`, `annotate` | Compare two folders; who changed each line of a file |
 | `dir` | Server-side listing of a folder |
-| `properties` (`info`) | Local and server information about an item |
-| `labels`, `branches` | Labels of the collection; branch tree of an item |
-| `merge /candidate` | Changesets not yet merged between two branches |
+| `properties` (`info`), `property` | Local and server information about an item; the item's properties (listing, `/setvalues`, `/deletevalues`) |
+| `resolvepath` | The server path of a local path and vice versa |
+| `labels`, `label`, `unlabel` | Labels of the collection; attach a label to items or remove it |
+| `branches`, `branch`, `merge`, `merges` | Branch tree of an item; branch an item; merge between branches (`/candidate`, `/preview`); merge history |
+| `rollback`, `undelete` | Pend the reverse of a changeset; bring deleted items back |
+| `checkin` (`ci`) | Check in pending changes with comment, work items and notes; `/validate` runs the checkin policies without writing |
+| `shelve`, `shelvesets`, `unshelve` | Park pending changes on the server, list shelvesets, take one back |
+| `lock` | Lock or unlock items on the server (`/lock:checkin`, `/lock:none`) |
+| `destroy` | Remove items and their history from the server for good; a `/preview` of the same arguments is required first |
+| `permission` | Show and change item permissions (`/allow`, `/deny`, `/remove`, `/inherit`) |
+| `protection` | Show the protection level; `protection set <1\|2\|3>` changes it in an interactive terminal |
+| `docs` (`msdn`) | Open the documentation of a command in the browser, or print its URL |
 | `help`, `version` | Command catalog (`/format:json` for agents); versions of tfp and the client libraries |
+
+`proxy`, `configure` and `certificates` are never offered (`TFP0005`). The switches of `tf.exe` that
+TfPortable leaves out answer `TFP0006` with the reason.
 
 Every switch of every command, and what TfPortable does with it, is in
 [docs/commands.md](docs/commands.md). Where TfPortable deliberately differs from `tf.exe`
@@ -138,8 +157,8 @@ remain the real enforcement.
 
 | Level | Allows | Commands |
 | --- | --- | --- |
-| 1 | Reading only; the only write to disk is `view /output` | `status`, `history`, `changeset`, `view`, `difference`, `dir`, `properties`, `localversions`, `workfold`, `workspaces`, `labels`, `branches`, `merge /candidate`, `merges`, `folderdiff`, `annotate`, `shelvesets`, `help`, `version`, `whoami`, `login`, `logout`, `protection` |
-| 2 (default) | Everyday work: pending changes, workspace updates and the everyday writes to the server | level 1 plus `add`, `checkout`, `delete`, `rename`, `undo`, `get`, `resolve`, `reconcile`, `merge`, `branch`, `rollback`, `undelete`, `checkin`, `shelve`, `unshelve`, `label`, `unlabel`, `lock` |
+| 1 | Reading only; the only writes to disk are `view /output` and `property /output` | `status`, `history`, `changeset`, `view`, `difference`, `dir`, `properties`, `localversions`, `workfold`, `workspaces`, `labels`, `branches`, `merge /candidate`, `merges`, `folderdiff`, `annotate`, `shelvesets`, `resolvepath`, the listings of `permission`, `workspace` and `property`, `docs`, `help`, `version`, `whoami`, `login`, `logout`, `protection` |
+| 2 (default) | Everyday work: pending changes, workspace updates and the everyday writes to the server | level 1 plus `add`, `checkout`, `delete`, `rename`, `undo`, `get`, `resolve`, `reconcile`, `merge`, `branch`, `rollback`, `undelete`, `checkin`, `shelve`, `unshelve`, `label`, `unlabel`, `lock`, `property /setvalues /deletevalues /deleteall`, `workfold /map /unmap /cloak /decloak`, `changeset /comment /notes` |
 | 3 | Everything, including irreversible changes and other people's workspaces | level 2 plus `shelve /delete`, `label /delete`, `undo /workspace:<name>`, `lock /workspace:<name>`, `destroy`, `permission` changes (`/allow`, `/deny`, `/remove`, `/inherit`), `workspace /new`, `/delete` and edits |
 
 The full table with the per-switch levels is in `docs/SPEC.md` ("Úrovně ochrany") and
@@ -152,8 +171,10 @@ a `TFPxxxx` error code with a next step ([docs/errors.md](docs/errors.md)), and 
 [docs/CLAUDE.md](docs/CLAUDE.md) is a ready-made section for the `CLAUDE.md` of a TFVC project
 plus a permissions snippet for `.claude/settings.json`: which commands to use, dash switches,
 `-format:json`, what exit codes 110 and 120 mean, and that the agent never asks for or enters a
-PAT. Read-only commands can be allowed without confirmation; `get`, `undo`, `reconcile`,
-`resolve` and `delete` should ask. Other agents can use the same text as a starting point.
+PAT. Read-only commands run without confirmation; commands that change the workspace or write to
+the server (`get`, `undo`, `checkin`, `shelve`, `merge`, `permission`, ...) ask first; `destroy` and
+`protection set` are denied, a person runs them in their own terminal. Other agents can use the
+same text as a starting point.
 
 ## Build
 

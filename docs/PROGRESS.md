@@ -241,6 +241,18 @@ Open:
 
 Entries before 2026-10-11 are condensed; the full log is in the git history (`git show b820bc7:docs/PROGRESS.md`).
 
+### 2026-10-12 – cloud session, README brought up to v1.0.0 (branch `claude/vibrant-mayer-9kx4fh`)
+
+- Done: README compared with the catalog, SPEC.md "Úrovně ochrany", `docs/commands.md` and `docs/CLAUDE.md`: the
+  phase 1 claim that `checkin`, `shelve`, `lock`, `label`, `destroy`, `permission` and workspace creation are refused
+  is gone (they run under the protection levels), the command table lists phases 2 to 4, the level table matches
+  SPEC.md (level 1 listings of `permission`, `workspace`, `property`, `resolvepath`, `docs`, `property /output`;
+  level 2 `property` writes, `workfold` mapping edits, `changeset /comment /notes`), the agent paragraph follows the
+  `ask`/`deny` lists of `docs/CLAUDE.md`, the `history` limit of 256 is stated instead of "nothing is truncated".
+  Branch `tf-reference-notes` checked: fully merged into `main` (7d51e60), safe to delete.
+- Next: nothing planned.
+- Blockers: none.
+
 ### 2026-10-11 – cloud session, documents after v1.0.0 (branch `claude/vibrant-mayer-9kx4fh`)
 
 - Done: `docs/DEVELOPER-TODO.md` deleted (every item done and verified), this file condensed to what still
