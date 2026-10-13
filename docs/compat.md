@@ -417,6 +417,11 @@ It is a guard rail and a clear contract for scripts and agents, not a security b
 before the tool connects, so a switch that raises the level does so for every value: `undo /workspace:<name>`
 needs level 3 even for the user's own workspace (SPEC.md names the foreign workspace as the reason).
 Help (`<command> /?`, `tfp help <command>`) is never gated.
+One known gap of the level 1 boundary (since v1.1.0): a lock is a pending change of the item on the server, so
+`undo` of an item that was locked with `lock` or `/lock:` releases that lock, and `unshelve` of a shelveset that
+holds a lock pends it again; both run at level 1 because the tool cannot see the lock before it connects, and the
+gate runs before the connection. A lock is only ever created at level 2, so level 1 never adds anything to the
+server; it can only take an own lock back.
 
 ## 19. Open questions raised by this analysis
 

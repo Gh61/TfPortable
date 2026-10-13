@@ -475,7 +475,7 @@ namespace TfPortable.IntegrationTests
                 committed = true;
                 Assert.True(checkin.ExitCode == 0, checkin.Stderr + checkin.Stdout);
 
-                // The write form is level 2: a property set and a binary value from a file, as one pending change.
+                // The write form pends locally (level 1): a property set and a binary value from a file, as one pending change.
                 var set = Run($"property /setvalues:tfp-owner=team-a;;b;tfp-icon=@{Path.Combine(folder, "icon.bin")} {file} /format:json");
                 Assert.True(set.ExitCode == 0, set.Stderr + set.Stdout);
                 var change = ((JArray)Data(set)["changes"]!).Single();

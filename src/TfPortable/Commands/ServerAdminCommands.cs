@@ -491,7 +491,7 @@ namespace TfPortable.Commands
 
     /// <summary>
     /// `tfp property itemspec ... [/version:] [/recursive] [/propertynames:] [/output:]` lists the versioned-item properties (level 1);
-    /// `/setvalues:name=value;...`, `/deletevalues:name`, `/deleteall` pend a property change in the workspace (level 2), as tf.exe 18.10
+    /// `/setvalues:name=value;...`, `/deletevalues:name`, `/deleteall` pend a property change in the workspace (level 1, `/lock:checkin|checkout` level 2), as tf.exe 18.10
     /// (docs/tf-reference/property.md).
     /// </summary>
     internal sealed class PropertyCommand : ICommand
