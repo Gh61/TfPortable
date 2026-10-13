@@ -358,7 +358,9 @@ namespace TfPortable.Tests
             var map = CommandLine.Parse(new[] { "workfold", "/map", "$/a", "C:\\a" });
             Assert.Equal((2, "map"), ProtectionLevels.Required(map.Spec!, map));
             var move = CommandLine.Parse(new[] { "unshelve", "x", "/move" });
-            Assert.Equal((2, (string?)null), ProtectionLevels.Required(move.Spec!, move));
+            Assert.Equal((2, "move"), ProtectionLevels.Required(move.Spec!, move));
+            var restore = CommandLine.Parse(new[] { "unshelve", "x" });
+            Assert.Equal((1, (string?)null), ProtectionLevels.Required(restore.Spec!, restore));
         }
     }
 }
