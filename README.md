@@ -45,8 +45,8 @@ It is meant for local workspaces. Every version-control command of `tf.exe` is t
 daily loop of an agent (see what changed, read history and files, diff, add, edit, rename, delete,
 undo, get) through checkin, shelving, labels, locks and branching to server administration
 (`destroy`, `permission`, `workspace`, `property`). What a command may do is decided by the
-protection level (below): the irreversible commands need level 3, which a person sets in their own
-terminal. Only `proxy`, `configure` and `certificates` are never offered (`TFP0005`), and a few
+protection level (below): level 1 allows everything that changes nothing on the server, the
+irreversible commands need level 3, which a person sets in their own terminal. Only `proxy`, `configure` and `certificates` are never offered (`TFP0005`), and a few
 switches of `tf.exe` answer `TFP0006` with the reason (marked ✗ in [docs/commands.md](docs/commands.md)).
 
 ## Install
@@ -157,8 +157,8 @@ remain the real enforcement.
 
 | Level | Allows | Commands |
 | --- | --- | --- |
-| 1 | Reading only; the only writes to disk are `view /output` and `property /output` | `status`, `history`, `changeset`, `view`, `difference`, `dir`, `properties`, `localversions`, `workfold`, `workspaces`, `labels`, `branches`, `merge /candidate`, `merges`, `folderdiff`, `annotate`, `shelvesets`, `resolvepath`, the listings of `permission`, `workspace` and `property`, `docs`, `help`, `version`, `whoami`, `login`, `logout`, `protection` |
-| 2 (default) | Everyday work: pending changes, workspace updates and the everyday writes to the server | level 1 plus `add`, `checkout`, `delete`, `rename`, `undo`, `get`, `resolve`, `reconcile`, `merge`, `branch`, `rollback`, `undelete`, `checkin`, `shelve`, `unshelve`, `label`, `unlabel`, `lock`, `property /setvalues /deletevalues /deleteall`, `workfold /map /unmap /cloak /decloak`, `changeset /comment /notes` |
+| 1 | Nothing changes on the server: reads, and the work in your own workspace that stays local until a checkin (pending changes, which `undo` takes back; the files on disk; a shelveset restored into it) | `status`, `history`, `changeset`, `view`, `difference`, `dir`, `properties`, `localversions`, `workfold`, `workspaces`, `labels`, `branches`, `merges`, `folderdiff`, `annotate`, `shelvesets`, `resolvepath`, the listings of `permission` and `workspace`, `property` (listing and `/setvalues /deletevalues /deleteall`), `docs`, `help`, `version`, `whoami`, `login`, `logout`, `protection`, `add`, `checkout`, `delete`, `rename`, `undo`, `get`, `resolve`, `reconcile`, `merge`, `branch`, `rollback`, `undelete`, `unshelve` |
+| 2 (default) | The everyday writes to the server | level 1 plus `checkin`, `shelve`, `unshelve /move`, `label`, `unlabel`, `lock`, `/lock:checkin\|checkout` on the commands that pend changes, `workfold /map /unmap /cloak /decloak`, `changeset /comment /notes` |
 | 3 | Everything, including irreversible changes and other people's workspaces | level 2 plus `shelve /delete`, `label /delete`, `undo /workspace:<name>`, `lock /workspace:<name>`, `destroy`, `permission` changes (`/allow`, `/deny`, `/remove`, `/inherit`), `workspace /new`, `/delete` and edits |
 
 The full table with the per-switch levels is in `docs/SPEC.md` ("Úrovně ochrany") and

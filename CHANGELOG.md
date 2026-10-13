@@ -3,6 +3,19 @@
 One section per release. The CI release step copies the section of the released tag into the
 GitHub release notes, so write the section before the release is run. The newest release comes first.
 
+## v1.1.0 (2026-10-13)
+
+Everything of v1.0.0. The boundary between protection levels 1 and 2 is the server.
+
+- Protection level 1 now allows everything that changes nothing on the server: `add`, `checkout`, `delete`,
+  `rename`, `undo`, `get`, `resolve`, `reconcile`, `merge`, `branch`, `rollback`, `undelete`, `unshelve` and the
+  `property` writes (`/setvalues`, `/deletevalues`, `/deleteall`) run at level 1; they only pend changes in the
+  own local workspace, update its files or restore a shelveset that stays on the server.
+- Level 2 keeps the writes to the server: `checkin`, `shelve`, `label`, `unlabel`, `lock`, `unshelve /move`
+  (deletes the shelveset), `/lock:checkin|checkout` on the commands that pend changes (the lock is written to
+  the server; `/lock:none` does not raise the level), the `workfold` mapping edits and `changeset /comment /notes`.
+- Level 3 is unchanged. `whoami`, `protection` and `help` call level 1 "no server writes" instead of "read-only".
+
 ## v1.0.0 (2026-10-11)
 
 Everything of v0.3.0. The first stable version: every version-control command of tf.exe is implemented or

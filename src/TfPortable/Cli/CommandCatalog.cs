@@ -154,7 +154,7 @@ namespace TfPortable.Cli
         private static readonly SwitchSpec Recursive = new SwitchSpec("recursive", "R", SwitchValue.None, "Include subfolders.");
         private static readonly SwitchSpec Version = new SwitchSpec("version", "V", SwitchValue.Required, "Versionspec: C<n>, <n>, T, L<label>[@scope], D<date>, W[name[;owner]]; ranges a~b.");
         private static readonly SwitchSpec Preview = new SwitchSpec("preview", null, SwitchValue.None, "Show what would be done without doing it.");
-        private static readonly SwitchSpec Lock = new SwitchSpec("lock", "K", SwitchValue.Required, "Lock level of the pended items: none (default), checkin blocks checkins of others, checkout blocks checkouts too (a lock is written to the server).", new[] { "none", "checkin", "checkout" });
+        private static readonly SwitchSpec Lock = new SwitchSpec("lock", "K", SwitchValue.Required, "Lock level of the pended items: none (default), checkin blocks checkins of others, checkout blocks checkouts too (a lock is written to the server, protection level 2).", new[] { "none", "checkin", "checkout" });
         private static readonly SwitchSpec Encoding = new SwitchSpec("encoding", null, SwitchValue.Required, "File encoding, e.g. utf-8, windows-1250, binary.");
         private static readonly SwitchSpec Owner = new SwitchSpec("owner", "O", SwitchValue.Required, "Owner filter (* for everyone).");
         private static readonly SwitchSpec Shelveset = new SwitchSpec("shelveset", null, SwitchValue.Required, "Shelveset name[;owner].");
@@ -185,7 +185,7 @@ namespace TfPortable.Cli
             new CommandSpec("version", Array.Empty<string>(), null, CommandStatus.Implemented,
                 "Print the TfPortable and client library versions.", ""),
             new CommandSpec("protection", Array.Empty<string>(), null, CommandStatus.Implemented,
-                "Show the protection level (1 read-only, 2 everyday work, 3 everything), or set it in an interactive terminal.", "[set <1|2|3>]"),
+                "Show the protection level (1 no server writes, 2 everyday work, 3 everything), or set it in an interactive terminal.", "[set <1|2|3>]"),
             new CommandSpec("docs", new[] { "msdn" }, null, CommandStatus.Implemented,
                 "Open the TfPortable documentation (or the page of a command) in the default browser.", "[command]",
                 new SwitchSpec("url", null, SwitchValue.None, "Print the URL only; do not open the browser.", extension: true)),
@@ -370,7 +370,7 @@ namespace TfPortable.Cli
                 "Restore a shelveset into the workspace.", "shelvesetname[;owner] [itemspec ...] [/recursive] [/nomerge]",
                 Recursive,
                 new SwitchSpec("nomerge", null, SwitchValue.None, "Fail instead of merging with local pending changes."),
-                new SwitchSpec("move", null, SwitchValue.None, "Delete the shelveset on the server after it was restored without conflicts."),
+                new SwitchSpec("move", null, SwitchValue.None, "Delete the shelveset on the server after it was restored without conflicts (protection level 2)."),
                 NoAutoResolve),
             new CommandSpec("label", Array.Empty<string>(), 3, CommandStatus.Implemented,
                 "Create or update a label on items.", "labelname[@scope] itemspec ... [/version:versionspec] [/comment:text|@file] [/child:replace|merge] [/recursive]",
@@ -441,9 +441,9 @@ namespace TfPortable.Cli
             new CommandSpec("property", Array.Empty<string>(), 4, CommandStatus.Implemented,
                 "List the versioned-item properties of items, or pend a property change (/setvalues, /deletevalues, /deleteall).", "itemspec ...",
                 Version, Recursive, Lock,
-                new SwitchSpec("setvalues", null, SwitchValue.Required, "Pend a property set: name=value[;name=value...]; ';;' and '==' escape the separators; a value '@file' reads the file as a binary value (protection level 2)."),
-                new SwitchSpec("deletevalues", null, SwitchValue.Required, "Pend the deletion of the named properties; repeatable or comma-separated (protection level 2).", repeatable: true),
-                new SwitchSpec("deleteall", null, SwitchValue.None, "Pend the deletion of every property of the items (protection level 2)."),
+                new SwitchSpec("setvalues", null, SwitchValue.Required, "Pend a property set: name=value[;name=value...]; ';;' and '==' escape the separators; a value '@file' reads the file as a binary value."),
+                new SwitchSpec("deletevalues", null, SwitchValue.Required, "Pend the deletion of the named properties; repeatable or comma-separated.", repeatable: true),
+                new SwitchSpec("deleteall", null, SwitchValue.None, "Pend the deletion of every property of the items."),
                 new SwitchSpec("propertynames", null, SwitchValue.Required, "List only these properties; repeatable or comma-separated.", repeatable: true),
                 new SwitchSpec("output", null, SwitchValue.Required, "Write the value of the single property named by /propertynames to this file (bytes for a binary value)."),
                 new SwitchSpec("silent", null, SwitchValue.None, "Pend without listing the changes.")),
