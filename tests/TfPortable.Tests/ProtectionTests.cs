@@ -64,10 +64,14 @@ namespace TfPortable.Tests
             Assert.Equal(0, ProtectionLevels.Of("protection"));
             Assert.Equal(0, ProtectionLevels.Of("login"));
             Assert.Equal(0, ProtectionLevels.Of("view"));
-            foreach (string local in new[] { "add", "checkout", "delete", "rename", "undo", "get", "resolve", "reconcile", "undelete", "merge", "branch", "rollback", "unshelve", "property" })
+            foreach (string local in new[] { "add", "checkout", "delete", "rename", "undo", "get", "resolve", "reconcile", "undelete", "merge", "branch", "rollback", "unshelve" })
             {
                 Assert.Equal(1, ProtectionLevels.Of(local));
             }
+
+            Assert.Equal(0, ProtectionLevels.Of("property"));
+            var setValues = CommandLine.Parse(new[] { "property", "/setvalues:a=1", "x.txt" });
+            Assert.Equal((1, "setvalues"), ProtectionLevels.Required(setValues.Spec!, setValues));
 
             Assert.Equal(2, ProtectionLevels.Of("checkin"));
             Assert.Equal(2, ProtectionLevels.Of("shelve"));

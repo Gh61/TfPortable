@@ -56,6 +56,9 @@ namespace TfPortable.Cli
             ["unshelve/move"] = Work,
             ["view/output"] = Local,
             ["property/output"] = Local,
+            ["property/setvalues"] = Local,
+            ["property/deletevalues"] = Local,
+            ["property/deleteall"] = Local,
             // `/lock:checkin|checkout` writes a lock to the server as `lock` does; `/lock:none` (the default) does not count.
             ["add/lock"] = Work,
             ["checkout/lock"] = Work,

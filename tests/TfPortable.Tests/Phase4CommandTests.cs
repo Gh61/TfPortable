@@ -273,9 +273,9 @@ namespace TfPortable.Tests
             Assert.Equal(LockLevel.Checkin, WorkspaceCommandSupport.LockLevelOf(CommandLine.Parse(new[] { "property", "/setvalues:a=1", "/lock:checkin", "x.txt" })));
 
             var set = CommandLine.Parse(new[] { "property", "/setvalues:a=1", "x.txt" });
-            Assert.Equal((1, (string?)null), ProtectionLevels.Required(set.Spec!, set));
+            Assert.Equal((1, "setvalues"), ProtectionLevels.Required(set.Spec!, set));
             var deleteAll = CommandLine.Parse(new[] { "property", "/deleteall", "x.txt" });
-            Assert.Equal((1, (string?)null), ProtectionLevels.Required(deleteAll.Spec!, deleteAll));
+            Assert.Equal((1, "deleteall"), ProtectionLevels.Required(deleteAll.Spec!, deleteAll));
             var read = CommandLine.Parse(new[] { "property", "/propertynames:a", "/output:v.txt", "x.txt" });
             Assert.Equal((1, "output"), ProtectionLevels.Required(read.Spec!, read));
             var listing = CommandLine.Parse(new[] { "property", "x.txt" });
