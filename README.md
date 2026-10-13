@@ -6,7 +6,7 @@ easy to read for people and easy to parse for scripts and AI coding agents.
 
 > Status: every version-control command of tf.exe is implemented, or answers `TFP0005` (never offered) or
 > `TFP0006` (a switch left out, with the reason). The current release is
-> [v1.0.0](https://github.com/Gh61/TfPortable/releases/tag/v1.0.0). Day-to-day state: `docs/PROGRESS.md`.
+> [v1.1.0](https://github.com/Gh61/TfPortable/releases/tag/v1.1.0). Day-to-day state: `docs/PROGRESS.md`.
 
 ## Why this project exists
 

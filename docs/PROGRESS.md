@@ -4,6 +4,8 @@ Read this first in every session. Update it at the end of every session (see CLA
 
 ## Status
 
+The current release is [v1.1.0](https://github.com/Gh61/TfPortable/releases/tag/v1.1.0) (2026-10-13, CI workflow
+run 200 on da5ada3): protection level 1 allows everything that changes nothing on the server.
 [v1.0.0](https://github.com/Gh61/TfPortable/releases/tag/v1.0.0) was released on 2026-10-11 from `main` (CI
 workflow run 189 on 76eb720). Every milestone and phase of SPEC.md is done, every switch of tf.exe is either
 implemented or answers `TFP0006` (marked ✗ in `docs/commands.md`), and no catalog command returns `TFP0003`.
@@ -13,7 +15,7 @@ releases v0.1.0, v0.2.0, v0.3.0, v1.0.0) is in the session log below and in the 
 | Milestone | Status |
 | --- | --- |
 | Milestones 0–5, phases 2–4, golden comparison, v1.0 preparation (SPEC.md) | done, released as v1.0.0 |
-| Protection level 1 = nothing changes on the server (branch `claude/vibrant-mayer-9kx4fh`, PR #29) | in review; to be released as v1.1.0 after the merge |
+| Protection level 1 = nothing changes on the server (branch `claude/vibrant-mayer-9kx4fh`, PR #29) | done, merged on 2026-10-13 (da5ada3), released as [v1.1.0](https://github.com/Gh61/TfPortable/releases/tag/v1.1.0) (CI workflow run 200 with `release_tag=v1.1.0`, `tfp.exe` 4,064,768 bytes, SHA-256 asset) |
 
 New work starts as a new row here (not started, in progress, blocked, done), with its branch and PR.
 
@@ -248,7 +250,8 @@ Entries before 2026-10-11 are condensed; the full log is in the git history (`gi
 - Done: the level map (`ProtectionLevels.cs`) moved the local-only commands to level 1 and raised `/lock:checkin|checkout`
   and `unshelve /move` to level 2 (Decisions 2026-10-13); unit tests and the phase 4 integration test follow; help
   texts, SPEC.md, commands.md, README, docs/CLAUDE.md, errors.md, json-schema.md, compat.md and `CHANGELOG.md`
-  (`v1.1.0`) updated. PR, CI, independent review, merge, release `v1.1.0` by the CI workflow.
+  (`v1.1.0`) updated. PR #29 reviewed by an independent agent (findings under Decisions), CI green, merged with a
+  merge commit (da5ada3); `v1.1.0` released by the CI workflow (run 200), the release notes from `CHANGELOG.md`.
 - Next: nothing planned.
 - Blockers: none.
 
