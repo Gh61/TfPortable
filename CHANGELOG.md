@@ -3,6 +3,19 @@
 One section per release. The CI release step copies the section of the released tag into the
 GitHub release notes, so write the section before the release is run. The newest release comes first.
 
+## v1.2.0 (2026-10-13)
+
+Everything of v1.1.0. A read-only protection level.
+
+- Protection level 0: reading only. Nothing is written to the workspace or to disk; the listings, `history`,
+  `changeset`, `view` to the console, `difference`, `dir`, `merge /candidate`, `merges`, `folderdiff`,
+  `annotate`, `shelvesets`, the listings of `permission`, `workspace` and `property`, `resolvepath`, `docs`,
+  `whoami`, `help`, `version`, `login`, `logout` and `protection` run at level 0. `view /output` and
+  `property /output` write a file and need level 1, as does every command that changes the workspace.
+- `tfp protection set 0` lowers the level without a confirmation; the settings file accepts 0 to 3.
+  Levels 1, 2 and 3 are unchanged; the default stays 2.
+- The README shows the latest release through a badge instead of a version number.
+
 ## v1.1.0 (2026-10-13)
 
 Everything of v1.0.0. The boundary between protection levels 1 and 2 is the server.

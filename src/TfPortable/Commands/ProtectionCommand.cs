@@ -9,7 +9,7 @@ using TfPortable.Settings;
 namespace TfPortable.Commands
 {
     /// <summary>
-    /// `tfp protection` shows the protection level, `tfp protection set &lt;1|2|3&gt;` changes it (SPEC.md "Úrovně ochrany").
+    /// `tfp protection` shows the protection level, `tfp protection set &lt;0|1|2|3&gt;` changes it (SPEC.md "Úrovně ochrany").
     /// Setting needs an interactive terminal: a script or an agent cannot do it, and raising asks for a typed confirmation.
     /// </summary>
     internal sealed class ProtectionCommand : ICommand
@@ -36,8 +36,8 @@ namespace TfPortable.Commands
             if (commandLine.Positionals.Count != 2 || !string.Equals(commandLine.Positionals[0], "set", StringComparison.OrdinalIgnoreCase)
                 || !int.TryParse(commandLine.Positionals[1], out int level) || level < ProtectionLevels.ReadOnly || level > ProtectionLevels.Everything)
             {
-                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "protection takes no argument, or 'set' followed by 1, 2 or 3.",
-                    $"Example: '{toolName} protection set 2'. Levels: 1 no server writes, 2 everyday work, 3 everything.");
+                throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "protection takes no argument, or 'set' followed by 0, 1, 2 or 3.",
+                    $"Example: '{toolName} protection set 2'. Levels: 0 read-only, 1 no server writes, 2 everyday work, 3 everything.");
             }
 
             if (!InteractiveProvider())

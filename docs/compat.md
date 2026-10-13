@@ -408,7 +408,8 @@ English and come from SPEC.md; the shapes follow the original.
 ## 18. Protection levels (extension, phase 3)
 
 tf.exe has no notion of protection; every command runs as the user's permissions allow. TfPortable
-adds three levels (SPEC.md "Úrovně ochrany"): 1 nothing changes on the server (reads and the work in the own
+adds four levels (SPEC.md "Úrovně ochrany"): 0 reads only (nothing written to the workspace or to disk;
+`view /output` and `property /output` need level 1), 1 nothing changes on the server (the work in the own
 workspace: pending changes, `get`, `unshelve`), 2 everyday writes to the server (default), 3 everything.
 A command or switch above the configured level ends with `TFP0004` (exit 100) before the tool
 connects to the server. The level is stored in `%APPDATA%\TfPortable\settings.json` and changed

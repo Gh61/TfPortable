@@ -69,6 +69,8 @@ failures with `gh run view --log-failed`.
   server itself returns (TFxxxxx messages) are passed through verbatim.
 - Every change of behavior that SPEC.md describes updates SPEC.md in the same commit and adds
   an entry to "Decisions" in `docs/PROGRESS.md`.
+- Never write a version number into README.md: the release badge shows the latest release. A release
+  needs its section in `CHANGELOG.md` before the workflow runs (the release notes come from it).
 - If SPEC.md is unclear: check the golden files, then Microsoft's TFVC command docs. If it is
   still unclear, choose the behavior closest to the original tf.exe, record it under
   "Decisions", and add the question to "Open questions".

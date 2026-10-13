@@ -28,7 +28,7 @@ Setup (once, by a person):
   `exitCode`, `data`, `errors[]` with a stable `code` (TFPxxxx) and a `hint`.
 - Start with `tfp whoami -format:json` to see the identity, the collection, the workspace and
   the protection level.
-- The protection level (1 nothing changes on the server, 2 everyday work, 3 everything) decides which commands run.
+- The protection level (0 read-only, 1 nothing changes on the server, 2 everyday work, 3 everything) decides which commands run.
   Exit code 100 with `TFP0004` means the command is above the level: report it and leave the
   level alone. Never run `tfp protection set`; a person changes the level in their own terminal.
 - Do not check in unless the task says so; leave the work as pending changes otherwise. When it

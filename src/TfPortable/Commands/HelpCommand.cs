@@ -66,7 +66,7 @@ namespace TfPortable.Commands
                 yield return line;
             }
 
-            foreach (var line in Section("Phase 2 (branching, as pending changes):", CommandCatalog.Commands.Where(c => c.Phase == 2)))
+            foreach (var line in Section("Phase 2 (branching, as pending changes, protection level 1; merges, folderdiff and annotate read at level 0):", CommandCatalog.Commands.Where(c => c.Phase == 2)))
             {
                 yield return line;
             }

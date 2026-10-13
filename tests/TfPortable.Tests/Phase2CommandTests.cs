@@ -160,7 +160,7 @@ namespace TfPortable.Tests
             foreach (string name in new[] { "merges", "folderdiff", "annotate" })
             {
                 Assert.Equal(CommandStatus.Implemented, CommandCatalog.Find(name)!.Status);
-                Assert.Equal(1, ProtectionLevels.Of(name));
+                Assert.Equal(0, ProtectionLevels.Of(name));
             }
 
             var preview = CommandLine.Parse(new[] { "merge", "$/a", "$/b", "/preview" });

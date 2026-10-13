@@ -6,31 +6,34 @@ using TfPortable.Errors;
 namespace TfPortable.Cli
 {
     /// <summary>
-    /// The protection level every command and some switches require (SPEC.md "Úrovně ochrany"): 1 changes nothing on the
-    /// server (reads, and the work in the own workspace that stays local until a checkin), 2 is the everyday write to the
-    /// server, 3 is everything including irreversible and foreign changes.
+    /// The protection level every command and some switches require (SPEC.md "Úrovně ochrany"): 0 reads only (nothing on
+    /// disk either), 1 changes nothing on the server (the work in the own workspace that stays local until a checkin), 2 is
+    /// the everyday write to the server, 3 is everything including irreversible and foreign changes.
     /// The level the user allows lives in <see cref="Settings.ToolSettings"/>; a command above it is TFP0004.
     /// </summary>
     internal static class ProtectionLevels
     {
-        public const int ReadOnly = 1;
+        public const int ReadOnly = 0;
+        public const int Local = 1;
         public const int Work = 2;
         public const int Everything = 3;
 
         private static readonly Dictionary<string, int> Commands = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
         {
-            // Level 1: nothing changes on the server. Reads, the local PAT store, `view /output`, and the work in the own
-            // workspace: pending changes (undone with `undo`), the files on disk (`get`, `resolve`, `reconcile`) and a shelveset
-            // restored into it. A switch that writes to the server (`/lock:checkin|checkout`, `unshelve /move`) raises the level.
+            // Level 0: reads only; nothing is written to the workspace or to disk (`view /output` and `property /output`
+            // raise to level 1). The PAT store (`login`, `logout`) and the settings file (`protection set`) are the tool's own.
             ["status"] = ReadOnly, ["history"] = ReadOnly, ["changeset"] = ReadOnly, ["view"] = ReadOnly, ["difference"] = ReadOnly,
             ["dir"] = ReadOnly, ["properties"] = ReadOnly, ["localversions"] = ReadOnly, ["workfold"] = ReadOnly, ["workspaces"] = ReadOnly,
             ["labels"] = ReadOnly, ["branches"] = ReadOnly, ["merges"] = ReadOnly, ["annotate"] = ReadOnly, ["folderdiff"] = ReadOnly,
             ["shelvesets"] = ReadOnly, ["help"] = ReadOnly, ["version"] = ReadOnly, ["whoami"] = ReadOnly, ["login"] = ReadOnly,
             ["logout"] = ReadOnly, ["protection"] = ReadOnly, ["docs"] = ReadOnly, ["resolvepath"] = ReadOnly, ["property"] = ReadOnly,
             ["permission"] = ReadOnly, ["workspace"] = ReadOnly,
-            ["add"] = ReadOnly, ["checkout"] = ReadOnly, ["delete"] = ReadOnly, ["rename"] = ReadOnly, ["undo"] = ReadOnly, ["get"] = ReadOnly,
-            ["resolve"] = ReadOnly, ["reconcile"] = ReadOnly, ["undelete"] = ReadOnly, ["merge"] = ReadOnly, ["branch"] = ReadOnly, ["rollback"] = ReadOnly,
-            ["unshelve"] = ReadOnly,
+            // Level 1: nothing changes on the server. The work in the own workspace: pending changes (undone with `undo`), the
+            // files on disk (`get`, `resolve`, `reconcile`) and a shelveset restored into it. A switch that writes to the server
+            // (`/lock:checkin|checkout`, `unshelve /move`) raises the level.
+            ["add"] = Local, ["checkout"] = Local, ["delete"] = Local, ["rename"] = Local, ["undo"] = Local, ["get"] = Local,
+            ["resolve"] = Local, ["reconcile"] = Local, ["undelete"] = Local, ["merge"] = Local, ["branch"] = Local, ["rollback"] = Local,
+            ["unshelve"] = Local,
             // Level 2: the everyday writes to the server.
             ["checkin"] = Work, ["shelve"] = Work, ["label"] = Work, ["unlabel"] = Work, ["lock"] = Work,
             // Level 3: irreversible or administrative (permission and workspace list at level 1; their write switches raise the level).
@@ -51,6 +54,8 @@ namespace TfPortable.Cli
             ["changeset/comment"] = Work,
             ["changeset/notes"] = Work,
             ["unshelve/move"] = Work,
+            ["view/output"] = Local,
+            ["property/output"] = Local,
             // `/lock:checkin|checkout` writes a lock to the server as `lock` does; `/lock:none` (the default) does not count.
             ["add/lock"] = Work,
             ["checkout/lock"] = Work,
@@ -74,7 +79,7 @@ namespace TfPortable.Cli
             ["workspace/filetime"] = Everything,
         };
 
-        public static string Name(int level) => level == ReadOnly ? "no server writes" : level == Work ? "everyday work" : "everything";
+        public static string Name(int level) => level == ReadOnly ? "read-only" : level == Local ? "no server writes" : level == Work ? "everyday work" : "everything";
 
         /// <summary>The level of a command by its canonical name; every catalog command has one (unit test).</summary>
         public static int Of(string command)
@@ -92,6 +97,12 @@ namespace TfPortable.Cli
         {
             int level = Of(spec.Name);
             string? raisedBy = null;
+
+            // `merge /candidate` only lists changesets; the merge itself pends changes in the workspace.
+            if (string.Equals(spec.Name, "merge", StringComparison.OrdinalIgnoreCase) && commandLine.Has("candidate"))
+            {
+                level = ReadOnly;
+            }
 
             foreach (string name in commandLine.SwitchNames)
             {

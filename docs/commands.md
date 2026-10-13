@@ -19,7 +19,7 @@ Legend: **✓** implemented as in tf.exe · **~** accepted, limited or no-op (se
 **✗** not supported yet, TFP0006 with the reason (decision of 2026-10-10; ask for it when you need it) · **+** TfPortable extension.
 The error codes a command can return are described in [errors.md](errors.md).
 
-## Phase 1 (protection level 1: nothing changes on the server; `/lock:checkin|checkout`, the `workfold` mapping edits and `changeset /comment /notes` level 2)
+## Phase 1 (listings at protection level 0; the commands that change the workspace at level 1, as do `view /output` and `property /output`; `/lock:checkin|checkout`, the `workfold` mapping edits and `changeset /comment /notes` level 2)
 
 <a id="cmd-status"></a>
 ### status (`stat` is not in the help; tf.exe accepts it)
@@ -292,7 +292,7 @@ tf vc merge [/recursive] [/force] [/candidate] [/discard] [/version:versionspec]
 | `/nosummary` | ~ accepted; tf.exe 18.10 prints no summary either (golden `merge/nosummary` equals `merge/all-run`) |
 | `/format:brief\|detailed` | ~ accepted; the pending merge listing has one shape in tf.exe 18.10 too (golden `merge/detailed`) |
 
-## Phase 2 (branching as pending changes; `merge`, `branch`, `undelete`, `rollback` at protection level 1 since v1.1.0, `/lock:checkin|checkout` level 2)
+## Phase 2 (branching as pending changes; `merge`, `branch`, `undelete`, `rollback` at protection level 1 since v1.1.0, `/lock:checkin|checkout` level 2; `merges`, `folderdiff`, `annotate` and `merge /candidate` read at level 0)
 
 <a id="cmd-merges"></a>
 ### merges

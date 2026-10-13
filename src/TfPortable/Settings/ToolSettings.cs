@@ -39,10 +39,10 @@ namespace TfPortable.Settings
                 if (token != null && token.Type != JTokenType.Null)
                 {
                     long? level = token.Type == JTokenType.Integer ? (long?)token : null;
-                    if (level == null || level < 1 || level > 3)
+                    if (level == null || level < 0 || level > 3)
                     {
                         throw new TfpException(ErrorCodes.ProtectionLevel, ExitCodes.GeneralError,
-                            $"The settings file {path} has protectionLevel {token.ToString(Newtonsoft.Json.Formatting.None)}. Only 1, 2 and 3 are valid.",
+                            $"The settings file {path} has protectionLevel {token.ToString(Newtonsoft.Json.Formatting.None)}. Only 0, 1, 2 and 3 are valid.",
                             "Fix the value or delete the file to return to level 2.");
                     }
 
