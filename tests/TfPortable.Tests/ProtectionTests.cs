@@ -152,7 +152,7 @@ namespace TfPortable.Tests
             Assert.Contains("Raise it with 'tfp protection set 2' in an interactive terminal.", stderr);
             Assert.DoesNotContain(";", stderr);
 
-            var (exitJson, json, _) = Run("add", "file.txt", "/format:json");
+            var (exitJson, json, _) = Run("checkin", "/comment:x", "file.txt", "/format:json");
             Assert.Equal(100, exitJson);
             Assert.Equal("TFP0004", (string)JObject.Parse(json)["errors"]![0]!["code"]!);
         }
