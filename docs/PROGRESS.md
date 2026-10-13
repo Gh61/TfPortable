@@ -4,8 +4,10 @@ Read this first in every session. Update it at the end of every session (see CLA
 
 ## Status
 
-The current release is [v1.1.0](https://github.com/Gh61/TfPortable/releases/tag/v1.1.0) (2026-10-13, CI workflow
-run 200 on da5ada3): protection level 1 allows everything that changes nothing on the server.
+The current release is [v1.2.0](https://github.com/Gh61/TfPortable/releases/tag/v1.2.0) (2026-10-13, CI workflow
+run 207 on 9dec097): protection level 0 reads only, nothing is written to disk. Before it,
+[v1.1.0](https://github.com/Gh61/TfPortable/releases/tag/v1.1.0) (2026-10-13, run 200 on da5ada3) made level 1
+allow everything that changes nothing on the server.
 [v1.0.0](https://github.com/Gh61/TfPortable/releases/tag/v1.0.0) was released on 2026-10-11 from `main` (CI
 workflow run 189 on 76eb720). Every milestone and phase of SPEC.md is done, every switch of tf.exe is either
 implemented or answers `TFP0006` (marked ✗ in `docs/commands.md`), and no catalog command returns `TFP0003`.
@@ -15,7 +17,7 @@ releases v0.1.0, v0.2.0, v0.3.0, v1.0.0) is in the session log below and in the 
 | Milestone | Status |
 | --- | --- |
 | Milestones 0–5, phases 2–4, golden comparison, v1.0 preparation (SPEC.md) | done, released as v1.0.0 |
-| Protection level 0 = reading only, nothing written to disk (branch `claude/vibrant-mayer-9kx4fh`) | in review; to be released as v1.2.0 after the merge |
+| Protection level 0 = reading only, nothing written to disk (branch `claude/vibrant-mayer-9kx4fh`) | done, merged on 2026-10-13 (9dec097, PR #31), released as [v1.2.0](https://github.com/Gh61/TfPortable/releases/tag/v1.2.0) (CI workflow run 207 with `release_tag=v1.2.0`, `tfp.exe` 4,065,280 bytes, SHA-256 asset) |
 | Protection level 1 = nothing changes on the server (branch `claude/vibrant-mayer-9kx4fh`, PR #29) | done, merged on 2026-10-13 (da5ada3), released as [v1.1.0](https://github.com/Gh61/TfPortable/releases/tag/v1.1.0) (CI workflow run 200 with `release_tag=v1.1.0`, `tfp.exe` 4,064,768 bytes, SHA-256 asset) |
 
 New work starts as a new row here (not started, in progress, blocked, done), with its branch and PR.
@@ -252,7 +254,9 @@ Entries before 2026-10-11 are condensed; the full log is in the git history (`gi
 - Done: level 0 (reading only) in `ProtectionLevels.cs`, `ToolSettings`, `ProtectionCommand`, the catalog and help
   texts; unit tests; SPEC.md "Úrovně ochrany" (L0 row), commands.md, README (level table, release badge instead of
   a version number), docs/CLAUDE.md, errors.md, json-schema.md, compat.md §18, `CHANGELOG.md` (`v1.2.0`), CLAUDE.md
-  rule about the README version. PR, CI, independent review, merge, release `v1.2.0` by the CI workflow.
+  rule about the README version. PR #31 reviewed by an independent agent (findings under Decisions: the `property`
+  writes and `workspaces /remove` raise to level 1), CI green, merged with a merge commit (9dec097); `v1.2.0`
+  released by the CI workflow (run 207), the release notes from `CHANGELOG.md`.
 - Next: nothing planned.
 - Blockers: none.
 
