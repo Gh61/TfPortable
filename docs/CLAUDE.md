@@ -104,7 +104,7 @@ if that matters in your project.
 
 `add`, `checkout` and `rename` are reversible with `undo`, so a team may move them to `allow`.
 `login` and `logout` stay with the person: the agent has no reason to run them. `permission` is in `ask`
-because the same command lists (level 1) and changes (level 3) permissions, and `property` because
+because the same command lists (level 0) and changes (level 3) permissions, and `property` because
 `-setvalues`/`-deletevalues`/`-deleteall` pend a change (level 1, reversible with `undo`); a team that only reads
 them may move `tfp permission` and `tfp property` to `allow`. `destroy` is denied outright: a person runs it in their own terminal.
 

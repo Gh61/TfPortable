@@ -171,7 +171,7 @@ tf vc workspaces /remove:(*|ws1[,ws2,...]) /collection:(*|url) [/login:u,[p]]
 | --- | --- |
 | `/owner`, `/computer`, `/format:brief\|detailed`, `workspacename` | ✓ |
 | `/format:xml` | ✗ TFP0006 (use `/format:json`) |
-| `/remove:` | ✓ (local cache only, as in tf.exe) |
+| `/remove:` | ✓ (local cache only, as in tf.exe; protection level 1 since v1.2.0, the cache is a file on disk) |
 | `/updateUserName:`, `/updateComputerName:` | ✗ TFP0006 (server administration after an account or machine rename) |
 
 <a id="cmd-history"></a>
@@ -509,7 +509,7 @@ tf vc permission [/allow:(* |perm1[,perm2,...]] [/deny:(* |perm1[,perm2,...])] [
 
 | Switch | TfPortable |
 | --- | --- |
-| `itemspec ...`, `/recursive` (listing) | ✓ protection level 1; the `====` block per item with `Server item: $/path (Inherit: Yes)` and, per identity, `Allow`, `Deny`, `Allow (inherited)`, `Deny (inherited)` |
+| `itemspec ...`, `/recursive` (listing) | ✓ protection level 0; the `====` block per item with `Server item: $/path (Inherit: Yes)` and, per identity, `Allow`, `Deny`, `Allow (inherited)`, `Deny (inherited)` |
 | `/allow:`, `/deny:`, `/remove:` with `/user:` and/or `/group:` | ✓ protection level 3; the permission names of tf.exe (Read, PendChange, Checkin, Label, Lock, ReviseOther, UnlockOther, UndoOther, LabelOther, AdminProjectRights, CheckinOther, Merge, ManageBranch; `*` = all; an unknown name is TFP0002); the identities go to the server as given (display name, account, e-mail, `[Project]\Group`); prints `$/path: identity` per applied change as tf.exe; a change the server did not apply (an unknown identity, an inheritance change on `$/`) is TFP0501 per item (exit 1) with the library's failure text as the server message; when the server applied nothing at all the exit code is 100, as tf.exe with its empty result |
 | `/inherit:yes\|no` | ✓ protection level 3 (`$/path: inherit no`) |
 | `/recursive` with a change | ✓ the change is applied to every item below (the server stores ACLs per item) |
@@ -533,7 +533,7 @@ tf vc workspace [/collection:url] [/comment:("comment"|@commentfile)] [/newname:
 | `/new name` | ✓ protection level 3; the name is required (tf.exe defaults to the computer name; a tool without a dialog wants it explicit); a local workspace of the authenticated user with `$/` mapped to the current folder, or the mappings of `/template:`; `/comment:`, `/computer:`, `/permission:` (default Private), `/filetime:` (default current) ✓; `/location:server` is TFP0204; another owner is TFP0002. Prints `Workspace <name>;<owner> created.` and the detailed listing |
 | `/delete name[;owner]` | ✓ protection level 3; deletes the workspace on the server and from the local cache; the pending changes it had are dropped (a warning with their count); prints `Workspace <name>;<owner> deleted.` (tf.exe is silent) |
 | `name /newname: /comment: /computer: /permission: /filetime:` | ✓ protection level 3 (`Workspace <name>;<owner> updated.` and the listing); `/newowner:` ✗ TFP0006 |
-| `name` without switches | ✓ protection level 1: the detailed listing of `workspaces /format:detailed` |
+| `name` without switches | ✓ protection level 0: the detailed listing of `workspaces /format:detailed` |
 
 <a id="cmd-property"></a>
 ### property
@@ -549,7 +549,7 @@ tf vc property itemspec /deleteall [/recursive] [/silent] [/lock:none]
 
 | Switch | TfPortable |
 | --- | --- |
-| listing | ✓ protection level 1: a dashed line, `Server item: $/path`, then `name = value` per property or `The item has no properties.` (phase 4 capture `property/read`); a binary value shows as `<binary, n bytes>` |
+| listing | ✓ protection level 0: a dashed line, `Server item: $/path`, then `name = value` per property or `The item has no properties.` (phase 4 capture `property/read`); a binary value shows as `<binary, n bytes>` |
 | `/version:`, `/recursive` | ✓ |
 | `/propertynames:` | ✓ repeatable or comma-separated; lists only these properties |
 | `/output:` | ✓ writes the value of the single property named by `/propertynames` to the file (its bytes for a binary value, UTF-8 text otherwise) and prints `Wrote <name> of <item> to <file>.`; a missing property is a warning (exit 0); needs exactly one name and no `/recursive` |
@@ -571,7 +571,7 @@ names a file), and a property name with a comma or surrounding spaces cannot be 
 tf vc resolvepath itemspec ...
 ```
 
-✓ protection level 1: `<given path> -> <counterpart>` per item (a local path gives its server path, a server path its local path);
+✓ protection level 0: `<given path> -> <counterpart>` per item (a local path gives its server path, a server path its local path);
 a path outside the mappings is TFP0203 (exit 1 per item).
 
 <a id="cmd-docs"></a>

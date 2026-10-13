@@ -36,7 +36,7 @@ namespace TfPortable.Cli
             ["unshelve"] = Local,
             // Level 2: the everyday writes to the server.
             ["checkin"] = Work, ["shelve"] = Work, ["label"] = Work, ["unlabel"] = Work, ["lock"] = Work,
-            // Level 3: irreversible or administrative (permission and workspace list at level 1; their write switches raise the level).
+            // Level 3: irreversible or administrative (permission and workspace list at level 0; their write switches raise the level).
             ["destroy"] = Everything, ["proxy"] = Everything, ["configure"] = Everything, ["certificates"] = Everything,
         };
 
@@ -59,6 +59,8 @@ namespace TfPortable.Cli
             ["property/setvalues"] = Local,
             ["property/deletevalues"] = Local,
             ["property/deleteall"] = Local,
+            // `workspaces /remove` deletes entries of the client library's workspace cache on disk.
+            ["workspaces/remove"] = Local,
             // `/lock:checkin|checkout` writes a lock to the server as `lock` does; `/lock:none` (the default) does not count.
             ["add/lock"] = Work,
             ["checkout/lock"] = Work,

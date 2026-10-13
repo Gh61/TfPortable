@@ -257,7 +257,7 @@ namespace TfPortable.Cli
                 Owner,
                 new SwitchSpec("computer", "M", SwitchValue.Required, "Computer filter (* for every computer)."),
                 FormatWithout(new[] { "xml" }, "brief", "detailed"),
-                new SwitchSpec("remove", null, SwitchValue.Required, "Remove workspaces from the local cache (* or a comma-separated list)."),
+                new SwitchSpec("remove", null, SwitchValue.Required, "Remove workspaces from the local cache (* or a comma-separated list; protection level 1)."),
                 Unsupported("updateusername", SwitchValue.Required, "it rewrites the owner of workspaces on the server after an account was renamed, which is server administration, not work with code"),
                 Unsupported("updatecomputername", SwitchValue.Required, "it rewrites the computer of workspaces on the server after a machine was renamed, which is server administration, not work with code")),
 

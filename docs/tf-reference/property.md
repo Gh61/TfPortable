@@ -68,8 +68,8 @@ item specs (`PendChangesOptions.Silent` for `/silent`). The pended changes arriv
 `NewPendingChange` event (change type `property`), so the output is the usual grouped `property: <item>` listing
 of the pend commands and `status` shows them as `property`. `undo` reverts them.
 
-Protection level: the command stays level 1 for reading; `/setvalues`, `/deletevalues`, `/deleteall` raise it to
-level 2 (same mechanism as `workfold /map`). JSON: reading keeps `items[]`; writing returns the usual
+Protection level (as of v1.2.0): the command reads at level 0; `/setvalues`, `/deletevalues`, `/deleteall` and
+`/output` raise it to level 1 (same mechanism as `workfold /map`, which raises to level 2). JSON: reading keeps `items[]`; writing returns the usual
 `changes: [PendingChange]`. Documentation to update: SPEC.md catalog row and phase 4 table, `docs/commands.md`,
 `docs/json-schema.md`, `docs/compat.md` §21, `docs/CLAUDE.md` permission snippet (`tfp property` moves from
 `allow` to the same treatment as `tfp permission`: listing allowed, writes ask). Integration test: set, read back

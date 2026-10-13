@@ -83,6 +83,8 @@ namespace TfPortable.Tests
             Assert.Equal(0, ProtectionLevels.Of("docs"));
             var viewOutput = CommandLine.Parse(new[] { "view", "/output:a.txt", "$/a.txt" });
             Assert.Equal((1, "output"), ProtectionLevels.Required(viewOutput.Spec!, viewOutput));
+            var removeCache = CommandLine.Parse(new[] { "workspaces", "/remove:*" });
+            Assert.Equal((1, "remove"), ProtectionLevels.Required(removeCache.Spec!, removeCache));
             var viewConsole = CommandLine.Parse(new[] { "view", "$/a.txt" });
             Assert.Equal((0, (string?)null), ProtectionLevels.Required(viewConsole.Spec!, viewConsole));
             var create = CommandLine.Parse(new[] { "workspace", "/new", "Build" });
