@@ -521,12 +521,16 @@ namespace TfPortable.IntegrationTests
                 var stillThere = Run($"property {file} /format:json");
                 Assert.Equal("team-a;b", (string?)((JArray)Data(stillThere)["items"]!).Single()["properties"]!["tfp-owner"]);
 
-                // The write form is blocked at level 1 before the tool connects.
+                // The write form pends locally and runs at level 1; a lock would reach the server and is blocked before the tool connects.
                 using (ProtectionLevelScope.Set(1))
                 {
-                    var blocked = Run($"property /setvalues:x=y {file}");
+                    var blocked = Run($"property /setvalues:x=y /lock:checkin {file}");
                     Assert.Equal(100, blocked.ExitCode);
-                    Assert.StartsWith("ERROR TFP0004: Switch '/setvalues' of 'property' needs protection level 2.", blocked.Stderr);
+                    Assert.StartsWith("ERROR TFP0004: Switch '/lock' of 'property' needs protection level 2.", blocked.Stderr);
+                    var local = Run($"property /setvalues:x=y {file}");
+                    Assert.True(local.ExitCode == 0, local.Stderr + local.Stdout);
+                    var undoLocal = Run($"undo {file} /noprompt");
+                    Assert.True(undoLocal.ExitCode == 0, undoLocal.Stderr + undoLocal.Stdout);
                 }
             }
             finally

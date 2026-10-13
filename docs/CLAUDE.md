@@ -28,7 +28,7 @@ Setup (once, by a person):
   `exitCode`, `data`, `errors[]` with a stable `code` (TFPxxxx) and a `hint`.
 - Start with `tfp whoami -format:json` to see the identity, the collection, the workspace and
   the protection level.
-- The protection level (1 read-only, 2 everyday work, 3 everything) decides which commands run.
+- The protection level (1 nothing changes on the server, 2 everyday work, 3 everything) decides which commands run.
   Exit code 100 with `TFP0004` means the command is above the level: report it and leave the
   level alone. Never run `tfp protection set`; a person changes the level in their own terminal.
 - Do not check in unless the task says so; leave the work as pending changes otherwise. When it
@@ -104,8 +104,8 @@ if that matters in your project.
 
 `add`, `checkout` and `rename` are reversible with `undo`, so a team may move them to `allow`.
 `login` and `logout` stay with the person: the agent has no reason to run them. `permission` is in `ask`
-because the same command lists (level 1) and changes (level 3) permissions, and `property` for the same reason
-(listing at level 1, `-setvalues`/`-deletevalues`/`-deleteall` pend a change at level 2); a team that only reads
+because the same command lists (level 1) and changes (level 3) permissions, and `property` because
+`-setvalues`/`-deletevalues`/`-deleteall` pend a change (level 1, reversible with `undo`); a team that only reads
 them may move `tfp permission` and `tfp property` to `allow`. `destroy` is denied outright: a person runs it in their own terminal.
 
 ## What the agent gets

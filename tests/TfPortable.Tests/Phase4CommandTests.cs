@@ -273,13 +273,13 @@ namespace TfPortable.Tests
             Assert.Equal(LockLevel.Checkin, WorkspaceCommandSupport.LockLevelOf(CommandLine.Parse(new[] { "property", "/setvalues:a=1", "/lock:checkin", "x.txt" })));
 
             var set = CommandLine.Parse(new[] { "property", "/setvalues:a=1", "x.txt" });
-            Assert.Equal((2, "setvalues"), ProtectionLevels.Required(set.Spec!, set));
+            Assert.Equal((1, (string?)null), ProtectionLevels.Required(set.Spec!, set));
             var deleteAll = CommandLine.Parse(new[] { "property", "/deleteall", "x.txt" });
-            Assert.Equal((2, "deleteall"), ProtectionLevels.Required(deleteAll.Spec!, deleteAll));
+            Assert.Equal((1, (string?)null), ProtectionLevels.Required(deleteAll.Spec!, deleteAll));
             var read = CommandLine.Parse(new[] { "property", "/propertynames:a", "/output:v.txt", "x.txt" });
             Assert.Equal((1, (string?)null), ProtectionLevels.Required(read.Spec!, read));
             new ToolSettings { ProtectionLevel = 1 }.Save();
-            Assert.StartsWith("ERROR TFP0004: Switch '/setvalues' of 'property' needs protection level 2.", Run("property", "/setvalues:a=1", "x.txt").Err);
+            Assert.StartsWith("ERROR TFP0004: Switch '/lock' of 'property' needs protection level 2.", Run("property", "/setvalues:a=1", "/lock:checkin", "x.txt").Err);
         }
 
         [Fact]

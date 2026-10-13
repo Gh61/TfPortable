@@ -37,7 +37,7 @@ namespace TfPortable.Commands
                 || !int.TryParse(commandLine.Positionals[1], out int level) || level < ProtectionLevels.ReadOnly || level > ProtectionLevels.Everything)
             {
                 throw new TfpException(ErrorCodes.InvalidSwitch, ExitCodes.GeneralError, "protection takes no argument, or 'set' followed by 1, 2 or 3.",
-                    $"Example: '{toolName} protection set 2'. Levels: 1 read-only, 2 everyday work, 3 everything.");
+                    $"Example: '{toolName} protection set 2'. Levels: 1 no server writes, 2 everyday work, 3 everything.");
             }
 
             if (!InteractiveProvider())

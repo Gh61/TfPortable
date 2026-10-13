@@ -57,12 +57,19 @@ namespace TfPortable.Tests
         }
 
         [Fact]
-        public void Reads_are_level_1_and_writes_are_level_2_or_3()
+        public void Reads_and_local_work_are_level_1_and_server_writes_are_level_2_or_3()
         {
             Assert.Equal(1, ProtectionLevels.Of("status"));
             Assert.Equal(1, ProtectionLevels.Of("shelvesets"));
             Assert.Equal(1, ProtectionLevels.Of("protection"));
+            foreach (string local in new[] { "add", "checkout", "delete", "rename", "undo", "get", "resolve", "reconcile", "undelete", "merge", "branch", "rollback", "unshelve", "property" })
+            {
+                Assert.Equal(1, ProtectionLevels.Of(local));
+            }
+
             Assert.Equal(2, ProtectionLevels.Of("checkin"));
+            Assert.Equal(2, ProtectionLevels.Of("shelve"));
+            Assert.Equal(2, ProtectionLevels.Of("label"));
             Assert.Equal(2, ProtectionLevels.Of("lock"));
             Assert.Equal(3, ProtectionLevels.Of("destroy"));
             Assert.Equal(1, ProtectionLevels.Of("workspace"));
@@ -78,6 +85,16 @@ namespace TfPortable.Tests
             Assert.Equal((3, "workspace"), ProtectionLevels.Required(lockForeign.Spec!, lockForeign));
             var comment = CommandLine.Parse(new[] { "changeset", "5", "/comment:x" });
             Assert.Equal((2, "comment"), ProtectionLevels.Required(comment.Spec!, comment));
+            var lockedAdd = CommandLine.Parse(new[] { "add", "/lock:checkin", "a.txt" });
+            Assert.Equal((2, "lock"), ProtectionLevels.Required(lockedAdd.Spec!, lockedAdd));
+            var unlockedAdd = CommandLine.Parse(new[] { "add", "/lock:none", "a.txt" });
+            Assert.Equal((1, (string?)null), ProtectionLevels.Required(unlockedAdd.Spec!, unlockedAdd));
+            var lockOwn = CommandLine.Parse(new[] { "lock", "/lock:none", "$/a" });
+            Assert.Equal((2, (string?)null), ProtectionLevels.Required(lockOwn.Spec!, lockOwn));
+            var move = CommandLine.Parse(new[] { "unshelve", "/move", "x" });
+            Assert.Equal((2, "move"), ProtectionLevels.Required(move.Spec!, move));
+            var restore = CommandLine.Parse(new[] { "unshelve", "x" });
+            Assert.Equal((1, (string?)null), ProtectionLevels.Required(restore.Spec!, restore));
         }
 
         [Fact]
@@ -128,10 +145,10 @@ namespace TfPortable.Tests
         public void A_command_above_the_level_is_TFP0004_with_the_spec_wording()
         {
             new ToolSettings { ProtectionLevel = 1 }.Save();
-            var (exit, stdout, stderr) = Run("add", "file.txt");
+            var (exit, stdout, stderr) = Run("checkin", "/comment:x", "file.txt");
             Assert.Equal(100, exit);
             Assert.Equal(string.Empty, stdout);
-            Assert.StartsWith("ERROR TFP0004: Command 'add' needs protection level 2. The current level is 1.", stderr);
+            Assert.StartsWith("ERROR TFP0004: Command 'checkin' needs protection level 2. The current level is 1.", stderr);
             Assert.Contains("Raise it with 'tfp protection set 2' in an interactive terminal.", stderr);
             Assert.DoesNotContain(";", stderr);
 
@@ -226,7 +243,7 @@ namespace TfPortable.Tests
             Assert.Equal(3, (int)JObject.Parse(json)["data"]!["commands"]![0]!["protectionLevel"]!);
 
             var lines = WhoamiCommand.Render(new Context.IdentityInfo("Name", "user@example.com", "id"), "https://dev.azure.com/org", null, null, "C:\\work", 1).ToList();
-            Assert.Contains("Protection : 1 (read-only)", lines);
+            Assert.Contains("Protection : 1 (no server writes)", lines);
         }
     }
 }

@@ -19,7 +19,7 @@ Legend: **✓** implemented as in tf.exe · **~** accepted, limited or no-op (se
 **✗** not supported yet, TFP0006 with the reason (decision of 2026-10-10; ask for it when you need it) · **+** TfPortable extension.
 The error codes a command can return are described in [errors.md](errors.md).
 
-## Phase 1
+## Phase 1 (protection level 1: nothing changes on the server; `/lock:checkin|checkout`, the `workfold` mapping edits and `changeset /comment /notes` level 2)
 
 <a id="cmd-status"></a>
 ### status (`stat` is not in the help; tf.exe accepts it)
@@ -47,7 +47,7 @@ tf vc add [itemspec] [/lock:(none|checkin|checkout)] [/encoding:filetype]
 | Switch | TfPortable |
 | --- | --- |
 | `/recursive`, `/noignore`, `/encoding:` | ✓ (`/encoding`, not `/type` as the SPEC draft said) |
-| `/lock:` | ✓ `none` (default), `checkin`, `checkout`: the pended item carries the lock on the server, as `lock` does (a checkout lock is not supported in local workspaces by the server, golden `lock/checkout-lock`) |
+| `/lock:` | ✓ `none` (default), `checkin`, `checkout`: the pended item carries the lock on the server, as `lock` does, so `checkin` and `checkout` need protection level 2 (the command itself runs at level 1 since v1.1.0) (a checkout lock is not supported in local workspaces by the server, golden `lock/checkout-lock`) |
 
 <a id="cmd-checkout"></a>
 ### checkout (alias `edit`)
@@ -292,7 +292,7 @@ tf vc merge [/recursive] [/force] [/candidate] [/discard] [/version:versionspec]
 | `/nosummary` | ~ accepted; tf.exe 18.10 prints no summary either (golden `merge/nosummary` equals `merge/all-run`) |
 | `/format:brief\|detailed` | ~ accepted; the pending merge listing has one shape in tf.exe 18.10 too (golden `merge/detailed`) |
 
-## Phase 2 (branching as pending changes; `merge`, `branch`, `undelete`, `rollback` at protection level 2)
+## Phase 2 (branching as pending changes; `merge`, `branch`, `undelete`, `rollback` at protection level 1 since v1.1.0, `/lock:checkin|checkout` level 2)
 
 <a id="cmd-merges"></a>
 ### merges
@@ -334,7 +334,7 @@ tf vc folderdiff [sourcePath] targetPath [/recursive] [/noprompt] [/collection:u
 | `/filterLocalPathsOnly` | ✗ TFP0006 (an edge case of `/filter`) |
 | `/noprompt` | ~ accepted (tfp never opens the dialog) |
 
-## Phase 3 (the everyday write path; protection level 2, `/delete` level 3)
+## Phase 3 (the everyday write path; protection level 2, `/delete` level 3; `unshelve` without `/move` level 1 since v1.1.0)
 
 <a id="cmd-checkin"></a>
 ### checkin (alias `ci`, from the Microsoft docs)
@@ -399,9 +399,9 @@ shelveset that does not exist is TFP0301 (exit 100, as tf.exe); an empty list wi
 tf vc unshelve [/move] [shelvesetname[;username]] [itemspec] [/recursive] [/nomerge] [/noautoresolve] [/noprompt] [/login:u,[p]]
 ```
 
-`shelvesetname` ✓ required (tfp never opens the dialog); `/recursive`, `/nomerge`, `/noautoresolve` ✓; `/move` ✓ phase 4
+`shelvesetname` ✓ required (tfp never opens the dialog); `/recursive`, `/nomerge`, `/noautoresolve` ✓; `/move` ✓ phase 4, protection level 2
 (the shelveset is deleted after a complete unshelve without conflicts or failures, `Shelveset <name>;<owner> deleted.`;
-otherwise it is kept with a warning). Open conflicts of the merge are TFP0403 (exit 1); a local pending change in the way is TFP0401 (exit 100).
+otherwise it is kept with a warning); without `/move` nothing changes on the server, so `unshelve` runs at level 1. Open conflicts of the merge are TFP0403 (exit 1); a local pending change in the way is TFP0401 (exit 100).
 
 <a id="cmd-label"></a>
 ### label
@@ -553,8 +553,8 @@ tf vc property itemspec /deleteall [/recursive] [/silent] [/lock:none]
 | `/version:`, `/recursive` | ✓ |
 | `/propertynames:` | ✓ repeatable or comma-separated; lists only these properties |
 | `/output:` | ✓ writes the value of the single property named by `/propertynames` to the file (its bytes for a binary value, UTF-8 text otherwise) and prints `Wrote <name> of <item> to <file>.`; a missing property is a warning (exit 0); needs exactly one name and no `/recursive` |
-| `/setvalues:` | ✓ protection level 2: pends a property change (`name=value[;name=value...]`; `;;` and `==` are literal separators; a value `@file` reads the file as a binary value); the usual grouped listing of the pended items, `status` shows the change type `property`, `undo` takes it back, `checkin` stores it |
-| `/deletevalues:`, `/deleteall` | ✓ protection level 2: pend the deletion of the named properties (repeatable or comma-separated) or of every property |
+| `/setvalues:` | ✓ protection level 1 (a pending change; since v1.1.0): pends a property change (`name=value[;name=value...]`; `;;` and `==` are literal separators; a value `@file` reads the file as a binary value); the usual grouped listing of the pended items, `status` shows the change type `property`, `undo` takes it back, `checkin` stores it |
+| `/deletevalues:`, `/deleteall` | ✓ protection level 1: pend the deletion of the named properties (repeatable or comma-separated) or of every property |
 | `/silent`, `/lock:` | ✓ as on `add` |
 | `/setproperty` | not a switch of tf.exe 18.10 either (capture `property/set`, exit 100): TFP0002 |
 

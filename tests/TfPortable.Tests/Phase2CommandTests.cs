@@ -154,7 +154,7 @@ namespace TfPortable.Tests
             foreach (string name in new[] { "merge", "branch", "undelete", "rollback" })
             {
                 Assert.Equal(CommandStatus.Implemented, CommandCatalog.Find(name)!.Status);
-                Assert.Equal(2, ProtectionLevels.Of(name));
+                Assert.Equal(1, ProtectionLevels.Of(name));
             }
 
             foreach (string name in new[] { "merges", "folderdiff", "annotate" })
@@ -164,7 +164,9 @@ namespace TfPortable.Tests
             }
 
             var preview = CommandLine.Parse(new[] { "merge", "$/a", "$/b", "/preview" });
-            Assert.Equal((2, (string?)null), ProtectionLevels.Required(preview.Spec!, preview));
+            Assert.Equal((1, (string?)null), ProtectionLevels.Required(preview.Spec!, preview));
+            var locked = CommandLine.Parse(new[] { "merge", "$/a", "$/b", "/lock:checkout" });
+            Assert.Equal((2, "lock"), ProtectionLevels.Required(locked.Spec!, locked));
         }
     }
 }
