@@ -4,9 +4,12 @@
 one file, no Visual Studio, no dialogs, sign-in with a Personal Access Token, and output that is
 easy to read for people and easy to parse for scripts and AI coding agents.
 
+[![Latest release](https://img.shields.io/github/v/release/Gh61/TfPortable?label=release)](https://github.com/Gh61/TfPortable/releases/latest)
+[![CI](https://github.com/Gh61/TfPortable/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Gh61/TfPortable/actions/workflows/ci.yml)
+
 > Status: every version-control command of tf.exe is implemented, or answers `TFP0005` (never offered) or
-> `TFP0006` (a switch left out, with the reason). The current release is
-> [v1.1.0](https://github.com/Gh61/TfPortable/releases/tag/v1.1.0). Day-to-day state: `docs/PROGRESS.md`.
+> `TFP0006` (a switch left out, with the reason). The badge above shows the latest release; what each
+> release contains is in `CHANGELOG.md`, the day-to-day state in `docs/PROGRESS.md`.
 
 ## Why this project exists
 
@@ -45,8 +48,8 @@ It is meant for local workspaces. Every version-control command of `tf.exe` is t
 daily loop of an agent (see what changed, read history and files, diff, add, edit, rename, delete,
 undo, get) through checkin, shelving, labels, locks and branching to server administration
 (`destroy`, `permission`, `workspace`, `property`). What a command may do is decided by the
-protection level (below): level 1 allows everything that changes nothing on the server, the
-irreversible commands need level 3, which a person sets in their own terminal. Only `proxy`, `configure` and `certificates` are never offered (`TFP0005`), and a few
+protection level (below): level 0 reads only, level 1 allows everything that changes nothing on the
+server, the irreversible commands need level 3, which a person sets in their own terminal. Only `proxy`, `configure` and `certificates` are never offered (`TFP0005`), and a few
 switches of `tf.exe` answer `TFP0006` with the reason (marked ✗ in [docs/commands.md](docs/commands.md)).
 
 ## Install
@@ -132,7 +135,7 @@ Exit codes: `0` success, `1` partial success or a per-item failure, `2` unknown 
 | `lock` | Lock or unlock items on the server (`/lock:checkin`, `/lock:none`) |
 | `destroy` | Remove items and their history from the server for good; a `/preview` of the same arguments is required first |
 | `permission` | Show and change item permissions (`/allow`, `/deny`, `/remove`, `/inherit`) |
-| `protection` | Show the protection level; `protection set <1\|2\|3>` changes it in an interactive terminal |
+| `protection` | Show the protection level; `protection set <0\|1\|2\|3>` changes it in an interactive terminal |
 | `docs` (`msdn`) | Open the documentation of a command in the browser, or print its URL |
 | `help`, `version` | Command catalog (`/format:json` for agents); versions of tfp and the client libraries |
 
@@ -146,10 +149,10 @@ is described in [docs/json-schema.md](docs/json-schema.md).
 
 ## Protection levels
 
-TfPortable runs at one of three protection levels. Every command and switch has the level it
+TfPortable runs at one of four protection levels (0 to 3). Every command and switch has the level it
 needs; a command above the configured level ends with `TFP0004` (exit 100) before the tool
 connects, and the hint says how to raise the level. The level is stored in
-`%APPDATA%\TfPortable\settings.json` and changed only by `tfp protection set <1|2|3>` in an
+`%APPDATA%\TfPortable\settings.json` and changed only by `tfp protection set <0|1|2|3>` in an
 interactive terminal (raising it asks for a typed confirmation). `tfp protection` and
 `tfp whoami` show it. It is a guard rail and a clear contract for scripts and agents, not a
 security boundary: the agent's own permission rules (for Claude Code, [docs/CLAUDE.md](docs/CLAUDE.md))
@@ -157,7 +160,8 @@ remain the real enforcement.
 
 | Level | Allows | Commands |
 | --- | --- | --- |
-| 1 | Nothing changes on the server: reads, and the work in your own workspace that stays local until a checkin (pending changes, which `undo` takes back; the files on disk; a shelveset restored into it) | `status`, `history`, `changeset`, `view`, `difference`, `dir`, `properties`, `localversions`, `workfold`, `workspaces`, `labels`, `branches`, `merges`, `folderdiff`, `annotate`, `shelvesets`, `resolvepath`, the listings of `permission` and `workspace`, `property` (listing and `/setvalues /deletevalues /deleteall`), `docs`, `help`, `version`, `whoami`, `login`, `logout`, `protection`, `add`, `checkout`, `delete`, `rename`, `undo`, `get`, `resolve`, `reconcile`, `merge`, `branch`, `rollback`, `undelete`, `unshelve` |
+| 0 | Reading only: nothing is written to the workspace or to disk (the PAT store of `login`/`logout` and the settings file of `protection set` are the tool's own) | `status`, `history`, `changeset`, `view` (to the console), `difference`, `dir`, `properties`, `localversions`, `workfold`, `workspaces`, `labels`, `branches`, `merge /candidate`, `merges`, `folderdiff`, `annotate`, `shelvesets`, `resolvepath`, the listings of `permission`, `workspace` and `property`, `docs`, `help`, `version`, `whoami`, `login`, `logout`, `protection` |
+| 1 | Nothing changes on the server: the work in your own workspace that stays local until a checkin (pending changes, which `undo` takes back; the files on disk; a shelveset restored into it) | level 0 plus `add`, `checkout`, `delete`, `rename`, `undo`, `get`, `resolve`, `reconcile`, `merge`, `branch`, `rollback`, `undelete`, `unshelve`, `property /setvalues /deletevalues /deleteall`, `view /output`, `property /output` |
 | 2 (default) | The everyday writes to the server | level 1 plus `checkin`, `shelve`, `unshelve /move`, `label`, `unlabel`, `lock`, `/lock:checkin\|checkout` on the commands that pend changes, `workfold /map /unmap /cloak /decloak`, `changeset /comment /notes` |
 | 3 | Everything, including irreversible changes and other people's workspaces | level 2 plus `shelve /delete`, `label /delete`, `undo /workspace:<name>`, `lock /workspace:<name>`, `destroy`, `permission` changes (`/allow`, `/deny`, `/remove`, `/inherit`), `workspace /new`, `/delete` and edits |
 

@@ -15,6 +15,7 @@ releases v0.1.0, v0.2.0, v0.3.0, v1.0.0) is in the session log below and in the 
 | Milestone | Status |
 | --- | --- |
 | Milestones 0–5, phases 2–4, golden comparison, v1.0 preparation (SPEC.md) | done, released as v1.0.0 |
+| Protection level 0 = reading only, nothing written to disk (branch `claude/vibrant-mayer-9kx4fh`) | in review; to be released as v1.2.0 after the merge |
 | Protection level 1 = nothing changes on the server (branch `claude/vibrant-mayer-9kx4fh`, PR #29) | done, merged on 2026-10-13 (da5ada3), released as [v1.1.0](https://github.com/Gh61/TfPortable/releases/tag/v1.1.0) (CI workflow run 200 with `release_tag=v1.1.0`, `tfp.exe` 4,064,768 bytes, SHA-256 asset) |
 
 New work starts as a new row here (not started, in progress, blocked, done), with its branch and PR.
@@ -51,6 +52,7 @@ are recorded under "Decisions" (2026-10-09 to 2026-10-11). What stays with the d
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-10-13 | Protection level 0 (v1.2.0): reading only, nothing is written to the workspace or to disk. The listings and reads move from level 1 to level 0 (`ProtectionLevels.ReadOnly` is 0, the local work is `Local` = 1); `view /output`, `property /output` and the `property` writes (`/setvalues`, `/deletevalues`, `/deleteall`) raise the level to 1 as switches (the first CI run of the branch caught the writes at level 0); `workspaces /remove` raises to level 1 too (it deletes entries of the client library's workspace cache on disk; found by the independent review of PR #31, which also fixed the stale level numbers of the listings in commands.md, SPEC.md, docs/CLAUDE.md and tf-reference/property.md); `merge /candidate` is level 0 again (the special case in `Required` is back). The tool's own stores do not count: `login`/`logout` (Credential Manager), `protection set` (settings file), `docs` (browser). The settings file and `protection set` accept 0 to 3; lowering to 0 needs no confirmation; the default stays 2. `get /preview`, `undo /preview` and `reconcile /preview` stay at level 1 with their commands (a per-switch lowering would need a second table; not asked for). README: the version number is replaced by a release badge and a CI badge, and CLAUDE.md forbids a version number in README | Developer's request of 2026-10-13 |
 | 2026-10-13 | The boundary between protection levels 1 and 2 is the server (v1.1.0): level 1 allows everything that changes nothing on the server, so `add`, `checkout`, `delete`, `rename`, `undo`, `get`, `resolve`, `reconcile`, `merge`, `branch`, `rollback`, `undelete`, `unshelve` and the `property` writes move from level 2 to level 1 (they pend changes in the own local workspace, update its files or restore a shelveset that stays on the server; the server sees pending changes of a local workspace only as workspace state, which `undo` takes back). Switches that write to the server raise the level: `/lock:checkin\|checkout` on the pend commands (level 2, `/lock:none` does not), `unshelve /move` (level 2). Level 2 keeps `checkin`, `shelve`, `label`, `unlabel`, `lock`, the `workfold` mapping edits and `changeset /comment /notes`; level 3 is unchanged. The name of level 1 is "no server writes" instead of "read-only" (`whoami`, `protection`, `help`). The `merge /candidate` special case in `ProtectionLevels.Required` is gone (the command is level 1 now). Independent review of PR #29: no blocking findings; a known gap recorded instead of code (a lock is a server-side pending change, so `undo` of a locked item releases the lock and `unshelve` of a shelveset with a lock pends it again, both at level 1, since the gate runs before the connection; SPEC.md "Úrovně ochrany", compat.md §18), the stale `property` row of the SPEC.md command table, the `help` phase 3 header and two comments fixed. SPEC.md "Úrovně ochrany", commands.md, README, docs/CLAUDE.md, errors.md, json-schema.md, compat.md updated | Developer's decision of 2026-10-13: "changes that do nothing on the server, in theory even restoring a shelveset when it stays on the server" |
 | 2026-10-11 | After v1.0.0 the working documents are reduced to what still holds: `docs/DEVELOPER-TODO.md` (every item done and verified) is deleted, its recorded facts stay under "Decisions" and the permanent notes moved to "Needs the user" and "Next steps"; this file keeps Decisions, Open questions and the golden facts unchanged, the status table, next steps and the session log are condensed (the full text is in the git history, `git show b820bc7:docs/PROGRESS.md`); `docs/SPEC.md` gets an English note at the top saying that the specification is in Czech and binding, with no translation planned (the developer is its author and no outside contributors are expected); CLAUDE.md records the note | Developer's decision of 2026-10-11 |
 | 2026-10-07 | Executable is `tfp.exe`, project TfPortable, repository `tfportable` | Same name as tf.exe would hide which implementation runs |
@@ -244,6 +246,15 @@ Open:
 ## Session log
 
 Entries before 2026-10-11 are condensed; the full log is in the git history (`git show b820bc7:docs/PROGRESS.md`).
+
+### 2026-10-13 – cloud session, protection level 0 (branch `claude/vibrant-mayer-9kx4fh`, v1.2.0)
+
+- Done: level 0 (reading only) in `ProtectionLevels.cs`, `ToolSettings`, `ProtectionCommand`, the catalog and help
+  texts; unit tests; SPEC.md "Úrovně ochrany" (L0 row), commands.md, README (level table, release badge instead of
+  a version number), docs/CLAUDE.md, errors.md, json-schema.md, compat.md §18, `CHANGELOG.md` (`v1.2.0`), CLAUDE.md
+  rule about the README version. PR, CI, independent review, merge, release `v1.2.0` by the CI workflow.
+- Next: nothing planned.
+- Blockers: none.
 
 ### 2026-10-13 – cloud session, protection level 1 = nothing changes on the server (branch `claude/vibrant-mayer-9kx4fh`, v1.1.0)
 

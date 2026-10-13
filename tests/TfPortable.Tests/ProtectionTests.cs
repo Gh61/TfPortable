@@ -57,30 +57,42 @@ namespace TfPortable.Tests
         }
 
         [Fact]
-        public void Reads_and_local_work_are_level_1_and_server_writes_are_level_2_or_3()
+        public void Reads_are_level_0_local_work_level_1_and_server_writes_level_2_or_3()
         {
-            Assert.Equal(1, ProtectionLevels.Of("status"));
-            Assert.Equal(1, ProtectionLevels.Of("shelvesets"));
-            Assert.Equal(1, ProtectionLevels.Of("protection"));
-            foreach (string local in new[] { "add", "checkout", "delete", "rename", "undo", "get", "resolve", "reconcile", "undelete", "merge", "branch", "rollback", "unshelve", "property" })
+            Assert.Equal(0, ProtectionLevels.Of("status"));
+            Assert.Equal(0, ProtectionLevels.Of("shelvesets"));
+            Assert.Equal(0, ProtectionLevels.Of("protection"));
+            Assert.Equal(0, ProtectionLevels.Of("login"));
+            Assert.Equal(0, ProtectionLevels.Of("view"));
+            foreach (string local in new[] { "add", "checkout", "delete", "rename", "undo", "get", "resolve", "reconcile", "undelete", "merge", "branch", "rollback", "unshelve" })
             {
                 Assert.Equal(1, ProtectionLevels.Of(local));
             }
+
+            Assert.Equal(0, ProtectionLevels.Of("property"));
+            var setValues = CommandLine.Parse(new[] { "property", "/setvalues:a=1", "x.txt" });
+            Assert.Equal((1, "setvalues"), ProtectionLevels.Required(setValues.Spec!, setValues));
 
             Assert.Equal(2, ProtectionLevels.Of("checkin"));
             Assert.Equal(2, ProtectionLevels.Of("shelve"));
             Assert.Equal(2, ProtectionLevels.Of("label"));
             Assert.Equal(2, ProtectionLevels.Of("lock"));
             Assert.Equal(3, ProtectionLevels.Of("destroy"));
-            Assert.Equal(1, ProtectionLevels.Of("workspace"));
-            Assert.Equal(1, ProtectionLevels.Of("permission"));
-            Assert.Equal(1, ProtectionLevels.Of("docs"));
+            Assert.Equal(0, ProtectionLevels.Of("workspace"));
+            Assert.Equal(0, ProtectionLevels.Of("permission"));
+            Assert.Equal(0, ProtectionLevels.Of("docs"));
+            var viewOutput = CommandLine.Parse(new[] { "view", "/output:a.txt", "$/a.txt" });
+            Assert.Equal((1, "output"), ProtectionLevels.Required(viewOutput.Spec!, viewOutput));
+            var removeCache = CommandLine.Parse(new[] { "workspaces", "/remove:*" });
+            Assert.Equal((1, "remove"), ProtectionLevels.Required(removeCache.Spec!, removeCache));
+            var viewConsole = CommandLine.Parse(new[] { "view", "$/a.txt" });
+            Assert.Equal((0, (string?)null), ProtectionLevels.Required(viewConsole.Spec!, viewConsole));
             var create = CommandLine.Parse(new[] { "workspace", "/new", "Build" });
             Assert.Equal((3, "new"), ProtectionLevels.Required(create.Spec!, create));
             var allow = CommandLine.Parse(new[] { "permission", "/allow:Lock", "/user:x", "$/a" });
             Assert.Equal((3, "allow"), ProtectionLevels.Required(allow.Spec!, allow));
             var listing = CommandLine.Parse(new[] { "permission", "$/a" });
-            Assert.Equal((1, (string?)null), ProtectionLevels.Required(listing.Spec!, listing));
+            Assert.Equal((0, (string?)null), ProtectionLevels.Required(listing.Spec!, listing));
             var lockForeign = CommandLine.Parse(new[] { "lock", "/lock:checkin", "/workspace:other", "$/a" });
             Assert.Equal((3, "workspace"), ProtectionLevels.Required(lockForeign.Spec!, lockForeign));
             var comment = CommandLine.Parse(new[] { "changeset", "5", "/comment:x" });
@@ -107,7 +119,7 @@ namespace TfPortable.Tests
             Assert.Equal((2, (string?)null), ProtectionLevels.Required(plain.Spec!, plain));
 
             var candidate = CommandLine.Parse(new[] { "merge", "/candidate", "$/a", "$/b" });
-            Assert.Equal((1, (string?)null), ProtectionLevels.Required(candidate.Spec!, candidate));
+            Assert.Equal((0, (string?)null), ProtectionLevels.Required(candidate.Spec!, candidate));
 
             var undoForeign = CommandLine.Parse(new[] { "undo", "/workspace:other;owner", "$/a" });
             Assert.Equal((3, "workspace"), ProtectionLevels.Required(undoForeign.Spec!, undoForeign));
@@ -155,6 +167,18 @@ namespace TfPortable.Tests
             var (exitJson, json, _) = Run("checkin", "/comment:x", "file.txt", "/format:json");
             Assert.Equal(100, exitJson);
             Assert.Equal("TFP0004", (string)JObject.Parse(json)["errors"]![0]!["code"]!);
+
+            // Level 0 blocks every write to disk: the pend commands and the file output of a read.
+            new ToolSettings { ProtectionLevel = 0 }.Save();
+            var (exitAdd, _, stderrAdd) = Run("add", "file.txt");
+            Assert.Equal(100, exitAdd);
+            Assert.StartsWith("ERROR TFP0004: Command 'add' needs protection level 1. The current level is 0.", stderrAdd);
+            var (exitView, _, stderrView) = Run("view", "/output:a.txt", "$/a.txt");
+            Assert.Equal(100, exitView);
+            Assert.StartsWith("ERROR TFP0004: Switch '/output' of 'view' needs protection level 1. The current level is 0.", stderrView);
+            var (exitShow, stdoutShow, _) = Run("protection");
+            Assert.Equal(0, exitShow);
+            Assert.Contains("Protection level: 0 (read-only)", stdoutShow);
         }
 
         [Fact]
@@ -202,6 +226,9 @@ namespace TfPortable.Tests
             var (exit2, _, stderr2) = Run("protection", "set", "9");
             Assert.Equal(100, exit2);
             Assert.StartsWith("ERROR TFP0002:", stderr2);
+            var (exitNeg, _, stderrNeg) = Run("protection", "set", "-1");
+            Assert.Equal(100, exitNeg);
+            Assert.StartsWith("ERROR TFP0002:", stderrNeg);
 
             var (exit3, _, stderr3) = Run("protection", "raise");
             Assert.Equal(100, exit3);
@@ -231,6 +258,11 @@ namespace TfPortable.Tests
             Assert.Equal(1, (int)data["protectionLevel"]!);
             Assert.Equal(3, (int)data["previous"]!);
             Assert.Equal(1, ToolSettings.Load().ProtectionLevel);
+
+            var (exit4, stdout4, _) = Run("protection", "set", "0");
+            Assert.Equal(0, exit4);
+            Assert.Contains("Protection level set to 0 (read-only).", stdout4);
+            Assert.Equal(0, ToolSettings.Load().ProtectionLevel);
         }
 
         [Fact]
