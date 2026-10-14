@@ -516,7 +516,8 @@ namespace TfPortable.Output
                 return Encoding.BigEndianUnicode.GetString(bytes, 2, bytes.Length - 2);
             }
 
-            if (requestedEncoding == null)
+            // NUL bytes are valid UTF-8, so a BOM-less UTF-16 or UTF-32 item must not pass the UTF-8 attempt.
+            if (requestedEncoding == null && !LooksBinary(bytes))
             {
                 string? utf8 = AsUtf8(bytes);
                 if (utf8 != null)
@@ -558,7 +559,6 @@ namespace TfPortable.Output
         /// </summary>
         public static bool IsBomlessUtf8Text(string path)
         {
-            byte[] bytes;
             try
             {
                 if (!System.IO.File.Exists(path))
@@ -566,19 +566,41 @@ namespace TfPortable.Output
                     return false;
                 }
 
-                bytes = System.IO.File.ReadAllBytes(path);
+                // Streamed: the file is never loaded whole. The first buffer decides binary and BOM; the strict decoder keeps
+                // the state of a sequence split across buffers, and the final flush rejects a truncated sequence at the end.
+                using var stream = new System.IO.FileStream(path, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite);
+                byte[] buffer = new byte[8192];
+                var decoder = StrictUtf8.GetDecoder();
+                char[] chars = new char[buffer.Length + 1];
+                bool first = true;
+                int read;
+                while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    if (first)
+                    {
+                        first = false;
+                        byte[] head = read == buffer.Length ? buffer : buffer.Take(read).ToArray();
+                        if (LooksBinary(head) || HasBom(head))
+                        {
+                            return false;
+                        }
+                    }
+
+                    decoder.GetChars(buffer, 0, read, chars, 0, false);
+                }
+
+                if (first)
+                {
+                    return false;
+                }
+
+                decoder.GetChars(buffer, 0, 0, chars, 0, true);
+                return true;
             }
-            catch (Exception ex) when (ex is System.IO.IOException || ex is UnauthorizedAccessException)
+            catch (Exception ex) when (ex is System.IO.IOException || ex is UnauthorizedAccessException || ex is DecoderFallbackException)
             {
                 return false;
             }
-
-            if (bytes.Length == 0 || LooksBinary(bytes) || HasBom(bytes))
-            {
-                return false;
-            }
-
-            return AsUtf8(bytes) != null;
         }
 
         private static bool HasBom(byte[] bytes) =>

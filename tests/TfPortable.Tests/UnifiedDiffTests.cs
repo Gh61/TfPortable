@@ -124,6 +124,9 @@ namespace TfPortable.Tests
             Assert.Equal("x", TextContent.Decode(bom, "windows-1250", "windows-1250"));
             Assert.Null(TextContent.Decode(new byte[] { 1, 2, 3 }, "binary"));
             Assert.True(TextContent.LooksBinary(new byte[] { 65, 0, 66 }));
+            // A BOM-less UTF-16 item: its NUL bytes are valid UTF-8, so the server encoding must still decode it.
+            byte[] utf16 = Encoding.Unicode.GetBytes("Příliš žluťoučký kůň");
+            Assert.Equal("Příliš žluťoučký kůň", TextContent.Decode(utf16, "utf-16"));
         }
 
         [Fact]
@@ -154,6 +157,14 @@ namespace TfPortable.Tests
                 Assert.False(TextContent.IsBomlessUtf8Text(empty));
                 Assert.False(TextContent.IsBomlessUtf8Text(Path.Combine(dir, "missing.txt")));
                 Assert.False(TextContent.IsBomlessUtf8Text(dir));
+                // Larger than one read buffer, with multi-byte characters crossing the buffer boundary; then one truncated.
+                string big = Path.Combine(dir, "big.txt");
+                File.WriteAllBytes(big, new UTF8Encoding(false).GetBytes(string.Concat(Enumerable.Repeat("žluťoučký kůň ", 2000))));
+                Assert.True(TextContent.IsBomlessUtf8Text(big));
+                string truncated = Path.Combine(dir, "truncated.txt");
+                byte[] whole = new UTF8Encoding(false).GetBytes(string.Concat(Enumerable.Repeat("žluťoučký kůň ", 2000)) + "ž");
+                File.WriteAllBytes(truncated, whole.Take(whole.Length - 1).ToArray());
+                Assert.False(TextContent.IsBomlessUtf8Text(truncated));
             }
             finally
             {

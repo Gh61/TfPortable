@@ -46,7 +46,7 @@ tf vc add [itemspec] [/lock:(none|checkin|checkout)] [/encoding:filetype]
 
 | Switch | TfPortable |
 | --- | --- |
-| `/recursive`, `/noignore`, `/encoding:` | ✓ (`/encoding`, not `/type` as the SPEC draft said). Without `/encoding` a file named explicitly that has no BOM and is valid UTF-8 is added as `utf-8` (the library and tf.exe would record the ANSI code page); wildcards, `/recursive` and other files keep the library's detection (docs/compat.md §5) |
+| `/recursive`, `/noignore`, `/encoding:` | ✓ (`/encoding`, not `/type` as the SPEC draft said). Without `/encoding` a file named explicitly that has no BOM and is valid UTF-8 (pure ASCII included) is added as `utf-8` (the library and tf.exe would record the ANSI code page); wildcards, `/recursive` and other files keep the library's detection (docs/compat.md §5) |
 | `/lock:` | ✓ `none` (default), `checkin`, `checkout`: the pended item carries the lock on the server, as `lock` does, so `checkin` and `checkout` need protection level 2 (the command itself runs at level 1 since v1.1.0) (a checkout lock is not supported in local workspaces by the server, golden `lock/checkout-lock`) |
 
 <a id="cmd-checkout"></a>
