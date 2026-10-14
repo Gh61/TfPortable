@@ -3,7 +3,9 @@
 One section per release. The CI release step copies the section of the released tag into the
 GitHub release notes, so write the section before the release is run. The newest release comes first.
 
-## Unreleased
+## v1.2.1 (2026-10-14)
+
+Everything of v1.2.0. Content is read as UTF-8 by default.
 
 - Content is read as UTF-8 by default: `view`, `difference`, `changeset /diff` and `annotate` decode a file by its BOM,
   else as UTF-8 when the bytes are valid UTF-8, else by the item's server encoding when it is a code page, else by the
