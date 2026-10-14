@@ -261,7 +261,7 @@ namespace TfPortable.Commands
             string path = value.Substring(1);
             try
             {
-                return File.ReadAllText(path).TrimEnd('\r', '\n');
+                return File.ReadAllText(path, System.Text.Encoding.UTF8).TrimEnd('\r', '\n');
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException)
             {

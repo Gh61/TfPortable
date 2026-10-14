@@ -56,6 +56,8 @@ namespace TfPortable.IntegrationTests
                 File.WriteAllText(Path.Combine(scratch, "name.txt"), "a\r\n");
                 File.WriteAllText(Path.Combine(scratch, "page.txt"), "b\r\n");
                 File.WriteAllText(Path.Combine(scratch, "bin.txt"), "c\r\n");
+                File.WriteAllBytes(Path.Combine(scratch, "utf8.txt"), new System.Text.UTF8Encoding(false).GetBytes("Příliš žluťoučký kůň\r\n"));
+                File.WriteAllBytes(Path.Combine(scratch, "ansi.txt"), System.Text.Encoding.GetEncoding(1250).GetBytes("Příliš žluťoučký kůň\r\n"));
 
                 var byName = Run("add Main\\_encoding\\name.txt /encoding:windows-1250 /noprompt");
                 Assert.True(byName.ExitCode == 0, byName.Stderr);
@@ -63,11 +65,23 @@ namespace TfPortable.IntegrationTests
                 Assert.True(byPage.ExitCode == 0, byPage.Stderr);
                 var binary = Run("add Main\\_encoding\\bin.txt /encoding:binary /noprompt");
                 Assert.True(binary.ExitCode == 0, binary.Stderr);
+                // Without /encoding a BOM-less UTF-8 file named explicitly is recorded as utf-8; a file that is not valid
+                // UTF-8 keeps the client library's detection (the ANSI code page of the machine).
+                var detected = Run("add Main\\_encoding\\utf8.txt Main\\_encoding\\ansi.txt /noprompt /format:json");
+                Assert.True(detected.ExitCode == 0, detected.Stderr + detected.Stdout);
+                Assert.Equal(2, Changes(detected).Count);
 
                 var changes = Changes(Run("status Main\\_encoding /recursive /format:json"));
                 Assert.Equal("windows-1250", (string?)changes.First(c => ServerPath(c)!.EndsWith("/name.txt", StringComparison.Ordinal))["encoding"]);
                 Assert.Equal("windows-1250", (string?)changes.First(c => ServerPath(c)!.EndsWith("/page.txt", StringComparison.Ordinal))["encoding"]);
                 Assert.Equal("binary", (string?)changes.First(c => ServerPath(c)!.EndsWith("/bin.txt", StringComparison.Ordinal))["encoding"]);
+                Assert.Equal("utf-8", (string?)changes.First(c => ServerPath(c)!.EndsWith("/utf8.txt", StringComparison.Ordinal))["encoding"]);
+                Assert.NotEqual("utf-8", (string?)changes.First(c => ServerPath(c)!.EndsWith("/ansi.txt", StringComparison.Ordinal))["encoding"]);
+
+                // difference reads the BOM-less UTF-8 file as UTF-8 whatever encoding the server recorded for it.
+                var diff = Run("difference Main\\_encoding\\utf8.txt /format:json");
+                Assert.True(diff.ExitCode == 0 || diff.ExitCode == 1, diff.Stderr + diff.Stdout);
+                Assert.Contains("Příliš žluťoučký kůň", diff.Stdout);
             }
             finally
             {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Newtonsoft.Json.Linq;
@@ -25,10 +26,38 @@ namespace TfPortable.Commands
 
             // .tfignore applies to wildcard and /recursive expansion only; an explicitly named file is always added (docs/compat.md §5).
             bool expands = commandLine.Has("recursive") || items.Any(i => i.HasWildcard);
-            var result = workspace.PendAdd(paths, commandLine.Has("recursive"), commandLine.Value("encoding"), expands && !commandLine.Has("noignore"), lockLevel);
-            output.Lines(WorkspaceCommandSupport.GroupedByFolder(result.Changes, WorkspaceCommandSupport.NameOf));
-            var skipped = WorkspaceCommandSupport.ReportFailures(output, result.Failures, toolName);
-            output.Success(WorkspaceCommandSupport.ChangesJson(result.Changes, skipped));
+            bool applyIgnore = expands && !commandLine.Has("noignore");
+            string? encoding = commandLine.Value("encoding");
+
+            // Without /encoding the client library records the ANSI code page for a BOM-less text file (tf.exe does the same);
+            // a file named explicitly that is valid UTF-8 is recorded as utf-8 instead. Wildcards and /recursive stay with the library.
+            var utf8 = new List<string>();
+            var rest = new List<string>();
+            for (int i = 0; i < paths.Count; i++)
+            {
+                bool explicitFile = encoding == null && !commandLine.Has("recursive") && !items[i].HasWildcard && !Directory.Exists(paths[i]);
+                (explicitFile && TextContent.IsBomlessUtf8Text(paths[i]) ? utf8 : rest).Add(paths[i]);
+            }
+
+            var changes = new List<PendingChangeInfo>();
+            var failures = new List<FailureInfo>();
+            if (rest.Count > 0)
+            {
+                var result = workspace.PendAdd(rest, commandLine.Has("recursive"), encoding, applyIgnore, lockLevel);
+                changes.AddRange(result.Changes);
+                failures.AddRange(result.Failures);
+            }
+
+            if (utf8.Count > 0)
+            {
+                var result = workspace.PendAdd(utf8, false, "utf-8", applyIgnore, lockLevel);
+                changes.AddRange(result.Changes);
+                failures.AddRange(result.Failures);
+            }
+
+            output.Lines(WorkspaceCommandSupport.GroupedByFolder(changes, WorkspaceCommandSupport.NameOf));
+            var skipped = WorkspaceCommandSupport.ReportFailures(output, failures, toolName);
+            output.Success(WorkspaceCommandSupport.ChangesJson(changes, skipped));
             return ExitCodes.Success;
         }
     }

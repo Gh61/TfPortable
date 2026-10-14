@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using TfPortable.Commands;
@@ -107,14 +108,57 @@ namespace TfPortable.Tests
         }
 
         [Fact]
-        public void Content_is_decoded_by_the_server_encoding_or_a_bom()
+        public void Content_is_decoded_as_utf8_when_valid_else_by_the_server_encoding_and_a_bom_wins()
         {
             byte[] cp1250 = Encoding.GetEncoding(1250).GetBytes("Příliš žluťoučký kůň");
             Assert.Equal("Příliš žluťoučký kůň", TextContent.Decode(cp1250, "windows-1250"));
+            // A BOM-less UTF-8 file that tf.exe recorded as windows-1250 (its ANSI default) is still read as UTF-8.
+            byte[] utf8 = new UTF8Encoding(false).GetBytes("Příliš žluťoučký kůň");
+            Assert.Equal("Příliš žluťoučký kůň", TextContent.Decode(utf8, "windows-1250"));
+            Assert.Equal("Příliš žluťoučký kůň", TextContent.Decode(utf8, null));
+            // An explicit /encoding: wins over the UTF-8 default.
+            Assert.Equal(Encoding.GetEncoding(1250).GetString(utf8), TextContent.Decode(utf8, "windows-1250", "windows-1250"));
+            Assert.Null(TextContent.Decode(utf8, "windows-1250", "binary"));
             byte[] bom = new UTF8Encoding(true).GetPreamble().Concat(Encoding.UTF8.GetBytes("x")).ToArray();
             Assert.Equal("x", TextContent.Decode(bom, "windows-1250"));
+            Assert.Equal("x", TextContent.Decode(bom, "windows-1250", "windows-1250"));
             Assert.Null(TextContent.Decode(new byte[] { 1, 2, 3 }, "binary"));
             Assert.True(TextContent.LooksBinary(new byte[] { 65, 0, 66 }));
+        }
+
+        [Fact]
+        public void A_bomless_utf8_file_is_detected_for_add()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "tfp-tests-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string utf8 = Path.Combine(dir, "utf8.txt");
+                File.WriteAllBytes(utf8, new UTF8Encoding(false).GetBytes("Příliš žluťoučký kůň\r\n"));
+                string ascii = Path.Combine(dir, "ascii.txt");
+                File.WriteAllBytes(ascii, Encoding.ASCII.GetBytes("plain\r\n"));
+                string cp1250 = Path.Combine(dir, "cp1250.txt");
+                File.WriteAllBytes(cp1250, Encoding.GetEncoding(1250).GetBytes("Příliš žluťoučký kůň\r\n"));
+                string bom = Path.Combine(dir, "bom.txt");
+                File.WriteAllBytes(bom, new UTF8Encoding(true).GetPreamble().Concat(Encoding.UTF8.GetBytes("x")).ToArray());
+                string binary = Path.Combine(dir, "bin.dat");
+                File.WriteAllBytes(binary, new byte[] { 65, 0, 66 });
+                string empty = Path.Combine(dir, "empty.txt");
+                File.WriteAllBytes(empty, Array.Empty<byte>());
+
+                Assert.True(TextContent.IsBomlessUtf8Text(utf8));
+                Assert.True(TextContent.IsBomlessUtf8Text(ascii));
+                Assert.False(TextContent.IsBomlessUtf8Text(cp1250));
+                Assert.False(TextContent.IsBomlessUtf8Text(bom));
+                Assert.False(TextContent.IsBomlessUtf8Text(binary));
+                Assert.False(TextContent.IsBomlessUtf8Text(empty));
+                Assert.False(TextContent.IsBomlessUtf8Text(Path.Combine(dir, "missing.txt")));
+                Assert.False(TextContent.IsBomlessUtf8Text(dir));
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
         }
     }
 

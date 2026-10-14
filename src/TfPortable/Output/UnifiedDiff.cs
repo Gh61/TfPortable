@@ -481,13 +481,22 @@ namespace TfPortable.Output
         }
     }
 
-    /// <summary>Decoding of item content by the server's encoding name (SPEC.md: `view` re-encodes to UTF-8).</summary>
+    /// <summary>
+    /// Decoding of item content (SPEC.md "Výstup a kódování"): a BOM wins; without one the bytes are UTF-8 when they are
+    /// valid UTF-8, and the item's server encoding otherwise. tf.exe records the ANSI code page (windows-1250 on a Czech
+    /// machine) for every BOM-less text file it adds, so the server encoding alone would turn UTF-8 sources into mojibake.
+    /// </summary>
     internal static class TextContent
     {
-        /// <summary>Decodes with the item's encoding; a BOM wins over the name. Null for binary items.</summary>
-        public static string? Decode(byte[] bytes, string? encodingName)
+        private static readonly UTF8Encoding StrictUtf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+
+        /// <summary>
+        /// Decodes content. <paramref name="encodingName"/> is the item's server encoding, <paramref name="requestedEncoding"/>
+        /// an explicit `/encoding:` that wins over the UTF-8 default (a BOM still wins over both). Null for binary content.
+        /// </summary>
+        public static string? Decode(byte[] bytes, string? encodingName, string? requestedEncoding = null)
         {
-            if (encodingName == "binary")
+            if (requestedEncoding == "binary" || (requestedEncoding == null && encodingName == "binary"))
             {
                 return null;
             }
@@ -507,10 +516,20 @@ namespace TfPortable.Output
                 return Encoding.BigEndianUnicode.GetString(bytes, 2, bytes.Length - 2);
             }
 
+            if (requestedEncoding == null)
+            {
+                string? utf8 = AsUtf8(bytes);
+                if (utf8 != null)
+                {
+                    return utf8;
+                }
+            }
+
             Encoding encoding;
+            string? name = requestedEncoding ?? encodingName;
             try
             {
-                encoding = string.IsNullOrEmpty(encodingName) ? new UTF8Encoding(false) : Encoding.GetEncoding(encodingName);
+                encoding = string.IsNullOrEmpty(name) ? new UTF8Encoding(false) : Encoding.GetEncoding(name);
             }
             catch (ArgumentException)
             {
@@ -520,8 +539,54 @@ namespace TfPortable.Output
             return encoding.GetString(bytes);
         }
 
-        /// <summary>A local file read as text (BOM-aware, UTF-8 by default); null when it looks binary.</summary>
-        public static string? ReadLocal(string path, string? encodingName = null)
+        /// <summary>The bytes as a string when they are valid UTF-8 (BOM-less), else null.</summary>
+        public static string? AsUtf8(byte[] bytes)
+        {
+            try
+            {
+                return StrictUtf8.GetString(bytes);
+            }
+            catch (DecoderFallbackException)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// True for a text file without a BOM whose bytes are valid UTF-8: the file `add` records as `utf-8` instead of the
+        /// client library's default, the ANSI code page. Binary files, files with a BOM and unreadable files are false.
+        /// </summary>
+        public static bool IsBomlessUtf8Text(string path)
+        {
+            byte[] bytes;
+            try
+            {
+                if (!System.IO.File.Exists(path))
+                {
+                    return false;
+                }
+
+                bytes = System.IO.File.ReadAllBytes(path);
+            }
+            catch (Exception ex) when (ex is System.IO.IOException || ex is UnauthorizedAccessException)
+            {
+                return false;
+            }
+
+            if (bytes.Length == 0 || LooksBinary(bytes) || HasBom(bytes))
+            {
+                return false;
+            }
+
+            return AsUtf8(bytes) != null;
+        }
+
+        private static bool HasBom(byte[] bytes) =>
+            (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
+            || (bytes.Length >= 2 && ((bytes[0] == 0xFF && bytes[1] == 0xFE) || (bytes[0] == 0xFE && bytes[1] == 0xFF)));
+
+        /// <summary>A local file read as text (BOM-aware, UTF-8 when valid, else the item's encoding); null when it looks binary.</summary>
+        public static string? ReadLocal(string path, string? encodingName = null, string? requestedEncoding = null)
         {
             byte[] bytes = System.IO.File.ReadAllBytes(path);
             if (LooksBinary(bytes))
@@ -529,7 +594,7 @@ namespace TfPortable.Output
                 return null;
             }
 
-            return Decode(bytes, encodingName);
+            return Decode(bytes, encodingName, requestedEncoding);
         }
 
         public static bool LooksBinary(byte[] bytes)
