@@ -483,8 +483,9 @@ namespace TfPortable.Output
 
     /// <summary>
     /// Decoding of item content (SPEC.md "Výstup a kódování"): a BOM wins; without one the bytes are UTF-8 when they are
-    /// valid UTF-8, and the item's server encoding otherwise. tf.exe records the ANSI code page (windows-1250 on a Czech
-    /// machine) for every BOM-less text file it adds, so the server encoding alone would turn UTF-8 sources into mojibake.
+    /// valid UTF-8, else the item's server encoding when it is a code page, else the machine's ANSI code page. The server
+    /// encoding of a BOM-less item is not reliable: older tools recorded the ANSI code page for UTF-8 files, and the client
+    /// library records utf-8 for every BOM-less text file, even one in windows-1250.
     /// </summary>
     internal static class TextContent
     {
@@ -537,6 +538,13 @@ namespace TfPortable.Output
                 encoding = new UTF8Encoding(false);
             }
 
+            if (requestedEncoding == null && encoding is UTF8Encoding && !LooksBinary(bytes))
+            {
+                // Not valid UTF-8, yet the server calls it utf-8 (the library's default for every BOM-less file): the machine's
+                // ANSI code page is the best remaining guess, and it shows a windows-1250 file correctly on a Czech Windows.
+                encoding = Encoding.Default;
+            }
+
             return encoding.GetString(bytes);
         }
 
@@ -552,60 +560,6 @@ namespace TfPortable.Output
                 return null;
             }
         }
-
-        /// <summary>
-        /// True for a text file without a BOM whose bytes are valid UTF-8: the file `add` records as `utf-8` instead of the
-        /// client library's default, the ANSI code page. Binary files, files with a BOM and unreadable files are false.
-        /// </summary>
-        public static bool IsBomlessUtf8Text(string path)
-        {
-            try
-            {
-                if (!System.IO.File.Exists(path))
-                {
-                    return false;
-                }
-
-                // Streamed: the file is never loaded whole. The first buffer decides binary and BOM; the strict decoder keeps
-                // the state of a sequence split across buffers, and the final flush rejects a truncated sequence at the end.
-                using var stream = new System.IO.FileStream(path, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite);
-                byte[] buffer = new byte[8192];
-                var decoder = StrictUtf8.GetDecoder();
-                char[] chars = new char[buffer.Length + 1];
-                bool first = true;
-                int read;
-                while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    if (first)
-                    {
-                        first = false;
-                        byte[] head = read == buffer.Length ? buffer : buffer.Take(read).ToArray();
-                        if (LooksBinary(head) || HasBom(head))
-                        {
-                            return false;
-                        }
-                    }
-
-                    decoder.GetChars(buffer, 0, read, chars, 0, false);
-                }
-
-                if (first)
-                {
-                    return false;
-                }
-
-                decoder.GetChars(buffer, 0, 0, chars, 0, true);
-                return true;
-            }
-            catch (Exception ex) when (ex is System.IO.IOException || ex is UnauthorizedAccessException || ex is DecoderFallbackException)
-            {
-                return false;
-            }
-        }
-
-        private static bool HasBom(byte[] bytes) =>
-            (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
-            || (bytes.Length >= 2 && ((bytes[0] == 0xFF && bytes[1] == 0xFE) || (bytes[0] == 0xFE && bytes[1] == 0xFF)));
 
         /// <summary>A local file read as text (BOM-aware, UTF-8 when valid, else the item's encoding); null when it looks binary.</summary>
         public static string? ReadLocal(string path, string? encodingName = null, string? requestedEncoding = null)

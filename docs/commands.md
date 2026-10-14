@@ -46,7 +46,7 @@ tf vc add [itemspec] [/lock:(none|checkin|checkout)] [/encoding:filetype]
 
 | Switch | TfPortable |
 | --- | --- |
-| `/recursive`, `/noignore`, `/encoding:` | ✓ (`/encoding`, not `/type` as the SPEC draft said). Without `/encoding` a file named explicitly that has no BOM and is valid UTF-8 (pure ASCII included) is added as `utf-8` (the library and tf.exe would record the ANSI code page); wildcards, `/recursive` and other files keep the library's detection (docs/compat.md §5) |
+| `/recursive`, `/noignore`, `/encoding:` | ✓ (`/encoding`, not `/type` as the SPEC draft said). Without `/encoding` the client library records `utf-8` for every BOM-less text file, a windows-1250 one included; pass `/encoding:windows-1250` for such a file (docs/compat.md §5) |
 | `/lock:` | ✓ `none` (default), `checkin`, `checkout`: the pended item carries the lock on the server, as `lock` does, so `checkin` and `checkout` need protection level 2 (the command itself runs at level 1 since v1.1.0) (a checkout lock is not supported in local workspaces by the server, golden `lock/checkout-lock`) |
 
 <a id="cmd-checkout"></a>
@@ -234,7 +234,7 @@ Formats: Brief, Context, Rcs, SS, SS_SideBySide, SS_Unix, Unified, Unix, Visual
 | `/format:unified`, `/format:brief` | ✓ |
 | other formats (`context`, `rcs`, `ss*`, `unix`, `visual`) | ✗ TFP0006 (docs/compat.md §12) |
 | `/ignorespace`, `/ignoreeol`, `/ignorecase`, `/recursive` | ✓ |
-| `/encoding:` | ~ accepted (forces the encoding used to read both sides). Without it each side is read by its BOM, else as UTF-8 when the bytes are valid UTF-8, else by the item's server encoding (docs/compat.md §12) |
+| `/encoding:` | ~ accepted (forces the encoding used to read both sides). Without it each side is read by its BOM, else as UTF-8 when the bytes are valid UTF-8, else by the item's server encoding when it is a code page, else by the machine's ANSI code page (docs/compat.md §12) |
 | `/options`, `/configure` | ✗ TFP0006 (external diff tool configuration of Visual Studio) |
 
 <a id="cmd-dir"></a>

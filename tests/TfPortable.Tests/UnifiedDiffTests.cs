@@ -127,49 +127,11 @@ namespace TfPortable.Tests
             // A BOM-less UTF-16 item: its NUL bytes are valid UTF-8, so the server encoding must still decode it.
             byte[] utf16 = Encoding.Unicode.GetBytes("Příliš žluťoučký kůň");
             Assert.Equal("Příliš žluťoučký kůň", TextContent.Decode(utf16, "utf-16"));
+            // A windows-1250 file the library recorded as utf-8: the machine's ANSI code page decodes it, never U+FFFD.
+            string ansi = TextContent.Decode(cp1250, "utf-8")!;
+            Assert.DoesNotContain('\uFFFD', ansi);
+            Assert.Equal(Encoding.Default.GetString(cp1250), ansi);
         }
-
-        [Fact]
-        public void A_bomless_utf8_file_is_detected_for_add()
-        {
-            string dir = Path.Combine(Path.GetTempPath(), "tfp-tests-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
-            {
-                string utf8 = Path.Combine(dir, "utf8.txt");
-                File.WriteAllBytes(utf8, new UTF8Encoding(false).GetBytes("Příliš žluťoučký kůň\r\n"));
-                string ascii = Path.Combine(dir, "ascii.txt");
-                File.WriteAllBytes(ascii, Encoding.ASCII.GetBytes("plain\r\n"));
-                string cp1250 = Path.Combine(dir, "cp1250.txt");
-                File.WriteAllBytes(cp1250, Encoding.GetEncoding(1250).GetBytes("Příliš žluťoučký kůň\r\n"));
-                string bom = Path.Combine(dir, "bom.txt");
-                File.WriteAllBytes(bom, new UTF8Encoding(true).GetPreamble().Concat(Encoding.UTF8.GetBytes("x")).ToArray());
-                string binary = Path.Combine(dir, "bin.dat");
-                File.WriteAllBytes(binary, new byte[] { 65, 0, 66 });
-                string empty = Path.Combine(dir, "empty.txt");
-                File.WriteAllBytes(empty, Array.Empty<byte>());
-
-                Assert.True(TextContent.IsBomlessUtf8Text(utf8));
-                Assert.True(TextContent.IsBomlessUtf8Text(ascii));
-                Assert.False(TextContent.IsBomlessUtf8Text(cp1250));
-                Assert.False(TextContent.IsBomlessUtf8Text(bom));
-                Assert.False(TextContent.IsBomlessUtf8Text(binary));
-                Assert.False(TextContent.IsBomlessUtf8Text(empty));
-                Assert.False(TextContent.IsBomlessUtf8Text(Path.Combine(dir, "missing.txt")));
-                Assert.False(TextContent.IsBomlessUtf8Text(dir));
-                // Larger than one read buffer, with multi-byte characters crossing the buffer boundary; then one truncated.
-                string big = Path.Combine(dir, "big.txt");
-                File.WriteAllBytes(big, new UTF8Encoding(false).GetBytes(string.Concat(Enumerable.Repeat("žluťoučký kůň ", 2000))));
-                Assert.True(TextContent.IsBomlessUtf8Text(big));
-                string truncated = Path.Combine(dir, "truncated.txt");
-                byte[] whole = new UTF8Encoding(false).GetBytes(string.Concat(Enumerable.Repeat("žluťoučký kůň ", 2000)) + "ž");
-                File.WriteAllBytes(truncated, whole.Take(whole.Length - 1).ToArray());
-                Assert.False(TextContent.IsBomlessUtf8Text(truncated));
-            }
-            finally
-            {
-                Directory.Delete(dir, true);
-            }
         }
     }
 

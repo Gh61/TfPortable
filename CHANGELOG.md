@@ -6,11 +6,10 @@ GitHub release notes, so write the section before the release is run. The newest
 ## Unreleased
 
 - Content is read as UTF-8 by default: `view`, `difference`, `changeset /diff` and `annotate` decode a file by its BOM,
-  else as UTF-8 when the bytes are valid UTF-8, else by the item's server encoding. tf.exe and Visual Studio record the
-  ANSI code page (`windows-1250` on a Czech Windows) for every BOM-less text file they add, so the server encoding alone
-  turned UTF-8 sources into mojibake. An explicit `difference /encoding:` still wins.
-- `add` without `/encoding` records a file named explicitly as `utf-8` when it has no BOM and is valid UTF-8; wildcards,
-  `/recursive` and files that are not valid UTF-8 keep the client library's detection.
+  else as UTF-8 when the bytes are valid UTF-8, else by the item's server encoding when it is a code page, else by the
+  machine's ANSI code page. The server encoding of a BOM-less item is not reliable (older tools recorded `windows-1250`
+  for UTF-8 files, the client library records `utf-8` for every BOM-less file), so it no longer decides alone. An
+  explicit `difference /encoding:` still wins.
 
 ## v1.2.0 (2026-10-13)
 
