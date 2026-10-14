@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using TfPortable.Commands;
@@ -107,14 +108,31 @@ namespace TfPortable.Tests
         }
 
         [Fact]
-        public void Content_is_decoded_by_the_server_encoding_or_a_bom()
+        public void Content_is_decoded_as_utf8_when_valid_else_by_the_server_encoding_and_a_bom_wins()
         {
             byte[] cp1250 = Encoding.GetEncoding(1250).GetBytes("Příliš žluťoučký kůň");
             Assert.Equal("Příliš žluťoučký kůň", TextContent.Decode(cp1250, "windows-1250"));
+            // A BOM-less UTF-8 file that tf.exe recorded as windows-1250 (its ANSI default) is still read as UTF-8.
+            byte[] utf8 = new UTF8Encoding(false).GetBytes("Příliš žluťoučký kůň");
+            Assert.Equal("Příliš žluťoučký kůň", TextContent.Decode(utf8, "windows-1250"));
+            Assert.Equal("Příliš žluťoučký kůň", TextContent.Decode(utf8, null));
+            // An explicit /encoding: wins over the UTF-8 default.
+            Assert.Equal(Encoding.GetEncoding(1250).GetString(utf8), TextContent.Decode(utf8, "windows-1250", "windows-1250"));
+            Assert.Null(TextContent.Decode(utf8, "windows-1250", "binary"));
             byte[] bom = new UTF8Encoding(true).GetPreamble().Concat(Encoding.UTF8.GetBytes("x")).ToArray();
             Assert.Equal("x", TextContent.Decode(bom, "windows-1250"));
+            Assert.Equal("x", TextContent.Decode(bom, "windows-1250", "windows-1250"));
             Assert.Null(TextContent.Decode(new byte[] { 1, 2, 3 }, "binary"));
             Assert.True(TextContent.LooksBinary(new byte[] { 65, 0, 66 }));
+            // A BOM-less UTF-16 item: its NUL bytes are valid UTF-8, so the server encoding must still decode it.
+            byte[] utf16 = Encoding.Unicode.GetBytes("Příliš žluťoučký kůň");
+            Assert.Equal("Příliš žluťoučký kůň", TextContent.Decode(utf16, "utf-16"));
+            // A windows-1250 file the library recorded as utf-8: the ANSI code page of the culture decodes it, never U+FFFD
+            // (never Encoding.Default: the manifest makes the process code page UTF-8).
+            string ansi = TextContent.Decode(cp1250, "utf-8")!;
+            Assert.DoesNotContain('\uFFFD', ansi);
+            Assert.Equal(TextContent.AnsiEncoding().GetString(cp1250), ansi);
+            Assert.NotEqual(65001, TextContent.AnsiEncoding().CodePage);
         }
     }
 

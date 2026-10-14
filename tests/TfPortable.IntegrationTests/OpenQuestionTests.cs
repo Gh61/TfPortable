@@ -56,6 +56,8 @@ namespace TfPortable.IntegrationTests
                 File.WriteAllText(Path.Combine(scratch, "name.txt"), "a\r\n");
                 File.WriteAllText(Path.Combine(scratch, "page.txt"), "b\r\n");
                 File.WriteAllText(Path.Combine(scratch, "bin.txt"), "c\r\n");
+                File.WriteAllBytes(Path.Combine(scratch, "utf8.txt"), new System.Text.UTF8Encoding(false).GetBytes("Příliš žluťoučký kůň\r\n"));
+                File.WriteAllBytes(Path.Combine(scratch, "ansi.txt"), System.Text.Encoding.GetEncoding(1250).GetBytes("Příliš žluťoučký kůň\r\n"));
 
                 var byName = Run("add Main\\_encoding\\name.txt /encoding:windows-1250 /noprompt");
                 Assert.True(byName.ExitCode == 0, byName.Stderr);
@@ -63,11 +65,27 @@ namespace TfPortable.IntegrationTests
                 Assert.True(byPage.ExitCode == 0, byPage.Stderr);
                 var binary = Run("add Main\\_encoding\\bin.txt /encoding:binary /noprompt");
                 Assert.True(binary.ExitCode == 0, binary.Stderr);
+                // Without /encoding the client library records utf-8 for every BOM-less text file, the windows-1250 one included
+                // (observed 2026-10-14; docs/compat.md §5). tfp reads such a file by its bytes, not by that label.
+                var detected = Run("add Main\\_encoding\\utf8.txt Main\\_encoding\\ansi.txt /noprompt /format:json");
+                Assert.True(detected.ExitCode == 0, detected.Stderr + detected.Stdout);
+                Assert.Equal(2, Changes(detected).Count);
 
                 var changes = Changes(Run("status Main\\_encoding /recursive /format:json"));
                 Assert.Equal("windows-1250", (string?)changes.First(c => ServerPath(c)!.EndsWith("/name.txt", StringComparison.Ordinal))["encoding"]);
                 Assert.Equal("windows-1250", (string?)changes.First(c => ServerPath(c)!.EndsWith("/page.txt", StringComparison.Ordinal))["encoding"]);
                 Assert.Equal("binary", (string?)changes.First(c => ServerPath(c)!.EndsWith("/bin.txt", StringComparison.Ordinal))["encoding"]);
+                Assert.Equal("utf-8", (string?)changes.First(c => ServerPath(c)!.EndsWith("/utf8.txt", StringComparison.Ordinal))["encoding"]);
+                Assert.Equal("utf-8", (string?)changes.First(c => ServerPath(c)!.EndsWith("/ansi.txt", StringComparison.Ordinal))["encoding"]);
+
+                // difference reads the BOM-less UTF-8 file as UTF-8 whatever encoding the server recorded for it, and the
+                // windows-1250 file without U+FFFD (the ANSI code page of the culture, since the label utf-8 does not fit the bytes).
+                var diff = Run("difference Main\\_encoding\\utf8.txt /format:json");
+                Assert.True(diff.ExitCode == 0 || diff.ExitCode == 1, diff.Stderr + diff.Stdout);
+                Assert.Contains("Příliš žluťoučký kůň", diff.Stdout);
+                var diffAnsi = Run("difference Main\\_encoding\\ansi.txt /format:json");
+                Assert.True(diffAnsi.ExitCode == 0 || diffAnsi.ExitCode == 1, diffAnsi.Stderr + diffAnsi.Stdout);
+                Assert.False(diffAnsi.Stdout.Contains("\uFFFD"), diffAnsi.Stdout);
             }
             finally
             {

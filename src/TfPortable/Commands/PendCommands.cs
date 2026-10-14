@@ -25,6 +25,7 @@ namespace TfPortable.Commands
 
             // .tfignore applies to wildcard and /recursive expansion only; an explicitly named file is always added (docs/compat.md §5).
             bool expands = commandLine.Has("recursive") || items.Any(i => i.HasWildcard);
+            // Without /encoding the client library detects the type itself: a BOM, binary, else utf-8 (verified in CI 2026-10-14).
             var result = workspace.PendAdd(paths, commandLine.Has("recursive"), commandLine.Value("encoding"), expands && !commandLine.Has("noignore"), lockLevel);
             output.Lines(WorkspaceCommandSupport.GroupedByFolder(result.Changes, WorkspaceCommandSupport.NameOf));
             var skipped = WorkspaceCommandSupport.ReportFailures(output, result.Failures, toolName);

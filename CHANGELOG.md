@@ -3,6 +3,14 @@
 One section per release. The CI release step copies the section of the released tag into the
 GitHub release notes, so write the section before the release is run. The newest release comes first.
 
+## Unreleased
+
+- Content is read as UTF-8 by default: `view`, `difference`, `changeset /diff` and `annotate` decode a file by its BOM,
+  else as UTF-8 when the bytes are valid UTF-8, else by the item's server encoding when it is a code page, else by the
+  ANSI code page of the user's culture (`windows-1250` for cs-CZ). The server encoding of a BOM-less item is not reliable (older tools recorded `windows-1250`
+  for UTF-8 files, the client library records `utf-8` for every BOM-less file), so it no longer decides alone. An
+  explicit `difference /encoding:` still wins.
+
 ## v1.2.0 (2026-10-13)
 
 Everything of v1.1.0. A read-only protection level.
