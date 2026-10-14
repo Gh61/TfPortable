@@ -132,7 +132,6 @@ namespace TfPortable.Tests
             Assert.DoesNotContain('\uFFFD', ansi);
             Assert.Equal(Encoding.Default.GetString(cp1250), ansi);
         }
-        }
     }
 
     public class ServerRenderingTests
