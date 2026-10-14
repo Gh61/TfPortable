@@ -4,8 +4,9 @@ Read this first in every session. Update it at the end of every session (see CLA
 
 ## Status
 
-The current release is [v1.2.0](https://github.com/Gh61/TfPortable/releases/tag/v1.2.0) (2026-10-13, CI workflow
-run 207 on 9dec097): protection level 0 reads only, nothing is written to disk. Before it,
+The current release is [v1.2.1](https://github.com/Gh61/TfPortable/releases/tag/v1.2.1) (2026-10-14): content is
+read as UTF-8 by default. Before it, [v1.2.0](https://github.com/Gh61/TfPortable/releases/tag/v1.2.0) (2026-10-13, CI
+workflow run 207 on 9dec097) added protection level 0 (reads only, nothing is written to disk). Before it,
 [v1.1.0](https://github.com/Gh61/TfPortable/releases/tag/v1.1.0) (2026-10-13, run 200 on da5ada3) made level 1
 allow everything that changes nothing on the server.
 [v1.0.0](https://github.com/Gh61/TfPortable/releases/tag/v1.0.0) was released on 2026-10-11 from `main` (CI
@@ -17,6 +18,7 @@ releases v0.1.0, v0.2.0, v0.3.0, v1.0.0) is in the session log below and in the 
 | Milestone | Status |
 | --- | --- |
 | Milestones 0–5, phases 2–4, golden comparison, v1.0 preparation (SPEC.md) | done, released as v1.0.0 |
+| UTF-8 default for content (branch `claude/vibrant-mayer-9kx4fh`, PR #33) | done, merged on 2026-10-14 (774f336), released as [v1.2.1](https://github.com/Gh61/TfPortable/releases/tag/v1.2.1) |
 | Protection level 0 = reading only, nothing written to disk (branch `claude/vibrant-mayer-9kx4fh`) | done, merged on 2026-10-13 (9dec097, PR #31), released as [v1.2.0](https://github.com/Gh61/TfPortable/releases/tag/v1.2.0) (CI workflow run 207 with `release_tag=v1.2.0`, `tfp.exe` 4,065,280 bytes, SHA-256 asset) |
 | Protection level 1 = nothing changes on the server (branch `claude/vibrant-mayer-9kx4fh`, PR #29) | done, merged on 2026-10-13 (da5ada3), released as [v1.1.0](https://github.com/Gh61/TfPortable/releases/tag/v1.1.0) (CI workflow run 200 with `release_tag=v1.1.0`, `tfp.exe` 4,064,768 bytes, SHA-256 asset) |
 
@@ -256,8 +258,9 @@ Entries before 2026-10-11 are condensed; the full log is in the git history (`gi
   culture; `difference` passes an explicit `/encoding:` separately (Decisions 2026-10-14; the add-time detection
   was dropped after CI showed the library records utf-8 itself). Unit tests (`UnifiedDiffTests`) and the integration
   test `OpenQuestionTests` (add without `/encoding`, `difference` of a UTF-8 and of a cp1250 file). SPEC.md,
-  compat.md, commands.md, CHANGELOG "Unreleased" updated.
-  PR, CI, independent review, merge; no release asked for (the change waits in "Unreleased").
+  compat.md, commands.md, CHANGELOG updated. PR #33 reviewed by an independent agent (findings under Decisions), CI
+  green after two corrections the CI forced (the library records utf-8 itself; `Encoding.Default` is UTF-8 inside
+  tfp.exe), merged with a merge commit (774f336); released as `v1.2.1` by the CI workflow at the developer's request.
 - Next: nothing planned.
 - Blockers: none.
 
