@@ -127,10 +127,12 @@ namespace TfPortable.Tests
             // A BOM-less UTF-16 item: its NUL bytes are valid UTF-8, so the server encoding must still decode it.
             byte[] utf16 = Encoding.Unicode.GetBytes("Příliš žluťoučký kůň");
             Assert.Equal("Příliš žluťoučký kůň", TextContent.Decode(utf16, "utf-16"));
-            // A windows-1250 file the library recorded as utf-8: the machine's ANSI code page decodes it, never U+FFFD.
+            // A windows-1250 file the library recorded as utf-8: the ANSI code page of the culture decodes it, never U+FFFD
+            // (never Encoding.Default: the manifest makes the process code page UTF-8).
             string ansi = TextContent.Decode(cp1250, "utf-8")!;
             Assert.DoesNotContain('\uFFFD', ansi);
-            Assert.Equal(Encoding.Default.GetString(cp1250), ansi);
+            Assert.Equal(TextContent.AnsiEncoding().GetString(cp1250), ansi);
+            Assert.NotEqual(65001, TextContent.AnsiEncoding().CodePage);
         }
     }
 

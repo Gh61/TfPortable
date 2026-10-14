@@ -234,7 +234,7 @@ Formats: Brief, Context, Rcs, SS, SS_SideBySide, SS_Unix, Unified, Unix, Visual
 | `/format:unified`, `/format:brief` | ✓ |
 | other formats (`context`, `rcs`, `ss*`, `unix`, `visual`) | ✗ TFP0006 (docs/compat.md §12) |
 | `/ignorespace`, `/ignoreeol`, `/ignorecase`, `/recursive` | ✓ |
-| `/encoding:` | ~ accepted (forces the encoding used to read both sides). Without it each side is read by its BOM, else as UTF-8 when the bytes are valid UTF-8, else by the item's server encoding when it is a code page, else by the machine's ANSI code page (docs/compat.md §12) |
+| `/encoding:` | ~ accepted (forces the encoding used to read both sides). Without it each side is read by its BOM, else as UTF-8 when the bytes are valid UTF-8, else by the item's server encoding when it is a code page, else by the ANSI code page of the user's culture (docs/compat.md §12) |
 | `/options`, `/configure` | ✗ TFP0006 (external diff tool configuration of Visual Studio) |
 
 <a id="cmd-dir"></a>

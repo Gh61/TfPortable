@@ -483,7 +483,7 @@ namespace TfPortable.Output
 
     /// <summary>
     /// Decoding of item content (SPEC.md "Výstup a kódování"): a BOM wins; without one the bytes are UTF-8 when they are
-    /// valid UTF-8, else the item's server encoding when it is a code page, else the machine's ANSI code page. The server
+    /// valid UTF-8, else the item's server encoding when it is a code page, else the ANSI code page of the culture. The server
     /// encoding of a BOM-less item is not reliable: older tools recorded the ANSI code page for UTF-8 files, and the client
     /// library records utf-8 for every BOM-less text file, even one in windows-1250.
     /// </summary>
@@ -540,12 +540,27 @@ namespace TfPortable.Output
 
             if (requestedEncoding == null && encoding is UTF8Encoding && !LooksBinary(bytes))
             {
-                // Not valid UTF-8, yet the server calls it utf-8 (the library's default for every BOM-less file): the machine's
-                // ANSI code page is the best remaining guess, and it shows a windows-1250 file correctly on a Czech Windows.
-                encoding = Encoding.Default;
+                // Not valid UTF-8, yet the server calls it utf-8 (the library's default for every BOM-less file): the ANSI code
+                // page of the user's culture is the best remaining guess (windows-1250 on a Czech Windows). Not Encoding.Default:
+                // the manifest sets the process code page to UTF-8, so that would be UTF-8 again.
+                encoding = AnsiEncoding();
             }
 
             return encoding.GetString(bytes);
+        }
+
+        /// <summary>The ANSI code page of the current culture (`windows-1250` for cs-CZ), `windows-1252` when it has none.</summary>
+        public static Encoding AnsiEncoding()
+        {
+            try
+            {
+                int codePage = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ANSICodePage;
+                return Encoding.GetEncoding(codePage > 0 ? codePage : 1252);
+            }
+            catch (Exception ex) when (ex is ArgumentException || ex is NotSupportedException)
+            {
+                return Encoding.GetEncoding(1252);
+            }
         }
 
         /// <summary>The bytes as a string when they are valid UTF-8 (BOM-less), else null.</summary>

@@ -79,13 +79,13 @@ namespace TfPortable.IntegrationTests
                 Assert.Equal("utf-8", (string?)changes.First(c => ServerPath(c)!.EndsWith("/ansi.txt", StringComparison.Ordinal))["encoding"]);
 
                 // difference reads the BOM-less UTF-8 file as UTF-8 whatever encoding the server recorded for it, and the
-                // windows-1250 file without U+FFFD (the machine's ANSI code page, since the label utf-8 does not fit the bytes).
+                // windows-1250 file without U+FFFD (the ANSI code page of the culture, since the label utf-8 does not fit the bytes).
                 var diff = Run("difference Main\\_encoding\\utf8.txt /format:json");
                 Assert.True(diff.ExitCode == 0 || diff.ExitCode == 1, diff.Stderr + diff.Stdout);
                 Assert.Contains("Příliš žluťoučký kůň", diff.Stdout);
                 var diffAnsi = Run("difference Main\\_encoding\\ansi.txt /format:json");
                 Assert.True(diffAnsi.ExitCode == 0 || diffAnsi.ExitCode == 1, diffAnsi.Stderr + diffAnsi.Stdout);
-                Assert.DoesNotContain("\uFFFD", diffAnsi.Stdout);
+                Assert.False(diffAnsi.Stdout.Contains("\uFFFD"), diffAnsi.Stdout);
             }
             finally
             {
